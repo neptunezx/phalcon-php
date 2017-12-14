@@ -1,4 +1,5 @@
 <?php
+
 /**
  * File Interface
  *
@@ -6,16 +7,19 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Http\Request;
 
 /**
- * Phalcon\Http\Request\FileInterface initializer
+ * Phalcon\Http\Request\FileInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/http/request/fileinterface.c
+ * Interface for Phalcon\Http\Request\File
+ *
  */
 interface FileInterface
 {
+
     /**
      * \Phalcon\Http\Request\FileInterface constructor
      *

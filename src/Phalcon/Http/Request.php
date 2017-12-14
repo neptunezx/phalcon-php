@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Request
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Http;
 
 use \Phalcon\Http\RequestInterface;
@@ -16,6 +18,7 @@ use \Phalcon\Http\Request\File;
 use \Phalcon\DI\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\Text;
+use \InvalidArgumentException;
 
 /**
  * Phalcon\Http\Request
@@ -25,54 +28,57 @@ use \Phalcon\Text;
  * <p>The request object is a simple value object that is passed between the dispatcher and controller classes.
  * It packages the HTTP request environment.</p>
  *
- *<code>
+ * <code>
  *  $request = new Phalcon\Http\Request();
  *  if ($request->isPost() == true) {
  *      if ($request->isAjax() == true) {
  *          echo 'Request was made using POST and AJAX';
  *      }
  *  }
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/http/request.c
  */
 class Request implements RequestInterface, InjectionAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
-
-    /**
-     * Filter
-     *
-     * @var null
-     * @access protected
-    */
-    protected $_filter;
 
     /**
      * Raw Body
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_rawBody;
+
+    /**
+     * Filter
+     *
+     * @var null
+     * @access protected
+     */
+    protected $_filter;
+    protected $_putCache;
+    protected $_httpMethodParameterOverride = false;
+    protected $_strictHostCheck             = false;
 
     /**
      * Sets the dependency injector
      *
      * @param \Phalcon\DiInterface $dependencyInjector
-     * @throws Exception
      */
     public function setDI($dependencyInjector)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new InvalidArgumentException('Invalid parameter type.');
         }
 
         $this->_dependencyInjector = $dependencyInjector;
@@ -92,479 +98,462 @@ class Request implements RequestInterface, InjectionAwareInterface
      * Gets a variable from the $_REQUEST superglobal applying filters if needed.
      * If no parameters are given the $_REQUEST superglobal is returned
      *
-     *<code>
-     *  //Returns value from $_REQUEST["user_email"] without sanitizing
-     *  $userEmail = $request->get("user_email");
+     * <code>
+     * 	//Returns value from $_REQUEST["user_email"] without sanitizing
+     * 	$userEmail = $request->get("user_email");
      *
-     *  //Returns value from $_REQUEST["user_email"] with sanitizing
-     *  $userEmail = $request->get("user_email", "email");
-     *</code>
-     *
-     * @param string|null $name
-     * @param string|array|null $filters
-     * @param mixed $defaultValue
-     * @return mixed
-     * @throws Exception
+     * 	//Returns value from $_REQUEST["user_email"] with sanitizing
+     * 	$userEmail = $request->get("user_email", "email");
+     * </code>
      */
-    public function get($name = null, $filters = null, $defaultValue = null)
+    public function get($name = null, $filters = null, $defaultValue = null, $notAllowEmpty = false, $noRecursive = false)
     {
-        /* Validate input */
-        if (is_string($name) === false && is_null($name) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_string($filters) === false && is_array($filters) === false &&
-            is_null($filters) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        /* Get data */
-        if (is_null($name) === false) {
-            if (isset($_REQUEST[$name]) === true) {
-                $value = $_REQUEST[$name];
-
-                //Apply filters is required
-                if (is_null($filters) === false) {
-                    //Get filter service
-                    if (is_object($this->_filter) === false) {
-                        $dependencyInjector = $this->_dependencyInjector;
-                        if (is_object($this->_dependencyInjector) === false) {
-                            throw new Exception("A dependency injection object is required to access the 'filter' service");
-                        }
-
-                        $this->_filter = $dependencyInjector->getShared('filter');
-                    }
-
-                    return $this->_filter->sanitize($value, $filters);
-                } else {
-                    return $value;
-                }
-            }
-            
-            return $defaultValue;
-        }
-
-        return $_REQUEST;
+        return $this->getHelper($_REQUEST, $name, $filters, $defaultValue, $notAllowEmpty, $noRecursive);
     }
 
     /**
-     * Gets a variable from the $_POST superglobal applying filters if needed
-     * If no parameters are given the $_POST superglobal is returned
+     * Gets a variable from the $$_POST superglobal applying filters if needed
+     * If no parameters are given the $$_POST superglobal is returned
      *
-     *<code>
-     *  //Returns value from $_POST["user_email"] without sanitizing
-     *  $userEmail = $request->getPost("user_email");
+     * <code>
+     * 	//Returns value from $$_POST["user_email"] without sanitizing
+     * 	$userEmail = $request->getPost("user_email");
      *
-     *  //Returns value from $_POST["user_email"] with sanitizing
-     *  $userEmail = $request->getPost("user_email", "email");
-     *</code>
-     *
-     * @param string|null $name
-     * @param string|array|null $filters
-     * @param mixed $defaultValue
-     * @return mixed
-     * @throws Exception
+     * 	//Returns value from $$_POST["user_email"] with sanitizing
+     * 	$userEmail = $request->getPost("user_email", "email");
+     * </code>
      */
-    public function getPost($name = null, $filters = null, $defaultValue = null)
+    public function getPost($name = null, $filters = null, $defaultValue = null, $notAllowEmpty = false, $noRecursive = false)
     {
-        if (is_string($name) === false && is_null($name) === false) {
-            throw new Exception('Invalid parmeter type.');
+        return $this->getHelper($_POST, $name, $filters, $defaultValue, $notAllowEmpty, $noRecursive);
+    }
+
+    /**
+     * Gets a variable from put request
+     *
+     * <code>
+     * 	//Returns value from $_PUT["user_email"] without sanitizing
+     * 	$userEmail = $request->getPut("user_email");
+     *
+     * 	//Returns value from $_PUT["user_email"] with sanitizing
+     * 	$userEmail = $request->getPut("user_email", "email");
+     * </code>
+     */
+    public function getPut($name = null, $filters = null, $defaultValue = null, $notAllowEmpty = false, $noRecursive = false)
+    {
+        $put = $this->_putCache;
+
+        if (!is_array($put)) {
+            $put = [];
+            parse_str($this->getRawBody(), $put);
+
+            $this->_putCache = $put;
         }
 
-        if (is_string($filters) === false && is_array($filters) === false &&
-            is_null($filters) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_null($name) === false) {
-            if (isset($_POST[$name]) === true) {
-                $value = $_POST[$name];
-
-                if (is_null($filters) === false) {
-                    if (is_object($this->_filter) === false) {
-                        $dependencyInjector = $this->_dependencyInjector;
-                        if (is_object($dependencyInjector) === false) {
-                            throw new Exception("A dependency injection object is required to access the 'filter' service");
-                        }
-
-                        $this->_filter = $dependencyInjector->getShared('filter');
-                    }
-
-                    return $this->_filter->sanitize($value, $filters);
-                }
-                
-                return $value;
-            }
-
-            return $defaultValue;
-        }
-
-        return $_POST;
+        return $this->getHelper($put, $name, $filters, $defaultValue, $notAllowEmpty, $noRecursive);
     }
 
     /**
      * Gets variable from $_GET superglobal applying filters if needed
      * If no parameters are given the $_GET superglobal is returned
      *
-     *<code>
-     *  //Returns value from $_GET["id"] without sanitizing
-     *  $id = $request->getQuery("id");
+     * <code>
+     * 	// Returns value from $_GET['id'] without sanitizing
+     * 	$id = $request->getQuery('id');
      *
-     *  //Returns value from $_GET["id"] with sanitizing
-     *  $id = $request->getQuery("id", "int");
+     * 	// Returns value from $_GET['id'] with sanitizing
+     * 	$id = $request->getQuery('id', 'int');
      *
-     *  //Returns value from $_GET["id"] with a default value
-     *  $id = $request->getQuery("id", null, 150);
-     *</code>
-     *
-     * @param string|null $name
-     * @param string|array|null $filters
-     * @param mixed $defaultValue
-     * @return mixed
-     * @throws Exception
+     * 	// Returns value from $_GET['id'] with a default value
+     * 	$id = $request->getQuery('id', null, 150);
+     * </code>
      */
-    public function getQuery($name = null, $filters = null, $defaultValue = null)
+    public function getQuery($name = null, $filters = null, $defaultValue = null, $notAllowEmpty = false, $noRecursive = false)
     {
+        return $this->getHelper($_GET, $name, $filters, $defaultValue, $notAllowEmpty, $noRecursive);
+    }
+
+    /**
+     * Helper to get data from superglobals, applying filters if needed.
+     * If no parameters are given the superglobal is returned.
+     */
+    protected final function getHelper($source, $name = null, $filters = null, $defaultValue = null, $notAllowEmpty = false, $noRecursive = false)
+    {
+        /* Validate input */
         if (is_string($name) === false && is_null($name) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new InvalidArgumentException('Invalid parameter type.');
+        }
+        if (is_string($filters) === false && is_array($filters) === false &&
+            is_null($filters) === false) {
+            throw new InvalidArgumentException('Invalid parameter type.');
         }
 
-        if (is_null($filters) === false && is_string($filters) === false &&
-            is_array($filters) === false) {
-            throw new Exception('Invalid parameter type.');
+        if ($name === null) {
+            return $source;
         }
 
-        if (is_null($name) === false) {
-            if (isset($_GET[$name]) === true) {
-                $value = $_GET[$name];
-
-                if (is_null($filters) === false) {
-                    if (is_object($this->_filter) === false) {
-                        $dependencyInjector = $this->_dependencyInjector;
-                        if (is_object($dependencyInjector) === false) {
-                            throw new Exception("A dependency injection object is required to access the 'filter' service");
-                        }
-
-                        $this->_filter = $dependencyInjector->getShared('filter');
-                    }
-
-                    return $this->_filter->sanitize($value, $filters);
-                }
-
-                return $value;
-            }
-
+        if (!isset($source[$name])) {
             return $defaultValue;
         }
 
-        return $_GET;
+        if ($filters !== null) {
+            $filter = $this->_filter;
+            if (!is_object($filter)) {
+                $dependencyInjector = $this->_dependencyInjector;
+                if (!is_object($dependencyInjector)) {
+                    throw new Exception("A dependency injection object is required to access the 'filter' service");
+                }
+                $filter        = $dependencyInjector->getShared("filter");
+                $this->_filter = $filter;
+            }
+
+            $value = $filter->sanitize($value, $filters, $noRecursive);
+        }
+
+        if (empty($value) && $notAllowEmpty === true) {
+            return $defaultValue;
+        }
+
+        return $value;
     }
 
     /**
      * Gets variable from $_SERVER superglobal
-     *
-     * @param string $name
-     * @return mixed
-     * @throws Exception
      */
     public function getServer($name)
     {
-        if (is_string($name) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (isset($_SERVER[$name])) {
+            $serverValue = $_SERVER[$name];
+            return $serverValue;
         }
-
-        if (isset($_SERVER[$name]) === true) {
-            return $_SERVER[$name];
-        }
-
         return null;
     }
 
     /**
      * Checks whether $_REQUEST superglobal has certain index
-     *
-     * @param string $name
-     * @return boolean
-     * @throws Exception
      */
     public function has($name)
     {
-        if (is_string($name) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         return isset($_REQUEST[$name]);
     }
 
     /**
-     * Checks whether $_POST superglobal has certain index
-     *
-     * @param string $name
-     * @return boolean
-     * @throws Exception
+     * Checks whether $$_POST superglobal has certain index
      */
     public function hasPost($name)
     {
-        if (is_string($name) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         return isset($_POST[$name]);
     }
 
     /**
+     * Checks whether the PUT data has certain index
+     */
+    public function hasPut($name)
+    {
+        $put = $this->getPut();
+
+        return isset($put[$name]);
+    }
+
+    /**
      * Checks whether $_GET superglobal has certain index
-     *
-     * @param string $name
-     * @return boolean
-     * @throws Exception
      */
     public function hasQuery($name)
     {
-        if (is_string($name) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         return isset($_GET[$name]);
     }
 
     /**
      * Checks whether $_SERVER superglobal has certain index
-     *
-     * @param string $name
-     * @return mixed
-     * @throws Exception
      */
-    public function hasServer($name)
+    public final function hasServer($name)
     {
-        if (is_string($name) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         return isset($_SERVER[$name]);
     }
 
     /**
      * Gets HTTP header from request data
-     *
-     * @param string $header
-     * @return string
-     * @throws Exception
      */
-    public function getHeader($header)
+    public final function getHeader($header)
     {
-        if (is_string($header) === false) {
-            throw new Exception('Invalid parameter type.');
+        $name = strtoupper(strtr($header, "-", "_"));
+
+        if (isset($_SERVER[$name])) {
+            return $_SERVER[$name];
         }
 
-        if (isset($_SERVER[$header]) === true) {
-            return $_SERVER[$header];
-        } else {
-            if (isset($_SERVER['HTTP_'.$header]) === true) {
-                return $_SERVER['HTTP_'.$header];
-            }
+        if (isset($_SERVER["HTTP_" . $name])) {
+            $value = $_SERVER["HTTP_" . $name];
+            return $value;
         }
 
-        return '';
+        return "";
     }
 
     /**
      * Gets HTTP schema (http/https)
-     *
-     * @return string
      */
     public function getScheme()
     {
-        $https = $this->getServer('HTTPS');
-        if (empty($https) === false) {
-            if ($https === 'off') {
-                $scheme = 'http';
+        $scheme = null;
+        $https  = $this->getServer("HTTPS");
+        if ($https) {
+            if ($https == "off") {
+                $scheme = "http";
             } else {
-                $scheme = 'https';
+                $scheme = "https";
             }
         } else {
-            $scheme = 'http';
+            $scheme = "http";
         }
-
         return $scheme;
     }
 
     /**
-     * Checks whether request has been made using ajax. Checks if $_SERVER['HTTP_X_REQUESTED_WITH']=='XMLHttpRequest'
-     *
-     * @return boolean
+     * Checks whether request has been made using ajax
      */
     public function isAjax()
     {
-        return ($this->getHeader('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' ? true : false);
+        return isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && $_SERVER["HTTP_X_REQUESTED_WITH"] === "XMLHttpRequest";
     }
 
     /**
      * Checks whether request has been made using SOAP
-     *
-     * @return boolean
      */
-    public function isSoapRequested()
+    public function isSoap()
     {
-        if (isset($_SERVER['HTTP_SOAPACTION']) === true) {
+        if (isset($_SERVER["HTTP_SOAPACTION"])) {
             return true;
-        } elseif (isset($_SERVER['CONTENT_TYPE']) === true) {
-            if (strpos($_SERVER['CONTENT_TYPE'], 'application/soap+xml') !== false) {
-                return true;
+        } else {
+            $contentType = $this->getContentType();
+            if (!empty($contentType)) {
+                return memstr($contentType, "application/soap+xml");
             }
         }
-
         return false;
     }
 
     /**
      * Checks whether request has been made using any secure layer
-     *
-     * @return boolean
      */
-    public function isSecureRequest()
+    public function isSecure()
     {
-        return ($this->getScheme() === 'https' ? true : false);
+        return $this->getScheme() === "https";
     }
 
     /**
      * Gets HTTP raw request body
-     *
-     * @return string
      */
     public function getRawBody()
     {
-        if (is_string($this->_rawBody)) {
-            return $this->_rawBody;
-        } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $raw = file_get_contents('php://input');
-            if ($raw === false) {
-                $raw = '';
-            }
+        $rawBody = $this->_rawBody;
+        if (empty($rawBody)) {
 
-            $this->_rawBody = $raw;
-            return $raw;
+            $contents = file_get_contents("php://input");
+
+            /**
+             * We need store the read raw body because it can't be read again
+             */
+            $this->_rawBody = $contents;
+            return $contents;
         }
-
-        return '';
+        return $rawBody;
     }
 
     /**
      * Gets decoded JSON HTTP raw request body
-     *
-     * @return mixed
      */
-    public function getJsonRawBody()
+    public function getJsonRawBody($associative = false)
     {
         $rawBody = $this->getRawBody();
-        if (is_string($rawBody) === true) {
-            return json_decode($rawBody, 0);
+        if (!is_string($rawBody)) {
+            return false;
         }
+
+        return json_decode($rawBody, $associative);
     }
 
     /**
      * Gets active server address IP
-     *
-     * @return string
      */
     public function getServerAddress()
     {
-        if (isset($_SERVER['SERVER_ADDR']) === true) {
-            return $_SERVER['SERVER_ADDR'];
+        if (isset($_SERVER["SERVER_ADDR"])) {
+            $serverAddr = $_SERVER["SERVER_ADDR"];
+            return $serverAddr;
         }
-
-        return gethostbyname('localhost');
+        return gethostbyname("localhost");
     }
 
     /**
      * Gets active server name
-     *
-     * @return string
      */
     public function getServerName()
     {
-        if (isset($_SERVER['SERVER_NAME']) === true) {
-            return $_SERVER['SERVER_NAME'];
+        if (isset($_SERVER["SERVER_NAME"])) {
+            $serverName = $_SERVER["SERVER_NAME"];
+            return $serverName;
         }
-
-        return 'localhost';
+        return "localhost";
     }
 
     /**
-     * Gets information about schema, host and port used by the request
+     * Gets host name used by the request.
      *
-     * @return string
+     * `Request::getHttpHost` trying to find host name in following order:
+     *
+     * - `$_SERVER['HTTP_HOST']`
+     * - `$_SERVER['SERVER_NAME']`
+     * - `$_SERVER['SERVER_ADDR']`
+     *
+     * Optionally `Request::getHttpHost` validates and clean host name.
+     * The `Request::$_strictHostCheck` can be used to validate host name.
+     *
+     * Note: validation and cleaning have a negative performance impact because they use regular expressions.
+     *
+     * <code>
+     * use Phalcon\Http\Request;
+     *
+     * $request = new Request;
+     *
+     * $_SERVER['HTTP_HOST'] = 'example.com';
+     * $request->getHttpHost(); // example.com
+     *
+     * $_SERVER['HTTP_HOST'] = 'example.com:8080';
+     * $request->getHttpHost(); // example.com:8080
+     *
+     * $request->setStrictHostCheck(true);
+     * $_SERVER['HTTP_HOST'] = 'ex=am~ple.com';
+     * $request->getHttpHost(); // UnexpectedValueException
+     *
+     * $_SERVER['HTTP_HOST'] = 'ExAmPlE.com';
+     * $request->getHttpHost(); // example.com
+     * </code>
      */
     public function getHttpHost()
     {
-        //Get the server name from _SERVER['HTTP_HOST']
-        $httpHost = $this->getServer('HTTP_HOST');
-        if (isset($httpHost) === true) {
-            return $httpHost;
+        $strict = $this->_strictHostCheck;
+
+        /**
+         * Get the server name from $_SERVER['HTTP_HOST']
+         */
+        $host = $this->getServer("HTTP_HOST");
+        if (!$host) {
+
+            /**
+             * Get the server name from $_SERVER['SERVER_NAME']
+             */
+            $host = $this->getServer("SERVER_NAME");
+            if (!$host) {
+                /**
+                 * Get the server address from $_SERVER['SERVER_ADDR']
+                 */
+                $host = $this->getServer("SERVER_ADDR");
+            }
         }
 
-        //Get current scheme
-        $scheme = $this->getScheme();
+        if ($host && $strict) {
+            /**
+             * Cleanup. Force lowercase as per RFC 952/2181
+             */
+            $host = strtolower(trim($host));
+            if (memstr($host, ":")) {
+                $host = preg_replace("/:[[:digit:]]+$/", "", $host);
+            }
 
-        //Get the server name from _SERVER['SERVER_NAME']
-        $serverName = $this->getServer('SERVER_NAME');
-
-        //Get the server port from _SERVER['SERVER_PORT']
-        $serverPort = $this->getServer('SERVER_PORT');
-
-        //Check if the request is a standard http
-        $isStdName = ($scheme === 'http' ? true : false);
-        $isStdPort = ($serverPort === 80 ? true : false);
-        $isStdHttp = ($isStdName && $isStdPort ? true : false);
-
-        //Check if the request is a secure http request
-        $isSecureScheme = ($scheme === 'https' ? true : false);
-        $isSecurePort = ($serverPort === 443 ? true : false);
-        $isSecureHttp = ($isSecureScheme && $isSecurePort ? true : false);
-
-        //If is is a standard http we return the server name only
-        if ($isStdHttp === true ||
-            $isSecureHttp === true) {
-            return $serverName;
+            /**
+             * Host may contain only the ASCII letters 'a' through 'z' (in a case-insensitive manner),
+             * the digits '0' through '9', and the hyphen ('-') as per RFC 952/2181
+             */
+            if ("" !== preg_replace("/[a-z0-9-]+\.?/", "", $host)) {
+                throw new \UnexpectedValueException("Invalid host " . $host);
+            }
         }
 
-        return $serverName.':'.$serverPort;
+        return (string) $host;
+    }
+
+    /**
+     * Sets if the `Request::getHttpHost` method must be use strict validation of host name or not
+     */
+    public function setStrictHostCheck($flag = true)
+    {
+        $this->_strictHostCheck = $flag;
+
+        return $this;
+    }
+
+    /**
+     * Checks if the `Request::getHttpHost` method will be use strict validation of host name or not
+     */
+    public function isStrictHostCheck()
+    {
+        return $this->_strictHostCheck;
+    }
+
+    /**
+     * Gets information about the port on which the request is made.
+     */
+    public function getPort()
+    {
+        /**
+         * Get the server name from $_SERVER['HTTP_HOST']
+         */
+        $host = $this->getServer("HTTP_HOST");
+        if ($host) {
+            if (memstr($host, ":")) {
+                $pos = strrpos($host, ":");
+
+                if (false !== $pos) {
+                    return (int) substr($host, $pos + 1);
+                }
+            }
+
+            return "https" === $this->getScheme() ? 443 : 80;
+        }
+
+        return (int) $this->getServer("SERVER_PORT");
+    }
+
+    /**
+     * Gets HTTP URI which request has been made
+     */
+    public final function getURI()
+    {
+        if (isset($_SERVER["REQUEST_URI"])) {
+            $requestURI = $_SERVER["REQUEST_URI"];
+            return $requestURI;
+        }
+
+        return "";
     }
 
     /**
      * Gets most possible client IPv4 Address. This method search in $_SERVER['REMOTE_ADDR'] and optionally in $_SERVER['HTTP_X_FORWARDED_FOR']
-     *
-     * @param boolean|null $trustForwardedHeader
-     * @return string
-     * @throws Exception
      */
-    public function getClientAddress($trustForwardedHeader = null)
+    public function getClientAddress($trustForwardedHeader = false)
     {
-        if (is_null($trustForwardedHeader) === true) {
-            $trustForwardedHeader = false;
-        } elseif (is_bool($trustForwardedHeader) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        //Proxies use this IP
-        if ($trustForwardedHeader === true &&
-            isset($_SERVER['HTTP_X_FORWARDED_FOR']) === true) {
-            $address = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        }
-
-        if (isset($address) === false) {
-            if (isset($_SERVER['REMOTE_ADDR']) === true) {
-                $address = $_SERVER['REMOTE_ADDR'];
+        /**
+         * Proxies uses this IP
+         */
+        if ($trustForwardedHeader) {
+            $address = $_SERVER["HTTP_X_FORWARDED_FOR"];
+            if ($address === null) {
+                $address = $_SERVER["HTTP_CLIENT_IP"];
             }
         }
 
-        if (isset($address) === true) {
-            if (strpos($address, ',') !== false) {
-                //The client address has multiple parts, only return the first part
-                $addresses = explode(',', $address);
-                return $addresses[0];
-            }
+        if ($address === null) {
+            $address = $_SERVER["REMOTE_ADDR"];
+        }
 
+        if (is_string($address)) {
+            if (memstr($address, ",")) {
+                /**
+                 * The client address has multiples parts, only return the first part
+                 */
+                return explode(",", $address)[0];
+            }
             return $address;
         }
 
@@ -574,363 +563,513 @@ class Request implements RequestInterface, InjectionAwareInterface
     /**
      * Gets HTTP method which request has been made
      *
-     * @return string
+     * If the X-HTTP-Method-Override header is set, and if the method is a POST,
+     * then it is used to determine the "real" intended HTTP method.
+     *
+     * The _method request parameter can also be used to determine the HTTP method,
+     * but only if setHttpMethodParameterOverride(true) has been called.
+     *
+     * The method is always an uppercased string.
      */
-    public function getMethod()
+    public final function getMethod()
     {
-        if (isset($_SERVER['REQUEST_METHOD']) === true) {
-            return $_SERVER['REQUEST_METHOD'];
+        $returnMethod = "";
+
+        if (isset($_SERVER["REQUEST_METHOD"])) {
+            $requestMethod = $_SERVER["REQUEST_METHOD"];
+            $returnMethod  = $requestMethod;
         }
 
-        return '';
+        if ("POST" === $requestMethod) {
+            $headers = $this->getHeaders();
+            if (isset($headers["X-HTTP-METHOD-OVERRIDE"])) {
+                $overridedMethod = $headers["X-HTTP-METHOD-OVERRIDE"];
+                $returnMethod    = $overridedMethod;
+            } elseif ($this->_httpMethodParameterOverride) {
+                if (isset($_REQUEST["_method"])) {
+                    $spoofedMethod = $_REQUEST["_method"];
+                    $returnMethod  = $spoofedMethod;
+                }
+            }
+        }
+
+        if (!$this->isValidHttpMethod($returnMethod)) {
+            $returnMethod = "GET";
+        }
+
+        return strtoupper($returnMethod);
     }
 
     /**
      * Gets HTTP user agent used to made the request
-     *
-     * @return string
      */
     public function getUserAgent()
     {
-        if (isset($_SERVER['HTTP_USER_AGENT']) === true) {
-            return $_SERVER['HTTP_USER_AGENT'];
-        } else {
-            return '';
+        if (isset($_SERVER["HTTP_USER_AGENT"])) {
+            return $_SERVER["HTTP_USER_AGENT"];
         }
+        return "";
     }
 
     /**
-     * Check if HTTP method match any of the passed methods
-     *
-     * @param string|array $methods
-     * @return boolean
+     * Checks if a method is a valid HTTP method
      */
-    public function isMethod($methods)
+    public function isValidHttpMethod($method)
     {
-        $methodHttp = $this->getMethod();
-
-        if (is_string($methods) === true) {
-            return ($methods == $methodHttp ? true : false);
-        } else {
-            foreach ($methods as $method) {
-                if ($method === $methodHttp) {
-                    return true;
-                }
-            }
+        switch (strtoupper($method)) {
+            case "GET":
+            case "POST":
+            case "PUT":
+            case "DELETE":
+            case "HEAD":
+            case "OPTIONS":
+            case "PATCH":
+            case "PURGE": // Squid and Varnish support
+            case "TRACE":
+            case "CONNECT":
+                return true;
         }
-        
+
         return false;
     }
 
     /**
-     * Checks whether HTTP method is POST. if $_SERVER['REQUEST_METHOD']=='POST'
-     *
-     * @return boolean
+     * Check if HTTP method match any of the passed methods
+     * When strict is true it checks if validated methods are real HTTP methods
+     */
+    public function isMethod($methods, $strict = false)
+    {
+        $httpMethod = $this->getMethod();
+
+        if (is_string($methods)) {
+            if ($strict && !$this->isValidHttpMethod($methods)) {
+                throw new Exception("Invalid HTTP method: " . $methods);
+            }
+            return $methods == $httpMethod;
+        }
+
+        if (is_array($methods)) {
+            foreach ($methods as $method) {
+                if ($this->isMethod($method, $strict)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if ($strict) {
+            throw new Exception("Invalid HTTP method: non-string");
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks whether HTTP method is POST. if $_SERVER["REQUEST_METHOD"]==="POST"
      */
     public function isPost()
     {
-        return ($this->getMethod() === 'POST' ? true : false);
+        return $this->getMethod() === "POST";
     }
 
     /**
-     * Checks whether HTTP method is GET. if $_SERVER['REQUEST_METHOD']=='GET'
-     *
-     * @return boolean
+     * Checks whether HTTP method is GET. if $_SERVER["REQUEST_METHOD"]==="GET"
      */
     public function isGet()
     {
-        return ($this->getMethod() === 'GET' ? true : false);
+        return $this->getMethod() === "GET";
     }
 
     /**
-     * Checks whether HTTP method is PUT. if $_SERVER['REQUEST_METHOD']=='PUT'
-     *
-     * @return boolean
+     * Checks whether HTTP method is PUT. if $_SERVER["REQUEST_METHOD"]==="PUT"
      */
     public function isPut()
     {
-        return ($this->getMethod() === 'PUT' ? true : false);
+        return $this->getMethod() === "PUT";
     }
 
     /**
-     * Checks whether HTTP method is PATCH. if $_SERVER['REQUEST_METHOD']=='PATCH'
-     *
-     * @return boolean
+     * Checks whether HTTP method is PATCH. if $_SERVER["REQUEST_METHOD"]==="PATCH"
      */
     public function isPatch()
     {
-        return ($this->getMethod() === 'PATCH' ? true : false);
+        return $this->getMethod() === "PATCH";
     }
 
     /**
-     * Checks whether HTTP method is HEAD. if $_SERVER['REQUEST_METHOD']=='HEAD'
-     *
-     * @return boolean
+     * Checks whether HTTP method is HEAD. if $_SERVER["REQUEST_METHOD"]==="HEAD"
      */
     public function isHead()
     {
-        return ($this->getMethod() === 'HEAD' ? true : false);
+        return $this->getMethod() === "HEAD";
     }
 
     /**
-     * Checks whether HTTP method is DELETE. if $_SERVER['REQUEST_METHOD']=='DELETE'
-     *
-     * @return boolean
+     * Checks whether HTTP method is DELETE. if $_SERVER["REQUEST_METHOD"]==="DELETE"
      */
     public function isDelete()
     {
-        return ($this->getMethod() === 'DELETE' ? true : false);
+        return $this->getMethod() === "DELETE";
     }
 
     /**
-     * Checks whether HTTP method is OPTIONS. if $_SERVER['REQUEST_METHOD']=='OPTIONS'
-     *
-     * @return boolean
+     * Checks whether HTTP method is OPTIONS. if $_SERVER["REQUEST_METHOD"]==="OPTIONS"
      */
     public function isOptions()
     {
-        return ($this->getMethod() === 'OPTIONS' ? true : false);
+        return $this->getMethod() === "OPTIONS";
     }
 
     /**
-     * Checks whether request includes attached files
-     *
-     * @param null|boolean $notErrored
-     * @return boolean
-     * @throws Exception
+     * Checks whether HTTP method is PURGE (Squid and Varnish support). if $_SERVER["REQUEST_METHOD"]==="PURGE"
      */
-    public function hasFiles($notErrored = null)
+    public function isPurge()
     {
-        if (is_null($notErrored) === true) {
-            $notErrored = true;
-        } elseif (is_bool($notErrored) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        return $this->getMethod() === "PURGE";
+    }
 
-        if (is_array($_FILES) === false) {
+    /**
+     * Checks whether HTTP method is TRACE. if $_SERVER["REQUEST_METHOD"]==="TRACE"
+     */
+    public function isTrace()
+    {
+        return $this->getMethod() === "TRACE";
+    }
+
+    /**
+     * Checks whether HTTP method is CONNECT. if $_SERVER["REQUEST_METHOD"]==="CONNECT"
+     */
+    public function isConnect()
+    {
+        return $this->getMethod() === "CONNECT";
+    }
+
+    /**
+     * Checks whether request include attached files
+     */
+    public function hasFiles($onlySuccessful = false)
+    {
+        $onlySuccessful = boolval($onlySuccessful);
+
+        $numberFiles = 0;
+
+        $files = $_FILES;
+
+        if (!is_array($files)) {
             return 0;
         }
 
-        $count = 0;
-        foreach ($_FILES as $file) {
-            if ($notErrored === false) {
-                ++$count;
-            } else {
-                if (isset($file['error']) === true) {
-                    foreach ($file['error'] as $error) {
-                        if ($error === \UPLOAD_ERR_OK) {
-                            ++$count;
-                            break;
-                        }
+        foreach ($files as $file) {
+            if (isset($file["error"])) {
+                $error = $file["error"];
+                if (!is_array($error)) {
+                    if (!$error || !$onlySuccessful) {
+                        $numberFiles++;
                     }
+                }
+
+                if (is_array($error)) {
+                    $numberFiles += $this->hasFileHelper($error, $onlySuccessful);
                 }
             }
         }
 
-        return $count;
+        return $numberFiles;
     }
 
     /**
-     * Gets attached files as \Phalcon\Http\Request\File instances
-     *
-     * @param boolean|null $notErrored
-     * @return \Phalcon\Http\Request\File[]|null
-     * @throws Exception
+     * Recursively counts file in an of files
      */
-    public function getUploadedFiles($notErrored = null)
+    protected final function hasFileHelper($data, $onlySuccessful)
     {
-        if (is_null($notErrored) === true) {
-            $notErrored = true;
-        } elseif (is_bool($notErrored) === false) {
-            throw new Exception('Invalid parameter type.');
+        $numberFiles = 0;
+
+        if (!is_array($data)) {
+            return 1;
         }
 
-        if (is_array($_FILES) === false ||
-            count($_FILES) === 0) {
-            return;
-        }
-
-        $result = array();
-
-        foreach ($_FILES as $name => $file) {
-            //Skip if upload failed
-            if ($notErrored === true) {
-                if (isset($file['error']) === true) {
-                    foreach ($file['error'] as $error) {
-                        if ($error !== \UPLOAD_ERR_OK) {
-                            continue 2;
-                        }
-                    }
+        foreach ($data as $value) {
+            if (!is_array($value)) {
+                if (!$value || !$onlySuccessful) {
+                    $numberFiles++;
                 }
             }
 
-            //Create object
-            $result[] = new File($file, $name);
+            if (is_array($value)) {
+                $numberFiles += $this->hasFileHelper($value, $onlySuccessful);
+            }
         }
 
-        return $result;
+        return $numberFiles;
+    }
+
+    /**
+     * Gets attached files as Phalcon\Http\Request\File instances
+     */
+    public function getUploadedFiles($onlySuccessful = false)
+    {
+        $files = [];
+
+        $superFiles = $_FILES;
+
+        if (count($superFiles) > 0) {
+
+            foreach ($superFiles as $prefix => $input) {
+                if (is_array($input["name"])) {
+                    $smoothInput = $this->smoothFiles($input["name"], $input["type"], $input["tmp_name"], $input["size"], $input["error"], $prefix);
+
+                    foreach ($smoothInput as $file) {
+                        if ($onlySuccessful == false || $file["error"] == UPLOAD_ERR_OK) {
+                            $dataFile = [
+                                "name"     => $file["name"],
+                                "type"     => $file["type"],
+                                "tmp_name" => $file["tmp_name"],
+                                "size"     => $file["size"],
+                                "error"    => $file["error"]
+                            ];
+
+                            $files[] = new File($dataFile, $file["key"]);
+                        }
+                    }
+                } else {
+                    if ($onlySuccessful == false || $input["error"] == UPLOAD_ERR_OK) {
+                        $files[] = new File($input, $prefix);
+                    }
+                }
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * Smooth out $_FILES to have plain with all files uploaded
+     */
+    protected final function smoothFiles($names, $types, $tmp_names, $sizes, $errors, $prefix)
+    {
+        $files = [];
+
+        foreach ($names as $idx => $name) {
+            $p = $prefix . "." . $idx;
+
+            if (is_string($name)) {
+
+                $files[] = [
+                    "name"     => $name,
+                    "type"     => $types[$idx],
+                    "tmp_name" => $tmp_names[$idx],
+                    "size"     => $sizes[$idx],
+                    "error"    => $errors[$idx],
+                    "key"      => $p
+                ];
+            }
+
+            if (is_array($name)) {
+                $parentFiles = $this->smoothFiles($names[$idx], $types[$idx], $tmp_names[$idx], $sizes[$idx], $errors[$idx], $p);
+
+                foreach ($parentFiles as $file) {
+                    $files[] = $file;
+                }
+            }
+        }
+
+        return $files;
     }
 
     /**
      * Returns the available headers in the request
-     *
-     * @return array
      */
     public function getHeaders()
     {
-        if (is_array($_SERVER) === false) {
-            return;
-        }
+        $headers        = [];
+        $contentHeaders = ["CONTENT_TYPE" => true, "CONTENT_LENGTH" => true];
 
-        $result = array();
-        foreach ($_SERVER as $key => $value) {
-            if (Text::startsWith($key, 'HTTP_') === true) {
-                $result[] = substr($key, 5);
+        foreach ($_SERVER as $name => $value) {
+            if (Text::startsWith($name, "HTTP_")) {
+                $name           = ucwords(strtolower(str_replace("_", " ", substr($name, 5))));
+                $name           = str_replace(" ", "-", $name);
+                $headers[$name] = $value;
+            } elseif (isset($contentHeaders[$name])) {
+                $name           = ucwords(strtolower(str_replace("_", " ", $name)));
+                $name           = str_replace(" ", "-", $name);
+                $headers[$name] = $value;
             }
         }
 
-        return $result;
+        return $headers;
     }
 
     /**
      * Gets web page that refers active request. ie: http://www.google.com
-     *
-     * @return string
      */
     public function getHTTPReferer()
     {
-        if (isset($_SERVER['HTTP_REFERER']) === true) {
-            return $_SERVER['HTTP_REFERER'];
+        if (isset($_SERVER["HTTP_REFERER"])) {
+            $httpReferer = $_SERVER["HTTP_REFERER"];
+            return $httpReferer;
         }
-
-        return '';
+        return "";
     }
 
     /**
-     * Process a request header and return an array of values with their qualities
-     *
-     * @param string $serverIndex
-     * @param string $name
-     * @return array
-     * @throws Exception
+     * Process a request header and return an of values with their qualities
      */
-    protected function _getQualityHeader($serverIndex, $name)
+    protected final function _getQualityHeader($serverIndex, $name)
     {
-        if (is_string($serverIndex) === false ||
-            is_string($name) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $returnedParts = [];
+        foreach (preg_split("/,\\s*/", $this->getServer(serverIndex), -1, PREG_SPLIT_NO_EMPTY) as $part) {
 
-        $return = array();
-
-        $parts = preg_split('/,\\s*/', $this->getServer($serverIndex));
-
-        foreach ($parts as $part) {
-            $headerParts = explode(';', $part);
-            if (isset($headerParts[1]) === true) {
-                $quality = substr($headerParts[1], 2);
-            } else {
-                $quality = 1;
+            $headerParts = [];
+            foreach (preg_split("/\s*;\s*/", trim(part), -1, PREG_SPLIT_NO_EMPTY) as $headerPart) {
+                if (strpos($headerPart, "=") !== false) {
+                    $split = explode("=", $headerPart, 2);
+                    if ($split[0] === "q") {
+                        $headerParts["quality"] = (double) $split[1];
+                    } else {
+                        $headerParts[$split[0]] = $split[1];
+                    }
+                } else {
+                    $headerParts[$name]     = $headerPart;
+                    $headerParts["quality"] = 1.0;
+                }
             }
 
-            $return[] = array($name => $headerParts[0], 'quality' => $quality);
+            $returnedParts[] = $headerParts;
         }
 
-        return $return;
+        return $returnedParts;
     }
 
     /**
      * Process a request header and return the one with best quality
-     *
-     * @param array $qualityParts
-     * @param string $name
-     * @return string
-     * @throws Exception
      */
-    protected function _getBestQuality($qualityParts, $name)
+    protected final function _getBestQuality($qualityParts, $name)
     {
-        if (is_array($qualityParts) === false ||
-            is_string($name) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $quality = 0;
-        $i = 0;
+        $i            = 0;
+        $quality      = 0.0;
+        $selectedName = "";
 
         foreach ($qualityParts as $accept) {
-            if ($i === 0) {
-                $quality = $accept['quality'];
+            if ($i == 0) {
+                $quality      = (double) $accept["quality"];
                 $selectedName = $accept[$name];
             } else {
-                if ($quality < $accept['quality']) {
-                    $quality = $accept['quality'];
+                $acceptQuality = (double) $accept["quality"];
+                if ($acceptQuality > $quality) {
+                    $quality      = $acceptQuality;
                     $selectedName = $accept[$name];
                 }
             }
-
-            ++$i;
+            $i++;
         }
-
         return $selectedName;
     }
 
     /**
-     * Gets array with mime/types and their quality accepted by the browser/client from $_SERVER['HTTP_ACCEPT']
-     *
-     * @return array
+     * Gets content type which request has been made
+     */
+    public function getContentType()
+    {
+        if (isset($_SERVER["CONTENT_TYPE"])) {
+            $contentType = $_SERVER["CONTENT_TYPE"];
+            return $contentType;
+        } else {
+            /**
+             * @see https://bugs.php.net/bug.php?id=66606
+             */
+            if (isset($_SERVER["HTTP_CONTENT_TYPE"])) {
+                $contentType = $_SERVER["HTTP_CONTENT_TYPE"];
+                return $contentType;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets an with mime/types and their quality accepted by the browser/client from $_SERVER["HTTP_ACCEPT"]
      */
     public function getAcceptableContent()
     {
-        return $this->_getQualityHeader('HTTP_ACCEPT', 'accept');
+        return $this->_getQualityHeader("HTTP_ACCEPT", "accept");
     }
 
     /**
-     * Gets best mime/type accepted by the browser/client from $_SERVER['HTTP_ACCEPT']
-     *
-     * @return array
+     * Gets best mime/type accepted by the browser/client from $_SERVER["HTTP_ACCEPT"]
      */
     public function getBestAccept()
     {
-        return $this->_getBestQuality($this->getAcceptableContent(), 'accept');
+        return $this->_getBestQuality($this->getAcceptableContent(), "accept");
     }
 
     /**
-     * Gets charsets array and their quality accepted by the browser/client from $_SERVER['HTTP_ACCEPT_CHARSET']
-     *
-     * @return array
+     * Gets a charsets and their quality accepted by the browser/client from $_SERVER["HTTP_ACCEPT_CHARSET"]
      */
     public function getClientCharsets()
     {
-        return $this->_getQualityHeader('HTTP_ACCEPT_CHARSET', 'charset');
+        return $this->_getQualityHeader("HTTP_ACCEPT_CHARSET", "charset");
     }
 
     /**
-     * Gets best charset accepted by the browser/client from $_SERVER['HTTP_ACCEPT_CHARSET']
-     *
-     * @return string
+     * Gets best charset accepted by the browser/client from $_SERVER["HTTP_ACCEPT_CHARSET"]
      */
     public function getBestCharset()
     {
-        return $this->_getBestQuality($this->getClientCharsets(), 'charset');
+        return $this->_getBestQuality($this->getClientCharsets(), "charset");
     }
 
     /**
-     * Gets languages array and their quality accepted by the browser/client from $_SERVER['HTTP_ACCEPT_LANGUAGE']
-     *
-     * @return array
+     * Gets languages and their quality accepted by the browser/client from $_SERVER["HTTP_ACCEPT_LANGUAGE"]
      */
     public function getLanguages()
     {
-        return $this->_getQualityHeader('HTTP_ACCEPT_LANGUAGE', 'language');
+        return $this->_getQualityHeader("HTTP_ACCEPT_LANGUAGE", "language");
     }
 
     /**
-     * Gets best language accepted by the browser/client from $_SERVER['HTTP_ACCEPT_LANGUAGE']
-     *
-     * @return string
+     * Gets best language accepted by the browser/client from $_SERVER["HTTP_ACCEPT_LANGUAGE"]
      */
     public function getBestLanguage()
     {
-        return $this->_getBestQuality($this->getLanguages(), 'language');
+        return $this->_getBestQuality($this->getLanguages(), "language");
     }
+
+    /**
+     * Gets auth info accepted by the browser/client from $_SERVER['PHP_AUTH_USER']
+     */
+    public function getBasicAuth()
+    {
+        if (isset($_SERVER["PHP_AUTH_USER"]) && isset($_SERVER["PHP_AUTH_PW"])) {
+            $auth             = [];
+            $auth["username"] = $_SERVER["PHP_AUTH_USER"];
+            $auth["password"] = $_SERVER["PHP_AUTH_PW"];
+            return $auth;
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets auth info accepted by the browser/client from $_SERVER['PHP_AUTH_DIGEST']
+     */
+    public function getDigestAuth()
+    {
+        $auth = [];
+        if (isset($_SERVER["PHP_AUTH_DIGEST"])) {
+            $digest  = $_SERVER["PHP_AUTH_DIGEST"];
+            $matches = [];
+            if (!preg_match_all("#(\\w+)=(['\"]?)([^'\" ,]+)\\2#", $digest, $matches, 2)) {
+                return $auth;
+            }
+            if (is_array($matches)) {
+                foreach ($matches as $match) {
+                    $auth[$match[1]] = $match[3];
+                }
+            }
+        }
+
+        return $auth;
+    }
+
 }

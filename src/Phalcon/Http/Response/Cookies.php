@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Cookies
  *
@@ -7,12 +8,14 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Http\Response;
 
 use \Phalcon\Http\Response\CookiesInterface;
 use \Phalcon\Http\Response\Exception;
 use \Phalcon\Http\Cookie;
+use \Phalcon\Http\CookieInterface;
 use \Phalcon\Http\ResponseInterface;
 use \Phalcon\DI\InjectionAwareInterface;
 use \Phalcon\DiInterface;
@@ -27,12 +30,13 @@ use \Phalcon\DiInterface;
  */
 class Cookies implements CookiesInterface, InjectionAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -40,7 +44,7 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_registered = false;
 
     /**
@@ -48,7 +52,7 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_useEncryption = true;
 
     /**
@@ -56,8 +60,16 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_cookies;
+
+    /**
+     * constructor
+     */
+    public function __construct()
+    {
+        $this->_cookies = [];
+    }
 
     /**
      * Sets the dependency injector
@@ -125,8 +137,7 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
      * @return \Phalcon\Http\Response\Cookies
      * @throws Exception
      */
-    public function set($name, $value = null, $expire = null, $path = null,
-        $secure = null, $domain = null, $httpOnly = null)
+    public function set($name, $value = null, $expire = 0, $path = '/', $secure = null, $domain = null, $httpOnly = null)
     {
         /* Type check */
         if (is_string($name) === false) {
@@ -166,8 +177,11 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
         if (isset($this->_cookies[$name]) === false) {
             //@note no validation
             $dependencyInjector = $this->_dependencyInjector;
-            $cookie = new Cookie($name, $value, $expire, $path, $secure, $domain, $httpOnly);
-
+            $cookie             = new Cookie($name, $value, $expire, $path, $secure, $domain, $httpOnly);
+            $cookie             = $this->_dependencyInjector->get("Phalcon\\Http\\Cookie", [$name, $value, $expire, $path, $secure, $domain, $httpOnly]);
+            if (is_object($cookie) === false || $cookie instanceof CookieInterface === false) {
+                throw new Exception('Wrong cookie service.');
+            }
             //Pass the DI to created cookies
             $cookie->setDi($dependencyInjector);
 
@@ -203,10 +217,11 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
             }
 
             /*
-             * Pass the cookies bag to the response so it can send the headers at the of the
-             * request
-            */
+             * Pass the cookies bag to the response so it can send the headers at the of the request
+             */
             $response->setCookies($this);
+
+            $this->_registered = true;
         }
 
         return $this;
@@ -233,9 +248,15 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
             return $this->_cookies[$name];
         }
 
-        //Create the cookie if it does not exist
-        $cookie = new Cookie($name);
-
+        /**
+         * Create the cookie if the it does not exist.
+         * It's value come from $_COOKIE with request, so it shouldn't be saved
+         * to _cookies property, otherwise it will always be resent after get.
+         */
+        $cookie = $this->_dependencyInjector->get("Phalcon\\Http\\Cookie", [$name]);
+        if (is_object($cookie) === false || $cookie instanceof CookieInterface === false) {
+            throw new Exception('Wrong cookie service.');
+        }
         $dependencyInjector = $this->_dependencyInjector;
         if (is_object($dependencyInjector) === true) {
             //Pass the DI to created cookies
@@ -246,8 +267,6 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
                 $cookie->useEncryption(true);
             }
         }
-
-        $this->_cookies[$name] = $cookie;
 
         return $cookie;
     }
@@ -292,10 +311,6 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_array($this->_cookies) === false) {
-            $this->_cookies = array();
-        }
-
         //Check the internal bag
         if (isset($this->_cookies[$name]) === true) {
             //@note no unset call?
@@ -314,10 +329,6 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
      */
     public function send()
     {
-        if (is_array($this->_cookies) === false) {
-            $this->_cookies = array();
-        }
-
         if (headers_sent() === false) {
             foreach ($this->_cookies as $cookie) {
                 $cookie->send();
@@ -340,4 +351,5 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
 
         return $this;
     }
+
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Response Interface
  *
@@ -6,16 +7,18 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Http;
 
 /**
- * Phalcon\Http\ResponseInterface initializer
+ * Phalcon\Http\Response
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/http/responseinterface.c
+ * Interface for Phalcon\Http\Response
  */
 interface ResponseInterface
 {
+
     /**
      * Sets the HTTP response code
      *
@@ -81,6 +84,14 @@ interface ResponseInterface
     public function setContentType($contentType, $charset = null);
 
     /**
+     * Sets the response content-length
+     * 
+     *  @param int $contentLength
+     * @return \Phalcon\Http\ResponseInterface
+     */
+    public function setContentLength($contentLength);
+
+    /**
      * Redirect by HTTP to another action or URL
      *
      * @param string|null $location
@@ -88,7 +99,7 @@ interface ResponseInterface
      * @param int|null $statusCode
      * @return \Phalcon\Http\ResponseInterface
      */
-    public function redirect($location = null, $externalRedirect = null, $statusCode = null);
+    public function redirect($location = null, $externalRedirect = false, $statusCode = 302);
 
     /**
      * Sets HTTP response body
@@ -101,9 +112,9 @@ interface ResponseInterface
     /**
      * Sets HTTP response body. The parameter is automatically converted to JSON
      *
-     *<code>
+     * <code>
      *  $response->setJsonContent(array("status" => "OK"));
-     *</code>
+     * </code>
      *
      * @param string $content
      * @return \Phalcon\Http\ResponseInterface

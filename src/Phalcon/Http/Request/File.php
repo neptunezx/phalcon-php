@@ -1,4 +1,5 @@
 <?php
+
 /**
  * File
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Http\Request;
 
 use \Phalcon\Http\Request\FileInterface;
@@ -18,7 +20,7 @@ use \Phalcon\Http\Request\Exception;
  *
  * Provides OO wrappers to the $_FILES superglobal
  *
- *<code>
+ * <code>
  *  class PostsController extends \Phalcon\Mvc\Controller
  *  {
  *
@@ -34,18 +36,19 @@ use \Phalcon\Http\Request\Exception;
  *      }
  *
  *  }
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/http/request/file.c
  */
 class File implements FileInterface
 {
+
     /**
      * Name
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_name;
 
     /**
@@ -53,7 +56,7 @@ class File implements FileInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_tmp;
 
     /**
@@ -61,7 +64,7 @@ class File implements FileInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_size;
 
     /**
@@ -69,7 +72,7 @@ class File implements FileInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_type;
 
     /**
@@ -77,7 +80,7 @@ class File implements FileInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_error;
 
     /**
@@ -85,8 +88,15 @@ class File implements FileInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_key;
+
+    /**
+     * Extension
+     * 
+     * @var string
+     */
+    protected $_extension;
 
     /**
      * \Phalcon\Http\Request\File constructor
@@ -103,19 +113,23 @@ class File implements FileInterface
 
         //@note no type checks
         if (isset($file['name']) === true) {
-            $this->_name = (string)$file['name'];
+            $this->_name = (string) $file['name'];
+
+            if (defined("PATHINFO_EXTENSION")) {
+                $this->_extension = pathinfo($name, PATHINFO_EXTENSION);
+            }
         }
 
         if (isset($file['tmp_name']) === true) {
-            $this->_tmp = (string)$file['tmp_name'];
+            $this->_tmp = (string) $file['tmp_name'];
         }
 
         if (isset($file['size']) === true) {
-            $this->_size = (int)$file['size'];
+            $this->_size = (int) $file['size'];
         }
 
         if (isset($file['type']) === true) {
-            $this->_type = (string)$file['type'];
+            $this->_type = (string) $file['type'];
         }
 
         if (isset($file['error']) === true) {
@@ -178,6 +192,15 @@ class File implements FileInterface
      */
     public function getRealType()
     {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        if (!is_resource($finfo)) {
+            return "";
+        }
+
+        $mime = finfo_file($finfo, $this->_tmp);
+        finfo_close($finfo);
+
+        return $mime;
     }
 
     /**
@@ -204,14 +227,14 @@ class File implements FileInterface
      * Is Uploaded File?
      *
      * @return boolean
-    */
+     */
     public function isUploadedFile()
     {
         $tmpName = $this->getTempName();
         if (is_string($tmpName) === true) {
             return is_uploaded_file($tmpName);
         }
-        
+
         return false;
     }
 
@@ -234,13 +257,24 @@ class File implements FileInterface
     }
 
     /**
+     * Return file's extesion name
+     * 
+     * @return string
+     */
+    public function getExtension()
+    {
+        return $this->_extension;
+    }
+
+    /**
      * Set State
      *
      * @return \Phalcon\Http\Request\FileInterface
-    */
+     */
     public static function __set_state($data)
     {
         //@note this function does not respect _key
         return new File($data);
     }
+
 }

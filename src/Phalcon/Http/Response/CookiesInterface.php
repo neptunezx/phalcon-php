@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Cookies Interface
  *
@@ -6,7 +7,8 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Http\Response;
 
 /**
@@ -16,6 +18,7 @@ namespace Phalcon\Http\Response;
  */
 interface CookiesInterface
 {
+
     /**
      * Set if cookies in the bag must be automatically encrypted/decrypted
      *
@@ -43,8 +46,7 @@ interface CookiesInterface
      * @param boolean|null $httpOnly
      * @return \Phalcon\Http\Response\CookiesInterface
      */
-    public function set($name, $value = null, $expire = null,
-        $path = null, $secure = null, $domain = null, $httpOnly = null);
+    public function set($name, $value = null, $expire = 0, $path = '/', $secure = null, $domain = null, $httpOnly = null);
 
     /**
      * Gets a cookie from the bag

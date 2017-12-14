@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Headers
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Http\Response;
 
 use \Phalcon\Http\Response\HeadersInterface;
@@ -17,18 +19,17 @@ use \Phalcon\Http\Response\Exception;
  * Phalcon\Http\Response\Headers
  *
  * This class is a bag to manage the response headers
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/http/response/headers.c
  */
 class Headers implements HeadersInterface
 {
+
     /**
      * Headers
      *
      * @var null|array
      * @access protected
-    */
-    protected $_headers;
+     */
+    protected $_headers = [];
 
     /**
      * Sets a header to be sent at the end of the request
@@ -43,11 +44,7 @@ class Headers implements HeadersInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_array($this->_headers) === false) {
-            $this->_headers = array();
-        }
-
-        $this->_headers[$name] = $value;
+        $this->_headers[$name] = (string) $value;
     }
 
     /**
@@ -61,10 +58,6 @@ class Headers implements HeadersInterface
     {
         if (is_string($name) === false) {
             throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_array($this->_headers) === false) {
-            $this->_headers = array();
         }
 
         if (isset($this->_headers[$name]) === true) {
@@ -104,10 +97,13 @@ class Headers implements HeadersInterface
             foreach ($this->_headers as $header => $value) {
                 if (empty($value) === false) {
                     //Default header
-                    header($header.': '.$value);
+                    header($header . ': ' . $value, true);
                 } else {
-                    //Raw header
-                    header($header);
+                    if (memstr($header, ":") || substr($header, 0, 5) == "HTTP/") {
+                        header($header, true);
+                    } else {
+                        header($header . ": ", true);
+                    }
                 }
             }
 
@@ -122,7 +118,15 @@ class Headers implements HeadersInterface
      */
     public function reset()
     {
-        $this->_headers = array();
+        $this->_headers = [];
+    }
+
+    /**
+     * Returns the current headers as an array
+     */
+    public function toArray()
+    {
+        return $this->_headers;
     }
 
     /**
@@ -138,7 +142,7 @@ class Headers implements HeadersInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $headers = new Headers();
+        $headers = new self();
         if (isset($data['_headers']) === true &&
             is_array($data['_headers']) === true) {
             foreach ($data['_headers'] as $key => $value) {
@@ -149,4 +153,5 @@ class Headers implements HeadersInterface
 
         return $headers;
     }
+
 }

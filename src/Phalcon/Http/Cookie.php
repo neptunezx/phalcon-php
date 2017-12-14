@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Cookies
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Http;
 
 use \Phalcon\DI\InjectionAwareInterface;
@@ -26,12 +28,13 @@ use \Phalcon\Session\AdapterInterface as SessionInterface;
  */
 class Cookie implements InjectionAwareInterface
 {
+
     /**
      * Readed
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_readed = false;
 
     /**
@@ -39,7 +42,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_restored = false;
 
     /**
@@ -47,7 +50,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_useEncryption = false;
 
     /**
@@ -55,7 +58,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -63,7 +66,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var null|\Phalcon\FilterInterface
      * @access protected
-    */
+     */
     protected $_filter;
 
     /**
@@ -71,7 +74,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_name;
 
     /**
@@ -79,7 +82,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_value;
 
     /**
@@ -87,7 +90,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_expire;
 
     /**
@@ -95,7 +98,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_path = '/';
 
     /**
@@ -103,7 +106,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_domain;
 
     /**
@@ -111,7 +114,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var null|boolean
      * @access protected
-    */
+     */
     protected $_secure;
 
     /**
@@ -119,7 +122,7 @@ class Cookie implements InjectionAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_httpOnly = true;
 
     /**
@@ -170,7 +173,7 @@ class Cookie implements InjectionAwareInterface
         }
 
         /* Update property */
-        $this->_name = $name;
+        $this->_name   = $name;
         $this->_expire = $expire;
     }
 
@@ -213,7 +216,7 @@ class Cookie implements InjectionAwareInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->_value = $value;
+        $this->_value  = $value;
         $this->_readed = true;
     }
 
@@ -341,7 +344,7 @@ class Cookie implements InjectionAwareInterface
                             throw new Exception('Wrong session service.');
                         }
 
-                        $session->set('_PHCOOKIE_'.$this->_name, $definition);
+                        $session->set('_PHCOOKIE_' . $this->_name, $definition);
                     }
                 }
             }
@@ -364,16 +367,9 @@ class Cookie implements InjectionAwareInterface
         }
 
         //Sets the cookie using the standard 'setcookie' function
-
         //@note use 'bool' as type for the last two parameter
         setcookie(
-            (string)$this->_name,
-            (string)$value,
-            (int)$this->_expire,
-            (string)$this->_path,
-            (string)$this->_domain,
-            (bool)$this->_secure,
-            (bool)$this->_httpOnly
+            (string) $this->_name, (string) $value, (int) $this->_expire, (string) $this->_path, (string) $this->_domain, (bool) $this->_secure, (bool) $this->_httpOnly
         );
 
         return $this;
@@ -398,7 +394,7 @@ class Cookie implements InjectionAwareInterface
 
                 //@note no kind of session data validation
 
-                $definition = $session->get('_PHCOOKIE_'.$this->_name);
+                $definition = $session->get('_PHCOOKIE_' . $this->_name);
                 if (is_array($definition) === true) {
                     /* Read definition */
                     if (isset($definition['expire']) === true) {
@@ -443,20 +439,14 @@ class Cookie implements InjectionAwareInterface
                 throw new Exception('Wrong session service.');
             }
 
-            $session->remove('_PHCOOKIE_'.$this->_name);
+            $session->remove('_PHCOOKIE_' . $this->_name);
         }
 
         $this->_value = null;
 
         //@note use the type 'boolean' for the last two parameters
         setcookie(
-            (string)$this->_name,
-            null,
-            time() - 691200,
-            (string)$this->_path,
-            (string)$this->_domain,
-            (bool)$this->_secure,
-            (bool)$this->_httpOnly
+            (string) $this->_name, null, time() - 691200, (string) $this->_path, (string) $this->_domain, (bool) $this->_secure, (bool) $this->_httpOnly
         );
     }
 
@@ -521,7 +511,7 @@ class Cookie implements InjectionAwareInterface
             $this->restore();
         }
 
-        return (string)$this->_expire;
+        return (string) $this->_expire;
     }
 
     /**
@@ -557,7 +547,7 @@ class Cookie implements InjectionAwareInterface
             $this->restore();
         }
 
-        return (string)$this->_path;
+        return (string) $this->_path;
     }
 
     /**
@@ -593,7 +583,7 @@ class Cookie implements InjectionAwareInterface
             $this->restore();
         }
 
-        return (string)$this->_domain;
+        return (string) $this->_domain;
     }
 
     /**
@@ -675,12 +665,13 @@ class Cookie implements InjectionAwareInterface
     {
         if (is_null($this->_value) === true) {
             try {
-                return (string)$this->getValue();
+                return (string) $this->getValue();
             } catch (\Exception $e) {
-                trigger_error((string)$e->getMessage(), \E_USER_ERROR);
+                trigger_error((string) $e->getMessage(), \E_USER_ERROR);
             }
         }
 
-        return (string)$this->_value;
+        return (string) $this->_value;
     }
+
 }

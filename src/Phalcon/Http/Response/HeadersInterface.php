@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Headers Interface
  *
@@ -6,16 +7,18 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Http\Response;
 
 /**
- * Phalcon\Http\Response\HeadersInterface initializer
+ * Phalcon\Http\Response\HeadersInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/http/response/headersinterface.c
+ * Interface for Phalcon\Http\Response\Headers compatible bags
  */
 interface HeadersInterface
 {
+
     /**
      * Sets a header to be sent at the end of the request
      *
