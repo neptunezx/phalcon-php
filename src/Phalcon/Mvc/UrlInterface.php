@@ -1,4 +1,5 @@
 <?php
+
 /**
  * URL Interface
  *
@@ -6,16 +7,18 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Mvc;
 
 /**
- * Phalcon\Mvc\UrlInterface initializer
+ * Phalcon\Mvc\UrlInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/urlinterface.c
+ * Interface for Phalcon\Mvc\UrlInterface
  */
 interface UrlInterface
 {
+
     /**
      * Sets a prefix to all the urls generated
      *
@@ -51,7 +54,7 @@ interface UrlInterface
      * @param mixed $args
      * @return string
      */
-    public function get($uri = null, $args = null);
+    public function get($uri = null, $args = null, $local = null);
 
     /**
      * Generates a local path
