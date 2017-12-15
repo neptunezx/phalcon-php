@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Filter
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon;
 
 use \Closure;
@@ -22,23 +24,38 @@ use \Phalcon\Filter\Exception as FilterException;
  * define his/her own filters
  *
  *<code>
- *  $filter = new Phalcon\Filter();
- *  $filter->sanitize("some(one)@exa\\mple.com", "email"); // returns "someone@example.com"
- *  $filter->sanitize("hello<<", "string"); // returns "hello"
- *  $filter->sanitize("!100a019", "int"); // returns "100019"
- *  $filter->sanitize("!100a019.01a", "float"); // returns "100019.01"
- *</code>
+ * $filter = new \Phalcon\Filter();
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/filter.c
+ * $filter->sanitize("some(one)@exa\\mple.com", "email"); // returns "someone@example.com"
+ * $filter->sanitize("hello<<", "string"); // returns "hello"
+ * $filter->sanitize("!100a019", "int"); // returns "100019"
+ * $filter->sanitize("!100a019.01a", "float"); // returns "100019.01"
+ *</code>
  */
 class Filter implements FilterInterface
 {
+
+    const FILTER_EMAIL         = "email";
+    const FILTER_ABSINT        = "absint";
+    const FILTER_INT           = "int";
+    const FILTER_INT_CAST      = "int!";
+    const FILTER_STRING        = "string";
+    const FILTER_FLOAT         = "float";
+    const FILTER_FLOAT_CAST    = "float!";
+    const FILTER_ALPHANUM      = "alphanum";
+    const FILTER_TRIM          = "trim";
+    const FILTER_STRIPTAGS     = "striptags";
+    const FILTER_LOWER         = "lower";
+    const FILTER_UPPER         = "upper";
+    const FILTER_URL           = "url";
+    const FILTER_SPECIAL_CHARS = "special_chars";
+
     /**
      * Filters
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_filters = null;
 
     /**
@@ -55,12 +72,12 @@ class Filter implements FilterInterface
             throw new FilterException('Filter name must be string');
         }
 
-        if (is_object($handler) === false) {
-            throw new FilterException('Filter must be an object');
+        if (!is_object($handler) && !is_callable($handler)) {
+            throw new FilterException('Filter must be an object or callable');
         }
 
         if (is_array($this->_filters) === false) {
-            $this->_filters = array();
+            $this->_filters = [];
         }
 
         $this->_filters[$name] = $handler;
@@ -71,17 +88,17 @@ class Filter implements FilterInterface
      *
      * @param mixed $value
      * @param mixed $filters
+     * @param boolean $noRecursive
      * @return mixed
      */
-    public function sanitize($value, $filters)
+    public function sanitize($value, $filters, $noRecursive = false)
     {
         //Apply an array of filters
         if (is_array($filters) === true) {
             if (is_null($value) === false) {
                 foreach ($filters as $filter) {
-                    if (is_array($value) === true) {
-                        $arrayValue = array();
-
+                    if (is_array($value) === true && !$noRecursive) {
+                        $arrayValue = [];
                         foreach ($value as $itemKey => $itemValue) {
                             //@note no type check of $itemKey
                             $arrayValue[$itemKey] = $this->_sanitize($itemValue, $filter);
@@ -98,17 +115,15 @@ class Filter implements FilterInterface
         }
 
         //Apply a single filter value
-        if (is_array($value) === true) {
-            $sanizitedValue = array();
+        if (is_array($value) === true && !$noRecursive) {
+            $sanizitedValue = [];
             foreach ($value as $key => $itemValue) {
                 //@note no type check of $key
                 $sanizitedValue[$key] = $this->_sanitize($itemValue, $filters);
             }
-        } else {
-            $sanizitedValue = $this->_sanitize($value, $filters);
         }
 
-        return $sanizitedValue;
+        return $this->_sanitize($value, $filters);
     }
 
     /**
@@ -126,9 +141,9 @@ class Filter implements FilterInterface
         }
 
         /* User-defined filter */
-        if (isset($filters[$filter]) === true) {
+        if (isset($this->_filters[$filter]) === true) {
             $filterObject = $this->_filters[$filter];
-            if ($filterObject instanceof \Closure) {
+            if ($filterObject instanceof Closure || is_callable($filterObject)) {
                 return call_user_func_array($filterObject, array($value));
             }
 
@@ -137,59 +152,92 @@ class Filter implements FilterInterface
 
         /* Predefined filter */
         switch ($filter) {
-            case 'email':
-                return filter_var(str_replace('\'', '', $value), 517);
-                break;
-            case 'int':
-                return filter_var($value, 519);
-                break;
-            case 'string':
-                return filter_var($value, 513);
-                break;
-            case 'float':
-                return filter_var($value, 520, array('flags' => 4096));
-                break;
-            case 'alphanum':
-                $filtered = '';
-                $value = (string)$value;
-                $valueLength = strlen($value);
-                $zeroChar = chr(0);
 
-                for ($i = 0; $i < $valueLength; ++$i) {
-                    if ($value[$i] == $zeroChar) {
-                        break;
-                    }
+            case Filter::FILTER_EMAIL:
+                /**
+                 * The 'email' filter uses the filter extension
+                 */
+                return filter_var($value, constant("FILTER_SANITIZE_EMAIL"));
 
-                    if (ctype_alnum($value[$i]) === true) {
-                        $filtered .= $value[$i];
+            case Filter::FILTER_INT:
+                /**
+                 * 'int' filter sanitizes a numeric input
+                 */
+                return filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+
+            case Filter::FILTER_INT_CAST:
+
+                return intval($value);
+
+            case Filter::FILTER_ABSINT:
+
+                return abs(intval($value));
+
+            case Filter::FILTER_STRING:
+
+                return filter_var($value, FILTER_SANITIZE_STRING);
+
+            case Filter::FILTER_FLOAT:
+                /**
+                 * The 'float' filter uses the filter extension
+                 */
+                return filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, ["flags" => FILTER_FLAG_ALLOW_FRACTION]);
+
+            case Filter::FILTER_FLOAT_CAST:
+
+                return doubleval($value);
+
+            case Filter::FILTER_ALPHANUM:
+
+                return preg_replace("/[^A-Za-z0-9]/", "", $value);
+
+            case Filter::FILTER_TRIM:
+                if (is_array($value)) {
+                    foreach ($value as &$v) {
+                        $v = trim($v);
                     }
+                    return $value;
+                } else {
+                    $value = trim($value);
                 }
-                return $filtered;
-                break;
-            case 'trim':
-                return trim($value);
-                break;
-            case 'striptags':
+                return $value;
+
+            case Filter::FILTER_STRIPTAGS:
+
                 return strip_tags($value);
-                break;
-            case 'lower':
-                if (function_exists('mb_strtolower') === true) {
-                    return mb_strtolower($value);
-                } else {
-                    //@note we use the default implementation instad of a custom one
-                    return strtolower($value);
-                }
-                break;
-            case 'upper':
-                if (function_exists('mb_strtoupper') === true) {
-                    return mb_strtoupper($value);
-                } else {
-                    //@note we use the default implementation instad of a custom one
-                    return strtoupper($value);
-                }
-        }
 
-        throw new FilterException('Sanitize filter '.$filter.' is not supported');
+            case Filter::FILTER_LOWER:
+
+                if (function_exists("mb_strtolower")) {
+                    /**
+                     * 'lower' checks for the mbstring extension to make a correct lowercase transformation
+                     */
+                    return mb_strtolower($value);
+                }
+                return strtolower($value);
+
+            case Filter::FILTER_UPPER:
+
+                if (function_exists("mb_strtoupper")) {
+                    /**
+                     * 'upper' checks for the mbstring extension to make a correct lowercase transformation
+                     */
+                    return mb_strtoupper($value);
+                }
+                return strtoupper($value);
+
+            case Filter::FILTER_URL:
+
+                return filter_var($value, FILTER_SANITIZE_URL);
+
+            case Filter::FILTER_SPECIAL_CHARS:
+
+                return filter_var($value, FILTER_SANITIZE_SPECIAL_CHARS);
+
+            default:
+
+                throw new Exception("Sanitize filter '" . $filter . "' is not supported");
+        }
     }
 
     /**
@@ -201,4 +249,5 @@ class Filter implements FilterInterface
     {
         return $this->_filters;
     }
+
 }

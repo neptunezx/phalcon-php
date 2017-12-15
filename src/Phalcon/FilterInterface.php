@@ -10,9 +10,9 @@
 namespace Phalcon;
 
 /**
- * Phalcon\FilterInterface initializer
+ * Phalcon\FilterInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/filterinterface.c
+ * Interface for Phalcon\Filter
  */
 interface FilterInterface
 {
