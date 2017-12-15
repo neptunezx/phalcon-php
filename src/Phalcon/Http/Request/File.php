@@ -116,7 +116,7 @@ class File implements FileInterface
             $this->_name = (string) $file['name'];
 
             if (defined("PATHINFO_EXTENSION")) {
-                $this->_extension = pathinfo($name, PATHINFO_EXTENSION);
+                $this->_extension = pathinfo($this->_name, PATHINFO_EXTENSION);
             }
         }
 
