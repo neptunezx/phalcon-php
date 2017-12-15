@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Bag
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Session;
 
 use \Phalcon\DI\InjectionAwareInterface;
@@ -23,22 +25,22 @@ use \Phalcon\Session\AdapterInterface;
  * This component helps to separate session data into "namespaces". Working by this way
  * you can easily create groups of session variables into the application
  *
- *<code>
- *  $user = new \Phalcon\Session\Bag('user');
- *  $user->name = "Kimbra Johnson";
- *  $user->age = 22;
- *</code>
+ * <code>
+ * $user = new \Phalcon\Session\Bag("user");
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/session/bag.c
+ * $user->name = "Kimbra Johnson";
+ * $user->age  = 22;
+ * </code>
  */
-class Bag implements InjectionAwareInterface, BagInterface
+class Bag implements InjectionAwareInterface, BagInterface, \IteratorAggregate, \ArrayAccess, \Countable
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -46,7 +48,7 @@ class Bag implements InjectionAwareInterface, BagInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_name;
 
     /**
@@ -54,7 +56,7 @@ class Bag implements InjectionAwareInterface, BagInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_data;
 
     /**
@@ -62,7 +64,7 @@ class Bag implements InjectionAwareInterface, BagInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_initialized = false;
 
     /**
@@ -70,7 +72,7 @@ class Bag implements InjectionAwareInterface, BagInterface
      *
      * @var null|\Phalcon\Session\Adapter
      * @access protected
-    */
+     */
     protected $_session;
 
     /**
@@ -143,21 +145,21 @@ class Bag implements InjectionAwareInterface, BagInterface
         }
 
         /* Obtain data */
-        $data = $session->get($this->_name);
+        $data = $this->_session->get($this->_name);
         if (is_array($data) === false) {
             $data = array();
         }
 
-        $this->_data = $data;
+        $this->_data        = $data;
         $this->_initialized = true;
     }
 
     /**
      * Destroyes the session bag
      *
-     *<code>
+     * <code>
      * $user->destroy();
-     *</code>
+     * </code>
      */
     public function destroy()
     {
@@ -165,15 +167,16 @@ class Bag implements InjectionAwareInterface, BagInterface
             $this->initialize();
         }
 
+        $this->_data = [];
         $this->_session->remove($this->_name);
     }
 
     /**
      * Sets a value in the session bag
      *
-     *<code>
+     * <code>
      * $user->set('name', 'Kimbra');
-     *</code>
+     * </code>
      *
      * @param string $property
      * @param mixed $value
@@ -197,9 +200,9 @@ class Bag implements InjectionAwareInterface, BagInterface
      * Magic setter to assign values to the session bag.
      * Alias for \Phalcon\Session\Bag::set()
      *
-     *<code>
+     * <code>
      * $user->name = "Kimbra";
-     *</code>
+     * </code>
      *
      * @param string $property
      * @param mixed $value
@@ -212,9 +215,9 @@ class Bag implements InjectionAwareInterface, BagInterface
     /**
      * Obtains a value from the session bag optionally setting a default value
      *
-     *<code>
+     * <code>
      * echo $user->get('name', 'Kimbra');
-     *</code>
+     * </code>
      *
      * @param string $property
      * @param mixed $defaultValue
@@ -234,10 +237,7 @@ class Bag implements InjectionAwareInterface, BagInterface
 
         /* Retrieve the data */
         if (isset($this->_data[$property]) === true) {
-            $value = $this->_data[$property];
-            if (empty($value) === false) {
-                return $value;
-            }
+            return $this->_data[$property];
         }
 
         return $defaultValue;
@@ -247,9 +247,9 @@ class Bag implements InjectionAwareInterface, BagInterface
      * Magic getter to obtain values from the session bag.
      * Alias for \Phalcon\Session\Bag::get()
      *
-     *<code>
+     * <code>
      * echo $user->name;
-     *</code>
+     * </code>
      *
      * @param string $property
      * @return mixed
@@ -262,9 +262,9 @@ class Bag implements InjectionAwareInterface, BagInterface
     /**
      * Check whether a property is defined in the internal bag
      *
-     *<code>
+     * <code>
      * var_dump($user->has('name'));
-     *</code>
+     * </code>
      *
      * @param string $property
      * @return boolean
@@ -287,9 +287,9 @@ class Bag implements InjectionAwareInterface, BagInterface
      * Magic isset to check whether a property is defined in the bag.
      * Alias for \Phalcon\Session\Bag::has()
      *
-     *<code>
+     * <code>
      * var_dump(isset($user['name']));
-     *</code>
+     * </code>
      *
      * @param string $property
      * @return boolean
@@ -302,9 +302,9 @@ class Bag implements InjectionAwareInterface, BagInterface
     /**
      * Removes a property from the internal bag
      *
-     *<code>
+     * <code>
      * $user->remove('name');
-     *</code>
+     * </code>
      *
      * @param string $property
      * @return boolean
@@ -334,9 +334,9 @@ class Bag implements InjectionAwareInterface, BagInterface
      * Magic unset to remove items using the property syntax.
      * Alias for \Phalcon\Session\Bag::remove()
      *
-     *<code>
+     * <code>
      * unset($user['name']);
-     *</code>
+     * </code>
      *
      * @param string $property
      * @return boolean
@@ -345,4 +345,56 @@ class Bag implements InjectionAwareInterface, BagInterface
     {
         return $this->remove($property);
     }
+
+    /**
+     * Return length of bag
+     *
+     * <code>
+     * echo $user->count();
+     * </code>
+     * 
+     * @return int
+     */
+    public final function count()
+    {
+        if ($this->_initialized === false) {
+            $this->initialize();
+        }
+        return count($this->_data);
+    }
+
+    /**
+     *  Returns the bag iterator
+     * 
+     * @return \ArrayIterator
+     */
+    public final function getIterator()
+    {
+        if ($this->_initialized === false) {
+            $this->initialize();
+        }
+
+        return new \ArrayIterator($this->_data);
+    }
+
+    public final function offsetSet($property, $value)
+    {
+        return $this->set($roperty, $value);
+    }
+
+    public final function offsetExists($property)
+    {
+        return $this->has($property);
+    }
+
+    public final function offsetUnset($property)
+    {
+        return $this->remove($property);
+    }
+
+    public final function offsetGet($property)
+    {
+        return $this->get($property);
+    }
+
 }

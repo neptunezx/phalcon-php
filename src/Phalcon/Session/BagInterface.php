@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Bag Interface
  *
@@ -6,7 +7,8 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Session;
 
 /**
@@ -16,6 +18,7 @@ namespace Phalcon\Session;
  */
 interface BagInterface
 {
+
     /**
      * Initializes the session bag. This method must not be called directly, the class calls it when its internal data is accesed
      */

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Adapter Interface
  *
@@ -6,22 +7,17 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Session;
 
 /**
- * Phalcon\Session\AdapterInterface initializer
+ * Phalcon\Session\AdapterInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/session/adapterinterface.c
+ * Interface for Phalcon\Session adapters
  */
 interface AdapterInterface
 {
-    /**
-     * \Phalcon\Session construtor
-     *
-     * @param array $options
-     */
-    public function __construct($options = null);
 
     /**
      * Starts session, optionally using an adapter
@@ -35,7 +31,7 @@ interface AdapterInterface
      *
      * @param array $options
      */
-    public function setOptions($options);
+    public function setOptions(array $options);
 
     /**
      * Get internal options
@@ -93,7 +89,30 @@ interface AdapterInterface
     /**
      * Destroys the active session
      *
+     * @param boolean $removeData
      * @return boolean
      */
-    public function destroy();
+    public function destroy($removeData = false);
+
+    /**
+     * Regenerate session's id
+     *
+     * @param boolean $deleteOldSession
+     * @return \Phalcon\Session\AdapterInterface
+     */
+    public function regenerateId($deleteOldSession = true);
+
+    /**
+     * Set session name
+     * 
+     * @param string $name
+     */
+    public function setName($name);
+
+    /**
+     * Get session name
+     * 
+     * @return string
+     */
+    public function getName();
 }
