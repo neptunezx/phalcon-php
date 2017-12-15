@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Crypt Interface
  *
@@ -6,16 +7,18 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon;
 
 /**
- * Phalcon\CryptInterface initializer
+ * Phalcon\CryptInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cryptinterface.c
+ * Interface for Phalcon\Crypt
  */
 interface CryptInterface
 {
+
     /**
      * Sets the cipher algorithm
      *
@@ -30,21 +33,6 @@ interface CryptInterface
      * @return string
      */
     public function getCipher();
-
-    /**
-     * Sets the encrypt/decrypt mode
-     *
-     * @param string $mode
-     * @return \Phalcon\EncryptInterface
-     */
-    public function setMode($mode);
-
-    /**
-     * Returns the current encryption mode
-     *
-     * @return string
-     */
-    public function getMode();
 
     /**
      * Sets the encryption key
@@ -103,11 +91,4 @@ interface CryptInterface
      * @return array
      */
     public function getAvailableCiphers();
-
-    /**
-     * Returns a list of available modes
-     *
-     * @return array
-     */
-    public function getAvailableModes();
 }
