@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Backend Interface
  *
@@ -6,7 +7,8 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Cache;
 
 /**
@@ -16,6 +18,7 @@ namespace Phalcon\Cache;
  */
 interface BackendInterface
 {
+
     /**
      * Starts a cache. The $keyname allows to identify the created fragment
      *
@@ -91,7 +94,7 @@ interface BackendInterface
      * @param int|null $lifetime
      * @param boolean|null $stopBuffer
      */
-    public function save($keyName = null, $content = null, $lifetime = null, $stopBuffer = null);
+    public function save($keyName = null, $content = null, $lifetime = null, $stopBuffer = true);
 
     /**
      * Deletes a value from the cache by its key

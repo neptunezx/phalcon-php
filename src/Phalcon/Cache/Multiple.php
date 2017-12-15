@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Multiple Backends
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Cache;
 
 use \Phalcon\Cache\Exception;
@@ -15,57 +17,73 @@ use \Phalcon\Cache\Exception;
 /**
  * Phalcon\Cache\Multiple
  *
- * Allows to read to chained backends writing to multiple backends
+ * Allows to read to chained backend adapters writing to multiple backends
  *
  *<code>
- *   use Phalcon\Cache\Frontend\Data as DataFrontend,
- *       Phalcon\Cache\Multiple,
- *       Phalcon\Cache\Backend\Apc as ApcCache,
- *       Phalcon\Cache\Backend\Memcache as MemcacheCache,
- *       Phalcon\Cache\Backend\File as FileCache;
+ * use Phalcon\Cache\Frontend\Data as DataFrontend;
+ * use Phalcon\Cache\Multiple;
+ * use Phalcon\Cache\Backend\Apc as ApcCache;
+ * use Phalcon\Cache\Backend\Memcache as MemcacheCache;
+ * use Phalcon\Cache\Backend\File as FileCache;
  *
- *   $ultraFastFrontend = new DataFrontend(array(
- *       "lifetime" => 3600
- *   ));
+ * $ultraFastFrontend = new DataFrontend(
+ *     [
+ *         "lifetime" => 3600,
+ *     ]
+ * );
  *
- *   $fastFrontend = new DataFrontend(array(
- *       "lifetime" => 86400
- *   ));
+ * $fastFrontend = new DataFrontend(
+ *     [
+ *         "lifetime" => 86400,
+ *     ]
+ * );
  *
- *   $slowFrontend = new DataFrontend(array(
- *       "lifetime" => 604800
- *   ));
+ * $slowFrontend = new DataFrontend(
+ *     [
+ *         "lifetime" => 604800,
+ *     ]
+ * );
  *
- *   //Backends are registered from the fastest to the slower
- *   $cache = new Multiple(array(
- *       new ApcCache($ultraFastFrontend, array(
- *           "prefix" => 'cache',
- *       )),
- *       new MemcacheCache($fastFrontend, array(
- *           "prefix" => 'cache',
- *           "host" => "localhost",
- *           "port" => "11211"
- *       )),
- *       new FileCache($slowFrontend, array(
- *           "prefix" => 'cache',
- *           "cacheDir" => "../app/cache/"
- *       ))
- *   ));
+ * //Backends are registered from the fastest to the slower
+ * $cache = new Multiple(
+ *     [
+ *         new ApcCache(
+ *             $ultraFastFrontend,
+ *             [
+ *                 "prefix" => "cache",
+ *             ]
+ *         ),
+ *         new MemcacheCache(
+ *             $fastFrontend,
+ *             [
+ *                 "prefix" => "cache",
+ *                 "host"   => "localhost",
+ *                 "port"   => "11211",
+ *             ]
+ *         ),
+ *         new FileCache(
+ *             $slowFrontend,
+ *             [
+ *                 "prefix"   => "cache",
+ *                 "cacheDir" => "../app/cache/",
+ *             ]
+ *         ),
+ *     ]
+ * );
  *
- *   //Save, saves in every backend
- *   $cache->save('my-key', $data);
+ * //Save, saves in every backend
+ * $cache->save("my-key", $data);
  *</code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/multiple.c
  */
 class Multiple
 {
+
     /**
      * Backends
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_backends;
 
     /**
@@ -214,4 +232,16 @@ class Multiple
 
         return false;
     }
+
+    /**
+     * Flush all backend(s)
+     */
+    public function flush()
+    {
+        foreach ($this->_backends as $backend) {
+            $backend->flush();
+        }
+        return true;
+    }
+
 }

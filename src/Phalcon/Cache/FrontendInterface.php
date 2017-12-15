@@ -10,9 +10,9 @@
 namespace Phalcon\Cache;
 
 /**
- * Phalcon\Cache\FrontendInterface initializer
+ * Phalcon\Cache\FrontendInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/frontendinterface.c
+ * Interface for Phalcon\Cache\Frontend adapters
  */
 interface FrontendInterface
 {

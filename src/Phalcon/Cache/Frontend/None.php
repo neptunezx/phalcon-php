@@ -1,4 +1,5 @@
 <?php
+
 /**
  * None Cache Frontend
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Cache\Frontend;
 
 use \Phalcon\Cache\FrontendInterface;
@@ -17,7 +19,7 @@ use \Phalcon\Cache\FrontendInterface;
  *
  * Discards any kind of frontend data input. This frontend does not have expiration time or any other options
  *
- *<code>
+ * <code>
  *
  *  //Create a None Cache
  *  $frontCache = new Phalcon\Cache\Frontend\None();
@@ -45,12 +47,13 @@ use \Phalcon\Cache\FrontendInterface;
  *  foreach ($robots as $robot) {
  *      echo $robot->name, "\n";
  *  }
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/frontend/none.c
  */
 class None implements FrontendInterface
 {
+
     /**
      * Returns cache lifetime, always one second expiring content
      *
@@ -76,6 +79,7 @@ class None implements FrontendInterface
      */
     public function start()
     {
+        
     }
 
     /**
@@ -85,6 +89,7 @@ class None implements FrontendInterface
      */
     public function getContent()
     {
+        return null;
     }
 
     /**
@@ -92,6 +97,7 @@ class None implements FrontendInterface
      */
     public function stop()
     {
+        
     }
 
     /**
@@ -113,4 +119,5 @@ class None implements FrontendInterface
     {
         return $data;
     }
+
 }

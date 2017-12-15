@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Cache Backend
  *
@@ -7,26 +8,27 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Cache;
 
 use \Phalcon\Cache\Exception;
+use \Phalcon\Cache\FrontendInterface;
 
 /**
  * Phalcon\Cache\Backend
  *
  * This class implements common functionality for backend adapters. A backend cache adapter may extend this class
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/backend.c
  */
-abstract class Backend
+abstract class Backend implements BackendInterface
 {
+
     /**
      * Frontend
      *
      * @var null|\Phalcon\Cache\FrontendInterface
      * @access protected
-    */
+     */
     protected $_frontend;
 
     /**
@@ -34,7 +36,7 @@ abstract class Backend
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_options;
 
     /**
@@ -42,7 +44,7 @@ abstract class Backend
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_prefix = '';
 
     /**
@@ -50,7 +52,7 @@ abstract class Backend
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_lastKey = '';
 
     /**
@@ -58,7 +60,7 @@ abstract class Backend
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_lastLifetime;
 
     /**
@@ -66,7 +68,7 @@ abstract class Backend
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_fresh = false;
 
     /**
@@ -74,7 +76,7 @@ abstract class Backend
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_started = false;
 
     /**
@@ -101,7 +103,7 @@ abstract class Backend
         }
 
         $this->_frontend = $frontend;
-        $this->_options = $options;
+        $this->_options  = $options;
     }
 
     /**
@@ -237,4 +239,5 @@ abstract class Backend
     {
         return $this->_lastLifetime;
     }
+
 }

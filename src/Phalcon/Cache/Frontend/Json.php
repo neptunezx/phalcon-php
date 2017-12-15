@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Json Cache Frontend
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Cache\Frontend;
 
 use \Phalcon\Cache\FrontendInterface;
@@ -18,42 +20,47 @@ use \Phalcon\Cache\Exception;
  *
  * Allows to cache data converting/deconverting them to JSON.
  *
- * This adapters uses the json_encode/json_decode PHP's functions
+ * This adapter uses the json_encode/json_decode PHP's functions
  *
  * As the data is encoded in JSON other systems accessing the same backend could
  * process them
  *
- *<code>
+ * <code>
+ * <?php
  *
  * // Cache the data for 2 days
- * $frontCache = new Phalcon\Cache\Frontend\Json(array(
- *    "lifetime" => 172800
- * ));
+ * $frontCache = new \Phalcon\Cache\Frontend\Json(
+ *     [
+ *         "lifetime" => 172800,
+ *     ]
+ * );
  *
- * //Create the Cache setting memcached connection options
- * $cache = new Phalcon\Cache\Backend\Memcache($frontCache, array(
- *      'host' => 'localhost',
- *      'port' => 11211,
- *      'persistent' => false
- * ));
+ * // Create the Cache setting memcached connection options
+ * $cache = new \Phalcon\Cache\Backend\Memcache(
+ *     $frontCache,
+ *     [
+ *         "host"       => "localhost",
+ *         "port"       => 11211,
+ *         "persistent" => false,
+ *     ]
+ * );
  *
- * //Cache arbitrary data
- * $cache->save('my-data', array(1, 2, 3, 4, 5));
+ * // Cache arbitrary data
+ * $cache->save("my-data", [1, 2, 3, 4, 5]);
  *
- * //Get data
- * $data = $cache->get('my-data');
- *</code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/frontend/json.c
+ * // Get data
+ * $data = $cache->get("my-data");
+ * </code>
  */
 class Json implements FrontendInterface
 {
+
     /**
      * Frontend Options
      *
      * @var array|null
      * @access protected
-    */
+     */
     protected $_frontendOptions;
 
     /**
@@ -102,6 +109,7 @@ class Json implements FrontendInterface
      */
     public function start()
     {
+        
     }
 
     /**
@@ -111,6 +119,7 @@ class Json implements FrontendInterface
      */
     public function getContent()
     {
+        return null;
     }
 
     /**
@@ -118,6 +127,7 @@ class Json implements FrontendInterface
      */
     public function stop()
     {
+        
     }
 
     /**
@@ -141,4 +151,5 @@ class Json implements FrontendInterface
     {
         return json_decode($data);
     }
+
 }

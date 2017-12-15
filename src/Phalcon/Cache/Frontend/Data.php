@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Data Cache Frontend
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Cache\Frontend;
 
 use \Phalcon\Cache\FrontendInterface;
@@ -18,49 +20,60 @@ use \Phalcon\Cache\Exception;
  *
  * Allows to cache native PHP data in a serialized form
  *
- *<code>
+ * <code>
+ * use Phalcon\Cache\Backend\File;
+ * use Phalcon\Cache\Frontend\Data;
  *
- *  // Cache the files for 2 days using a Data frontend
- *  $frontCache = new Phalcon\Cache\Frontend\Data(array(
- *      "lifetime" => 172800
- *  ));
+ * // Cache the files for 2 days using a Data frontend
+ * $frontCache = new Data(
+ *     [
+ *         "lifetime" => 172800,
+ *     ]
+ * );
  *
- *  // Create the component that will cache "Data" to a "File" backend
- *  // Set the cache file directory - important to keep the "/" at the end of
- *  // of the value for the folder
- *  $cache = new Phalcon\Cache\Backend\File($frontCache, array(
- *      "cacheDir" => "../app/cache/"
- *  ));
+ * // Create the component that will cache "Data" to a 'File' backend
+ * // Set the cache file directory - important to keep the '/' at the end of
+ * // of the value for the folder
+ * $cache = new File(
+ *     $frontCache,
+ *     [
+ *         "cacheDir" => "../app/cache/",
+ *     ]
+ * );
  *
- *  // Try to get cached records
- *  $cacheKey = 'robots_order_id.cache';
- *  $robots    = $cache->get($cacheKey);
- *  if ($robots === null) {
+ * $cacheKey = "robots_order_id.cache";
  *
- *      // $robots is null due to cache expiration or data does not exist
- *      // Make the database call and populate the variable
- *      $robots = Robots::find(array("order" => "id"));
+ * // Try to get cached records
+ * $robots = $cache->get($cacheKey);
  *
- *      // Store it in the cache
- *      $cache->save($cacheKey, $robots);
- *  }
+ * if ($robots === null) {
+ *     // $robots is null due to cache expiration or data does not exist
+ *     // Make the database call and populate the variable
+ *     $robots = Robots::find(
+ *         [
+ *             "order" => "id",
+ *         ]
+ *     );
  *
- *  // Use $robots :)
- *  foreach ($robots as $robot) {
- *      echo $robot->name, "\n";
- *  }
- *</code>
+ *     // Store it in the cache
+ *     $cache->save($cacheKey, $robots);
+ * }
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/frontend/data.c
+ * // Use $robots :)
+ * foreach ($robots as $robot) {
+ *     echo $robot->name, "\n";
+ * }
+ * </code>
  */
 class Data implements FrontendInterface
 {
+
     /**
      * Frontend Options
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_frontendOptions;
 
     /**
@@ -88,7 +101,7 @@ class Data implements FrontendInterface
     {
         if (is_array($this->_frontendOptions) === true &&
             isset($this->_frontendOptions['lifetime']) === true) {
-            return (int)$this->_frontendOptions['lifetime'];
+            return (int) $this->_frontendOptions['lifetime'];
         }
 
         return 1;
@@ -109,6 +122,7 @@ class Data implements FrontendInterface
      */
     public function start()
     {
+        
     }
 
     /**
@@ -118,6 +132,7 @@ class Data implements FrontendInterface
      */
     public function getContent()
     {
+        return null;
     }
 
     /**
@@ -125,6 +140,7 @@ class Data implements FrontendInterface
      */
     public function stop()
     {
+        
     }
 
     /**
@@ -146,6 +162,16 @@ class Data implements FrontendInterface
      */
     public function afterRetrieve($data)
     {
+        if (is_numeric($data)) {
+            return $data;
+        }
+
+        // do not unserialize empty string, null, false, etc
+        if (empty($data)) {
+            return $data;
+        }
+
         return unserialize($data);
     }
+
 }
