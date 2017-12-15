@@ -18,7 +18,6 @@ use \Phalcon\Http\Response\HeadersInterface;
 use \Phalcon\Http\Response\Headers;
 use \Phalcon\Http\Response\CookiesInterface;
 use \Phalcon\Mvc\UrlInterface;
-use \Phalcon\Mvc\ViewInterface;
 use \Phalcon\DI\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\DI;
@@ -168,8 +167,11 @@ class Response implements ResponseInterface, InjectionAwareInterface
      * @return \Phalcon\Http\ResponseInterface
      * @throws Exception
      */
-    public function setStatusCode($code, $message)
+    public function setStatusCode($code, $message = '')
     {
+        if ($message == null) {
+            $message = '';
+        }
         if (is_int($code) === false ||
             is_string($message) === false) {
             throw new Exception('Invalid parameter type.');
@@ -193,7 +195,7 @@ class Response implements ResponseInterface, InjectionAwareInterface
 
         // if an empty message is given we try and grab the default for this
         // status code. If a default doesn't exist, stop here.
-        if ($message === null) {
+        if ($message == '') {
             // See: http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
             $statusCodes = [
                 // INFORMATIONAL CODES

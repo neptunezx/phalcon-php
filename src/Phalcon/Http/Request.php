@@ -17,6 +17,7 @@ use \Phalcon\http\Request\Exception;
 use \Phalcon\Http\Request\File;
 use \Phalcon\DI\InjectionAwareInterface;
 use \Phalcon\DiInterface;
+use \Phalcon\FilterInterface;
 use \Phalcon\Text;
 use \InvalidArgumentException;
 
@@ -203,7 +204,10 @@ class Request implements RequestInterface, InjectionAwareInterface
                 if (!is_object($dependencyInjector)) {
                     throw new Exception("A dependency injection object is required to access the 'filter' service");
                 }
-                $filter        = $dependencyInjector->getShared("filter");
+                $filter = $dependencyInjector->getShared("filter");
+                if (!$filter instanceof FilterInterface) {
+                    throw new Exception('Wrong filter service');
+                }
                 $this->_filter = $filter;
             }
 
