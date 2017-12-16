@@ -1,4 +1,5 @@
 <?php
+
 /**
  * URL
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Mvc;
 
 use \Phalcon\Mvc\UrlInterface;
@@ -20,7 +22,7 @@ use \Phalcon\DiInterface;
  *
  * This components aids in the generation of: URIs, URLs and Paths
  *
- *<code>
+ * <code>
  *
  * //Generate a URL appending the URI to the base URI
  * echo $url->get('products/edit/1');
@@ -28,18 +30,19 @@ use \Phalcon\DiInterface;
  * //Generate a URL for a predefined route
  * echo $url->get(array('for' => 'blog-post', 'title' => 'some-cool-stuff', 'year' => '2012'));
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/url.c
  */
 class Url implements UrlInterface, InjectionAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -47,7 +50,7 @@ class Url implements UrlInterface, InjectionAwareInterface
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_baseUri;
 
     /**
@@ -55,7 +58,7 @@ class Url implements UrlInterface, InjectionAwareInterface
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_staticBaseUri;
 
     /**
@@ -63,7 +66,7 @@ class Url implements UrlInterface, InjectionAwareInterface
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_basePath;
 
     /**
@@ -71,7 +74,7 @@ class Url implements UrlInterface, InjectionAwareInterface
      *
      * @var object|null
      * @access protected
-    */
+     */
     protected $_router;
 
     /**
@@ -103,10 +106,10 @@ class Url implements UrlInterface, InjectionAwareInterface
     /**
      * Sets a prefix for all the URIs to be generated
      *
-     *<code>
+     * <code>
      *  $url->setBaseUri('/invo/');
      *  $url->setBaseUri('/invo/index.php/');
-     *</code>
+     * </code>
      *
      * @param string $baseUri
      * @return \Phalcon\Mvc\Url
@@ -130,9 +133,9 @@ class Url implements UrlInterface, InjectionAwareInterface
     /**
      * Sets a prefix for all static URLs generated
      *
-     *<code>
+     * <code>
      *  $url->setStaticBaseUri('/invo/');
-     *</code>
+     * </code>
      *
      * @param string $staticBaseUri
      * @return \Phalcon\Mvc\Url
@@ -154,7 +157,7 @@ class Url implements UrlInterface, InjectionAwareInterface
      *
      * @param string $path
      * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/kernel/framework/url.c
-    */
+     */
     private static function getUri($path)
     {
         if (is_string($path) === false) {
@@ -162,7 +165,7 @@ class Url implements UrlInterface, InjectionAwareInterface
         }
 
         $found = 0;
-        $mark = 0;
+        $mark  = 0;
 
         if (empty($path) === false) {
             for ($i = strlen($path); $i > 0; $i--) {
@@ -173,7 +176,7 @@ class Url implements UrlInterface, InjectionAwareInterface
                     if ($found === 1) {
                         $mark = $i - 1;
                     } else {
-                        return substr($path, 0, $mark - $i).chr(0);
+                        return substr($path, 0, $mark - $i) . chr(0);
                     }
                 }
             }
@@ -199,7 +202,7 @@ class Url implements UrlInterface, InjectionAwareInterface
             if (is_string($uri) === false) {
                 $baseUri = '/';
             } else {
-                $baseUri .= '/'.$uri.'/';
+                $baseUri .= '/' . $uri . '/';
             }
 
             $this->_baseUri = $baseUri;
@@ -225,9 +228,9 @@ class Url implements UrlInterface, InjectionAwareInterface
     /**
      * Sets a base path for all the generated paths
      *
-     *<code>
+     * <code>
      *  $url->setBasePath('/var/www/htdocs/');
-     *</code>
+     * </code>
      *
      * @param string $basePath
      * @return \Phalcon\Mvc\Url
@@ -251,7 +254,7 @@ class Url implements UrlInterface, InjectionAwareInterface
     {
         return $this->_basePath;
     }
-    
+
     /**
      * Replace Marker
      *
@@ -262,7 +265,7 @@ class Url implements UrlInterface, InjectionAwareInterface
      * @param int $position
      * @param int $cursor
      * @param int $marker
-    */
+     */
     private static function replaceMarker($pattern, $named, &$paths, &$replacements, &$position, &$cursor, &$marker)
     {
         $notValid = false;
@@ -272,31 +275,31 @@ class Url implements UrlInterface, InjectionAwareInterface
          * $pattern: string to handle
          * $named: is named marker?
          * $replacements: parameter data to use
-        */
+         */
 
         if ($named === true) {
-            $length = $cursor - $marker - 1;    //Length of the name
-            $item = substr($pattern, $marker + 1, $length); //The name
+            $length    = $cursor - $marker - 1;    //Length of the name
+            $item      = substr($pattern, $marker + 1, $length); //The name
             $cursorVar = $marker + 1;
-            $marker = $marker + 1;
+            $marker    = $marker + 1;
             for ($j = 0; $j < $length; ++$j) {
                 $ch = $pattern[$cursorVar];
                 if ($ch === "\0") {
                     $notValid = true;
                     break;
                 }
-                
+
                 $z = ord($ch);
                 if ($j === 0 && !(($z >= 97 && $z <= 122) || ($z >= 65 && $z <= 90))) {
                     $notValid = true;
                     break;
                 }
-                
+
                 if (($z >= 97 && $z <= 122) || ($z >= 65 && $z <= 90) || ($z >= 48 &&
-                $z <= 57) || $ch === '-' || $ch === '_' || $ch === ':') {
+                    $z <= 57) || $ch === '-' || $ch === '_' || $ch === ':') {
                     if ($ch === ':') {
                         $variableLength = $cursorVar - $marker;
-                        $variable = substr($pattern, $marker, $variableLength);
+                        $variable       = substr($pattern, $marker, $variableLength);
                         break;
                     }
                 } else {
@@ -306,15 +309,15 @@ class Url implements UrlInterface, InjectionAwareInterface
                 $cursorVar++;
             }
         }
-        
+
         if ($notValid === false) {
             if (isset($paths[$position])) {
                 if ($named === true) {
                     if (isset($variable) === true) {
-                        $item = $variable;
+                        $item   = $variable;
                         $length = $variableLength;
                     }
-                    
+
                     if (isset($replacements[$item]) === true) {
                         $position++;
                         return $replacements[$item];
@@ -331,10 +334,10 @@ class Url implements UrlInterface, InjectionAwareInterface
                     }
                 }
             }
-            
+
             $position++;
         }
-        
+
         return null;
     }
 
@@ -347,7 +350,7 @@ class Url implements UrlInterface, InjectionAwareInterface
      * @return string|boolean
      * @throws Exception
      * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/kernel/framework/router.c
-    */
+     */
     private static function replacePaths($pattern, $paths, $replacements)
     {
         if (is_string($pattern) === false ||
@@ -373,14 +376,14 @@ class Url implements UrlInterface, InjectionAwareInterface
             return substr($pattern, 1);
         }
 
-        $cursor = 1;        //Cursor for $pattern; Ignoring the first character
-        $marker = null;
-        $bracketCount = 0;
-        $parenthesesCount = 0;
-        $intermediate = 0;
-        $ch = null;
-        $routeStr = '';
-        $position = 1;
+        $cursor             = 1;        //Cursor for $pattern; Ignoring the first character
+        $marker             = null;
+        $bracketCount       = 0;
+        $parenthesesCount   = 0;
+        $intermediate       = 0;
+        $ch                 = null;
+        $routeStr           = '';
+        $position           = 1;
         $lookingPlaceholder = false;
 
         for ($i = 1; $i < $l; ++$i) {
@@ -392,7 +395,7 @@ class Url implements UrlInterface, InjectionAwareInterface
             if ($parenthesesCount === 0 && $lookingPlaceholder === false) {
                 if ($ch === '{') {
                     if ($bracketCount === 0) {
-                        $marker = $cursor;
+                        $marker       = $cursor;
                         $intermediate = 0;
                     }
                     ++$bracketCount;
@@ -404,7 +407,7 @@ class Url implements UrlInterface, InjectionAwareInterface
                                 $replace = self::replaceMarker($pattern, true, $paths, $replacements, $position, $cursor, $marker);
                                 if (isset($replace) === true) {
                                     if (is_string($replace) === false) {
-                                        $replace = (string)$replace;
+                                        $replace = (string) $replace;
                                     }
 
                                     $routeStr .= $replace;
@@ -420,7 +423,7 @@ class Url implements UrlInterface, InjectionAwareInterface
             if ($bracketCount === 0 && $lookingPlaceholder === false) {
                 if ($ch === '(') {
                     if ($parenthesesCount === 0) {
-                        $marker = $cursor;
+                        $marker       = $cursor;
                         $intermediate = 0;
                     }
                     ++$parenthesesCount;
@@ -430,10 +433,10 @@ class Url implements UrlInterface, InjectionAwareInterface
                         if ($intermediate > 0) {
                             if ($parenthesesCount === 0) {
                                 $replace = self::replaceMarker($pattern, false, $paths, $replacements, $position, $cursor, $marker);
-                                
+
                                 if (isset($replace) === true) {
                                     if (is_string($replace) === false) {
-                                        $replace = (string)$replace;
+                                        $replace = (string) $replace;
                                     }
 
                                     $routeStr .= $replace;
@@ -454,7 +457,7 @@ class Url implements UrlInterface, InjectionAwareInterface
                             $replace = self::replaceMarker($pattern, false, $paths, $replacements, $position, $cursor, $marker);
                             if (isset($replace) === true) {
                                 if (is_string($replace) === false) {
-                                    $replace = (string)$replace;
+                                    $replace = (string) $replace;
                                 }
 
                                 $routeStr .= $replace;
@@ -467,8 +470,8 @@ class Url implements UrlInterface, InjectionAwareInterface
                 } else {
                     if ($ch === ':') {
                         $lookingPlaceholder = true;
-                        $marker = $cursor;
-                        $intermediate = 0;
+                        $marker             = $cursor;
+                        $intermediate       = 0;
                     }
                 }
             }
@@ -493,7 +496,7 @@ class Url implements UrlInterface, InjectionAwareInterface
      * @param string $sep
      * @return string
      * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/kernel/string.c
-    */
+     */
     private static function httpBuildQuery($params, $sep)
     {
         if (is_array($params) === false ||
@@ -505,9 +508,9 @@ class Url implements UrlInterface, InjectionAwareInterface
 
         foreach ($params as $key => $param) {
             if (isset($key) === false) {
-                $d .= $sep.$param;
+                $d .= $sep . $param;
             } else {
-                $d .= $sep.$key.'='.$param;
+                $d .= $sep . $key . '=' . $param;
             }
         }
 
@@ -517,7 +520,7 @@ class Url implements UrlInterface, InjectionAwareInterface
     /**
      * Generates a URL
      *
-     *<code>
+     * <code>
      *
      * //Generate a URL appending the URI to the base URI
      * echo $url->get('products/edit/1');
@@ -525,14 +528,14 @@ class Url implements UrlInterface, InjectionAwareInterface
      * //Generate a URL for a predefined route
      * echo $url->get(array('for' => 'blog-post', 'title' => 'some-cool-stuff', 'year' => '2012'));
      *
-     *</code>
+     * </code>
      *
      * @param string|array|null $uri
      * @param array|object|null $args Optional arguments to be appended to the query string
      * @return string
      * @throws Exception
      */
-    public function get($uri = null, $args = null)
+    public function get($uri = null, $args = null, $local = null, $baseUri = null)
     {
         if (is_string($uri) === false &&
             is_array($uri) === false &&
@@ -563,7 +566,7 @@ class Url implements UrlInterface, InjectionAwareInterface
 
                 //@note no interface validation
                 $this->_router = $dependencyInjector->getShared('router');
-                $router = $this->_router;
+                $router        = $this->_router;
             }
 
             $routeName = $uri['for'];
@@ -571,26 +574,24 @@ class Url implements UrlInterface, InjectionAwareInterface
             //Every route is uniquely differenced by a name
             $route = $router->getRouteByName($routeName);
             if (is_object($route) === false) {
-                throw new Exception('Cannot obtain a route using the name "'.$routeName.'"');
+                throw new Exception('Cannot obtain a route using the name "' . $routeName . '"');
             }
 
             //Replace the patterns by its variables
-            $return .= $this->_baseUri.self::replacePaths(
-                $pattern = $route->getPattern(),
-                $route->getReversedPaths(),
-                $uri
+            $return  .= $this->_baseUri . self::replacePaths(
+                    $pattern = $route->getPattern(), $route->getReversedPaths(), $uri
             );
         } else {
-            $return .= $this->_baseUri.$uri;
+            $return .= $this->_baseUri . $uri;
         }
 
         if (is_null($args) === false) {
             $query = self::httpBuildQuery($args, '&');
             if (is_string($query) === true && empty($query) === false) {
                 if (strpos($return, '?') !== false) {
-                    $return .= '&'.$query;
+                    $return .= '&' . $query;
                 } else {
-                    $return .= '?'.$query;
+                    $return .= '?' . $query;
                 }
             }
         }
@@ -616,10 +617,10 @@ class Url implements UrlInterface, InjectionAwareInterface
         }
 
         if (is_null($this->_staticBaseUri) === false) {
-            return $this->_staticBaseUri.$uri;
+            return $this->_staticBaseUri . $uri;
         }
 
-        return $this->getBaseUri().$uri;
+        return $this->getBaseUri() . $uri;
     }
 
     /**
@@ -637,6 +638,7 @@ class Url implements UrlInterface, InjectionAwareInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        return $this->_basePath.$path;
+        return $this->_basePath . $path;
     }
+
 }

@@ -19,7 +19,7 @@ use \Phalcon\Cache\Exception;
  *
  * Allows to read to chained backend adapters writing to multiple backends
  *
- *<code>
+ * <code>
  * use Phalcon\Cache\Frontend\Data as DataFrontend;
  * use Phalcon\Cache\Multiple;
  * use Phalcon\Cache\Backend\Apc as ApcCache;
@@ -73,7 +73,7 @@ use \Phalcon\Cache\Exception;
  *
  * //Save, saves in every backend
  * $cache->save("my-key", $data);
- *</code>
+ * </code>
  */
 class Multiple
 {

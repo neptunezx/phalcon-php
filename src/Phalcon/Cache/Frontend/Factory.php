@@ -34,19 +34,21 @@ class Factory extends BaseFactory
 
     protected static function loadClass($namespace, $config)
     {
+        if (!is_string($namespace)) {
+            throw new Exception('Invalid parameter type.');
+        }
 
         if (is_object($config) && $config instanceof Config) {
             $config = $config->toArray();
         }
 
-        if (is_array($config)) {
+        if (!is_array($config)) {
             throw new Exception("Config must be array or Phalcon\\Config object");
         }
 
         if (isset($config["adapter"])) {
-            unset($config["adapter"]);
-
             $className = $namespace . "\\" . Text::camelize($config["adapter"]);
+            unset($config["adapter"]);
             if ($className == "Phalcon\\Cache\\Frontend\\None") {
                 return new $className();
             } else {

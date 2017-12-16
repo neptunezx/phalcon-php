@@ -3,80 +3,84 @@
 namespace Phalcon\Session\Adapter;
 
 use Phalcon\Session\Adapter;
-use Phalcon\Cache\Backend\Redis;
+use Phalsky\Cache\Redis as RedisCache;
 use Phalcon\Cache\Frontend\None as FrontendNone;
 
 /**
- * Phalcon\Session\Adapter\Redis
+ * Phalcon\Session\Redis
  *
- * This adapter store sessions in Redis
+ * This adapter stores session in redis, surpport redis master-slaves cluster
  *
+ * @author ZhangXiang
+ * 
  * <code>
- * use Phalcon\Session\Adapter\Redis;
  *
- * $session = new Redis(
- *     [
- *         "uniqueId"   => "my-private-app",
- *         "host"       => "localhost",
- *         "port"       => 6379,
- *         "auth"       => "foobared",
- *         "persistent" => false,
- *         "lifetime"   => 3600,
- *         "prefix"     => "my",
- *         "index"      => 1,
- *     ]
- * );
+ * $session = new Phalcon\Session\Redis([
+ *     'uniqueId'   => 'my-private-app',
+ *     'host'        => '127.0.0.1',
+ *     'port'        => 6379,
+ *     'auth'        => '74c448dab46b',
+ *     'persistent'  => false,
+ *     'enableSlave' => true,
+ *     'lifetime'    => 172800,
+ *     'database'    => 0,
+ *     'slaveConfig' => [
+ *          'port'     => 6379,
+ *          'database' => 0,
+ *      ],
+ *      'slaves'      => [
+ *              [
+ *              'host' => '10.173.30.43',
+ *              'auth' => '74c448dab46b',
+ *          ],
+ *      ],
+ * ]);
  *
  * $session->start();
  *
- * $session->set("var", "some-value");
+ * $session->set('var', 'some-value');
  *
- * echo $session->get("var");
+ * echo $session->get('var');
  * </code>
  */
 class Redis extends Adapter
 {
 
-    // { get }
     protected $_redis    = null;
-    // { get }
     protected $_lifetime = 8600;
 
     /**
-     * Phalcon\Session\Adapter\Redis constructor
+     * Phalsky\Web\RedisSession constructor
      */
-    public function __construct($options = [])
+    public function __construct($options)
     {
         if (!isset($options["host"])) {
             $options["host"] = "127.0.0.1";
         }
-
         if (!isset($options["port"])) {
             $options["port"] = 6379;
         }
 
-        if (isset($options["persistent"])) {
+        if (!isset($options["persistent"])) {
             $options["persistent"] = false;
         }
 
-        if (isset($options["lifetime"])) {
-            $this->_lifetime = $options["lifetime"];
+        if (isset($options["lifetime"]) && (int) $options["lifetime"] > 0) {
+            $this->_lifetime = (int) $options["lifetime"];
         }
 
-        $this->_redis = new Redis(
-            new FrontendNone(["lifetime" => $this->_lifetime]), $options
-        );
+        //TODO:这里传入的options需要处理下
+        $this->_redis = new RedisCache(new FrontendNone(["lifetime" => $this->_lifetime]), $options);
 
-        session_set_save_handler(
-            [$this, "open"], [$this, "close"], [$this, "read"], [$this, "write"], [$this, "destroy"], [$this, "gc"]
-        );
+        //使得全局SESSION数组被设置时能够调用到这里的回调函数，从而达到用户自定义Session设置
+        session_set_save_handler([$this, "open"], [$this, "close"], [$this, "read"], [$this, "write"], [$this, "dispose"], [$this, "gc"]);
+        //register_shutdown_function('session_write_close'); 父类析构函数会调用session_write_close，这里就不需要了
 
-        parent::__construct(options);
+        parent::__construct($options);
     }
 
     /**
      * {@inheritdoc}
-     * 
      */
     public function open()
     {
@@ -85,7 +89,6 @@ class Redis extends Adapter
 
     /**
      * {@inheritdoc}
-     * 
      */
     public function close()
     {
@@ -97,7 +100,7 @@ class Redis extends Adapter
      */
     public function read($sessionId)
     {
-        return (string) $this->_redis->get($sessionId, $this->_lifetime);
+        return $this->_redis->get($this->sessionKey($sessionId), $this->_lifetime);
     }
 
     /**
@@ -105,25 +108,19 @@ class Redis extends Adapter
      */
     public function write($sessionId, $data)
     {
-        return $this->_redis->save($sessionId, $data, $this->_lifetime);
+        return $this->_redis->save($this->sessionKey($sessionId), $data, $this->_lifetime);
     }
 
     /**
-     * {@inheritdoc}
+     *  销毁redis中session变量
+     *  当调用$session->destroy()时，父类的destroy方法会调用session_destroy()方法，进一步调用到本销毁函数
      */
-    public function destroy($sessionId = null)
+    public function dispose($sessionId = null)
     {
-        $id = '';
-
         if ($sessionId === null) {
-            $id = $this->getId();
-        } else {
-            $id = $sessionId;
+            $sessionId = $this->getId();
         }
-
-        $this->removeSessionData();
-
-        return $this->_redis->exists($id) ? $this->_redis->delete($id) : true;
+        return $this->_redis->delete($this->sessionKey($sessionId));
     }
 
     /**
@@ -132,6 +129,11 @@ class Redis extends Adapter
     public function gc()
     {
         return true;
+    }
+
+    protected function sessionKey($sessionId)
+    {
+        return "session:$sessionId";
     }
 
 }

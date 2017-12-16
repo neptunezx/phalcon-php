@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Loader
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon;
 
 use \Phalcon\Events\EventsAwareInterface;
@@ -20,7 +22,7 @@ use \Phalcon\Text;
  *
  * This component helps to load your project classes automatically based on some conventions
  *
- *<code>
+ * <code>
  * //Creates the autoloader
  * $loader = new Phalcon\Loader();
  *
@@ -36,18 +38,19 @@ use \Phalcon\Text;
  *
  * //Requiring this class will automatically include file vendor/example/adapter/Some.php
  * $adapter = Example\Adapter\Some();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/loader.c
  */
 class Loader implements EventsAwareInterface
 {
+
     /**
      * Events Manager
      *
      * @var Phalcon\Events\ManagerInterface|null
      * @access protected
-    */
+     */
     protected $_eventsManager;
 
     /**
@@ -55,7 +58,7 @@ class Loader implements EventsAwareInterface
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_foundPath;
 
     /**
@@ -63,7 +66,7 @@ class Loader implements EventsAwareInterface
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_checkedPath;
 
     /**
@@ -71,7 +74,7 @@ class Loader implements EventsAwareInterface
      *
      * @var array|null
      * @access protected
-    */
+     */
     protected $_prefixes;
 
     /**
@@ -79,7 +82,7 @@ class Loader implements EventsAwareInterface
      *
      * @var array|null
      * @access protected
-    */
+     */
     protected $_classes;
 
     /**
@@ -87,7 +90,7 @@ class Loader implements EventsAwareInterface
      *
      * @var array
      * @access protected
-    */
+     */
     protected $_extensions;
 
     /**
@@ -95,7 +98,7 @@ class Loader implements EventsAwareInterface
      *
      * @var array|null
      * @access protected
-    */
+     */
     protected $_namespaces;
 
     /**
@@ -103,7 +106,7 @@ class Loader implements EventsAwareInterface
      *
      * @var array|null
      * @access protected
-    */
+     */
     protected $_directories;
 
     /**
@@ -111,7 +114,7 @@ class Loader implements EventsAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_registered = false;
 
     /**
@@ -373,7 +376,7 @@ class Loader implements EventsAwareInterface
      * @param string|null $seperator
      * @return string|boolean
      * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/kernel/file.c#L213
-    */
+     */
     private static function possibleAutoloadFilePath($prefix, $className, $virtualSeperator, $seperator = null)
     {
         if (is_string($prefix) === false ||
@@ -391,7 +394,7 @@ class Loader implements EventsAwareInterface
 
         if (is_null($seperator) === false &&
             is_string($seperator) === true &&
-            $prefix[$length-1] === $seperator[0]) {
+            $prefix[$length - 1] === $seperator[0]) {
             $length--;
         }
 
@@ -449,7 +452,7 @@ class Loader implements EventsAwareInterface
      * @param string $directorySeperator
      * @return string|null
      * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/kernel/file.c#L106
-    */
+     */
     private static function fixPath($path, $directorySeperator)
     {
         if (is_string($path) === false ||
@@ -463,9 +466,9 @@ class Loader implements EventsAwareInterface
 
         if (empty($pathLength) === false &&
             empty($directorySeperator) === false &&
-            $path[$pathLength-1] !== '\\' &&
-            $path[$pathLength-1] !== '/') {
-            return $path.$directorySeperator;
+            $path[$pathLength - 1] !== '\\' &&
+            $path[$pathLength - 1] !== '/') {
+            return $path . $directorySeperator;
         }
 
         return $path;
@@ -511,7 +514,7 @@ class Loader implements EventsAwareInterface
                         $fixedDirectory = self::fixPath($directory, \DIRECTORY_SEPARATOR);
 
                         foreach ($extensions as $extension) {
-                            $filePath = $fixedDirectory.$fileName.'.'.$extension;
+                            $filePath = $fixedDirectory . $fileName . '.' . $extension;
 
                             //Check if an events manager is available
                             if (is_object($eventsManager) === true) {
@@ -551,7 +554,7 @@ class Loader implements EventsAwareInterface
                         $fixedDirectory = self::fixPath($directory, \DIRECTORY_SEPARATOR);
 
                         foreach ($extensions as $extension) {
-                            $filePath = $fixedDirectory.$fileName.'.'.$extension;
+                            $filePath = $fixedDirectory . $fileName . '.' . $extension;
 
                             if (is_object($eventsManager) === true) {
                                 $this->_checkedPath = $filePath;
@@ -590,7 +593,7 @@ class Loader implements EventsAwareInterface
 
                 foreach ($extensions as $extension) {
                     //Create a possible path for the file
-                    $filePath = $fixedDirectory.$nsClassName.'.'.$extension;
+                    $filePath = $fixedDirectory . $nsClassName . '.' . $extension;
 
                     if (is_object($eventsManager) === true) {
                         $this->_checkedPath = $filePath;
@@ -642,4 +645,5 @@ class Loader implements EventsAwareInterface
     {
         return $this->_checkedPath;
     }
+
 }
