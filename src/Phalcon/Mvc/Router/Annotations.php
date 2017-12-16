@@ -14,7 +14,7 @@ use \Phalcon\Text;
 use \Phalcon\Mvc\Router;
 use \Phalcon\Mvc\RouterInterface;
 use \Phalcon\Mvc\Router\Exception;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Annotations\AdapterInterface;
 use \Phalcon\Annotations\Annotation;
 

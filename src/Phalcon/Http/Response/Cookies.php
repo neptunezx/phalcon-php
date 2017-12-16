@@ -17,7 +17,7 @@ use \Phalcon\Http\Response\Exception;
 use \Phalcon\Http\Cookie;
 use \Phalcon\Http\CookieInterface;
 use \Phalcon\Http\ResponseInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 
 /**

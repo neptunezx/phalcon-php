@@ -12,7 +12,7 @@ namespace Phalcon;
 
 use \ReflectionMethod;
 use \Phalcon\DispatcherInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Events\EventsAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\Text;

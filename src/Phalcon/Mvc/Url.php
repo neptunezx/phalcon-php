@@ -13,7 +13,7 @@
 namespace Phalcon\Mvc;
 
 use \Phalcon\Mvc\UrlInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Mvc\Url\Exception;
 use \Phalcon\DiInterface;
 

@@ -12,7 +12,7 @@ namespace Phalcon\Mvc;
 
 use \Phalcon\Dispatcher as DefaultDispatcher;
 use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DispatcherInterface as PhalconDispatcherInterface;
 use \Phalcon\Mvc\DispatcherInterface;
 use \Phalcon\Mvc\Dispatcher\Exception;
@@ -26,7 +26,7 @@ use \Phalcon\Mvc\Dispatcher\Exception;
  *
  *<code>
  *
- *  $di = new Phalcon\DI();
+ *  $di = new Phalcon\Di();
  *
  *  $dispatcher = new Phalcon\Mvc\Dispatcher();
  *

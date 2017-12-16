@@ -10,7 +10,7 @@
 */
 namespace Phalcon\CLI;
 
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Events\EventsAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\Events\ManagerInterface;

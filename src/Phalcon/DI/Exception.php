@@ -7,12 +7,12 @@
  * @version 1.2.6
  * @package Phalcon
 */
-namespace Phalcon\DI;
+namespace Phalcon\Di;
 
 /**
- * Phalcon\DI\Exception
+ * Phalcon\Di\Exception
  *
- * Exceptions thrown in Phalcon\DI will use this class
+ * Exceptions thrown in Phalcon\Di will use this class
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/di/exception.c
  */

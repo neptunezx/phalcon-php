@@ -14,9 +14,9 @@ use \Phalcon\Mvc\Model\Transaction\ManagerInterface;
 use \Phalcon\Mvc\Model\Transaction\Exception;
 use \Phalcon\Mvc\Model\Transaction;
 use \Phalcon\Mvc\Model\TransactionInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
-use \Phalcon\DI;
+use \Phalcon\Di;
 
 /**
  * Phalcon\Mvc\Model\Transaction\Manager

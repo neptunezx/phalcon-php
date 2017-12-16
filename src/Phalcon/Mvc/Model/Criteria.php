@@ -10,7 +10,7 @@
 */
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Mvc\Model\CriteriaInterface;
 use \Phalcon\Mvc\Model\Exception;
 use \Phalcon\DiInterface;

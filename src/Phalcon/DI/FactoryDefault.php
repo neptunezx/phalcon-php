@@ -8,16 +8,16 @@
  * @version 1.2.6
  * @package Phalcon
 */
-namespace Phalcon\DI;
+namespace Phalcon\Di;
 
-use \Phalcon\DI;
+use \Phalcon\Di;
 use \Phalcon\DiInterface;
-use \Phalcon\DI\Service;
+use \Phalcon\Di\Service;
 
 /**
- * Phalcon\DI\FactoryDefault
+ * Phalcon\Di\FactoryDefault
  *
- * This is a variant of the standard Phalcon\DI. By default it automatically
+ * This is a variant of the standard Phalcon\Di. By default it automatically
  * registers all the services provided by the framework. Thanks to this, the developer does not need
  * to register each service individually providing a full stack framework
  *
@@ -26,7 +26,7 @@ use \Phalcon\DI\Service;
 class FactoryDefault extends DI implements DiInterface
 {
     /**
-     * \Phalcon\DI\FactoryDefault constructor
+     * \Phalcon\Di\FactoryDefault constructor
      */
     public function __construct()
     {

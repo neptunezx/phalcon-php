@@ -10,7 +10,7 @@
 */
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\Mvc\Model\MetaData\Strategy\Introspection;
 use \Phalcon\Mvc\Model\Exception;

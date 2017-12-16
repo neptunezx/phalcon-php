@@ -10,10 +10,10 @@
 */
 namespace Phalcon\Mvc;
 
-use \Phalcon\DI\Injectable;
+use \Phalcon\Di\Injectable;
 use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\DI\InjectionAwareInterface;
-use \Phalcon\DI\FactoryDefault;
+use \Phalcon\Di\InjectionAwareInterface;
+use \Phalcon\Di\FactoryDefault;
 use \Phalcon\DiInterface;
 use \Phalcon\Mvc\Micro\Exception;
 use \Phalcon\Mvc\Micro\LazyLoader;
@@ -493,7 +493,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      * @param string $serviceName
      * @param mixed $definition
      * @param boolean|null $shared
-     * @return \Phalcon\DI\ServiceInterface
+     * @return \Phalcon\Di\ServiceInterface
      * @throws Exception
      */
     public function setService($serviceName, $definition, $shared = null)

@@ -11,7 +11,7 @@
 namespace Phalcon\CLI;
 
 use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DispatcherInterface;
 use \Phalcon\CLI\Dispatcher\Exception;
 use \Phalcon\Dispatcher as DefaultDispatcher;
@@ -25,7 +25,7 @@ use \Phalcon\Dispatcher as DefaultDispatcher;
  *
  *<code>
  *
- *  $di = new Phalcon\DI();
+ *  $di = new Phalcon\Di();
  *
  *  $dispatcher = new Phalcon\CLI\Dispatcher();
  *

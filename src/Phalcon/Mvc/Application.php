@@ -10,9 +10,9 @@
 */
 namespace Phalcon\Mvc;
 
-use \Phalcon\DI\Injectable;
+use \Phalcon\Di\Injectable;
 use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\Mvc\Application\Exception;
 use \Phalcon\Http\ResponseInterface;

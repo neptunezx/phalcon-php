@@ -10,9 +10,9 @@
 */
 namespace Phalcon;
 
-use \Phalcon\DI\Injectable;
+use \Phalcon\Di\Injectable;
 use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Validation\Exception as ValidationException;
 use \Phalcon\Validation\Message\Group;
 use \Phalcon\FilterInterface;
@@ -332,7 +332,7 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
                 if (isset($this->_filters[$attribute]) === true) {
                     $dependencyInjector = $this->getDi();
                     if (is_object($dependencyInjector) === false) {
-                        $dependencyInjector = \Phalcon\DI::getDefault();
+                        $dependencyInjector = \Phalcon\Di::getDefault();
                         if (is_object($dependencyInjector) === false) {
                             throw new ValidationException('A dependency injector is required to obtain the \'filter\' service');
                         }

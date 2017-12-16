@@ -11,7 +11,7 @@
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\DiInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Mvc\Model\QueryInterface;
 use \Phalcon\Mvc\Model\Exception;
 use \Phalcon\Mvc\Model\ManagerInterface;

@@ -12,10 +12,10 @@
 
 namespace Phalcon\Session;
 
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Session\BagInterface;
 use \Phalcon\DiInterface;
-use \Phalcon\DI;
+use \Phalcon\Di;
 use \Phalcon\Session\Exception;
 use \Phalcon\Session\AdapterInterface;
 

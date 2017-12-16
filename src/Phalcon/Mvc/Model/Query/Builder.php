@@ -13,9 +13,9 @@ namespace Phalcon\Mvc\Model\Query;
 use \Phalcon\Mvc\Model\Exception;
 use \Phalcon\Mvc\Model\Query;
 use \Phalcon\Mvc\Model\Query\BuilderInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
-use \Phalcon\DI;
+use \Phalcon\Di;
 
 /**
  * Phalcon\Mvc\Model\Query\Builder

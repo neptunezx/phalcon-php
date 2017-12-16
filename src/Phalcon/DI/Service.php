@@ -8,22 +8,22 @@
  * @version 1.2.6
  * @package Phalcon
 */
-namespace Phalcon\DI;
+namespace Phalcon\Di;
 
-use \Phalcon\DI\ServiceInterface;
-use \Phalcon\DI\Exception;
+use \Phalcon\Di\ServiceInterface;
+use \Phalcon\Di\Exception;
 use \Phalcon\DiInterface;
-use \Phalcon\DI\Service\Builder;
+use \Phalcon\Di\Service\Builder;
 use \ReflectionClass;
 use \Closure;
 
 /**
- * Phalcon\DI\Service
+ * Phalcon\Di\Service
  *
  * Represents individually a service in the services container
  *
  *<code>
- * $service = new Phalcon\DI\Service('request', 'Phalcon\Http\Request');
+ * $service = new Phalcon\Di\Service('request', 'Phalcon\Http\Request');
  * $request = $service->resolve();
  *<code>
  *
@@ -64,7 +64,7 @@ class Service implements ServiceInterface
     protected $_sharedInstance;
 
     /**
-     * \Phalcon\DI\Service
+     * \Phalcon\Di\Service
      *
      * @param string $name
      * @param mixed $definition
@@ -258,7 +258,7 @@ class Service implements ServiceInterface
      *
      * @param int $position
      * @param array $parameter
-     * @return \Phalcon\DI\Service
+     * @return \Phalcon\Di\Service
      * @throws Exception
      */
     public function setParameter($position, $parameter)
@@ -322,7 +322,7 @@ class Service implements ServiceInterface
      * Restore the internal state of a service
      *
      * @param array $attributes
-     * @return \Phalcon\DI\Service
+     * @return \Phalcon\Di\Service
      * @throws Exception
      */
     public static function __set_state($attributes)

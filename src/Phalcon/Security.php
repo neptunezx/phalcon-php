@@ -10,7 +10,7 @@
 */
 namespace Phalcon;
 
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\Flash\Exception as FlashException; //@note Look into the original code!
 use \Phalcon\Security\Exception as SecException;

@@ -12,11 +12,11 @@ namespace Phalcon\Mvc;
 
 use \Phalcon\Mvc\Collection\ManagerInterface;
 use \Phalcon\DiInterface;
-use \Phalcon\DI;
+use \Phalcon\Di;
 use \Phalcon\Mvc\CollectionInterface;
 use \Phalcon\Mvc\Collection\Exception;
 use \Phalcon\Mvc\Collection\Document;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Events\ManagerInterface as EventsManagerInterface;
 use \Phalcon\Text;
 use \Phalcon\Mvc\Model\MessageInterface;

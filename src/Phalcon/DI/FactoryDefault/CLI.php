@@ -8,16 +8,16 @@
  * @version 1.2.6
  * @package Phalcon
 */
-namespace Phalcon\DI\FactoryDefault;
+namespace Phalcon\Di\FactoryDefault;
 
-use \Phalcon\DI\FactoryDefault;
+use \Phalcon\Di\FactoryDefault;
 use \Phalcon\DiInterface;
-use \Phalcon\DI\Service;
+use \Phalcon\Di\Service;
 
 /**
- * Phalcon\DI\FactoryDefault\CLI
+ * Phalcon\Di\FactoryDefault\CLI
  *
- * This is a variant of the standard Phalcon\DI. By default it automatically
+ * This is a variant of the standard Phalcon\Di. By default it automatically
  * registers all the services provided by the framework.
  * Thanks to this, the developer does not need to register each service individually.
  * This class is specially suitable for CLI applications
@@ -27,7 +27,7 @@ use \Phalcon\DI\Service;
 class CLI extends FactoryDefault implements DiInterface
 {
     /**
-     * \Phalcon\DI\FactoryDefault\CLI constructor
+     * \Phalcon\Di\FactoryDefault\CLI constructor
      */
     public function __construct()
     {

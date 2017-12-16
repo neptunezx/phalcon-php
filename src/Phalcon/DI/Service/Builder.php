@@ -8,15 +8,15 @@
  * @version 1.2.6
  * @package Phalcon
 */
-namespace Phalcon\DI\Service;
+namespace Phalcon\Di\Service;
 
-use \Phalcon\DI\Exception;
+use \Phalcon\Di\Exception;
 use \Phalcon\DiInterface;
 use \ReflectionClass;
 use \ReflectionProperty;
 
 /**
- * Phalcon\DI\Service\Builder
+ * Phalcon\Di\Service\Builder
  *
  * This class builds instances based on complex definitions
  *

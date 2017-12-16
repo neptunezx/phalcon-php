@@ -8,17 +8,17 @@
  * @version 1.2.6
  * @package Phalcon
 */
-namespace Phalcon\DI;
+namespace Phalcon\Di;
 
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Events\EventsAwareInterface;
 use \Phalcon\DiInterface;
-use \Phalcon\DI\Exception;
-use \Phalcon\DI;
+use \Phalcon\Di\Exception;
+use \Phalcon\Di;
 use \Phalcon\Events\ManagerInterface;
 
 /**
- * Phalcon\DI\Injectable
+ * Phalcon\Di\Injectable
  *
  * This class allows to access services in the services container by just only accessing a public property
  * with the same name of a registered service

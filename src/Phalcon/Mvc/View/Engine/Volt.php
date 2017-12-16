@@ -13,7 +13,7 @@ namespace Phalcon\Mvc\View\Engine;
 use \Phalcon\Mvc\View\Engine;
 use \Phalcon\Mvc\View\EngineInterface;
 use \Phalcon\Mvc\View\Exception;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Events\EventsAwareInterface;
 use \Phalcon\Mvc\View\Engine\Volt\Compiler;
 use \Traversable;

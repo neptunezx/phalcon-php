@@ -17,7 +17,7 @@ use \Phalcon\Mvc\Model\Exception;
 use \Phalcon\Mvc\Model\Query;
 use \Phalcon\Mvc\Model\Query\Builder;
 use \Phalcon\Mvc\ModelInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Events\EventsAwareInterface;
 use \Phalcon\Events\ManagerInterface as EventsManagerInterface;
 use \Phalcon\DiInterface;
@@ -29,10 +29,10 @@ use \Phalcon\Text;
  * This components controls the initialization of models, keeping record of relations
  * between the different models of the application.
  *
- * A ModelsManager is injected to a model via a Dependency Injector/Services Container such as Phalcon\DI.
+ * A ModelsManager is injected to a model via a Dependency Injector/Services Container such as Phalcon\Di.
  *
  * <code>
- * $di = new Phalcon\DI();
+ * $di = new Phalcon\Di();
  *
  * $di->set('modelsManager', function() {
  *      return new Phalcon\Mvc\Model\Manager();

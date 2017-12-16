@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Dependency Injector
  *
@@ -7,23 +8,25 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon;
 
 use \ArrayAccess;
 use \Phalcon\DiInterface;
-use \Phalcon\DI\ServiceInterface;
-use \Phalcon\DI\Service;
-use \Phalcon\DI\InjectionAwareInterface;
-use \Phalcon\DI\Exception as DiException;
+use \Phalcon\Di\ServiceInterface;
+use \Phalcon\Di\Service;
+use \Phalcon\Di\InjectionAwareInterface;
+use \Phalcon\Di\Exception as DiException;
+use Phalcon\Di\ServiceProviderInterface;
 
 /**
- * Phalcon\DI
+ * Phalcon\Di
  *
- * Phalcon\DI is a component that implements Dependency Injection/Service Location
+ * Phalcon\Di is a component that implements Dependency Injection/Service Location
  * of services and it's itself a container for them.
  *
- * Since Phalcon is highly decoupled, Phalcon\DI is essential to integrate the different
+ * Since Phalcon is highly decoupled, Phalcon\Di is essential to integrate the different
  * components of the framework. The developer can also use this component to inject dependencies
  * and manage global instances of the different classes used in the application.
  *
@@ -34,8 +37,8 @@ use \Phalcon\DI\Exception as DiException;
  *
  * Additionally, this pattern increases testability in the code, thus making it less prone to errors.
  *
- *<code>
- * $di = new Phalcon\DI();
+ * <code>
+ * $di = new Phalcon\Di();
  *
  * //Using a string definition
  * $di->set('request', 'Phalcon\Http\Request', true);
@@ -47,18 +50,19 @@ use \Phalcon\DI\Exception as DiException;
  *
  * $request = $di->getRequest();
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/1.2.6/master/ext/di.c
  */
 class DI implements DiInterface
 {
+
     /**
      * Services
      *
      * @var array
      * @access protected
-    */
+     */
     protected $_services = array();
 
     /**
@@ -66,7 +70,7 @@ class DI implements DiInterface
      *
      * @var array
      * @access protected
-    */
+     */
     protected $_sharedInstances = array();
 
     /**
@@ -74,19 +78,19 @@ class DI implements DiInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_freshInstance = false;
 
     /**
      * Default Instance
      *
-     * @var null|\Phalcon\DI
+     * @var null|\Phalcon\Di
      * @access protected
-    */
+     */
     protected static $_default = null;
 
     /**
-     * \Phalcon\DI constructor
+     * \Phalcon\Di constructor
      */
     public function __construct()
     {
@@ -101,7 +105,7 @@ class DI implements DiInterface
      * @param string $name
      * @param mixed $definition
      * @param boolean $shared
-     * @return \Phalcon\DI\ServiceInterface|null
+     * @return \Phalcon\Di\ServiceInterface|null
      * @throws DiException
      */
     public function set($name, $definition, $shared = false)
@@ -127,7 +131,7 @@ class DI implements DiInterface
      *
      * @param string $name
      * @param mixed $definition
-     * @return \Phalcon\DI\ServiceInterface|null
+     * @return \Phalcon\Di\ServiceInterface|null
      */
     public function setShared($name, $definition)
     {
@@ -160,7 +164,7 @@ class DI implements DiInterface
      * @param string $name
      * @param mixed $definition
      * @param boolean $shared
-     * @return \Phalcon\DI\ServiceInterface|null
+     * @return \Phalcon\Di\ServiceInterface|null
      * @throws DiException
      */
     public function attempt($name, $definition, $shared = false)
@@ -177,11 +181,11 @@ class DI implements DiInterface
     }
 
     /**
-     * Sets a service using a raw \Phalcon\DI\Service definition
+     * Sets a service using a raw \Phalcon\Di\Service definition
      *
      * @param string $name
-     * @param \Phalcon\DI\ServiceInterface $rawDefinition
-     * @return \Phalcon\DI\ServiceInterface
+     * @param \Phalcon\Di\ServiceInterface $rawDefinition
+     * @return \Phalcon\Di\ServiceInterface
      * @throws DiException
      */
     public function setRaw($name, $rawDefinition)
@@ -216,14 +220,14 @@ class DI implements DiInterface
             return $this->_services[$name]->getDefinition();
         }
 
-        throw new DiException('Service \''.$name.'\' wasn\'t found in the dependency injection container');
+        throw new DiException('Service \'' . $name . '\' wasn\'t found in the dependency injection container');
     }
 
     /**
-     * Returns a \Phalcon\DI\Service instance
+     * Returns a \Phalcon\Di\Service instance
      *
      * @param string $name
-     * @return \Phalcon\DI\ServiceInterface
+     * @return \Phalcon\Di\ServiceInterface
      * @throws DiException
      */
     public function getService($name)
@@ -236,7 +240,7 @@ class DI implements DiInterface
             return $this->_services[$name];
         }
 
-        throw new DiException('Service \''.$name.'\' wasn\'t found in the dependency injection container');
+        throw new DiException('Service \'' . $name . '\' wasn\'t found in the dependency injection container');
     }
 
     /**
@@ -246,7 +250,7 @@ class DI implements DiInterface
      * @param array|null $params
      * @return object
      * @throws DiException
-    */
+     */
     private static function createInstance($className, $params = null)
     {
         if (is_string($className) === false) {
@@ -291,7 +295,7 @@ class DI implements DiInterface
                     $instance = self::createInstance($name);
                 }
             } else {
-                throw new DiException('Service \''.$name.'\' wasn\'t found in the dependency injection container');
+                throw new DiException('Service \'' . $name . '\' wasn\'t found in the dependency injection container');
             }
         }
 
@@ -318,7 +322,7 @@ class DI implements DiInterface
         }
 
         if (isset($this->_sharedInstances[$name]) === true) {
-            $instance = $this->_sharedInstances[$name];
+            $instance             = $this->_sharedInstances[$name];
             $this->_freshInstance = 0;
         } else {
             //Resolve
@@ -326,7 +330,7 @@ class DI implements DiInterface
 
             //Save
             $this->_sharedInstances[$name] = $instance;
-            $this->_freshInstance = true;
+            $this->_freshInstance          = true;
         }
 
         return $instance;
@@ -361,7 +365,7 @@ class DI implements DiInterface
     /**
      * Return the services registered in the DI
      *
-     * @return \Phalcon\DI\Service[]
+     * @return \Phalcon\Di\Service[]
      */
     public function getServices()
     {
@@ -384,9 +388,9 @@ class DI implements DiInterface
      * Allows to register a shared service using the array syntax.
      * Alias for \Phalcon\Di::setShared()
      *
-     *<code>
+     * <code>
      *  $di['request'] = new \Phalcon\Http\Request();
-     *</code>
+     * </code>
      *
      * @param string $name
      * @param mixed $definition
@@ -400,9 +404,9 @@ class DI implements DiInterface
      * Allows to obtain a shared service using the array syntax.
      * Alias for \Phalcon\Di::getShared()
      *
-     *<code>
+     * <code>
      *  var_dump($di['request']);
-     *</code>
+     * </code>
      *
      * @param string $name
      * @return mixed
@@ -454,7 +458,33 @@ class DI implements DiInterface
             }
         }
 
-        throw new DiException('Call to undefined method or service \''.$method."'");
+        throw new DiException('Call to undefined method or service \'' . $method . "'");
+    }
+
+    /**
+     * Registers a service provider.
+     *
+     * <code>
+     * use Phalcon\DiInterface;
+     * use Phalcon\Di\ServiceProviderInterface;
+     *
+     * class SomeServiceProvider implements ServiceProviderInterface
+     * {
+     *     public function register(DiInterface $di)
+     *     {
+     *         $di->setShared('service', function () {
+     *             // ...
+     *         });
+     *     }
+     * }
+     * </code>
+     * 
+     * @param \Phalcon\Di\ServiceProviderInterface $provider
+     * @return void
+     */
+    public function register($provider)
+    {
+        $provider->register($this);
     }
 
     /**
@@ -486,4 +516,5 @@ class DI implements DiInterface
     {
         self::$_default = null;
     }
+
 }

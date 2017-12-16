@@ -7,10 +7,10 @@
  * @version 1.2.6
  * @package Phalcon
 */
-namespace Phalcon\DI;
+namespace Phalcon\Di;
 
 /**
- * Phalcon\DI\InjectionAwareInterface initializer
+ * Phalcon\Di\InjectionAwareInterface initializer
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/di/injectionawareinterface.c
  */

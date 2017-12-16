@@ -22,7 +22,7 @@ interface DiInterface extends \ArrayAccess
      * @param string $name
      * @param mixed $definition
      * @param boolean $shared
-     * @return \Phalcon\DI\ServiceInterface
+     * @return \Phalcon\Di\ServiceInterface
      */
     public function set($name, $definition, $shared = null);
 
@@ -31,7 +31,7 @@ interface DiInterface extends \ArrayAccess
      *
      * @param string $name
      * @param mixed $definition
-     * @return \Phalcon\DI\ServiceInterface
+     * @return \Phalcon\Di\ServiceInterface
      */
     public function setShared($name, $definition);
 
@@ -50,7 +50,7 @@ interface DiInterface extends \ArrayAccess
      * @param string $name
      * @param mixed $definition
      * @param boolean $shared
-     * @return \Phalcon\DI\ServiceInterface
+     * @return \Phalcon\Di\ServiceInterface
      */
     public function attempt($name, $definition, $shared = null);
 
@@ -73,11 +73,11 @@ interface DiInterface extends \ArrayAccess
     public function getShared($name, $parameters = null);
 
     /**
-     * Sets a service using a raw \Phalcon\DI\Service definition
+     * Sets a service using a raw \Phalcon\Di\Service definition
      *
      * @param string $name
-     * @param \Phalcon\DI\ServiceInterface $rawDefinition
-     * @return \Phalcon\DI\ServiceInterface
+     * @param \Phalcon\Di\ServiceInterface $rawDefinition
+     * @return \Phalcon\Di\ServiceInterface
      */
     public function setRaw($name, $rawDefinition);
 
@@ -93,7 +93,7 @@ interface DiInterface extends \ArrayAccess
      * Returns the corresponding \Phalcon\Di\Service instance for a service
      *
      * @param string $name
-     * @return \Phalcon\DI\ServiceInterface
+     * @return \Phalcon\Di\ServiceInterface
      */
     public function getService($name);
 

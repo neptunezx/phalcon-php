@@ -18,9 +18,9 @@ use \Phalcon\Http\Response\HeadersInterface;
 use \Phalcon\Http\Response\Headers;
 use \Phalcon\Http\Response\CookiesInterface;
 use \Phalcon\Mvc\UrlInterface;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
-use \Phalcon\DI;
+use \Phalcon\Di;
 use \DateTime;
 use \DateTimeZone;
 

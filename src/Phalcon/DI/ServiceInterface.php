@@ -7,17 +7,17 @@
  * @version 1.2.6
  * @package Phalcon
 */
-namespace Phalcon\DI;
+namespace Phalcon\Di;
 
 /**
- * Phalcon\DI\ServiceInterface initializer
+ * Phalcon\Di\ServiceInterface initializer
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/di/serviceinterface.c
  */
 interface ServiceInterface
 {
     /**
-     * \Phalcon\DI\ServiceInterface
+     * \Phalcon\Di\ServiceInterface
      *
      * @param string $name
      * @param mixed $definition
@@ -73,7 +73,7 @@ interface ServiceInterface
      * Restore the interal state of a service
      *
      * @param array $attributes
-     * @return \Phalcon\DI\ServiceInterface
+     * @return \Phalcon\Di\ServiceInterface
      */
     public static function __set_state($attributes);
 }

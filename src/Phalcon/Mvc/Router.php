@@ -14,7 +14,7 @@ use \Phalcon\Mvc\RouterInterface;
 use \Phalcon\Mvc\Router\Exception;
 use \Phalcon\Mvc\Router\Route;
 use \Phalcon\Mvc\Router\Group;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 
 /**

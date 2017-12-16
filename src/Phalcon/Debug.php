@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Debug
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon;
 
 use \ReflectionClass;
@@ -24,12 +26,13 @@ use \Phalcon\Version;
  */
 class Debug
 {
+
     /**
      * URI
      *
      * @var string
      * @access public
-    */
+     */
     public $_uri = '//static.phalconphp.com/debug/1.2.0/';
 
     /**
@@ -37,7 +40,7 @@ class Debug
      *
      * @var string
      * @access public
-    */
+     */
     public $_theme = 'default';
 
     /**
@@ -45,15 +48,15 @@ class Debug
      *
      * @var boolean
      * @access protected
-    */
-    protected $_hideDocumentRoot= false;
+     */
+    protected $_hideDocumentRoot = false;
 
     /**
      * Show Backtrace
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_showBackTrace = true;
 
     /**
@@ -61,7 +64,7 @@ class Debug
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_showFiles = true;
 
     /**
@@ -69,7 +72,7 @@ class Debug
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_showFileFragment = false;
 
     /**
@@ -77,7 +80,7 @@ class Debug
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_data = null;
 
     /**
@@ -85,7 +88,7 @@ class Debug
      *
      * @var null|boolean
      * @access protected
-    */
+     */
     protected static $_isActive = null;
 
     /**
@@ -264,7 +267,7 @@ class Debug
             return htmlentities(str_replace('\n', '\\n', $value), 2, 'utf-8');
         }
 
-        return (string)$value;
+        return (string) $value;
     }
 
     /**
@@ -291,25 +294,25 @@ class Debug
 
                         if (is_scalar($v) === true) {
                             if ($v === '') {
-                                $varDump = '['.$k.'] =&gt; (empty string)';
+                                $varDump = '[' . $k . '] =&gt; (empty string)';
                             } else {
-                                $varDump = '['.$k.'] = &gt; '.$this->_escapeString($v);
+                                $varDump = '[' . $k . '] = &gt; ' . $this->_escapeString($v);
                             }
                             $dump[] = $varDump;
                         } else {
                             if (is_array($v) === true) {
-                                $dump[] = '['.$k.'] =&gt; Array('.$this->_getArrayDump($v, 1).')';
+                                $dump[] = '[' . $k . '] =&gt; Array(' . $this->_getArrayDump($v, 1) . ')';
                                 continue;
                             }
                             if (is_object($v) === true) {
-                                $dump[] = '['.$k.'] =&gt; Object('.get_class($v).')';
+                                $dump[] = '[' . $k . '] =&gt; Object(' . get_class($v) . ')';
                                 continue;
                             }
                             if (is_null($v) === true) {
-                                $dump[] = '['.$k.'] = &gt; null';
+                                $dump[] = '[' . $k . '] = &gt; null';
                                 continue;
                             }
-                            $dump[] = '['.$k.'] =&gt; '.$v;
+                            $dump[] = '[' . $k . '] =&gt; ' . $v;
                         }
                     }
 
@@ -337,7 +340,7 @@ class Debug
                 return $this->_escapeString($variable);
             }
 
-            return (string)$variable;
+            return (string) $variable;
         }
 
         if (is_object($variable) === true) {
@@ -346,22 +349,22 @@ class Debug
                 $dumpedObject = $variable->dump();
                 if (is_array($dumpedObject) === true) {
                     $arrayDump = $this->_getArrayDump($dumpedObject);
-                    $dump = 'Object('.$className.': '.$arrayDump.')';
+                    $dump      = 'Object(' . $className . ': ' . $arrayDump . ')';
                 } else {
                     throw new Exception('Invalid dump return value.');
                 }
             } else {
-                $dump = 'Object('.$className.')</span>';
+                $dump = 'Object(' . $className . ')</span>';
             }
 
             return $dump;
         }
 
         if (is_array($variable) === true) {
-            return 'Array('.$this->_getArrayDump($variable).')';
+            return 'Array(' . $this->_getArrayDump($variable) . ')';
         }
 
-        return (string)$variable;
+        return (string) $variable;
     }
 
     /**
@@ -372,7 +375,7 @@ class Debug
     public function getMajorVersion()
     {
         $parts = explode(' ', Version::get());
-        return (string)$parts[0];
+        return (string) $parts[0];
     }
 
     /**
@@ -380,13 +383,20 @@ class Debug
      *
      * @return string
      */
+
+    /**
+     * Generates a link to the current version documentation
+     */
     public function getVersion()
     {
-        $version = $this->getMajorVersion();
+        $link = [
+            "action" => "https://docs.phalconphp.com/en/" . Version::getPart(Version::VERSION_MAJOR) . ".0.0/",
+            "text"   => Version::get(),
+            "local"  => false,
+            "target" => "_new"
+        ];
 
-        //@note Improvement: use _blank instaead of _new
-        //@note Improvement: use slash instead of backslash at the end of the URL
-        return '<div class="version">Phalcon Framework <a target="_blank" href="http://docs.phalconphp.com/en/'.$version.'/">'.$version.'</a></div>';
+        return "<div class='version'>Phalcon Framework <a href=\"{$link['action']}\" target=\"{$link['target']}\">{$link['text']}</a></div>";
     }
 
     /**
@@ -397,7 +407,7 @@ class Debug
     public function getCssSources()
     {
         //@note I'm rather sure it shouldn't be always the "default" theme.
-        return '<link href="'.$this->_uri.'jquery/jquery-ui.css" type="text/css" rel="stylesheet" /><link href="'.$this->_uri.'themes/default/style.css" type="text/css" rel="stylesheet">';
+        return '<link href="' . $this->_uri . 'jquery/jquery-ui.css" type="text/css" rel="stylesheet" /><link href="' . $this->_uri . 'themes/default/style.css" type="text/css" rel="stylesheet">';
     }
 
     /**
@@ -407,7 +417,7 @@ class Debug
      */
     public function getJsSources()
     {
-        return '<script type="text/javascript" src="'.$this->_uri.'jquery/jquery.js"></script><script type="text/javascript" src="'.$this->_uri.'jquery/jquery-ui.js"></script><script type="text/javascript" src="'.$this->_uri.'jquery/jquery.scrollTo.js"></script><script type="text/javascript" src="'.$this->_uri.'prettify/prettify.js"></script><script type="text/javascript" src="'.$this->_uri.'pretty.js"></script>';
+        return '<script type="text/javascript" src="' . $this->_uri . 'jquery/jquery.js"></script><script type="text/javascript" src="' . $this->_uri . 'jquery/jquery-ui.js"></script><script type="text/javascript" src="' . $this->_uri . 'jquery/jquery.scrollTo.js"></script><script type="text/javascript" src="' . $this->_uri . 'prettify/prettify.js"></script><script type="text/javascript" src="' . $this->_uri . 'pretty.js"></script>';
     }
 
     /**
@@ -424,7 +434,7 @@ class Debug
             throw new Exception('Invalid parameter type.');
         }
 
-        $html = '<tr><td align="right" valign="top" class="error-number">#'.$n.'</td><td>';
+        $html = '<tr><td align="right" valign="top" class="error-number">#' . $n . '</td><td>';
 
         if (isset($trace['class']) === true && is_string($trace['class']) === true) {
             if (preg_match('/^Phalcon/', $trace['class']) === 1) {
@@ -432,16 +442,16 @@ class Debug
 
                 //Improvement: _blank instead of _new
                 //@note It might be useful to reference to the current version
-                $html .= '<span class="error-class"><a target="_blank" href="http://docs.phalconphp.com/en/latest/api/'.str_replace('\\', '_', $trace['class']).'.html">'.$trace['class'].'</a></span>';
+                $html .= '<span class="error-class"><a target="_blank" href="http://docs.phalconphp.com/en/latest/api/' . str_replace('\\', '_', $trace['class']) . '.html">' . $trace['class'] . '</a></span>';
             } else {
                 $r = new ReflectionClass($trace['class']);
                 if ($r->isInternal() === true) {
                     /* Internal class */
                     //Improvement: _blank instead of _new
-                    $html .= '<span class="error-class"><a target="_blank" href="http://php.net/manual/en/class.'.str_replace('_', '-', strtolower($trace['class'])).'.php">'.$trace['class'].'</a></span>';
+                    $html .= '<span class="error-class"><a target="_blank" href="http://php.net/manual/en/class.' . str_replace('_', '-', strtolower($trace['class'])) . '.php">' . $trace['class'] . '</a></span>';
                 } else {
                     /* Other class */
-                    $html .= '<span class="error-class">'.$trace['class'].'</span>';
+                    $html .= '<span class="error-class">' . $trace['class'] . '</span>';
                 }
             }
 
@@ -453,21 +463,21 @@ class Debug
         //@note there is no check if $class['function'] is set and a string
         //@note I expected a "isset($trace['function'])" since this is a repetition
         if (isset($trace['class']) === true) {
-            $html .= '<span class="error-function">'.(string)$trace['function'].'</span>';
+            $html .= '<span class="error-function">' . (string) $trace['function'] . '</span>';
         } else {
             if (function_exists($trace['function']) === true) {
-                $r = new ReflectionFunction((string)$trace['function']);
+                $r = new ReflectionFunction((string) $trace['function']);
                 if ($r->isInternal() === true) {
                     /* Internal function */
 
                     //Improvement: _blank instead of _new
-                    $html .= '<span class="error-function"><a target="_blank" href="http://php.net/manual/en/function.'.str_replace('_', '-', (string)$trace['function']).'.php">'.(string)$trace['function'].'</a></span>';
+                    $html .= '<span class="error-function"><a target="_blank" href="http://php.net/manual/en/function.' . str_replace('_', '-', (string) $trace['function']) . '.php">' . (string) $trace['function'] . '</a></span>';
                 } else {
                     /* Default function */
-                    $html .= '<span class="error-function">'.(string)$trace['function'].'</span>';
+                    $html .= '<span class="error-function">' . (string) $trace['function'] . '</span>';
                 }
             } else {
-                $html .= '<span class="error-function">'.(string)$trace['function'].'</span>';
+                $html .= '<span class="error-function">' . (string) $trace['function'] . '</span>';
             }
         }
 
@@ -477,10 +487,10 @@ class Debug
             if (empty($trace['args']) === false) {
                 $arguments = array();
                 foreach ($trace['args'] as $argument) {
-                    $arguments[] = '<span class="error-parameter">'.$this->_getVarDump($argument).'</span>';
+                    $arguments[] = '<span class="error-parameter">' . $this->_getVarDump($argument) . '</span>';
                 }
 
-                $html .= '('.implode(', ', $arguments).')';
+                $html .= '(' . implode(', ', $arguments) . ')';
             } else {
                 $html .= '()';
             }
@@ -489,40 +499,40 @@ class Debug
         //When 'file' is present, it usually means the function is provided by the user
         if (isset($trace['file']) === true && is_string($trace['file']) === true) {
             if (isset($trace['line']) === true) {
-                $trace['line'] = (string)$trace['line'];
+                $trace['line'] = (string) $trace['line'];
             } else {
                 //@note There is no handeling if no line number is present
                 $trace['line'] = '';
             }
 
-            $html .= '<br><div class="error-file">'.$trace['file'].' ('.$trace['line'].')</div>';
+            $html .= '<br><div class="error-file">' . $trace['file'] . ' (' . $trace['line'] . ')</div>';
 
             if ($this->_showFiles === true) {
                 //@note No exception handeling?!
-                $lines = file($trace['file']);
+                $lines       = file($trace['file']);
                 $numberLines = count($lines);
 
                 if ($this->_showFileFragment === true) {
                     //Get first line
-                    $firstLine = (int)$trace['line'] - 7;
+                    $firstLine = (int) $trace['line'] - 7;
                     if ($firstLine < 1) {
                         $firstLine = 1;
                     }
 
                     //Take five lines after the current exception's line
                     //@todo add an option for this
-                    $lastLine = (int)$trace['line'] + 5;
+                    $lastLine = (int) $trace['line'] + 5;
                     if ($lastLine > $numberLines) {
                         $lastLine = $numberLines;
                     }
 
-                    $html .= '<pre class=\'prettyprint highlight:'.$firstLine.':'.$trace['line'].' linenums:'.$firstLine.'\'>';
+                    $html .= '<pre class=\'prettyprint highlight:' . $firstLine . ':' . $trace['line'] . ' linenums:' . $firstLine . '\'>';
                 } else {
                     //@note $firstLine and $lastLine are not set
                     $firstLine = 0;
-                    $lastLine = 0;
+                    $lastLine  = 0;
 
-                    $html .= '<pre class\'prettyprint highlight:0:'.$trace['line'].' linenums error-scroll\'>';
+                    $html .= '<pre class\'prettyprint highlight:0:' . $trace['line'] . ' linenums error-scroll\'>';
                 }
 
                 //We assume the file is utf-8 encoded
@@ -556,7 +566,7 @@ class Debug
             }
         }
 
-        return $html.'</td></tr>';
+        return $html . '</td></tr>';
     }
 
     /**
@@ -578,16 +588,16 @@ class Debug
         self::$_isActive = true;
 
         /*
-            @note in the original sources the following annotation can be found:
-            Escape the exception's message avoiding possible XSS injections?
-            But then they the value is only copied
-        */
+          @note in the original sources the following annotation can be found:
+          Escape the exception's message avoiding possible XSS injections?
+          But then they the value is only copied
+         */
 
         $className = get_class($exception);
-        $message =  $exception->getMessage();
+        $message   = $exception->getMessage();
 
 
-        $html = '<html><head><meta http-equiv="Content-Type" content="text/html; charset="utf-8" /><title>'.$className.': '.$message.'</title>'.$this->getCssSources().'</head><body>'.$this->getVersion().'<div align="center"><div class="error-main"><h1>'.$className.': '.$message.'</h1><span class="error-file">'.$exception->getFile().' ('.$exception->getLine().')</span></div>';
+        $html = '<html><head><meta http-equiv="Content-Type" content="text/html; charset="utf-8" /><title>' . $className . ': ' . $message . '</title>' . $this->getCssSources() . '</head><body>' . $this->getVersion() . '<div align="center"><div class="error-main"><h1>' . $className . ': ' . $message . '</h1><span class="error-file">' . $exception->getFile() . ' (' . $exception->getLine() . ')</span></div>';
 
         if ($this->_showBackTrace === true) {
             $html .= '<div class="error-info"><div id="tabs"><ul><li><a href="#error-tabs-1">Backtrace</a></li><li><a href="#error-tabs-2">Request</a></li><li><a href="#error-tabs-3">Server</a></li><li><a href="#error-tabs-4">Included Files</a></li><li><a href="#error-tabs-5">Memory</a></li>';
@@ -606,7 +616,7 @@ class Debug
             //@note $_REQUEST contains unfiltered data, but there is no escaping
             $r = $_REQUEST;
             foreach ($r as $keyRequest => $value) {
-                $html .= '<tr><td class="key">'.$keyRequest.'</td><td>'.$value.'</td></tr>';
+                $html .= '<tr><td class="key">' . $keyRequest . '</td><td>' . $value . '</td></tr>';
             }
 
             $html .= '</table></div><div id="error-tabs-3"><table cellspacing="0" align="center" class="superglobal-detail"><tr><th>Key</th><th>Value</th></tr>';
@@ -614,7 +624,7 @@ class Debug
             //@note $_SERVER contains unfiltered data, but there is no escaping
             $r = $_SERVER;
             foreach ($r as $keyServer => $value) {
-                $html .= '<tr><td class="key">'.$keyServer.'</td><td>'.$this->_getVarDump($value).'</td></tr>';
+                $html .= '<tr><td class="key">' . $keyServer . '</td><td>' . $this->_getVarDump($value) . '</td></tr>';
             }
 
             $html .= '</table></div><div id="error-tabs-4"><table cellspacing="0" align="center" class="superglobal-detail"><tr><th>#</th><th>Path</th></tr>';
@@ -623,17 +633,17 @@ class Debug
             $files = get_included_files();
             foreach ($files as $keyFile => $value) {
                 //@note "td" opening element for key was changed to "th"
-                $html .= '<tr><th>'.$keyFile.'</th><td>'.$value.'</td></tr>';
+                $html .= '<tr><th>' . $keyFile . '</th><td>' . $value . '</td></tr>';
             }
 
-            $html .= '</table></div><div id="error-tabs-5"><table cellspacing="0" align="center" class="superglobal-detail"><tr><th colspan="2">Memory</th></tr><tr><td>Usage</td><td>'.(string)memory_get_usage().'</td></tr></table></div>';
+            $html .= '</table></div><div id="error-tabs-5"><table cellspacing="0" align="center" class="superglobal-detail"><tr><th colspan="2">Memory</th></tr><tr><td>Usage</td><td>' . (string) memory_get_usage() . '</td></tr></table></div>';
 
             if (is_array($this->_data) === true) {
                 $html .= '<div id="error-tabs-6"><table cellspacing="0" align="center" class="superglobal-detail"><tr><th>Key</th><th>Value</th></tr>';
 
                 foreach ($this->_data as $keyVar => $dataVar) {
                     //@note the c code is wrong, $dataVar is never int but an array!
-                    $html .= '<tr><td class="key">'.$keyVar.'</td><td>'.$this->_getVarDump((int)$dataVar).'</td></tr>';
+                    $html .= '<tr><td class="key">' . $keyVar . '</td><td>' . $this->_getVarDump((int) $dataVar) . '</td></tr>';
                 }
 
                 $html .= '</table></div>';
@@ -643,7 +653,7 @@ class Debug
         }
 
         //Get javascript sources
-        $html .= $this->getJsSources().'</div></body></html>';
+        $html .= $this->getJsSources() . '</div></body></html>';
 
         //Print the HTML
         //@todo add an option to store the html
@@ -654,4 +664,5 @@ class Debug
 
         return true;
     }
+
 }

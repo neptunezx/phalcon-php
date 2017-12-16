@@ -12,7 +12,7 @@
 
 namespace Phalcon\Http;
 
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\CryptInterface;
 use \Phalcon\FilterInterface;

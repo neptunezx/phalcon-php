@@ -15,7 +15,7 @@ namespace Phalcon\Http;
 use \Phalcon\Http\RequestInterface;
 use \Phalcon\http\Request\Exception;
 use \Phalcon\Http\Request\File;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\FilterInterface;
 use \Phalcon\Text;

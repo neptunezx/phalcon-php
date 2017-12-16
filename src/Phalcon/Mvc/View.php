@@ -11,8 +11,8 @@
 namespace Phalcon\Mvc;
 
 use \Closure;
-use \Phalcon\DI\Injectable;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\Injectable;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Events\EventsAwareInterface;
 use \Phalcon\Mvc\ViewInterface;
 use \Phalcon\Mvc\View\Exception;

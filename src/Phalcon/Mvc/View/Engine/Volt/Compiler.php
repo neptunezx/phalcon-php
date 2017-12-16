@@ -11,7 +11,7 @@
 namespace Phalcon\Mvc\View\Engine\Volt;
 
 use \Phalcon\Mvc\View\Engine\Volt\Parser;
-use \Phalcon\DI\InjectionAwareInterface;
+use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 use \Phalcon\Mvc\ViewInterface;
 use \Phalcon\Mvc\View\Exception;
