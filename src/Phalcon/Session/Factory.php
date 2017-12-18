@@ -1,6 +1,6 @@
 <?php
 
-namespace \Phalcon\Session;
+namespace Phalcon\Session;
 
 use \Phalcon\Factory as BaseFactory;
 

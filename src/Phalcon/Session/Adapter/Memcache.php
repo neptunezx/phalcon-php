@@ -3,7 +3,7 @@
 namespace Phalcon\Session\Adapter;
 
 use Phalcon\Session\Adapter;
-use Phalcon\Cache\Backend\Memcache;
+use Phalcon\Cache\Backend\Memcache as MemcacheCache;
 use Phalcon\Cache\Frontend\Data as FrontendData;
 
 /**
@@ -43,8 +43,6 @@ class Memcache extends Adapter
      */
     public function __construct(array $options = [])
     {
-        $lifetime;
-
         if (!isset($options["host"])) {
             $options["host"] = "127.0.0.1";
         }
@@ -61,7 +59,7 @@ class Memcache extends Adapter
             $this->_lifetime = $options["lifetime"];
         }
 
-        $this->_memcache = new Memcache(
+        $this->_memcache = new MemcacheCache(
             new FrontendData(["lifetime" => $this->_lifetime]), $options
         );
 
@@ -69,7 +67,7 @@ class Memcache extends Adapter
             [$this, "open"], [$this, "close"], [$this, "read"], [$this, "write"], [$this, "destroy"], [$this, "gc"]
         );
 
-        parent::__construct(options);
+        parent::__construct($options);
     }
 
     public function open()

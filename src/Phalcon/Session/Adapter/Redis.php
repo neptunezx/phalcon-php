@@ -3,7 +3,7 @@
 namespace Phalcon\Session\Adapter;
 
 use Phalcon\Session\Adapter;
-use Phalsky\Cache\Redis as RedisCache;
+use Phalcon\Cache\Backend\Redis as RedisCache;
 use Phalcon\Cache\Frontend\None as FrontendNone;
 
 /**
