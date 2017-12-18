@@ -50,6 +50,11 @@ interface HeadersInterface
     public function send();
 
     /**
+     * Removes a header to be sent at the end of the request
+     */
+    public function remove($header);
+
+    /**
      * Reset set headers
      *
      */

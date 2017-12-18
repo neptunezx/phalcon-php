@@ -25,8 +25,6 @@ use \Phalcon\DiInterface;
  *
  * This class is a bag to manage the cookies
  * A cookies bag is automatically registered as part of the 'response' service in the DI
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/http/response/cookies.c
  */
 class Cookies implements CookiesInterface, InjectionAwareInterface
 {
@@ -347,7 +345,7 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
      */
     public function reset()
     {
-        $this->_cookies = array();
+        $this->_cookies = [];
 
         return $this;
     }

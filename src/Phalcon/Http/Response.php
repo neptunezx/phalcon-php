@@ -367,12 +367,7 @@ class Response implements ResponseInterface, InjectionAwareInterface
      */
     public function setHeader($name, $value)
     {
-        if (is_string($name) === false ||
-            is_string($value) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->getHeaders()->set($name, $value);
+        $this->getHeaders()->set($name, strval($value));
 
         return $this;
     }

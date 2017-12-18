@@ -14,6 +14,7 @@ namespace Phalcon\Http\Response;
 
 use \Phalcon\Http\Response\HeadersInterface;
 use \Phalcon\Http\Response\Exception;
+use \Phalcon\Text;
 
 /**
  * Phalcon\Http\Response\Headers
@@ -40,10 +41,6 @@ class Headers implements HeadersInterface
      */
     public function set($name, $value)
     {
-        if (is_string($name) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_headers[$name] = (string) $value;
     }
 
@@ -75,15 +72,21 @@ class Headers implements HeadersInterface
      */
     public function setRaw($header)
     {
-        if (is_string($header) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $header = (string) $header;
 
         if (is_array($this->_headers) === false) {
             $this->_headers = array();
         }
 
         $this->_headers[$header] = null;
+    }
+
+    /**
+     * Removes a header to be sent at the end of the request
+     */
+    public function remove($header)
+    {
+        unset($this->_headers[$header]);
     }
 
     /**
@@ -99,7 +102,7 @@ class Headers implements HeadersInterface
                     //Default header
                     header($header . ': ' . $value, true);
                 } else {
-                    if (memstr($header, ":") || substr($header, 0, 5) == "HTTP/") {
+                    if (Text::memstr($header, ":") || substr($header, 0, 5) == "HTTP/") {
                         header($header, true);
                     } else {
                         header($header . ": ", true);

@@ -144,8 +144,8 @@ class Cookie implements InjectionAwareInterface
             throw new Exception('The cookie name must be string');
         }
 
-        if (is_string($value) === true) {
-            $this->_value = $value;
+        if (!empty($value)) {
+            $this->setValue($value);
         }
 
         if (is_null($expire) === true) {
@@ -160,21 +160,22 @@ class Cookie implements InjectionAwareInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_bool($secure) === true) {
+        if ($secure !== null) {
             $this->_secure = $secure;
         }
 
-        if (is_string($domain) === true) {
+        if ($domain !== null) {
             $this->_domain = $domain;
         }
 
-        if (is_bool($httpOnly) === true) {
+        if ($httpOnly !== null) {
             $this->_httpOnly = $httpOnly;
         }
 
         /* Update property */
         $this->_name   = $name;
         $this->_expire = $expire;
+        $this->_path   = $path;
     }
 
     /**
@@ -212,12 +213,9 @@ class Cookie implements InjectionAwareInterface
      */
     public function setValue($value)
     {
-        if (is_string($value) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_value  = $value;
         $this->_readed = true;
+        return $this;
     }
 
     /**
@@ -246,10 +244,8 @@ class Cookie implements InjectionAwareInterface
         }
 
         if ($this->_readed === false) {
-            $name = $this->_name;
-
-            if (isset($_COOKIE[$name]) === true) {
-                $value = $_COOKIE[$name];
+            if (isset($_COOKIE[$this->_name]) === true) {
+                $value = $_COOKIE[$this->_name];
                 if ($this->_useEncryption === true) {
                     $dependencyInjector = $this->_dependencyInjector;
                     //@note no interface validation
@@ -265,11 +261,13 @@ class Cookie implements InjectionAwareInterface
                     }
 
                     //Decrypt the value also decoding it with base64
-                    $value = $crypt->decryptBase64($value);
+                    $decryptedValue = $crypt->decryptBase64($value);
+                } else {
+                    $decryptedValue = $value;
                 }
 
                 //Update the value
-                $this->_value = $value;
+                $this->_value = $decryptedValue;
 
                 if (is_null($filters) === false) {
                     $filter = $this->_filter;
@@ -290,11 +288,11 @@ class Cookie implements InjectionAwareInterface
                         $this->_filter = $filter;
                     }
 
-                    return $filter->sanitize($value, $filters);
+                    return $filter->sanitize($decryptedValue, $filters);
                 }
 
                 //Return the value without filtering
-                return $value;
+                return $decryptedValue;
             }
 
             return $defaultValue;

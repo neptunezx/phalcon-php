@@ -197,6 +197,7 @@ class Request implements RequestInterface, InjectionAwareInterface
             return $defaultValue;
         }
 
+        $value = $source[$name];
         if ($filters !== null) {
             $filter = $this->_filter;
             if (!is_object($filter)) {
@@ -331,10 +332,19 @@ class Request implements RequestInterface, InjectionAwareInterface
         } else {
             $contentType = $this->getContentType();
             if (!empty($contentType)) {
-                return memstr($contentType, "application/soap+xml");
+                return Text::memstr($contentType, "application/soap+xml");
             }
         }
         return false;
+    }
+
+    /**
+     * Alias of isSoap(). It will be deprecated in future versions
+     * @deprecated
+     */
+    public function isSoapRequested()
+    {
+        return $this->isSoap();
     }
 
     /**
@@ -343,6 +353,15 @@ class Request implements RequestInterface, InjectionAwareInterface
     public function isSecure()
     {
         return $this->getScheme() === "https";
+    }
+
+    /**
+     * Alias of isSecure(). It will be deprecated in future versions
+     * @deprecated
+     */
+    public function isSecureRequest()
+    {
+        return $this->isSecure();
     }
 
     /**
@@ -461,7 +480,7 @@ class Request implements RequestInterface, InjectionAwareInterface
              * Cleanup. Force lowercase as per RFC 952/2181
              */
             $host = strtolower(trim($host));
-            if (memstr($host, ":")) {
+            if (Text::memstr($host, ":")) {
                 $host = preg_replace("/:[[:digit:]]+$/", "", $host);
             }
 
@@ -505,7 +524,7 @@ class Request implements RequestInterface, InjectionAwareInterface
          */
         $host = $this->getServer("HTTP_HOST");
         if ($host) {
-            if (memstr($host, ":")) {
+            if (Text::memstr($host, ":")) {
                 $pos = strrpos($host, ":");
 
                 if (false !== $pos) {
@@ -537,6 +556,7 @@ class Request implements RequestInterface, InjectionAwareInterface
      */
     public function getClientAddress($trustForwardedHeader = false)
     {
+        $address = null;
         /**
          * Proxies uses this IP
          */
@@ -552,7 +572,7 @@ class Request implements RequestInterface, InjectionAwareInterface
         }
 
         if (is_string($address)) {
-            if (memstr($address, ",")) {
+            if (Text::memstr($address, ",")) {
                 /**
                  * The client address has multiples parts, only return the first part
                  */
@@ -581,18 +601,18 @@ class Request implements RequestInterface, InjectionAwareInterface
 
         if (isset($_SERVER["REQUEST_METHOD"])) {
             $requestMethod = $_SERVER["REQUEST_METHOD"];
-            $returnMethod  = $requestMethod;
+            $returnMethod  = strtoupper($requestMethod);
+        } else {
+            return "GET";
         }
 
         if ("POST" === $requestMethod) {
-            $headers = $this->getHeaders();
-            if (isset($headers["X-HTTP-METHOD-OVERRIDE"])) {
-                $overridedMethod = $headers["X-HTTP-METHOD-OVERRIDE"];
-                $returnMethod    = $overridedMethod;
+            $overridedMethod = $this->getHeader("X-HTTP-METHOD-OVERRIDE");
+            if (!empty($overridedMethod)) {
+                $returnMethod = strtoupper($overridedMethod);
             } elseif ($this->_httpMethodParameterOverride) {
                 if (isset($_REQUEST["_method"])) {
-                    $spoofedMethod = $_REQUEST["_method"];
-                    $returnMethod  = $spoofedMethod;
+                    $returnMethod = strtoupper(_REQUEST["_method"]);
                 }
             }
         }
@@ -883,11 +903,25 @@ class Request implements RequestInterface, InjectionAwareInterface
 
     /**
      * Returns the available headers in the request
+     *
+     * <code>
+     * $_SERVER = [
+     *     "PHP_AUTH_USER" => "phalcon",
+     *     "PHP_AUTH_PW"   => "secret",
+     * ];
+     *
+     * $headers = $request->getHeaders();
+     *
+     * echo $headers["Authorization"]; // Basic cGhhbGNvbjpzZWNyZXQ=
+     * </code>
+     * 
+     * @return array
      */
     public function getHeaders()
     {
+        $authHeader     = null;
         $headers        = [];
-        $contentHeaders = ["CONTENT_TYPE" => true, "CONTENT_LENGTH" => true];
+        $contentHeaders = ["CONTENT_TYPE" => true, "CONTENT_LENGTH" => true, "CONTENT_MD5" => true];
 
         foreach ($_SERVER as $name => $value) {
             if (Text::startsWith($name, "HTTP_")) {
@@ -899,6 +933,41 @@ class Request implements RequestInterface, InjectionAwareInterface
                 $name           = str_replace(" ", "-", $name);
                 $headers[$name] = $value;
             }
+        }
+
+        if (isset($_SERVER["PHP_AUTH_USER"]) && isset($_SERVER["PHP_AUTH_PW"])) {
+            $headers["Php-Auth-User"] = $_SERVER["PHP_AUTH_USER"];
+            $headers["Php-Auth-Pw"]   = $_SERVER["PHP_AUTH_PW"];
+        } else {
+            if (isset($_SERVER["HTTP_AUTHORIZATION"])) {
+                $authHeader = $_SERVER["HTTP_AUTHORIZATION"];
+            } elseif (isset($_SERVER["REDIRECT_HTTP_AUTHORIZATION"])) {
+                $authHeader = $_SERVER["REDIRECT_HTTP_AUTHORIZATION"];
+            }
+
+            if ($authHeader) {
+                if (stripos($authHeader, "basic ") === 0) {
+                    $exploded = explode(":", base64_decode(substr($authHeader, 6)), 2);
+                    if (count($exploded) == 2) {
+                        $headers["Php-Auth-User"] = $exploded[0];
+                        $headers["Php-Auth-Pw"]   = $exploded[1];
+                    }
+                } elseif (stripos($authHeader, "digest ") === 0 && !isset($_SERVER["PHP_AUTH_DIGEST"])) {
+                    $headers["Php-Auth-Digest"] = $authHeader;
+                } elseif (stripos($authHeader, "bearer ") === 0) {
+                    $headers["Authorization"] = $authHeader;
+                }
+            }
+        }
+
+        if (isset($headers["Authorization"])) {
+            return $headers;
+        }
+
+        if (isset($headers["Php-Auth-User"])) {
+            $headers["Authorization"] = "Basic " . base64_encode($headers["Php-Auth-User"] . ":" . $headers["Php-Auth-Pw"]);
+        } else if (isset($headers["Php-Auth-Digest"])) {
+            $headers["Authorization"] = $headers["Php-Auth-Digest"];
         }
 
         return $headers;
@@ -922,10 +991,10 @@ class Request implements RequestInterface, InjectionAwareInterface
     protected final function _getQualityHeader($serverIndex, $name)
     {
         $returnedParts = [];
-        foreach (preg_split("/,\\s*/", $this->getServer(serverIndex), -1, PREG_SPLIT_NO_EMPTY) as $part) {
+        foreach (preg_split("/,\\s*/", $this->getServer($serverIndex), -1, PREG_SPLIT_NO_EMPTY) as $part) {
 
             $headerParts = [];
-            foreach (preg_split("/\s*;\s*/", trim(part), -1, PREG_SPLIT_NO_EMPTY) as $headerPart) {
+            foreach (preg_split("/\s*;\s*/", trim($part), -1, PREG_SPLIT_NO_EMPTY) as $headerPart) {
                 if (strpos($headerPart, "=") !== false) {
                     $split = explode("=", $headerPart, 2);
                     if ($split[0] === "q") {
