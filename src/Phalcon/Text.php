@@ -65,6 +65,18 @@ abstract class Text
     const RANDOM_DISTINCT = 5;
 
     /**
+     * find needle in $haystack
+     * 
+     * @param string $haystack
+     * @param string $needle
+     * @return boolean
+     */
+    public static function memstr($haystack, $needle)
+    {
+        return strpos($haystack, $needle) !== false;
+    }
+
+    /**
      * Converts strings to camelize style
      *
      * <code>
