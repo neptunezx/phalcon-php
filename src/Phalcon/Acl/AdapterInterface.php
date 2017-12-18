@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ACL Adapter Interface
  *
@@ -6,16 +7,18 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Acl;
 
 /**
- * Phalcon\Acl\AdapterInterface initializer
+ * Phalcon\Acl\AdapterInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/acl/adapterinterface.c
+ * Interface for Phalcon\Acl adapters
  */
 interface AdapterInterface
 {
+
     /**
      * Sets the default access level (Phalcon\Acl::ALLOW or \Phalcon\Acl::DENY)
      *
@@ -29,6 +32,22 @@ interface AdapterInterface
      * @return int
      */
     public function getDefaultAction();
+
+    /**
+     * Sets the default access level (Phalcon\Acl::ALLOW or Phalcon\Acl::DENY)
+     * for no arguments provided in isAllowed action if there exists func for accessKey
+     * 
+     * @return int
+     */
+    public function setNoArgumentsDefaultAction($defaultAccess);
+
+    /**
+     * Returns the default ACL access level for no arguments provided in
+     * isAllowed action if there exists func for accessKey
+     * 
+     * @return int
+     */
+    public function getNoArgumentsDefaultAction();
 
     /**
      * Adds a role to the ACL list. Second parameter lets to inherit access data from other existing role
@@ -100,7 +119,7 @@ interface AdapterInterface
      * @param string $resourceName
      * @param string|array $access
      */
-    public function allow($roleName, $resourceName, $access);
+    public function allow($roleName, $resourceName, $access, $func = null);
 
     /**
      * Deny access to a role on a resource
@@ -110,7 +129,7 @@ interface AdapterInterface
      * @param string|array $access
      * @return boolean
      */
-    public function deny($roleName, $resourceName, $access);
+    public function deny($roleName, $resourceName, $access, $func = null);
 
     /**
      * Check whether a role is allowed to access an action from a resource
@@ -120,7 +139,7 @@ interface AdapterInterface
      * @param string $access
      * @return boolean
      */
-    public function isAllowed($role, $resource, $access);
+    public function isAllowed($role, $resource, $access, array $parameters = null);
 
     /**
      * Returns the role which the list is checking if it's allowed to certain resource/access
@@ -146,14 +165,14 @@ interface AdapterInterface
     /**
      * Return an array with every role registered in the list
      *
-     * @return array
+     * @return RoleInterface[]
      */
     public function getRoles();
 
     /**
      * Return an array with every resource registered in the list
      *
-     * @return array
+     * @return ResourceInterface[]
      */
     public function getResources();
 }

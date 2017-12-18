@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ACL Adapter Class
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Acl;
 
 use \Phalcon\Events\EventsAwareInterface;
@@ -18,17 +20,16 @@ use \Phalcon\Acl\Exception;
  * Phalcon\Acl\Adapter
  *
  * Adapter for Phalcon\Acl adapters
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/acl/adapter.c
-*/
-abstract class Adapter implements EventsAwareInterface
+ */
+abstract class Adapter implements AdapterInterface, EventsAwareInterface
 {
+
     /**
      * Events Manager
      *
      * @var ManagerInterface|null
      * @access protected
-    */
+     */
     protected $_eventsManager;
 
     /**
@@ -36,7 +37,7 @@ abstract class Adapter implements EventsAwareInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_defaultAccess = 1;
 
     /**
@@ -44,7 +45,7 @@ abstract class Adapter implements EventsAwareInterface
      *
      * @var bool
      * @access protected
-    */
+     */
     protected $_accessGranted = false;
 
     /**
@@ -52,7 +53,7 @@ abstract class Adapter implements EventsAwareInterface
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_activeRole;
 
     /**
@@ -60,7 +61,7 @@ abstract class Adapter implements EventsAwareInterface
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_activeResource;
 
     /**
@@ -68,7 +69,7 @@ abstract class Adapter implements EventsAwareInterface
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_activeAccess;
 
     /**
@@ -83,7 +84,7 @@ abstract class Adapter implements EventsAwareInterface
             $eventsManager instanceof ManagerInterface === false) {
             throw new Exception('Invalid parameter type.');
         }
-        
+
         $this->_eventsManager = $eventsManager;
     }
 
@@ -151,4 +152,5 @@ abstract class Adapter implements EventsAwareInterface
     {
         return $this->_activeAccess;
     }
+
 }

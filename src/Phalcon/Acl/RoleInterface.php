@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ACL Resource Interface
  *
@@ -6,23 +7,17 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Acl;
 
 /**
- * Phalcon\Acl\RoleInterface initializer
+ * Phalcon\Acl\RoleInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/acl/roleinterface.c
+ * Interface for Phalcon\Acl\Role
  */
 interface RoleInterface
 {
-    /**
-     * \Phalcon\Acl\Role constructor
-     *
-     * @param string $name
-     * @param string|null $description
-     */
-    public function __construct($name, $description = null);
 
     /**
      * Returns the role name

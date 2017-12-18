@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ACL Resource
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Acl;
 
 use \Phalcon\Acl\ResourceInterface;
@@ -17,17 +19,16 @@ use \Phalcon\Acl\Exception;
  * Phalcon\Acl\Resource
  *
  * This class defines resource entity and its description
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/acl/resource.c
  */
 class Resource implements ResourceInterface
 {
+
     /**
      * Name
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_name;
 
     /**
@@ -35,7 +36,7 @@ class Resource implements ResourceInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_description;
 
     /**
@@ -96,4 +97,5 @@ class Resource implements ResourceInterface
     {
         return $this->_name;
     }
+
 }

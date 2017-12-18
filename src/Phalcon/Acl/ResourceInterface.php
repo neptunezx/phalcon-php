@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ACL Resource Interface
  *
@@ -6,23 +7,18 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Acl;
 
 /**
- * Phalcon\Acl\ResourceInterface initializer
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/acl/resourceinterface.c
+ * Phalcon\Acl\ResourceInterface
+ *
+ * Interface for Phalcon\Acl\Resource
  */
 interface ResourceInterface
 {
-    /**
-     * \Phalcon\Acl\ResourceInterface constructor
-     *
-     * @param string $name
-     * @param string|null $description
-     */
-    public function __construct($name, $description = null);
 
     /**
      * Returns the resource name

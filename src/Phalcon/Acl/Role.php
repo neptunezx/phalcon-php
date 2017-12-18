@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ACL Role
  *
@@ -7,7 +8,8 @@
  * @author Wenzel Pünter <wenzel@phelix.me>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Acl;
 
 use \Phalcon\Acl\RoleInterface;
@@ -17,17 +19,16 @@ use \Phalcon\Acl\Exception;
  * Phalcon\Acl\Role
  *
  * This class defines role entity and its description
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/acl/role.c
  */
 class Role implements RoleInterface
 {
+
     /**
      * Name
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_name;
 
     /**
@@ -35,7 +36,7 @@ class Role implements RoleInterface
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_description;
 
     /**
@@ -96,4 +97,5 @@ class Role implements RoleInterface
     {
         return $this->_name;
     }
+
 }
