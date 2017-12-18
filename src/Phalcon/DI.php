@@ -12,12 +12,15 @@
 
 namespace Phalcon;
 
-use \ArrayAccess;
-use \Phalcon\DiInterface;
-use \Phalcon\Di\ServiceInterface;
-use \Phalcon\Di\Service;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Di\Exception as DiException;
+use Phalcon\Config;
+use Phalcon\Di\Service;
+use Phalcon\DiInterface;
+use Phalcon\Di\Exception;
+use Phalcon\Config\Adapter\Php;
+use Phalcon\Config\Adapter\Yaml;
+use Phalcon\Di\ServiceInterface;
+use Phalcon\Events\ManagerInterface;
+use Phalcon\Di\InjectionAwareInterface;
 use Phalcon\Di\ServiceProviderInterface;
 
 /**
@@ -38,21 +41,24 @@ use Phalcon\Di\ServiceProviderInterface;
  * Additionally, this pattern increases testability in the code, thus making it less prone to errors.
  *
  * <code>
- * $di = new Phalcon\Di();
+ * use Phalcon\Di;
+ * use Phalcon\Http\Request;
  *
- * //Using a string definition
- * $di->set('request', 'Phalcon\Http\Request', true);
+ * $di = new Di();
  *
- * //Using an anonymous function
- * $di->set('request', function(){
- *    return new Phalcon\Http\Request();
- * }, true);
+ * // Using a string definition
+ * $di->set("request", Request::class, true);
+ *
+ * // Using an anonymous function
+ * $di->setShared(
+ *     "request",
+ *     function () {
+ *         return new Request();
+ *     }
+ * );
  *
  * $request = $di->getRequest();
- *
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/1.2.6/master/ext/di.c
  */
 class DI implements DiInterface
 {
@@ -63,7 +69,7 @@ class DI implements DiInterface
      * @var array
      * @access protected
      */
-    protected $_services = array();
+    protected $_services = [];
 
     /**
      * Shared Instances
@@ -71,7 +77,7 @@ class DI implements DiInterface
      * @var array
      * @access protected
      */
-    protected $_sharedInstances = array();
+    protected $_sharedInstances = [];
 
     /**
      * Fresh Instance
@@ -80,6 +86,13 @@ class DI implements DiInterface
      * @access protected
      */
     protected $_freshInstance = false;
+
+    /**
+     * Events Manager
+     *
+     * @var \Phalcon\Events\ManagerInterface
+     */
+    protected $_eventsManager = null;
 
     /**
      * Default Instance
@@ -94,9 +107,29 @@ class DI implements DiInterface
      */
     public function __construct()
     {
-        if (is_null(self::$_default) === true) {
+        if (is_null(self::$_default)) {
             self::$_default = $this;
         }
+    }
+
+    /**
+     * Sets the internal event manager
+     * 
+     * @param ManagerInterface $eventsManager
+     */
+    public function setInternalEventsManager(ManagerInterface $eventsManager)
+    {
+        $this->_eventsManager = $eventsManager;
+    }
+
+    /**
+     * Returns the internal event manager
+     * 
+     * @return  ManagerInterface
+     */
+    public function getInternalEventsManager()
+    {
+        return $this->_eventsManager;
     }
 
     /**
@@ -146,6 +179,10 @@ class DI implements DiInterface
      */
     public function remove($name)
     {
+        if ($name == null) {
+            return;
+        }
+
         if (is_string($name) === false) {
             throw new DiException('The service name must be a string');
         }
@@ -164,7 +201,7 @@ class DI implements DiInterface
      * @param string $name
      * @param mixed $definition
      * @param boolean $shared
-     * @return \Phalcon\Di\ServiceInterface|null
+     * @return \Phalcon\Di\ServiceInterface|false
      * @throws DiException
      */
     public function attempt($name, $definition, $shared = false)
@@ -174,10 +211,11 @@ class DI implements DiInterface
         }
 
         if (isset($this->_services[$name]) === false) {
-            return $this->set($name, $definition, $shared);
+            $this->_services[$name] = new Service($name, $definition, $shared);
+            return $this->_services[$name];
         }
 
-        return null;
+        return false;
     }
 
     /**
@@ -188,15 +226,10 @@ class DI implements DiInterface
      * @return \Phalcon\Di\ServiceInterface
      * @throws DiException
      */
-    public function setRaw($name, $rawDefinition)
+    public function setRaw($name, ServiceInterface $rawDefinition)
     {
         if (is_string($name) === false) {
             throw new DiException('The service name must be a string');
-        }
-
-        if (is_object($rawDefinition) === false ||
-            $rawDefinition instanceof ServiceInterface === false) {
-            throw new DiException('The service definition must be an object');
         }
 
         $this->_services[$name] = $rawDefinition;
@@ -279,29 +312,53 @@ class DI implements DiInterface
             throw new DiException('The service name must be a string');
         }
 
-        if (isset($this->_services[$name]) === true) {
-            //Service is registered in the DI
-            $instance = $this->_services[$name]->resolve($parameters, $this);
-        } else {
-            //Act as builder for any class
-            if (class_exists($name) === true) {
-                if (is_array($parameters) === true) {
-                    if (empty($parameters) === false) {
-                        $instance = self::createInstance($name, $parameters);
-                    } else {
-                        $instance = self::createInstance($name);
-                    }
+        $instance      = null;
+        $eventsManager = $this->_eventsManager;
+        if (!$eventsManager instanceof ManagerInterface) {
+            $eventsManager = null;
+        }
+        if (is_object($eventsManager)) {
+            $instance = $eventsManager->fire(
+                "di:beforeServiceResolve", $this, ["name" => $name, "parameters" => $parameters]
+            );
+        }
+
+        if (!$instance) {
+            if (isset($this->_services[$name])) {
+                $service  = $this->_services[$name];
+                /**
+                 * The service is registered in the DI
+                 */
+                $instance = $service->resolve($parameters, $this);
+            } else {
+                /**
+                 * The DI also acts as builder for any class even if it isn't defined in the DI
+                 */
+                if (!class_exists($name)) {
+                    throw new Exception("Service '" . $name . "' wasn't found in the dependency injection container");
+                }
+
+                if (is_array($parameters) && count($parameters)) {
+                    $instance = self::createInstance($name, $parameters);
                 } else {
                     $instance = self::createInstance($name);
                 }
-            } else {
-                throw new DiException('Service \'' . $name . '\' wasn\'t found in the dependency injection container');
             }
         }
 
         if (is_object($instance) === true &&
             $instance instanceof InjectionAwareInterface) {
             $instance->setDI($this);
+        }
+
+        if (is_object($eventsManager)) {
+            $eventsManager->fire(
+                "di:afterServiceResolve", $this, [
+                "name"       => $name,
+                "parameters" => $parameters,
+                "instance"   => $instance
+                ]
+            );
         }
 
         return $instance;
@@ -323,7 +380,7 @@ class DI implements DiInterface
 
         if (isset($this->_sharedInstances[$name]) === true) {
             $instance             = $this->_sharedInstances[$name];
-            $this->_freshInstance = 0;
+            $this->_freshInstance = false;
         } else {
             //Resolve
             $instance = $this->get($name, $parameters);
@@ -346,7 +403,7 @@ class DI implements DiInterface
     public function has($name)
     {
         if (is_string($name) === false) {
-            throw new DiException('The service alias must be a string');
+            throw new DiException('The service name must be a string');
         }
 
         return isset($this->_services[$name]);
@@ -424,7 +481,7 @@ class DI implements DiInterface
      */
     public function offsetUnset($name)
     {
-        $this->remove($name);
+        return false;
     }
 
     /**
@@ -482,7 +539,7 @@ class DI implements DiInterface
      * @param \Phalcon\Di\ServiceProviderInterface $provider
      * @return void
      */
-    public function register($provider)
+    public function register(ServiceProviderInterface $provider)
     {
         $provider->register($this);
     }
@@ -492,11 +549,9 @@ class DI implements DiInterface
      *
      * @param \Phalcon\DiInterface $dependencyInjector
      */
-    public static function setDefault($dependencyInjector)
+    public static function setDefault(DiInterface $dependencyInjector)
     {
-        if ($dependencyInjector instanceof DiInterface) {
-            self::$_default = $dependencyInjector;
-        }
+        self::$_default = $dependencyInjector;
     }
 
     /**
@@ -515,6 +570,105 @@ class DI implements DiInterface
     public static function reset()
     {
         self::$_default = null;
+    }
+
+    /**
+     * Loads services from a yaml file.
+     *
+     * <code>
+     * $di->loadFromYaml(
+     *     "path/services.yaml",
+     *     [
+     *         "!approot" => function ($value) {
+     *             return dirname(__DIR__) . $value;
+     *         }
+     *     ]
+     * );
+     * </code>
+     *
+     * And the services can be specified in the file as:
+     *
+     * <code>
+     * myComponent:
+     *     className: \Acme\Components\MyComponent
+     *     shared: true
+     *
+     * group:
+     *     className: \Acme\Group
+     *     arguments:
+     *         - type: service
+     *           name: myComponent
+     *
+     * user:
+     *    className: \Acme\User
+     * </code>
+     *
+     * @link https://docs.phalconphp.com/en/latest/reference/di.html
+     * @param string $filePath
+     * @param array $callbacks
+     * @return void
+     */
+    public function loadFromYaml($filePath, array $callbacks = null)
+    {
+
+        $services = new Yaml($filePath, $callbacks);
+
+        $this->loadFromConfig($services);
+    }
+
+    /**
+     * Loads services from a php config file.
+     *
+     * <code>
+     * $di->loadFromPhp("path/services.php");
+     * </code>
+     *
+     * And the services can be specified in the file as:
+     *
+     * <code>
+     * return [
+     *      'myComponent' => [
+     *          'className' => '\Acme\Components\MyComponent',
+     *          'shared' => true,
+     *      ],
+     *      'group' => [
+     *          'className' => '\Acme\Group',
+     *          'arguments' => [
+     *              [
+     *                  'type' => 'service',
+     *                  'service' => 'myComponent',
+     *              ],
+     *          ],
+     *      ],
+     *      'user' => [
+     *          'className' => '\Acme\User',
+     *      ],
+     * ];
+     * </code>
+     *
+     * @link https://docs.phalconphp.com/en/latest/reference/di.html
+     * 
+     *  * @param string $filePath
+     * @return void
+     */
+    public function loadFromPhp($filePath)
+    {
+        $this->loadFromConfig(new Php($filePath));
+    }
+
+    /**
+     * Loads services from a Config object.
+     * 
+     * @param Config $config
+     * @return void
+     */
+    protected function loadFromConfig(Config $config)
+    {
+        $services = $config->toArray();
+
+        foreach ($services as $name => $service) {
+            $this->set($name, $service, isset($service["shared"]) && $service["shared"]);
+        }
     }
 
 }

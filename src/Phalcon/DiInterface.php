@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Dependency Injector Interface
  *
@@ -6,16 +7,20 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon;
 
+use Phalcon\Di\ServiceInterface;
+
 /**
- * Phalcon\DiInterface initializer
+ * Phalcon\DiInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/diinterface.c
+ * Interface for Phalcon\Di
  */
 interface DiInterface extends \ArrayAccess
 {
+
     /**
      * Registers a service in the services container
      *
@@ -79,7 +84,7 @@ interface DiInterface extends \ArrayAccess
      * @param \Phalcon\Di\ServiceInterface $rawDefinition
      * @return \Phalcon\Di\ServiceInterface
      */
-    public function setRaw($name, $rawDefinition);
+    public function setRaw($name, ServiceInterface $rawDefinition);
 
     /**
      * Returns a service definition without resolving
@@ -124,7 +129,7 @@ interface DiInterface extends \ArrayAccess
      *
      * @param \Phalcon\DiInterface $dependencyInjector
      */
-    public static function setDefault($dependencyInjector);
+    public static function setDefault(DiInterface $dependencyInjector);
 
     /**
      * Return the last DI created
