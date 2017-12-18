@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Config Exception
  *
@@ -6,7 +7,8 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Config;
 
 /**
@@ -14,8 +16,8 @@ namespace Phalcon\Config;
  *
  * Exceptions thrown in Phalcon\Config will use this class
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/config/exception.c
  */
 class Exception extends \Phalcon\Exception
 {
+    
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Config
  *
@@ -8,10 +9,9 @@
  * @version 1.2.6
  * @package Phalcon
  */
+
 namespace Phalcon;
 
-use \ArrayAccess;
-use \Countable;
 use \Phalcon\Config\Exception as ConfigException;
 
 /**
@@ -21,34 +21,31 @@ use \Phalcon\Config\Exception as ConfigException;
  * It provides a nested object property based user interface for accessing this configuration data within
  * application code.
  *
- *<code>
- *  $config = new Phalcon\Config(array(
- *      "database" => array(
- *          "adapter" => "Mysql",
- *          "host" => "localhost",
- *          "username" => "scott",
- *          "password" => "cheetah",
- *          "dbname" => "test_db"
- *      ),
- *      "phalcon" => array(
- *          "controllersDir" => "../app/controllers/",
- *          "modelsDir" => "../app/models/",
- *          "viewsDir" => "../app/views/"
- *      )
- * ));
- *</code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/config.c
+ * <code>
+ * $config = new \Phalcon\Config(
+ *     [
+ *         "database" => [
+ *             "adapter"  => "Mysql",
+ *             "host"     => "localhost",
+ *             "username" => "scott",
+ *             "password" => "cheetah",
+ *             "dbname"   => "test_db",
+ *         ],
+ *         "phalcon" => [
+ *             "controllersDir" => "../app/controllers/",
+ *             "modelsDir"      => "../app/models/",
+ *             "viewsDir"       => "../app/views/",
+ *         ],
+ *     ]
+ * );
+ * </code>
  */
-class Config implements ArrayAccess, Countable
+class Config implements \ArrayAccess, \Countable
 {
-    /**
-     * Storage
-     *
-     * @var array
-     * @access private
-    */
-    private $_storage = array();
+
+    const DEFAULT_PATH_DELIMITER = ".";
+
+    protected static $_pathDelimiter;
 
     /**
      * \Phalcon\Config constructor
@@ -56,27 +53,23 @@ class Config implements ArrayAccess, Countable
      * @param array $arrayConfig
      * @throws ConfigException
      */
-    public function __construct($arrayConfig)
+    public function __construct(array $arrayConfig = null)
     {
         if (is_array($arrayConfig) === false) {
             throw new ConfigException('The configuration must be an Array');
         }
 
         foreach ($arrayConfig as $key => $value) {
-            if (is_array($value) === true) {
-                $this->_storage[$key] = new self($value);
-            } else {
-                $this->_storage[$key] = $value;
-            }
+            $this->offsetSet($key, $value);
         }
     }
 
     /**
      * Allows to check whether an attribute is defined using the array-syntax
      *
-     *<code>
+     * <code>
      * var_dump(isset($config['database']));
-     *</code>
+     * </code>
      *
      * @param scalar $index
      * @return boolean
@@ -84,39 +77,83 @@ class Config implements ArrayAccess, Countable
      */
     public function offsetExists($index)
     {
-        if (is_scalar($index) === false) {
-            throw new ConfigException('Invalid parameter type.');
+        $index = strval($index);
+
+        return isset($this->{$index});
+    }
+
+    /**
+     * Returns a value from current config using a dot separated path.
+     *
+     * <code>
+     * echo $config->path("unknown.path", "default", ".");
+     * </code>
+     */
+    public function path($path, $defaultValue = null, $delimiter = null)
+    {
+        if (!$path) {
+            return null;
         }
-        return isset($this->_storage[$index]);
+        if (!is_string($path)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (isset($this->{$path})) {
+            return $this->{$path};
+        }
+
+        if (empty($delimiter)) {
+            $delimiter = self::getPathDelimiter();
+        }
+
+        $config = $this;
+        $keys   = explode($delimiter, $path);
+
+        while (!empty($keys)) {
+            $key = array_shift($keys);
+
+            if (!isset($config->{$key})) {
+                break;
+            }
+
+            if (empty($keys)) {
+                return $config->{$key};
+            }
+
+            $config = $config->{$key};
+
+            if (empty($config)) {
+                break;
+            }
+        }
+
+        return $defaultValue;
     }
 
     /**
      * Gets an attribute from the configuration, if the attribute isn't defined returns null
      * If the value is exactly null or is not defined the default value will be used instead
      *
-     *<code>
+     * <code>
      * echo $config->get('controllersDir', '../app/controllers/');
-     *</code>
+     * </code>
      *
-     * @param scalar $index
+     * @param mixed $index
      * @param mixed $defaultValue
      * @return mixed
      * @throws ConfigException
      */
     public function get($index, $defaultValue = null)
     {
-        if (is_scalar($index) === false) {
-            throw new ConfigException('Invalid parameter type.');
-        }
-        return (isset($this->_storage[$index]) === true ? $this->_storage[$index] : $defaultValue);
+        $index = strval($index);
+        return (isset($this->{$index}) === true ? $this->{$index} : $defaultValue);
     }
 
     /**
      * Gets an attribute using the array-syntax
      *
-     *<code>
+     * <code>
      * print_r($config['database']);
-     *</code>
+     * </code>
      *
      * @param scalar $index
      * @return mixed
@@ -124,46 +161,45 @@ class Config implements ArrayAccess, Countable
      */
     public function offsetGet($index)
     {
-        return $this->get($index);
+        return $this->get(strval($index));
     }
 
     /**
      * Sets an attribute using the array-syntax
      *
-     *<code>
+     * <code>
      * $config['database'] = array('type' => 'Sqlite');
-     *</code>
+     * </code>
      *
-     * @param scalar $index
+     * @param mixed $index
      * @param mixed $value
-     * @throws ConfigException
      */
     public function offsetSet($index, $value)
     {
-        if (is_scalar($index) === false) {
-            throw new ConfigException('Invalid parameter type.');
-        }
+        $index = strval($index);
 
-        $this->_storage[$index] = $value;
+        if (is_array($value)) {
+            $this->{$index} = new self($value);
+        } else {
+            $this->{$index} = $value;
+        }
     }
 
     /**
      * Unsets an attribute using the array-syntax
      *
-     *<code>
+     * <code>
      * unset($config['database']);
-     *</code>
+     * </code>
      *
-     * @param scalar $index
-     * @throws ConfigException
+     * @param mixed $index
      */
     public function offsetUnset($index)
     {
-        if (is_scalar($index) === false) {
-            throw new ConfigException('Invalid parameter type.');
-        }
+        $index = strval($index);
 
-        unset($this->_storage[$index]);
+        //unset(this->{index});
+        $this->{$index} = null;
     }
 
     /**
@@ -171,85 +207,74 @@ class Config implements ArrayAccess, Countable
      *
      * @brief void \Phalcon\Config::merge(array|object $with)
      *
-     *<code>
+     * <code>
      *  $appConfig = new \Phalcon\Config(array('database' => array('host' => 'localhost')));
      *  $globalConfig->merge($config2);
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Config|array $config
      * @throws Exception ConfigException
      */
     public function merge($config)
     {
-        if (is_object($config) === true && $config instanceof Config === true) {
-            $config = $config->toArray(false);
-        } elseif (is_array($config) === false) {
-            throw new ConfigException('Configuration must be an object or array');
-        }
-
-        foreach ($config as $key => $value) {
-            //The key is already defined in the object, we have to merge it
-            if (isset($this->_storage[$key]) === true) {
-                if ($this->$key instanceof Config === true &&
-                    $value instanceof Config === true) {
-                    $this->$key->merge($value);
-                } else {
-                    $this->$key = $value;
-                }
-            } else {
-                if ($value instanceof Config === true) {
-                    $this->$key = new self($value->toArray());
-                } else {
-                    $this->$key = $value;
-                }
-            }
-        }
+        return $this->_merge($config);
     }
 
     /**
      * Converts recursively the object to an array
      *
-     * @brief array \Phalcon\Config::toArray(bool $recursive = true);
+     * @brief array \Phalcon\Config::toArray();
      *
-     *<code>
+     * <code>
      *  print_r($config->toArray());
-     *</code>
+     * </code>
      *
-     * @param boolean $recursive
      * @return array
      */
-    public function toArray($recursive = true)
+    public function toArray()
     {
-        $array = $this->_storage;
-
-        if ($recursive === true) {
-            foreach ($this->_storage as $key => $value) {
-                if ($value instanceof Config === true) {
-                    $array[$key] = $value->toArray($recursive);
+        $arrayConfig = [];
+        $vars        = get_object_vars($this);
+        foreach ($vars as $key => $value) {
+            if (is_object($value)) {
+                if (method_exists($value, "toArray")) {
+                    $arrayConfig[$key] = $value->toArray();
                 } else {
-                    $array[$key] = $value;
+                    $arrayConfig[$key] = $value;
                 }
+            } else {
+                $arrayConfig[$key] = $value;
             }
         }
-
-        return $array;
+        return $arrayConfig;
     }
 
     /**
-     * Counts configuration elements
+     * Returns the count of properties set in the config
      *
+     * <code>
+     * print count($config);
+     * </code>
+     *
+     * or
+     *
+     * <code>
+     * print $config->count();
+     * </code>
+     * 
      * @return int
-    */
+     */
     public function count()
     {
-        return count($this->_storage);
+        return count(get_object_vars($this));
     }
 
     /**
      * Restore data after unserialize()
-    */
+     */
     public function __wakeup()
     {
+        
     }
 
     /**
@@ -258,59 +283,69 @@ class Config implements ArrayAccess, Countable
      * @param array $data
      * @return \Phalcon\Config
      */
-    public static function __set_state($data)
+    public static function __set_state(array $data)
     {
         //@warning this function is not compatible with a direct var_export
-        return new Config($data);
+        return new self($data);
     }
 
     /**
-     * Get element
-     *
-     * @param scalar $index
-     * @return mixed
-     * @throws ConfigException
-    */
-    public function __get($index)
+     * Sets the default path delimiter
+     */
+    public static function setPathDelimiter($delimiter = null)
     {
-        return $this->get($index);
+        self::$_pathDelimiter = $delimiter;
     }
 
     /**
-     * Set element
-     *
-     * @param scalar $index
-     * @param mixed $value
-     * @throws ConfigException
-    */
-    public function __set($index, $value)
+     * Gets the default path delimiter
+     */
+    public static function getPathDelimiter()
     {
-        $this->offsetSet($index, $value);
+        $delimiter = self::$_pathDelimiter;
+        if (!$delimiter) {
+            $delimiter = self::DEFAULT_PATH_DELIMITER;
+        }
+
+        return $delimiter;
     }
 
     /**
-     * Isset element?
+     * Helper method for merge configs (forwarding nested config instance)
      *
-     * @param scalar $index
-     * @return boolean
-     * @throws ConfigException
-    */
-    public function __isset($index)
+     * @param Config config
+     * @param Config instance = null
+     *
+     * @return Config merged config
+     */
+    protected final function _merge($config, $instance = null)
     {
-        return $this->offsetExists($index);
+        if (!$instance) {
+            $instance = $this;
+        }
+
+        $number = $instance->count();
+
+        foreach (get_object_vars($config) as $key => $value) {
+            $property = strval($key);
+            if (isset($instance->{$property})) {
+                $localObject = $instance->{$property};
+                if ($localObject && $value) {
+                    if ($localObject instanceof Config && $value instanceof Config) {
+                        $this->_merge($value, $localObject);
+                        continue;
+                    }
+                }
+            }
+
+            if (is_numeric($key)) {
+                $key = strval($number);
+                $number++;
+            }
+            $instance->{$key} = $value;
+        }
+
+        return $instance;
     }
 
-    /**
-     * Unset element
-     *
-     * @WARNING This function is not implemented in the original
-     * Phalcon API.
-     *
-     * @param scalar $index
-     * @throws ConfigException
-    */
-    public function __unset($index)
-    {
-        $this->offsetUnset($index);
-    }
 }
