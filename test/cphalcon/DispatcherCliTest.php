@@ -47,7 +47,7 @@ class DispatcherCliTest extends PHPUnit_Framework_TestCase
 			return "data";
 		});
 
-		$dispatcher = new \Phalcon\CLI\Dispatcher();
+		$dispatcher = new \Phalcon\Cli\Dispatcher();
 		$dispatcher->setDI($di);
 		$dispatcher->dispatch();
 		$this->assertEquals($dispatcher->getTaskName(), 'main');

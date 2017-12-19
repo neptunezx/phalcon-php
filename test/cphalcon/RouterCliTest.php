@@ -31,7 +31,7 @@ class RouterCliTest extends PHPUnit_Framework_TestCase
 			return "data";
 		});
 
-		$router = new \Phalcon\CLI\Router();
+		$router = new \Phalcon\Cli\Router();
 
 		$router->handle(array());
 		$this->assertEquals($router->getModuleName(), null);

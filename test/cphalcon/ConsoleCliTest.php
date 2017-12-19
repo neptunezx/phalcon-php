@@ -48,7 +48,7 @@ class ConsoleCliTest extends PHPUnit_Framework_TestCase
 			return "data";
 		});
 
-		$console = new \Phalcon\CLI\Console();
+		$console = new \Phalcon\Cli\Console();
 		$console->setDI($di);
 		$dispatcher = $console->getDI()->getShared('dispatcher');
 
@@ -133,7 +133,7 @@ class ConsoleCliTest extends PHPUnit_Framework_TestCase
 			return "data";
 		});
 
-		$console = new \Phalcon\CLI\Console();
+		$console = new \Phalcon\Cli\Console();
 		$console->setDI($di);
 
 		$expected = array(
@@ -186,12 +186,12 @@ class ConsoleCliTest extends PHPUnit_Framework_TestCase
 
 		$di->setShared('dispatcher', function() use ($di)
 		{
-			$dispatcher = new Phalcon\CLI\Dispatcher;
+			$dispatcher = new Phalcon\Cli\Dispatcher;
 			$dispatcher->setDI($di);
 			return $dispatcher;
 		});
 
-		$console = new \Phalcon\CLI\Console();
+		$console = new \Phalcon\Cli\Console();
 		$console->setDI($di);
 		$console->handle(array('task' => 'issue787', 'action' => 'main'));
 

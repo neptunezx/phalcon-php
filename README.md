@@ -7,7 +7,7 @@ This project allows the usage of the Phalcon APsI in environments without the po
 
 ## Note
 1. This project is extended from project scento/phalcon-php(https://github.com/scento/phalcon.git) which is not maintained yet. 
-2. The goal of this project is to complete the PHP replacement of cphalcon 3.2.*, but remove the view component. 
+2. The goal of this project is to complete the PHP replacement of cphalcon-3.2.4(https://github.com/phalcon/cphalcon/archive/v3.2.4.tar.gz), but remove the view component. 
 3. The project is more suitable for web API development
 3. The codebase is still under development. A large number of PHPUnit tests fails now.
 
