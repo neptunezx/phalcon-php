@@ -11,20 +11,18 @@ use \Phalcon\Mvc\Micro\Exception;
  * Groups Micro-Mvc handlers as controllers
  *
  * <code>
+ * $app = new \Phalcon\Mvc\Micro();
  *
- * $app = new Phalcon\Mvc\Micro();
+ * $collection = new Collection();
  *
- * $collection = new Phalcon\Mvc\Micro\Collection();
+ * $collection->setHandler(
+ *     new PostsController()
+ * );
  *
- * $collection->setHandler(new PostsController());
- *
- * $collection->get('/posts/edit/{id}', 'edit');
+ * $collection->get("/posts/edit/{id}", "edit");
  *
  * $app->mount($collection);
- *
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/micro/collection.c
  */
 class Collection implements CollectionInterface
 {
@@ -62,19 +60,25 @@ class Collection implements CollectionInterface
     protected $_handlers;
 
     /**
-     * Add a hander to the group
+     * Internal function to add a handler to the group
      *
-     * @param string|array $method
-     * @param string $routePattern
-     * @param mixed $handler
+     * @param string|array method
+     * @param string routePattern
+     * @param mixed handler
+     * @param string $name
+     * @param string name
      */
-    private function addToMap($method, $routePattern, $handler)
+    private function _addMap($method, $routePattern, $handler, $name)
     {
+        if (is_string($routePattern) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+
         if (is_array($this->_handlers) === false) {
             $this->_handlers = array();
         }
 
-        $this->_handlers[] = array($method, $routePattern, $handler);
+        $this->_handlers[] = array($method, $routePattern, $handler, $name);
     }
 
     /**
@@ -180,17 +184,13 @@ class Collection implements CollectionInterface
      *
      * @param string $routePattern
      * @param callable $handler
+     * @param string $name
      * @return \Phalcon\Mvc\Micro\CollectionInterface
      * @throws Exception
      */
-    public function map($routePattern, $handler)
+    public function map($routePattern, $handler, $name = null)
     {
-        if (is_string($routePattern) === false ||
-            (is_callable($handler) === false && $handler instanceof MiddlewareInterface === false && is_string($handler) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->addToMap(null, $routePattern, $handler);
+        $this->_addMap(null, $routePattern, $handler, $name);
 
         return $this;
     }
@@ -200,17 +200,13 @@ class Collection implements CollectionInterface
      *
      * @param string $routePattern
      * @param callable $handler
+     * @param string $name
      * @return \Phalcon\Mvc\Micro\CollectionInterface
      * @throws Exception
      */
-    public function get($routePattern, $handler)
+    public function get($routePattern, $handler, $name = null)
     {
-        if (is_string($routePattern) === false ||
-            (is_callable($handler) === false && $handler instanceof MiddlewareInterface === false && is_string($handler) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->addToMap('GET', $routePattern, $handler);
+        $this->_addMap('GET', $routePattern, $handler, $name);
 
         return $this;
     }
@@ -220,17 +216,14 @@ class Collection implements CollectionInterface
      *
      * @param string $routePattern
      * @param callable $handler
+     * @param string $name
      * @return \Phalcon\Mvc\Micro\CollectionInterface
      * @throws Exception
      */
-    public function post($routePattern, $handler)
+    public function post($routePattern, $handler, $name = null)
     {
-        if (is_string($routePattern) === false ||
-            (is_callable($handler) === false && $handler instanceof MiddlewareInterface === false && is_string($handler) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
 
-        $this->addToMap('POST', $routePattern, $handler);
+        $this->_addMap('POST', $routePattern, $handler, $name);
 
         return $this;
     }
@@ -240,17 +233,13 @@ class Collection implements CollectionInterface
      *
      * @param string $routePattern
      * @param callable $handler
+     * @param string $name
      * @return \Phalcon\Mvc\Micro\CollectionInterface
      * @throws Exception
      */
-    public function put($routePattern, $handler)
+    public function put($routePattern, $handler, $name = null)
     {
-        if (is_string($routePattern) === false ||
-            (is_callable($handler) === false && $handler instanceof MiddlewareInterface === false && is_string($handler) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->addToMap('PUT', $routePattern, $handler);
+        $this->_addMap('PUT', $routePattern, $handler, $name);
 
         return $this;
     }
@@ -260,17 +249,13 @@ class Collection implements CollectionInterface
      *
      * @param string $routePattern
      * @param callable $handler
+     * @param string $name
      * @return \Phalcon\Mvc\Micro\CollectionInterface
      * @throws Exception
      */
-    public function patch($routePattern, $handler)
+    public function patch($routePattern, $handler, $name = null)
     {
-        if (is_string($routePattern) === false ||
-            (is_callable($handler) === false && $handler instanceof MiddlewareInterface === false && is_string($handler) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->addToMap('PATCH', $routePattern, $handler);
+        $this->_addMap('PATCH', $routePattern, $handler, $name);
 
         return $this;
     }
@@ -280,17 +265,13 @@ class Collection implements CollectionInterface
      *
      * @param string $routePattern
      * @param callable $handler
+     * @param string $name
      * @return \Phalcon\Mvc\Micro\CollectionInterface
      * @throws Exception
      */
-    public function head($routePattern, $handler)
+    public function head($routePattern, $handler, $name = null)
     {
-        if (is_string($routePattern) === false ||
-            (is_callable($handler) === false && $handler instanceof MiddlewareInterface === false && is_string($handler) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->addToMap('HEAD', $routePattern, $handler);
+        $this->_addMap('HEAD', $routePattern, $handler, $name);
 
         return $this;
     }
@@ -300,17 +281,13 @@ class Collection implements CollectionInterface
      *
      * @param string $routePattern
      * @param callable $handler
+     * @param string $name
      * @return \Phalcon\Mvc\Micro\CollectionInterface
      * @throws Exception
      */
-    public function delete($routePattern, $handler)
+    public function delete($routePattern, $handler, $name = null)
     {
-        if (is_string($routePattern) === false ||
-            (is_callable($handler) === false && $handler instanceof MiddlewareInterface === false && is_string($handler) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->addToMap('DELETE', $routePattern, $handler);
+        $this->_addMap('DELETE', $routePattern, $handler, $name);
 
         return $this;
     }
@@ -320,17 +297,13 @@ class Collection implements CollectionInterface
      *
      * @param string $routePattern
      * @param callable $handler
+     * @param string $name
      * @return \Phalcon\Mvc\Micro\CollectionInterface
      * @throws Exception
      */
-    public function options($routePattern, $handler)
+    public function options($routePattern, $handler, $name = null)
     {
-        if (is_string($routePattern) === false ||
-            (is_callable($handler) === false && $handler instanceof MiddlewareInterface === false && is_string($handler) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->addToMap('OPTIONS', $routePattern, $handler);
+        $this->_addMap('OPTIONS', $routePattern, $handler, $name);
 
         return $this;
     }

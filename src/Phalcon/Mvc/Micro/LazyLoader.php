@@ -2,70 +2,83 @@
 
 namespace Phalcon\Mvc\Micro;
 
-use \Phalcon\Mvc\Micro\Exception;
+use Phalcon\Mvc\Model\BinderInterface;
 
 /**
  * Phalcon\Mvc\Micro\LazyLoader
  *
  * Lazy-Load of handlers for Mvc\Micro using auto-loading
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/micro/lazyloader.c
  */
 class LazyLoader
 {
 
-    /**
-     * Handler
-     *
-     * @var null|object
-     * @access protected
-     */
     protected $_handler;
-
-    /**
-     * Definition
-     *
-     * @var null|string
-     * @access protected
-     */
+    protected $_modelBinder;
     protected $_definition;
 
     /**
-     * \Phalcon\Mvc\Micro\LazyLoader constructor
-     *
-     * @param string $definition
-     * @throws Exception
+     * Phalcon\Mvc\Micro\LazyLoader constructor
      */
     public function __construct($definition)
     {
-        if (is_string($definition) === false) {
-            throw new Exception('Only strings can be lazy loaded');
+        if (!is_string($definition)) {
+            throw new Exception('Parameter definition should be a string type');
         }
-
         $this->_definition = $definition;
     }
 
     /**
      * Initializes the internal handler, calling functions on it
      *
-     * @param string $method
-     * @param array $arguments
+     * @param  string method
+     * @param  array arguments
      * @return mixed
-     * @throws Exception
      */
     public function __call($method, $arguments)
     {
-        if (is_string($method) === false ||
-            is_array($arguments) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (!is_string($method)) {
+            throw new Exception('Parameter \'method\' should be a string type');
         }
 
-        if (is_object($this->_handler) === false) {
-            $this->_handler = new $this->_definition();
+        $handler = $this->_handler;
+
+        $definition = $this->_definition;
+
+        if (!is_object($handler)) {
+            $handler        = new $definition();
+            $this->_handler = $handler;
         }
 
-        //Call the handler
-        return call_user_func_array(array($this->_handler, $method), $arguments);
+        $modelBinder = $this->_modelBinder;
+
+        if ($modelBinder != null) {
+            $bindCacheKey = "_PHMB_" . $definition . "_" . $method;
+            $arguments    = $modelBinder->bindToHandler($handler, $arguments, $bindCacheKey, $method);
+        }
+
+        /**
+         * Call the handler
+         */
+        return call_user_func_array([$handler, $method], $arguments);
+    }
+
+    /**
+     * Calling __call method
+     *
+     * @param  string method
+     * @param  array arguments
+     * @return mixed
+     */
+    public function callMethod($method, $arguments, BinderInterface $modelBinder = null)
+    {
+        $this->_modelBinder = $modelBinder;
+
+        return $this->__call($method, $arguments);
+    }
+
+    public function getDifinition()
+    {
+        return $this->_definition;
     }
 
 }
