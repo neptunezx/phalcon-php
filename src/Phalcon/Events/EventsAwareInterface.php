@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Events Aware Interface
  *
@@ -6,8 +7,11 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Events;
+
+use Phalcon\Events\ManagerInterface;
 
 /**
  * Phalcon\Events\EventsAwareInterface initializer
@@ -16,6 +20,7 @@ namespace Phalcon\Events;
  */
 interface EventsAwareInterface
 {
+
     /**
      * Sets the events manager
      *

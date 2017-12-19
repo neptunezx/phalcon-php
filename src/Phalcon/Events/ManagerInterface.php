@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Manager Interface
  *
@@ -6,7 +7,8 @@
  * @author Eduar Carvajal <eduar@phalconphp.com>
  * @version 1.2.6
  * @package Phalcon
-*/
+ */
+
 namespace Phalcon\Events;
 
 /**
@@ -16,6 +18,7 @@ namespace Phalcon\Events;
  */
 interface ManagerInterface
 {
+
     /**
      * Attach a listener to the events manager
      *
