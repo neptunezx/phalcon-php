@@ -13,7 +13,6 @@ use \Redis as PhpRedis;
  * Allows to cache output fragments, PHP data or raw data to a redis master-slaves cluster backend
  *
  * This adapter uses the special redis key '_PHCR' to store all the keys internally used by the adapter
- * class Phalcon\Cache\Backend source address：https://github.com/phalcon/cphalcon/blob/master/phalcon/cache/backend.zep
  * 
  * @author ZhangXiang <zhangxiang-iri@360.cn>
  * 
