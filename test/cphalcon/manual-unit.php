@@ -159,9 +159,9 @@ if (PHP_OS == 'Linux') {
 	}
 }
 
-if (!extension_loaded('phalcon')) {
-	throw new Exception("Sorry, but phalcon extension is not loaded");
-}
+//if (!extension_loaded('phalcon')) {
+//	throw new Exception("Sorry, but phalcon extension is not loaded");
+//}
 
 try {
 	if (isset($_SERVER['argv'][1])) {

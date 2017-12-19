@@ -142,6 +142,7 @@ class ResponseTest extends PHPUnit_Framework_TestCase
 
 		$this->_response->redirect("some/local/uri");
 
+        var_dump($this->_response->getHeaders());
 		$this->assertEquals(Phalcon\Http\Response\Headers::__set_state(array(
 			'_headers' => array(
 				'HTTP/1.1 302 Found' => false,

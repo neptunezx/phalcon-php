@@ -41,7 +41,7 @@ class DispatcherCliTest extends PHPUnit_Framework_TestCase
 	public function testDispatcher()
 	{
 
-		$di = new \Phalcon\DI\FactoryDefault\CLI();
+		$di = new \Phalcon\DI\FactoryDefault\Cli();
 
 		$di->set('data', function(){
 			return "data";

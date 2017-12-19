@@ -218,7 +218,7 @@ class LoaderTest extends PHPUnit_Framework_TestCase
 
 		$test = new VousTest();
 		$this->assertEquals(get_class($test), 'VousTest');
-
+        var_dump($trace);
 		$this->assertEquals($trace, array(
 			'beforeCheckClass' => array(
 				0 => NULL,

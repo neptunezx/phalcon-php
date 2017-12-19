@@ -23,7 +23,7 @@ class DispatcherListener
 
 	protected $_test;
 
-	protected $_trace = '';
+	protected $_trace = [];
 
 	protected $_stop = '';
 
@@ -40,7 +40,7 @@ class DispatcherListener
 
 	public function stopAt($eventName)
 	{
-		$this->_trace = array();
+		$this->_trace = [];
 		$this->_stop = $eventName;
 	}
 
@@ -122,7 +122,7 @@ class DispatcherListener
 
 	public function clearTrace()
 	{
-		$this->_trace = array();
+		$this->_trace = [];
 	}
 
 	public function getTrace()
