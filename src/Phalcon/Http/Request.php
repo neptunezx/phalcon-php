@@ -1135,4 +1135,14 @@ class Request implements RequestInterface, InjectionAwareInterface
         return $auth;
     }
 
+    public function getHttpMethodParameterOverride()
+    {
+        return $this->_httpMethodParameterOverride;
+    }
+
+    public function setHttpMethodParameterOverride($httpMethodParameterOverride)
+    {
+        $this->_httpMethodParameterOverride = boolval($httpMethodParameterOverride);
+    }
+
 }
