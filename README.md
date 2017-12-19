@@ -1,26 +1,25 @@
 # phalcon-php
 [![Build Status](https://travis-ci.org/scento/phalcon-php.svg?branch=master)](http://travis-ci.org/scento/phalcon-php)
 [![Coverage Status](https://img.shields.io/coveralls/scento/phalcon-php.svg)](https://coveralls.io/r/scento/phalcon-php)
+phalcon-php is a free replacement for the [Phalcon Web Framework](https://github.com/phalcon/cphalcon), 
+delivered as a set of PHP classes based on the [Phalcon Devtools](https://github.com/phalcon/phalcon-devtools). 
+This project allows the usage of the Phalcon APsI in environments without the possibility to set up the phalcon extension (e.g. shared hosting) by providing a compatibility layer.
 
-Phalcon-PHP is a free replacement for the [Phalcon Web Framework](https://github.com/phalcon/cphalcon), delivered as a set of PHP classes based on the [Phalcon Devtools](https://github.com/phalcon/phalcon-devtools). This project allows the usage of the Phalcon API in environments without the possibility to set up the phalcon extension (e.g. shared hosting) by providing a compatibility layer.
+## Note
+1. This project is extended from project scento/phalcon-php(https://github.com/scento/phalcon.git) which is not maintained yet. 
+2. The goal of this project is to complete the PHP replacement of cphalcon 3.2.*, but remove the view component. 
+3. The project is more suitable for web API development
+3. The codebase is still under development. A large number of PHPUnit tests fails now.
 
-## Disclaimer
-1. This project is in the **pre-alpha** stadium and is currently not maintained. **Do not** use this in a production environment.
-2. This project currently only refers to the cphalcon version 1.2.6, which is **outdated**.
-3. The codebase is **very unstable** and **incomplete** *(VOLT, PHQL, ...)*. A large number of PHPUnit tests fails and the code coverage is even worse.
-4. The code **contains bugs**, which are "copied" from the C sources of cphalcon.
-5. The entire project is currently **not maintained**. If you want to fix some of the issues, feel free to do so - I will merge your pull requests.
-6. The cphalcon framework API itself frequently contradicts my own development patterns and the biggest part of the code structure is also not my own work. Don't judge me.
-
-## Current tasks
-  * Volt Parser (Scanner + Tokenizer)
+## Todo tasks
   * PHQL Parser (Scanner + Tokenizer)
   * Unit Tests
   * Documentation (Wiki)
+  * Swoole and cluster websocket communication support
+  * Consul support
 
 ## Development
-The current project **is not usable for any purpose** and still requires a lot of implementation. As the base for all developments, this project is using the `phalcon-devtools/ide/1.2.6` tree as a starting point.
-In case you are interested in contributing, please note that - except of the original Phalcon files - the entire code should follow the [PSR-1](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-1-basic-coding-standard.md) and [PSR-2](http://www.php-fig.org/psr/psr-2/) coding standards. The entire code should be additionally documented by PHPDoc annotations.
+The project is more suitable for web API development and extended from project scento/phalcon-php(https://github.com/scento/phalcon.git).
 
 ## Documentation
 It is possible to generate a low-level PHPDoc-based documentation of the entire code by using [PHP_UML](https://pear.php.net/manual/en/package.php.php-uml.command-line.php) or [phpDocumentator](http://www.phpdoc.org/). The repository contains a shell script, which generates the corresponding documentation if one or both of the tools are available.
@@ -38,6 +37,6 @@ You can use this project as a fallback for the original framework. Add this to y
 
 ```
 	"require": {
-		"scento/phalcon-php": "dev-master"
+		"neptunezx/phalcon-php": "dev-master"
 	}
 ```
