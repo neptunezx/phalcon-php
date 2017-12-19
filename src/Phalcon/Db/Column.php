@@ -1,13 +1,5 @@
 <?php
-/**
- * Column
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db;
 
 use \Phalcon\Db\ColumnInterface;
@@ -18,7 +10,7 @@ use \Phalcon\Db\Exception;
  *
  * Allows to define columns to be used on create or alter table operations
  *
- *<code>
+ * <code>
  *  use Phalcon\Db\Column as Column;
  *
  * //column definition
@@ -33,122 +25,123 @@ use \Phalcon\Db\Exception;
  *
  * //add column to existing table
  * $connection->addColumn("robots", null, $column);
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/column.c
  */
 class Column implements ColumnInterface
 {
+
     /**
      * Type: Integer
      *
      * @var int
-    */
+     */
     const TYPE_INTEGER = 0;
 
     /**
      * Type: Date
      *
      * @var int
-    */
+     */
     const TYPE_DATE = 1;
 
     /**
      * Type: Varchar
      *
      * @var int
-    */
+     */
     const TYPE_VARCHAR = 2;
 
     /**
      * Type: Decimal
      *
      * @var int
-    */
+     */
     const TYPE_DECIMAL = 3;
 
     /**
      * Type: DateTime
      *
      * @var int
-    */
+     */
     const TYPE_DATETIME = 4;
 
     /**
      * Type: Char
      *
      * @var int
-    */
+     */
     const TYPE_CHAR = 5;
 
     /**
      * Type: Text
      *
      * @var int
-    */
+     */
     const TYPE_TEXT = 6;
 
     /**
      * Type: Float
      *
      * @var int
-    */
+     */
     const TYPE_FLOAT = 7;
 
     /**
      * Type: Boolean
      *
      * @var int
-    */
+     */
     const TYPE_BOOLEAN = 8;
 
     /**
      * Type: Double
      *
      * @var int
-    */
+     */
     const TYPE_DOUBLE = 9;
 
     /**
      * Bind Param: Null
      *
      * @var int
-    */
+     */
     const BIND_PARAM_NULL = 0;
 
     /**
      * Bind Param: Integer
      *
      * @var int
-    */
+     */
     const BIND_PARAM_INT = 1;
 
     /**
      * Bind Param: String
      *
      * @var int
-    */
+     */
     const BIND_PARAM_STR = 2;
 
     /**
      * Bind Param: Boolean
      *
      * @var int
-    */
+     */
     const BIND_PARAM_BOOL = 5;
 
     /**
      * Bind Param: Decimal
      *
      * @var int
-    */
+     */
     const BIND_PARAM_DECIMAL = 32;
 
     /**
      * Bind: Skip
      *
      * @var int
-    */
+     */
     const BIND_SKIP = 1024;
 
     /**
@@ -156,7 +149,7 @@ class Column implements ColumnInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_columnName;
 
     /**
@@ -164,7 +157,7 @@ class Column implements ColumnInterface
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_schemaName;
 
     /**
@@ -172,7 +165,7 @@ class Column implements ColumnInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_type;
 
     /**
@@ -180,7 +173,7 @@ class Column implements ColumnInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_isNumeric = false;
 
     /**
@@ -188,7 +181,7 @@ class Column implements ColumnInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_size = 0;
 
     /**
@@ -196,7 +189,7 @@ class Column implements ColumnInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_scale = 0;
 
     /**
@@ -204,7 +197,7 @@ class Column implements ColumnInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_unsigned = false;
 
     /**
@@ -212,7 +205,7 @@ class Column implements ColumnInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_notNull = false;
 
     /**
@@ -220,7 +213,7 @@ class Column implements ColumnInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_primary = false;
 
     /**
@@ -228,7 +221,7 @@ class Column implements ColumnInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_autoIncrement = false;
 
     /**
@@ -236,7 +229,7 @@ class Column implements ColumnInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_first = false;
 
     /**
@@ -244,7 +237,7 @@ class Column implements ColumnInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_after;
 
     /**
@@ -252,7 +245,7 @@ class Column implements ColumnInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_bindType = 2;
 
     /**
@@ -277,8 +270,8 @@ class Column implements ColumnInterface
         } else {
             throw new Exception('Column type is required');
         }
-        
-        $type = (int)$definition['type'];
+
+        $type = (int) $definition['type'];
 
         //Check if the field is nullable
         if (isset($definition['notNull']) === true) {
@@ -518,4 +511,5 @@ class Column implements ColumnInterface
 
         return new Column($columnName, $definition);
     }
+
 }

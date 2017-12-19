@@ -1,13 +1,5 @@
 <?php
-/**
- * Failed
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Transaction;
 
 use \Phalcon\Mvc\Model\Transaction\Exception;
@@ -22,12 +14,13 @@ use \Phalcon\Mvc\ModelInterface;
  */
 class Failed extends Exception
 {
+
     /**
      * Record
      *
      * @var null|\Phalcon\Mvc\ModelInterface
      * @access protected
-    */
+     */
     protected $_record;
 
     /**
@@ -72,4 +65,5 @@ class Failed extends Exception
     {
         return $this->_record;
     }
+
 }

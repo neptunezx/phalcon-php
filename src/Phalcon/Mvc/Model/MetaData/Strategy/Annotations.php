@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Annotations
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Annotations
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model\MetaData\Strategy;
 
 use \Phalcon\Mvc\Model\Exception;
@@ -23,6 +25,7 @@ use \Phalcon\DiInterface;
  */
 class Annotations
 {
+
     /**
      * The meta-data is obtained by reading the column descriptions from the database information schema
      *
@@ -44,29 +47,29 @@ class Annotations
         }
 
         $annotations = $dependencyInjector->get('annotations');
-        $className = get_class($model);
+        $className   = get_class($model);
 
         $reflection = $annotations->get($className);
         if (is_object($reflection) === false) {
-            throw new Exception('No annotations were found in class '.$className);
+            throw new Exception('No annotations were found in class ' . $className);
         }
 
         //Get the properties defined in
         $propertiesAnnotations = $reflection->getPropertiesAnnotations();
         if (count($propertiesAnnotations) == 0) {
-            throw new Exception('No properties with annotations were found in class '.$className);
+            throw new Exception('No properties with annotations were found in class ' . $className);
         }
 
         //Initialize meta-data
-        $attributes = array();
-        $primaryKeys = array();
-        $nonPrimaryKeys = array();
-        $numericTyped = array();
-        $notNull = array();
-        $fieldTypes = array();
-        $fieldBindTypes = array();
+        $attributes       = array();
+        $primaryKeys      = array();
+        $nonPrimaryKeys   = array();
+        $numericTyped     = array();
+        $notNull          = array();
+        $fieldTypes       = array();
+        $fieldBindTypes   = array();
         $automaticDefault = array();
-        $identityField = false;
+        $identityField    = false;
 
         foreach ($propertiesAnnotations as $property => $propAnnotations) {
             //All columns marked with the 'Column' annotation are considered columns
@@ -80,21 +83,21 @@ class Annotations
             //Check if annotation has the 'type' named parameter
             $feature = $columnAnnotation->getNamedParameter('type');
             if ($feature === 'integer') {
-                $fieldTypes[$property] = 0;
+                $fieldTypes[$property]     = 0;
                 $fieldBindTypes[$property] = 1;
-                $numericTyped[$property] = 1;
+                $numericTyped[$property]   = 1;
             } elseif ($feature === 'decimal') {
-                $fieldTypes[$property] = 3;
+                $fieldTypes[$property]     = 3;
                 $fieldBindTypes[$property] = 32;
-                $numericTyped[$property] = 1;
+                $numericTyped[$property]   = 1;
             } elseif ($feature === 'boolean') {
-                $fieldTypes[$property] = 8;
+                $fieldTypes[$property]     = 8;
                 $fieldBindTypes[$property] = 5;
             } elseif ($feature === 'date') {
-                $fieldTypes[$property] = 1;
+                $fieldTypes[$property]     = 1;
                 $fieldBindTypes[$property] = 2;
             } else {
-                $fieldTypes[$property] = 2;
+                $fieldTypes[$property]     = 2;
                 $fieldBindTypes[$property] = 2;
             }
 
@@ -116,14 +119,14 @@ class Annotations
 
         //Create an array using the MODELS_* constants as indexes
         return array(
-            0 => $attributes,
-            1 => $primaryKeys,
-            2 => $nonPrimaryKeys,
-            3 => $notNull,
-            4 => $fieldTypes,
-            5 => $numericTyped,
-            8 => $identityField,
-            9 => $fieldBindTypes,
+            0  => $attributes,
+            1  => $primaryKeys,
+            2  => $nonPrimaryKeys,
+            3  => $notNull,
+            4  => $fieldTypes,
+            5  => $numericTyped,
+            8  => $identityField,
+            9  => $fieldBindTypes,
             10 => $automaticDefault,
             11 => $automaticDefault
         );
@@ -138,5 +141,7 @@ class Annotations
      */
     public function getColumnMaps()
     {
+        
     }
+
 }

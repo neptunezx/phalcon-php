@@ -1,13 +1,5 @@
 <?php
-/**
- * PresenceOf Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Validator;
 
 use \Phalcon\Mvc\Model\Validator;
@@ -20,11 +12,11 @@ use \Phalcon\Mvc\ModelInterface;
  *
  * Allows to validate if a filed have a value different of null and empty string ("")
  *
- *<code>
- *use Phalcon\Mvc\Model\Validator\PresenceOf;
+ * <code>
+ * use Phalcon\Mvc\Model\Validator\PresenceOf;
  *
- *class Subscriptors extends Phalcon\Mvc\Model
- *{
+ * class Subscriptors extends Phalcon\Mvc\Model
+ * {
  *
  *  public function validation()
  *  {
@@ -37,13 +29,14 @@ use \Phalcon\Mvc\ModelInterface;
  *      }
  *  }
  *
- *}
- *</code>
+ * }
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/presenceof.c
  */
 class PresenceOf extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validator
      *
@@ -70,7 +63,7 @@ class PresenceOf extends Validator implements ValidatorInterface
             //Check if the developer has defined a custom message
             $message = $this->getOption('message');
             if (isset($message) === false) {
-                $message = "'".$fieldName."' is required";
+                $message = "'" . $fieldName . "' is required";
             }
 
             $this->appendMessage($message, $fieldName, 'PresenceOf');
@@ -79,4 +72,5 @@ class PresenceOf extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

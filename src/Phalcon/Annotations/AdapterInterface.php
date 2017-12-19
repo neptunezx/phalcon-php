@@ -1,13 +1,5 @@
 <?php
-/**
- * Annotations Adapter Class
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations;
 
 /**
@@ -17,12 +9,13 @@ namespace Phalcon\Annotations;
  */
 interface AdapterInterface
 {
+
     /**
      * Read parsed annotations
      *
      * @param string $key
      * @return \Phalcon\Annotations\Reflection
-    */
+     */
     public function read($key);
 
     /**
@@ -30,7 +23,7 @@ interface AdapterInterface
      *
      * @param string $key
      * @param \Phalcon\Annotations\Reflection $data
-    */
+     */
     public function write($key, $data);
 
     /**

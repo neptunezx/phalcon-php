@@ -1,12 +1,5 @@
 <?php
-/**
- * Status Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Query;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Mvc\Model\Query;
  */
 interface StatusInterface
 {
+
     /**
      * \Phalcon\Mvc\Model\Query\Status
      *

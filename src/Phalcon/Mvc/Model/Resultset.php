@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Resultset
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Resultset
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Mvc\Model\ResultsetInterface;
@@ -49,39 +51,40 @@ use \Closure;
  */
 abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterator, Countable, ArrayAccess, Serializable
 {
+
     /**
      * Type: Full Result
      *
      * @var int
-    */
+     */
     const TYPE_RESULT_FULL = 0;
 
     /**
      * Type: Partial Result
      *
      * @var int
-    */
+     */
     const TYPE_RESULT_PARTIAL = 1;
 
     /**
      * Hydrate: Records
      *
      * @var int
-    */
+     */
     const HYDRATE_RECORDS = 0;
 
     /**
      * Hydrate: Objects
      *
      * @var int
-    */
+     */
     const HYDRATE_OBJECTS = 2;
 
     /**
      * Hydrate: Arrays
      *
      * @var int
-    */
+     */
     const HYDRATE_ARRAYS = 1;
 
     /**
@@ -89,7 +92,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_type = 0;
 
     /**
@@ -97,7 +100,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var null|\Phalcon\Db\ResultInterface
      * @access protected
-    */
+     */
     protected $_result;
 
     /**
@@ -105,7 +108,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var null|\Phalcon\Cache\BackendInterface
      * @access protected
-    */
+     */
     protected $_cache;
 
     /**
@@ -113,7 +116,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_isFresh = true;
 
     /**
@@ -121,7 +124,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_pointer = -1;
 
     /**
@@ -129,7 +132,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_count;
 
     /**
@@ -137,7 +140,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var null|\Phalcon\Mvc\ModelInterface
      * @access protected
-    */
+     */
     protected $_activeRow;
 
     /**
@@ -145,7 +148,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_rows;
 
     /**
@@ -153,7 +156,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_errorMessages;
 
     /**
@@ -161,7 +164,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      *
      * @var int|null
      * @access protected
-    */
+     */
     protected $_hydrateMode;
 
     /**
@@ -256,7 +259,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
             if ($this->_type === 1) {
                 //Here the resultset acts as a result that is fetched one by one
                 if ($this->_result != false) {
-                    $this->_count = (int)$this->_result->numRows();
+                    $this->_count = (int) $this->_result->numRows();
                 }
             } else {
                 //Here the resultset acts as an array
@@ -541,13 +544,13 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
     /**
      * Filters a resultset returning only those the developer requires
      *
-     *<code>
+     * <code>
      * $filtered = $robots->filter(function($robot){
      *      if ($robot->id < 3) {
      *          return $robot;
      *      }
      *  });
-     *</code>
+     * </code>
      *
      * @param callable $filter
      * @return \Phalcon\Mvc\Model[]
@@ -555,13 +558,13 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      */
     public function filter($filter)
     {
-        $records = array();
+        $records    = array();
         $parameters = array();
         $this->rewind();
 
         while ($this->valid()) {
-            $record = $this->current();
-            $parameters[0] = $record;
+            $record          = $this->current();
+            $parameters[0]   = $record;
             $processedRecord = call_user_func_array($filter, $parameters);
 
             //Only add processed records to 'records' if the returned value is an array/object
@@ -575,4 +578,5 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
 
         return $records;
     }
+
 }

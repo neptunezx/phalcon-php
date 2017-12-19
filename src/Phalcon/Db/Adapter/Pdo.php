@@ -1,13 +1,5 @@
 <?php
-/**
- * PDO
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db\Adapter;
 
 use \Phalcon\Db\Adapter;
@@ -22,7 +14,7 @@ use \PDOStatement;
  *
  * Phalcon\Db\Adapter\Pdo is the Phalcon\Db that internally uses PDO to connect to a database
  *
- *<code>
+ * <code>
  * $connection = new Phalcon\Db\Adapter\Pdo\Mysql(array(
  *      'host' => '192.168.0.11',
  *      'username' => 'sigma',
@@ -30,12 +22,13 @@ use \PDOStatement;
  *      'dbname' => 'blog',
  *      'port' => '3306'
  *  ));
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/adapter/pdo.c
  */
 abstract class Pdo extends Adapter implements EventsAwareInterface
 {
+
     /**
      * PDO
      *
@@ -80,7 +73,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      * This method is automatically called in \Phalcon\Db\Adapter\Pdo constructor.
      * Call it when you need to restore a database connection
      *
-     *<code>
+     * <code>
      * //Make a connection
      * $connection = new \Phalcon\Db\Adapter\Pdo\Mysql(array(
      *  'host' => '192.168.0.11',
@@ -134,7 +127,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
             $dnsParts = array();
 
             foreach ($descriptor as $key => $value) {
-                $dnsParts[] = $key.'='.$value;
+                $dnsParts[] = $key . '=' . $value;
             }
 
             $dnsAttributes = implode(';', $dnsParts);
@@ -142,7 +135,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
             $dnsAttributes = $descriptor['dns'];
         }
 
-        $dns = $this->_type.':'.$dnsAttributes;
+        $dns = $this->_type . ':' . $dnsAttributes;
 
         //Default options
         $options[\PDO::ATTR_ERRMODE] = \PDO::ERRMODE_EXCEPTION;
@@ -160,10 +153,10 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     /**
      * Returns a PDO prepared statement to be executed with 'executePrepared'
      *
-     *<code>
+     * <code>
      * $statement = $db->prepare('SELECT * FROM robots WHERE name = :name');
      * $result = $connection->executePrepared($statement, array('name' => 'Voltron'));
-     *</code>
+     * </code>
      *
      * @param string $sqlStatement
      * @return \PDOStatement
@@ -177,10 +170,10 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     /**
      * Executes a prepared statement binding. This function uses integer indexes starting from zero
      *
-     *<code>
+     * <code>
      * $statement = $db->prepare('SELECT * FROM robots WHERE name = :name');
      * $result = $connection->executePrepared($statement, array('name' => 'Voltron'));
-     *</code>
+     * </code>
      *
      * @param \PDOStatement $statement
      * @param array $placeholders
@@ -198,7 +191,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
 
         foreach ($placeholders as $wildcard => $value) {
             if (is_int($wildcard) === true) {
-                $parameter = $wildcard+1;
+                $parameter = $wildcard + 1;
             } elseif (is_string($wildcard) === true) {
                 $parameter = $wildcard;
             } else {
@@ -210,8 +203,8 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
                     //The bind type is double so we try to get the double value
                     $type = $dataTypes[$wildcard];
                     if ($type === 32) {
-                        $castValue = (int)$value;
-                        $type = 1024;
+                        $castValue = (int) $value;
+                        $type      = 1024;
                     } else {
                         $castValue = $value;
                     }
@@ -238,11 +231,11 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      * Sends SQL statements to the database server returning the success state.
      * Use this method only when the SQL statement sent to the server is returning rows
      *
-     *<code>
+     * <code>
      *  //Querying data
      *  $resultset = $connection->query("SELECT * FROM robots WHERE type='mechanical'");
      *  $resultset = $connection->query("SELECT * FROM robots WHERE type=?", array("mechanical"));
-     *</code>
+     * </code>
      *
      * @param string $sqlStatement
      * @param array|null $bindParams
@@ -254,9 +247,9 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     {
         if (is_string($sqlStatement) === false ||
             (is_array($bindParams) === false &&
-                is_null($bindParams) === false) ||
+            is_null($bindParams) === false) ||
             (is_array($bindTypes) === false &&
-                is_null($bindTypes) === false)) {
+            is_null($bindTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -300,11 +293,11 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      * Sends SQL statements to the database server returning the success state.
      * Use this method only when the SQL statement sent to the server doesn't return any row
      *
-     *<code>
+     * <code>
      *  //Inserting data
      *  $success = $connection->execute("INSERT INTO robots VALUES (1, 'Astro Boy')");
      *  $success = $connection->execute("INSERT INTO robots VALUES (?, ?)", array(1, 'Astro Boy'));
-     *</code>
+     * </code>
      *
      * @param string $sqlStatement
      * @param array|null $bindParams
@@ -315,9 +308,9 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     public function execute($sqlStatement, $bindParams = null, $bindTypes = null)
     {
         if (is_string($sqlStatement) === false ||
-        (is_null($bindParams) === false &&
+            (is_null($bindParams) === false &&
             is_array($bindParams) === false) ||
-        (is_array($bindTypes) === false &&
+            (is_array($bindTypes) === false &&
             is_null($bindTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
@@ -336,7 +329,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
 
         //Initialize affected_rows to 0
         $affectedRows = 0;
-        $pdo = $this->_pdo; //@note pdo can be null
+        $pdo          = $this->_pdo; //@note pdo can be null
         if (is_array($bindParams) === true) {
             $statement = $pdo->prepare($sqlStatement);
             if (is_object($statement) === true) {
@@ -361,10 +354,10 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     /**
      * Returns the number of affected rows by the lastest INSERT/UPDATE/DELETE executed in the database system
      *
-     *<code>
+     * <code>
      *  $connection->execute("DELETE FROM robots");
      *  echo $connection->affectedRows(), ' were deleted';
-     *</code>
+     * </code>
      *
      * @return int
      */
@@ -392,10 +385,10 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     /**
      * Escapes a column/table/schema name
      *
-     *<code>
+     * <code>
      *  $escapedTable = $connection->escapeIdentifier('robots');
      *  $escapedTable = $connection->escapeIdentifier(array('store', 'robots'));
-     *</code>
+     * </code>
      *
      * @param string|array $identifier
      * @return string
@@ -404,9 +397,9 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     public function escapeIdentifier($identifier)
     {
         if (is_array($identifier) === true) {
-            return '"'.$identifier[0].'"."'.$identifier[1].'"';
+            return '"' . $identifier[0] . '"."' . $identifier[1] . '"';
         } elseif (is_string($identifier) === true) {
-            return '"'.$identifier.'"';
+            return '"' . $identifier . '"';
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -415,9 +408,9 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     /**
      * Escapes a value to avoid SQL injections according to the active charset in the connection
      *
-     *<code>
+     * <code>
      *  $escapedStr = $connection->escapeString('some dangerous value');
-     *</code>
+     * </code>
      *
      * @param string $str
      * @return string
@@ -431,9 +424,9 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     /**
      * Converts bound parameters such as :name: or ?1 into PDO bind params ?
      *
-     *<code>
+     * <code>
      * print_r($connection->convertBoundParams('SELECT * FROM robots WHERE name = :name:', array('Bender')));
-     *</code>
+     * </code>
      *
      * @param string $sql
      * @param array $params
@@ -447,9 +440,9 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $queryParams = array();
+        $queryParams  = array();
         $placeholders = array();
-        $matches = null;
+        $matches      = null;
 
         if (preg_match_all("/\\?([0-9]+)|:([a-zA-Z0-9_]+):/", $sql, $matches, 2) === true) {
             foreach ($matches as $placeMatch) {
@@ -484,7 +477,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     /**
      * Returns the insert id for the auto_increment/serial column inserted in the lastest executed SQL statement
      *
-     *<code>
+     * <code>
      * //Inserting a new robot
      * $success = $connection->insert(
      *     "robots",
@@ -494,7 +487,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      *
      * //Getting the generated id
      * $id = $connection->lastInsertId();
-     *</code>
+     * </code>
      *
      * @param string|null $sequenceName
      * @return int|boolean
@@ -707,10 +700,10 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     /**
      * Checks whether the connection is under a transaction
      *
-     *<code>
+     * <code>
      *  $connection->begin();
      *  var_dump($connection->isUnderTransaction()); //true
-     *</code>
+     * </code>
      *
      * @return boolean
      */
@@ -733,4 +726,5 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     {
         return $this->_pdo;
     }
+
 }

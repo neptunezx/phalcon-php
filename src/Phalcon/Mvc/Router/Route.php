@@ -1,13 +1,5 @@
 <?php
-/**
- * Route
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Router;
 
 use \Phalcon\Mvc\Router\RouteInterface;
@@ -23,12 +15,13 @@ use \Phalcon\Text;
  */
 class Route implements RouteInterface
 {
+
     /**
      * Pattern
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_pattern;
 
     /**
@@ -36,7 +29,7 @@ class Route implements RouteInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_compiledPattern;
 
     /**
@@ -44,7 +37,7 @@ class Route implements RouteInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_paths;
 
     /**
@@ -52,7 +45,7 @@ class Route implements RouteInterface
      *
      * @var null|array|string
      * @access protected
-    */
+     */
     protected $_methods;
 
     /**
@@ -60,7 +53,7 @@ class Route implements RouteInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_hostname;
 
     /**
@@ -68,7 +61,7 @@ class Route implements RouteInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_converters;
 
     /**
@@ -76,7 +69,7 @@ class Route implements RouteInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_id;
 
     /**
@@ -84,7 +77,7 @@ class Route implements RouteInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_name;
 
     /**
@@ -92,7 +85,7 @@ class Route implements RouteInterface
      *
      * @var null|callback
      * @access protected
-    */
+     */
     protected $_beforeMatch;
 
     /**
@@ -100,7 +93,7 @@ class Route implements RouteInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected static $_uniqueId;
 
     /**
@@ -133,7 +126,7 @@ class Route implements RouteInterface
         }
 
         //TODO: Add a function that increases static members
-        $this->_id = $uniqueId;
+        $this->_id       = $uniqueId;
         self::$_uniqueId = $uniqueId + 1;
     }
 
@@ -191,7 +184,7 @@ class Route implements RouteInterface
         //Check if the pattern has parantheses in order to add the regex delimiters
         if (strpos($compiledPattern, '(') !== false ||
             strpos($compiledPattern, '[') !== false) {
-            return '#^'.$compiledPattern.'$#';
+            return '#^' . $compiledPattern . '$#';
         }
 
         return $compiledPattern;
@@ -200,10 +193,10 @@ class Route implements RouteInterface
     /**
      * Set one or more HTTP methods that constraint the matching of the route
      *
-     *<code>
+     * <code>
      * $route->via('GET');
      * $route->via(array('GET', 'POST'));
-     *</code>
+     * </code>
      *
      * @param string|array $httpMethods
      * @return \Phalcon\Mvc\Router\Route
@@ -227,7 +220,7 @@ class Route implements RouteInterface
      * @param string $str
      * @param array $matches
      * @throws Exception
-    */
+     */
     private static function extractNamedParameters($str, &$matches)
     {
         if (is_string($str) === false ||
@@ -236,19 +229,19 @@ class Route implements RouteInterface
             return false;
         }
 
-        $bracketCount = 0;
+        $bracketCount     = 0;
         $parenthesesCount = 0;
-        $intermediate = 0;
-        $numberMatches = 0;
-        $regexpLength = 0;
-        $notValid = false;
-        $marker = null;
-        $variable = null;
-        $item = null;
-        $regexp = null;
-        $cursorVar = null;
-        $routeStr = '';
-        $cursor = 0;
+        $intermediate     = 0;
+        $numberMatches    = 0;
+        $regexpLength     = 0;
+        $notValid         = false;
+        $marker           = null;
+        $variable         = null;
+        $item             = null;
+        $regexp           = null;
+        $cursorVar        = null;
+        $routeStr         = '';
+        $cursor           = 0;
 
         $l = strlen($str);
         for ($i = 0; $i < $l; ++$i) {
@@ -261,9 +254,9 @@ class Route implements RouteInterface
             if ($parenthesesCount === 0) {
                 if ($ch === '{') {
                     if ($bracketCount === 0) {
-                        $marker = $i;
+                        $marker       = $i;
                         $intermediate = 0;
-                        $notValid = false;
+                        $notValid     = false;
                     }
                     ++$bracketCount;
                 } elseif ($ch === '}') {
@@ -271,13 +264,13 @@ class Route implements RouteInterface
                     if ($intermediate > 0) {
                         if ($bracketCount === 0) {
                             $numberMatches++;
-                            $variable = null;
-                            $length = $cursor - $marker - 1;
-                            $item = substr($str, $marker + 1, $length);
+                            $variable  = null;
+                            $length    = $cursor - $marker - 1;
+                            $item      = substr($str, $marker + 1, $length);
                             $cursorVar = $marker + 1;
-                            $marker = $marker + 1;
+                            $marker    = $marker + 1;
                             for ($j = 0; $j < $length; ++$j) {
-                                $ch = $str[$cursorVar];
+                                $ch  = $str[$cursorVar];
                                 $cha = ord($ch);
 
                                 if ($ch === "\0") {
@@ -291,10 +284,10 @@ class Route implements RouteInterface
 
                                 if (($cha >= 97 && $cha <= 122) || ($cha >= 65 && $cha <= 90) || ($cha >= 48 && $cha <= 57) || $ch === '-' || $ch === '_' || $ch === ':') {
                                     if ($ch === ':') {
-                                        $regexpLength = $length - $j - 1;
+                                        $regexpLength   = $length - $j - 1;
                                         $variableLength = $cursorVar - $marker;
-                                        $variable = substr($str, $marker, $variableLength);
-                                        $regexp = substr($str, $cursorVar + 1, $regexpLength);
+                                        $variable       = substr($str, $marker, $variableLength);
+                                        $regexp         = substr($str, $cursorVar + 1, $regexpLength);
                                         break;
                                     }
                                 } else {
@@ -333,19 +326,19 @@ class Route implements RouteInterface
                                         }
 
                                         if ($foundPattern !== 2) {
-                                            $routeStr .= '('.$regexp.')';
+                                            $routeStr .= '(' . $regexp . ')';
                                         } else {
                                             $routeStr .= $regexp;
                                         }
                                         $matches[$variable] = $tmp;
                                     }
                                 } else {
-                                    $routeStr .= '([^/]*)';
+                                    $routeStr       .= '([^/]*)';
                                     $matches[$item] = $tmp;
                                 }
                             }
                         } else {
-                            $routeStr .= '{'.$item.'}';
+                            $routeStr .= '{' . $item . '}';
                         }
 
                         $cursor++;
@@ -395,24 +388,24 @@ class Route implements RouteInterface
         $originalPattern = $pattern;
 
         if (is_string($paths) === true) {
-            $moduleName = null;
+            $moduleName     = null;
             $controllerName = null;
-            $actionName = null;
+            $actionName     = null;
 
             //Explode the short paths using the :: separator
-            $parts = explode('::', $paths);
+            $parts       = explode('::', $paths);
             $numberParts = count($parts);
 
             //Create the array paths dynamically
             switch ($numberParts) {
                 case 3:
-                    $moduleName = $parts[0];
+                    $moduleName     = $parts[0];
                     $controllerName = $parts[1];
-                    $actionName = $parts[2];
+                    $actionName     = $parts[2];
                     break;
                 case 2:
                     $controllerName = $parts[0];
-                    $actionName = $parts[1];
+                    $actionName     = $parts[1];
                     break;
                 case 1:
                     $controllerName = $parts[0];
@@ -482,9 +475,9 @@ class Route implements RouteInterface
         }
 
         //Update member variables
-        $this->_pattern = $originalPattern;
+        $this->_pattern         = $originalPattern;
         $this->_compiledPattern = $pattern;
-        $this->_paths = $routePaths;
+        $this->_paths           = $routePaths;
     }
 
     /**
@@ -500,11 +493,11 @@ class Route implements RouteInterface
     /**
      * Sets the route's name
      *
-     *<code>
+     * <code>
      * $router->add('/about', array(
      *     'controller' => 'about'
      * ))->setName('about');
-     *</code>
+     * </code>
      *
      * @param string $name
      * @return \Phalcon\Mvc\Router\Route
@@ -614,10 +607,10 @@ class Route implements RouteInterface
     /**
      * Sets a set of HTTP methods that constraint the matching of the route (alias of via)
      *
-     *<code>
+     * <code>
      * $route->setHttpMethods('GET');
      * $route->setHttpMethods(array('GET', 'POST'));
-     *</code>
+     * </code>
      *
      * @param string|array $httpMethods
      * @return \Phalcon\Mvc\Router\Route
@@ -648,9 +641,9 @@ class Route implements RouteInterface
     /**
      * Sets a hostname restriction to the route
      *
-     *<code>
+     * <code>
      * $route->setHostname('localhost');
-     *</code>
+     * </code>
      *
      * @param string $hostname
      * @return \Phalcon\Mvc\Router\Route
@@ -718,4 +711,5 @@ class Route implements RouteInterface
     {
         self::$_uniqueId = 0;
     }
+
 }

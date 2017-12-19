@@ -1,13 +1,5 @@
 <?php
-/**
- * Collection
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc;
 
 use \Phalcon\Mvc\Collection\ManagerInterface;
@@ -35,32 +27,33 @@ use \MongoCollection;
  */
 class Collection implements CollectionInterface, InjectionAwareInterface, Serializable
 {
+
     /**
      * Operation: None
      *
      * @var int
-    */
+     */
     const OP_NONE = 0;
 
     /**
      * Operation: Create
      *
      * @var int
-    */
+     */
     const OP_CREATE = 1;
 
     /**
      * Operation: Update
      *
      * @var int
-    */
+     */
     const OP_UPDATE = 2;
 
     /**
      * Operation: Delete
      *
      * @var int
-    */
+     */
     const OP_DELETE = 3;
 
     /**
@@ -68,7 +61,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *
      * @var null
      * @access public
-    */
+     */
     public $_id;
 
     /**
@@ -76,7 +69,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *
      * @var \Phalcon\DiInterface|null
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -84,7 +77,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *
      * @var null|\Phalcon\Mvc\Collection\ManagerInterface
      * @access protected
-    */
+     */
     protected $_modelsManager;
 
     /**
@@ -92,7 +85,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_source;
 
     /**
@@ -100,7 +93,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_operationMade = 0;
 
     /**
@@ -108,7 +101,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_connection;
 
     /**
@@ -116,7 +109,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_errorMessages;
 
     /**
@@ -124,7 +117,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected static $_reserved;
 
     /**
@@ -132,7 +125,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected static $_disableEvents = false;
 
     /**
@@ -277,12 +270,12 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
         $reserved = self::$_reserved;
         if (is_null($reserved) === true) {
             //@note better: is_array($reserved) === false
-            $reserved = array(
-                '_connection' => true,
+            $reserved        = array(
+                '_connection'         => true,
                 '_dependencyInjector' => true,
-                '_source' => true,
-                '_operationMade' => true,
-                '_errorMessages' => true
+                '_source'             => true,
+                '_operationMade'      => true,
+                '_errorMessages'      => true
             );
             self::$_reserved = $reserved;
         }
@@ -380,9 +373,9 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
     /**
      * Reads an attribute value by its name
      *
-     *<code>
+     * <code>
      *  echo $robot->readAttribute('name');
-     *</code>
+     * </code>
      *
      * @param string $attribute
      * @return mixed
@@ -397,9 +390,9 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
     /**
      * Writes an attribute value by its name
      *
-     *<code>
+     * <code>
      *  $robot->writeAttribute('name', 'Rosey');
-     *</code>
+     * </code>
      *
      * @param string $attribute
      * @param mixed $value
@@ -505,7 +498,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
         }
 
         /* If a group of specific fields are requested we use a
-            Phalcon\Mvc\Collection\Document instead */
+          Phalcon\Mvc\Collection\Document instead */
         if (isset($params['fields']) === true) {
             $collection = new Document();
         }
@@ -736,11 +729,11 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
     /**
      * Executes validators on every validation call
      *
-     *<code>
-     *use \Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionIn;
+     * <code>
+     * use \Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionIn;
      *
-     *class Subscriptors extends \Phalcon\Mvc\Collection
-     *{
+     * class Subscriptors extends \Phalcon\Mvc\Collection
+     * {
      *
      *  public function validation()
      *  {
@@ -753,8 +746,8 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *      }
      *  }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param object $validator
      * @throws Exception
@@ -777,11 +770,11 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
     /**
      * Check whether validation process has generated any messages
      *
-     *<code>
-     *use \Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionIn;
+     * <code>
+     * use \Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionIn;
      *
-     *class Subscriptors extends \Phalcon\Mvc\Collection
-     *{
+     * class Subscriptors extends \Phalcon\Mvc\Collection
+     * {
      *
      *  public function validation()
      *  {
@@ -794,8 +787,8 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *      }
      *  }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @return boolean
      */
@@ -924,18 +917,18 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      * Returns all the validation messages
      *
      * <code>
-     *$robot = new Robots();
-     *$robot->type = 'mechanical';
-     *$robot->name = 'Astro Boy';
-     *$robot->year = 1952;
-     *if ($robot->save() == false) {
+     * $robot = new Robots();
+     * $robot->type = 'mechanical';
+     * $robot->name = 'Astro Boy';
+     * $robot->year = 1952;
+     * if ($robot->save() == false) {
      *  echo "Umh, We can't store robots right now ";
      *  foreach ($robot->getMessages() as $message) {
      *      echo $message;
      *  }
-     *} else {
+     * } else {
      *  echo "Great, a new robot was saved successfully!";
-     *}
+     * }
      * </code>
      *
      * @return \Phalcon\Mvc\Model\MessageInterface[]|null
@@ -948,7 +941,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
     /**
      * Appends a customized message on the validation process
      *
-     *<code>
+     * <code>
      *  use \Phalcon\Mvc\Model\Message as Message;
      *
      *  class Robots extends \Phalcon\Mvc\Model
@@ -962,7 +955,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
      *          }
      *      }
      *  }
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\Model\MessageInterface $message
      * @throws Exception
@@ -971,7 +964,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
     {
         if (is_object($message) === false ||
             $message instanceof MessageInterface === false) {
-            throw new Exception('Invalid message format \''.gettype($message)."'");
+            throw new Exception('Invalid message format \'' . gettype($message) . "'");
         }
 
         $this->_errorMessages[] = $message;
@@ -1012,14 +1005,14 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
 
         //The messages added to the validator are reset here
         $this->_errorMessages = array();
-        $disableEvents = self::$_disableEvents;
+        $disableEvents        = self::$_disableEvents;
 
         //Execute the preSave hook
         if ($this->_preSave($dependencyInjector, $disableEvents, $exists) === false) {
             return false;
         }
 
-        $reserved = $this->getReservedAttributes();
+        $reserved   = $this->getReservedAttributes();
         $properties = get_object_vars($this);
 
         //We only assign values to the public properties
@@ -1038,7 +1031,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
 
         //Save the document
         $success = false;
-        $status = $collection->save($data, array('w' => 1));
+        $status  = $collection->save($data, array('w' => 1));
         if (is_array($status) === true) {
             if (isset($status['ok']) === true && $status['ok'] == true) {
                 $success = true;
@@ -1171,9 +1164,9 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
     /**
      * Perform a count over a collection
      *
-     *<code>
+     * <code>
      * echo 'There are ', Robots::count(), ' robots';
-     *</code>
+     * </code>
      *
      * @param array|null $parameters
      * @return int
@@ -1204,9 +1197,9 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
             throw new Exception('Invalid parameters for aggregate');
         }
 
-        $model = new self();
+        $model      = new self();
         $connection = $model->getConnection();
-        $source = $model->getSource();
+        $source     = $model->getSource();
 
         if (empty($source) === true) {
             throw new Exception('Method getSource() returns empty string');
@@ -1239,9 +1232,9 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
             throw new Exception('Invalid parameter type.');
         }
 
-        $model = new self();
+        $model      = new self();
         $connection = $model->getConnection();
-        $source = $model->getSource();
+        $source     = $model->getSource();
 
         if (empty($source) === true) {
             throw new Exception('Method getSource() returns empty string');
@@ -1253,7 +1246,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
          * Uses a javascript hash to group the results, however this is slow with larger
          * datasets
          */
-        $group = $collection->group(array(), array('summatory' => array()), "function (curr, result) { if (typeof result.summatory[curr.".$field."] === \"undefined\") { result.summatory[curr.".$field."] = 1; } else { result.summatory[curr.".$field."]++; } }");
+        $group = $collection->group(array(), array('summatory' => array()), "function (curr, result) { if (typeof result.summatory[curr." . $field . "] === \"undefined\") { result.summatory[curr." . $field . "] = 1; } else { result.summatory[curr." . $field . "]++; } }");
 
         if (isset($group['retval']) === true) {
             if (isset($group['retval'][0]) === true) {
@@ -1299,9 +1292,9 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
             }
         }
 
-        $id = $this->_id;
+        $id         = $this->_id;
         $connection = $this->getConnection();
-        $source = $this->getSource();
+        $source     = $this->getSource();
 
         if (empty($source) === true) {
             throw new Exception('Method getSource() returns empty string');
@@ -1339,15 +1332,15 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
     /**
      * Returns the instance as an array representation
      *
-     *<code>
+     * <code>
      * print_r($robot->toArray());
-     *</code>
+     * </code>
      *
      * @return array
      */
     public function toArray()
     {
-        $data = array();
+        $data     = array();
         $reserved = $this->getReservedAttributes();
 
         //Get an array with the values of the object
@@ -1407,7 +1400,6 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
                 }
 
                 //@note no interface validation
-
                 //Update the models manager
                 $this->_modelsManager = $manager;
 
@@ -1422,4 +1414,5 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
 
         throw new Exception('Invalid serialization data');
     }
+
 }

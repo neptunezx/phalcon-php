@@ -1,13 +1,5 @@
 <?php
-/**
- * Syslog Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger\Adapter;
 
 use \Phalcon\Logger\Adapter;
@@ -20,7 +12,7 @@ use \Phalcon\Logger\Formatter\Syslog as SyslogFormatter;
  *
  * Sends logs to the system logger
  *
- *<code>
+ * <code>
  *  $logger = new \Phalcon\Logger\Adapter\Syslog("ident", array(
  *      'option' => LOG_NDELAY,
  *      'facility' => LOG_MAIL
@@ -28,18 +20,19 @@ use \Phalcon\Logger\Formatter\Syslog as SyslogFormatter;
  *  $logger->log("This is a message");
  *  $logger->log("This is an error", \Phalcon\Logger::ERROR);
  *  $logger->error("This is another error");
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/syslog.c
  */
 class Syslog extends Adapter implements AdapterInterface
 {
+
     /**
      * Opened
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_opened = false;
 
     /**
@@ -127,4 +120,5 @@ class Syslog extends Adapter implements AdapterInterface
 
         //@note we don't return a boolean
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Status
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Query;
 
 use \Phalcon\Mvc\ModelInterface;
@@ -22,31 +14,32 @@ use \Phalcon\Mvc\Model\Query\StatusInterface;
  * information and the related messages produced by the
  * model which finally executes the operations when it fails
  *
- *<code>
- *$phql = "UPDATE Robots SET name = :name:, type = :type:, year = :year: WHERE id = :id:";
- *$status = $app->modelsManager->executeQuery($phql, array(
+ * <code>
+ * $phql = "UPDATE Robots SET name = :name:, type = :type:, year = :year: WHERE id = :id:";
+ * $status = $app->modelsManager->executeQuery($phql, array(
  *   'id' => 100,
  *   'name' => 'Astroy Boy',
  *   'type' => 'mechanical',
  *   'year' => 1959
- *));
+ * ));
  *
  * //Check if the update was successful
  * if ($status->success() == true) {
  *   echo 'OK';
  * }
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/query/status.c
  */
 class Status implements StatusInterface
 {
+
     /**
      * Success
      *
      * @var null|boolean
      * @access protected
-    */
+     */
     protected $_success;
 
     /**
@@ -54,7 +47,7 @@ class Status implements StatusInterface
      *
      * @var null|\Phalcon\Mvc\ModelInterface
      * @access protected
-    */
+     */
     protected $_model;
 
     /**
@@ -73,7 +66,7 @@ class Status implements StatusInterface
         }
 
         $this->_success = $success;
-        $this->_model = $model;
+        $this->_model   = $model;
     }
 
     /**
@@ -109,4 +102,5 @@ class Status implements StatusInterface
     {
         return $this->_success;
     }
+
 }

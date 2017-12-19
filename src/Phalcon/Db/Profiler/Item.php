@@ -1,13 +1,5 @@
 <?php
-/**
- * Item
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db\Profiler;
 
 use \Phalcon\Db\Exception;
@@ -21,12 +13,13 @@ use \Phalcon\Db\Exception;
  */
 class Item
 {
+
     /**
      * SQL Statement
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_sqlStatement;
 
     /**
@@ -34,7 +27,7 @@ class Item
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_initialTime;
 
     /**
@@ -42,7 +35,7 @@ class Item
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_finalTime;
 
     /**
@@ -129,4 +122,5 @@ class Item
     {
         return $this->_finalTime - $this->_initialTime;
     }
+
 }

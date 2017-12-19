@@ -1,13 +1,5 @@
 <?php
-/**
- * Query Builder
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Query;
 
 use \Phalcon\Mvc\Model\Exception;
@@ -22,26 +14,27 @@ use \Phalcon\Di;
  *
  * Helps to create PHQL queries using an OO interface
  *
- *<code>
- *$resultset = $this->modelsManager->createBuilder()
+ * <code>
+ * $resultset = $this->modelsManager->createBuilder()
  *   ->from('Robots')
  *   ->join('RobotsParts')
  *   ->limit(20)
  *   ->orderBy('Robots.name')
  *   ->getQuery()
  *   ->execute();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/query/builder.c
  */
 class Builder implements BuilderInterface, InjectionAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -49,7 +42,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|string|array
      * @access protected
-    */
+     */
     protected $_columns;
 
     /**
@@ -57,7 +50,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|string|array
      * @access protected
-    */
+     */
     protected $_models;
 
     /**
@@ -65,7 +58,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_joins;
 
     /**
@@ -73,7 +66,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_conditions;
 
     /**
@@ -81,7 +74,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_group;
 
     /**
@@ -89,7 +82,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_having;
 
     /**
@@ -97,7 +90,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_order;
 
     /**
@@ -105,7 +98,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_limit;
 
     /**
@@ -113,7 +106,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_offset;
 
     /**
@@ -121,7 +114,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_forUpdate;
 
     /**
@@ -129,7 +122,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_sharedLock;
 
     /**
@@ -137,7 +130,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_bindParams;
 
     /**
@@ -145,7 +138,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_bindTypes;
 
     /**
@@ -153,13 +146,13 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_hiddenParamNumber = 0;
 
     /**
      * \Phalcon\Mvc\Model\Query\Builder constructor
      *
-     *<code>
+     * <code>
      * $params = array(
      *    'models'     => array('Users'),
      *    'columns'    => array('id', 'name', 'status'),
@@ -169,9 +162,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
      *    'order'      => array('name', 'id'),
      *    'limit'      => 20,
      *    'offset'     => 20,
-     *);
-     *$queryBuilder = new \Phalcon\Mvc\Model\Query\Builder($params);
-     *</code>
+     * );
+     * $queryBuilder = new \Phalcon\Mvc\Model\Query\Builder($params);
+     * </code>
      *
      * @param array|null $params
      * @param \Phalcon\DiInterface|null $dependencyInjector
@@ -278,9 +271,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Sets the columns to be queried
      *
-     *<code>
+     * <code>
      *  $builder->columns(array('id', 'name'));
-     *</code>
+     * </code>
      *
      * @param string|array $columns
      * @return \Phalcon\Mvc\Model\Query\Builder
@@ -311,10 +304,10 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Sets the models who makes part of the query
      *
-     *<code>
+     * <code>
      *  $builder->from('Robots');
      *  $builder->from(array('Robots', 'RobotsParts'));
-     *</code>
+     * </code>
      *
      * @param string|array $models
      * @return \Phalcon\Mvc\Model\Query\Builder
@@ -335,9 +328,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Add a model to take part of the query
      *
-     *<code>
+     * <code>
      *  $builder->addFrom('Robots', 'r');
-     *</code>
+     * </code>
      *
      * @param string $model
      * @param string|null $alias
@@ -385,12 +378,12 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Adds a INNER join to the query
      *
-     *<code>
+     * <code>
      *  $builder->join('Robots');
      *  $builder->join('Robots', 'r.id = RobotsParts.robots_id');
      *  $builder->join('Robots', 'r.id = RobotsParts.robots_id', 'r');
      *  $builder->join('Robots', 'r.id = RobotsParts.robots_id', 'r', 'LEFT');
-     *</code>
+     * </code>
      *
      * @param string $model
      * @param string|null $conditions
@@ -402,11 +395,11 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     {
         if (is_string($model) === false ||
             (is_string($conditions) === false &&
-                is_null($conditions) === false) ||
+            is_null($conditions) === false) ||
             (is_string($alias) === false &&
-                is_null($alias) === false) ||
+            is_null($alias) === false) ||
             (is_string($type) === false &&
-                is_null($type) === false)) {
+            is_null($type) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -422,12 +415,12 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Adds a INNER join to the query
      *
-     *<code>
+     * <code>
      *  $builder->innerJoin('Robots');
      *  $builder->innerJoin('Robots', 'r.id = RobotsParts.robots_id');
      *  $builder->innerJoin('Robots', 'r.id = RobotsParts.robots_id', 'r');
      *  $builder->innerJoin('Robots', 'r.id = RobotsParts.robots_id', 'r', 'LEFT');
-     *</code>
+     * </code>
      *
      * @param string $model
      * @param string|null $conditions
@@ -442,9 +435,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Adds a LEFT join to the query
      *
-     *<code>
+     * <code>
      *  $builder->leftJoin('Robots', 'r.id = RobotsParts.robots_id', 'r');
-     *</code>
+     * </code>
      *
      * @param string $model
      * @param string|null $conditions
@@ -459,9 +452,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Adds a RIGHT join to the query
      *
-     *<code>
+     * <code>
      *  $builder->rightJoin('Robots', 'r.id = RobotsParts.robots_id', 'r');
-     *</code>
+     * </code>
      *
      * @param string $model
      * @param string|null $conditions
@@ -476,10 +469,10 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Sets the query conditions
      *
-     *<code>
+     * <code>
      *  $builder->where('name = "Peter"');
      *  $builder->where('name = :name: AND id > :id:', array('name' => 'Peter', 'id' => 100));
-     *</code>
+     * </code>
      *
      * @param string $conditions
      * @param array|null $bindParams
@@ -491,9 +484,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     {
         if (is_string($conditions) === false ||
             (is_array($bindParams) === false &&
-                is_null($bindParams) === false) ||
+            is_null($bindParams) === false) ||
             (is_array($bindTypes) === false &&
-                is_null($bindTypes) === false)) {
+            is_null($bindTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -523,10 +516,10 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Appends a condition to the current conditions using a AND operator
      *
-     *<code>
+     * <code>
      *  $builder->andWhere('name = "Peter"');
      *  $builder->andWhere('name = :name: AND id > :id:', array('name' => 'Peter', 'id' => 100));
-     *</code>
+     * </code>
      *
      * @param string $conditions
      * @param array|null $bindParams
@@ -538,15 +531,15 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     {
         if (is_string($conditions) === false ||
             (is_array($bindParams) === false &&
-                is_null($bindParams) === false) ||
+            is_null($bindParams) === false) ||
             (is_array($bindTypes) === false &&
-                is_null($bindTypes) === false)) {
+            is_null($bindTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
         //Nest the conditions to the current ones or set as unique
         if (isset($this->_conditions) === true) {
-            $conditions = '('.$this->_conditions.') AND ('.$conditions.')';
+            $conditions = '(' . $this->_conditions . ') AND (' . $conditions . ')';
         }
 
         $this->_conditions = $conditions;
@@ -575,10 +568,10 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Appends a condition to the current conditions using a OR operator
      *
-     *<code>
+     * <code>
      *  $builder->orWhere('name = "Peter"');
      *  $builder->orWhere('name = :name: AND id > :id:', array('name' => 'Peter', 'id' => 100));
-     *</code>
+     * </code>
      *
      * @param string $conditions
      * @param array|null $bindParams
@@ -590,15 +583,15 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     {
         if (is_string($conditions) === false ||
             (is_array($bindParams) === false &&
-                is_null($bindParams) === false) ||
+            is_null($bindParams) === false) ||
             (is_array($bindTypes) === false &&
-                is_null($bindTypes) === false)) {
+            is_null($bindTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
         //Nest the conditions to the current ones or set as unique
         if (isset($this->_conditions) === true) {
-            $conditions = '('.$this->_conditions.') OR ('.$conditions.')';
+            $conditions = '(' . $this->_conditions . ') OR (' . $conditions . ')';
         }
 
         $this->_conditions = $conditions;
@@ -627,9 +620,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Appends a BETWEEN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $builder->betweenWhere('price', 100.25, 200.50);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param mixed $minimum
@@ -646,10 +639,10 @@ class Builder implements BuilderInterface, InjectionAwareInterface
 
         /* Create the parameters */
         $nextHiddenParam = $this->_hiddenParamNumber + 1;
-        $minimumKey = 'phb'.$this->_hiddenParamNumber;
-        $maximumKey = 'phb'.$nextHiddenParam;
-        $conditions = $expr.' BETWEEN :'.$minimumKey.': AND :'.$maximumKey.':';
-        $bindParams = array($minimumKey => $minimum, $maximumKey => $maximum);
+        $minimumKey      = 'phb' . $this->_hiddenParamNumber;
+        $maximumKey      = 'phb' . $nextHiddenParam;
+        $conditions      = $expr . ' BETWEEN :' . $minimumKey . ': AND :' . $maximumKey . ':';
+        $bindParams      = array($minimumKey => $minimum, $maximumKey => $maximum);
 
         //Append the BETWEEN to the current conditions using 'AND'
         $this->andWhere($conditions, $bindParams);
@@ -661,9 +654,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Appends a NOT BETWEEN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $builder->notBetweenWhere('price', 100.25, 200.50);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param mixed $minimum
@@ -680,10 +673,10 @@ class Builder implements BuilderInterface, InjectionAwareInterface
 
         /* Create the parameters */
         $nextHiddenParam = $this->_hiddenParamNumber + 1;
-        $minimumKey = 'phb'.$this->_hiddenParamNumber;
-        $maximumKey = 'phb'.$nextHiddenParam;
-        $conditions = $expr.' NOT BETWEEN :'.$minimumKey.': AND :'.$maximumKey.':';
-        $bindParams = array($minimumKey => $minimum, $maximumKey => $maximum);
+        $minimumKey      = 'phb' . $this->_hiddenParamNumber;
+        $maximumKey      = 'phb' . $nextHiddenParam;
+        $conditions      = $expr . ' NOT BETWEEN :' . $minimumKey . ': AND :' . $maximumKey . ':';
+        $bindParams      = array($minimumKey => $minimum, $maximumKey => $maximum);
 
         //Append the BETWEEN to the current conditions using 'AND'
         $this->andWhere($conditions, $bindParams);
@@ -695,9 +688,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Appends an IN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $builder->inWhere('id', [1, 2, 3]);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param array $values
@@ -717,20 +710,20 @@ class Builder implements BuilderInterface, InjectionAwareInterface
 
         /* Create the parameters */
         $hiddenParam = $this->_hiddenParamNumber;
-        $bindParams = array();
-        $bindKeys = array();
+        $bindParams  = array();
+        $bindKeys    = array();
 
         foreach ($values as $value) {
             //Key with auto-bind params
-            $key = 'phi'.$hiddenParam;
-            $queryKey = ':'.$key.':';
-            $bindKeys[] = $queryKey;
+            $key              = 'phi' . $hiddenParam;
+            $queryKey         = ':' . $key . ':';
+            $bindKeys[]       = $queryKey;
             $bindParams[$key] = $value;
             $hiddenParam++;
         }
 
         //Create a standard IN condition with bind params
-        $conditions = $expr.' IN ('.implode(', ', $bindKeys).')';
+        $conditions = $expr . ' IN (' . implode(', ', $bindKeys) . ')';
 
         //Append the IN to the current conditions using 'AND'
         $this->andWhere($conditions, $bindParams);
@@ -742,9 +735,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Appends a NOT IN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $builder->notInWhere('id', [1, 2, 3]);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param array $values
@@ -764,20 +757,20 @@ class Builder implements BuilderInterface, InjectionAwareInterface
 
         /* Create the parameters */
         $hiddenParam = $this->_hiddenParamNumber;
-        $bindParams = array();
-        $bindKeys = array();
+        $bindParams  = array();
+        $bindKeys    = array();
 
         foreach ($values as $value) {
             //Key with auto-bind params
-            $key = 'phi'.$hiddenParam;
-            $queryKey = ':'.$key.':';
-            $bindKeys[] = $queryKey;
+            $key              = 'phi' . $hiddenParam;
+            $queryKey         = ':' . $key . ':';
+            $bindKeys[]       = $queryKey;
             $bindParams[$key] = $value;
             $hiddenParam++;
         }
 
         //Create a standard IN condition with bind params
-        $conditions = $expr.' NOT IN ('.implode(', ', $bindKeys).')';
+        $conditions = $expr . ' NOT IN (' . implode(', ', $bindKeys) . ')';
 
         //Append the IN to the current conditions using 'AND'
         $this->andWhere($conditions, $bindParams);
@@ -799,10 +792,10 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Sets a ORDER BY condition clause
      *
-     *<code>
+     * <code>
      *  $builder->orderBy('Robots.name');
      *  $builder->orderBy(array('1', 'Robots.name'));
-     *</code>
+     * </code>
      *
      * @param string $orderBy
      * @return \Phalcon\Mvc\Model\Query\Builder
@@ -832,9 +825,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Sets a HAVING condition clause. You need to escape PHQL reserved words using [ and ] delimiters
      *
-     *<code>
+     * <code>
      *  $builder->having('SUM(Robots.price) > 0');
-     *</code>
+     * </code>
      *
      * @param string $having
      * @return \Phalcon\Mvc\Model\Query\Builder
@@ -864,10 +857,10 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Sets a LIMIT clause, optionally a offset clause
      *
-     *<code>
+     * <code>
      *  $builder->limit(100);
      *  $builder->limit(100, 20);
-     *</code>
+     * </code>
      *
      * @param int $limit
      * @param int|null $offset
@@ -877,13 +870,13 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     public function limit($limit, $offset = null)
     {
         if (is_numeric($limit) === true) {
-            $this->_limit = (int)$limit;
+            $this->_limit = (int) $limit;
         } else {
             throw new Exception('Invalid parameter type.');
         }
 
         if (is_null($offset) === false && is_numeric($offset) === true) {
-            $this->_offset = (int)$offset;
+            $this->_offset = (int) $offset;
         }
 
         return $this;
@@ -902,9 +895,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Sets an OFFSET clause
      *
-     *<code>
+     * <code>
      *  $builder->offset(30);
-     *</code>
+     * </code>
      *
      * @param int $offset
      * @return \Phalcon\Mvc\Model\Query\Builder
@@ -934,9 +927,9 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     /**
      * Sets a GROUP BY clause
      *
-     *<code>
+     * <code>
      *  $builder->groupBy(array('Robots.name'));
-     *</code>
+     * </code>
      *
      * @param string $group
      * @return \Phalcon\Mvc\Model\Query\Builder
@@ -977,14 +970,14 @@ class Builder implements BuilderInterface, InjectionAwareInterface
         }
 
         $dependencyInjector = $this->_dependencyInjector;
-        $models = $this->_models;
-        $conditions = $this->_conditions;
-        $columns = $this->_columns;
-        $joins = $this->_joins;
-        $group = $this->_group;
-        $having  = $this->_having;
-        $order = $this->_order;
-        $limit = $this->_limit;
+        $models             = $this->_models;
+        $conditions         = $this->_conditions;
+        $columns            = $this->_columns;
+        $joins              = $this->_joins;
+        $group              = $this->_group;
+        $having             = $this->_having;
+        $order              = $this->_order;
+        $limit              = $this->_limit;
 
         if (is_array($models) === true && count($models) == 0) {
             throw new Exception('At least one model is required to build the query');
@@ -1006,10 +999,10 @@ class Builder implements BuilderInterface, InjectionAwareInterface
 
             //Get the models metadata service to obtain the column names, column map and
             //primary key
-            $noPrimary = true;
+            $noPrimary     = true;
             $modelInstance = new $model($dependencyInjector);
-            $metaData = $dependencyInjector->getShared('modelsMetadata');
-            $primaryKeys = $metaData->getPrimaryKeyAttributes($modelInstance);
+            $metaData      = $dependencyInjector->getShared('modelsMetadata');
+            $primaryKeys   = $metaData->getPrimaryKeyAttributes($modelInstance);
 
             if (empty($primaryKeys) == false && isset($primaryKeys[0]) === true) {
                 $firstPrimaryKey = $primaryKeys[0];
@@ -1026,14 +1019,14 @@ class Builder implements BuilderInterface, InjectionAwareInterface
                     if (isset($columnMap[$firstPrimaryKey]) === true) {
                         $attributeField = $columnMap[$firstPrimaryKey];
                     } else {
-                        throw new Exception("Column '".$firstPrimaryKey.'" isn\'t part of the column map');
+                        throw new Exception("Column '" . $firstPrimaryKey . '" isn\'t part of the column map');
                     }
                 } else {
                     $attributeField = $firstPrimaryKey;
                 }
 
-                $conditions = '['.$model.'].['.$attributeField.'] = '.$conditions;
-                $noPrimary = false;
+                $conditions = '[' . $model . '].[' . $attributeField . '] = ' . $conditions;
+                $noPrimary  = false;
             }
 
             //A primary key is mandatory in these cases
@@ -1051,7 +1044,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
                     if (is_int($columnAlias) === true) {
                         $selectedColumns[] = $column;
                     } else {
-                        $selectedColumns[] = $column.' AS '.$columnAlias;
+                        $selectedColumns[] = $column . ' AS ' . $columnAlias;
                     }
                 }
 
@@ -1065,15 +1058,15 @@ class Builder implements BuilderInterface, InjectionAwareInterface
                 $selectedColumns = array();
                 foreach ($models as $modelColumnAlias => $model) {
                     if (is_int($modelColumnAlias) === true) {
-                        $selectedColumns[] = '['.$model.'].*';
+                        $selectedColumns[] = '[' . $model . '].*';
                     } else {
-                        $selectedColumns[] = '['.$modelColumnAlias.'].*';
+                        $selectedColumns[] = '[' . $modelColumnAlias . '].*';
                     }
                 }
 
                 $phql .= implode(', ', $selectedColumns);
             } else {
-                $phql .= '['.$models.'].*';
+                $phql .= '[' . $models . '].*';
             }
         }
 
@@ -1082,15 +1075,15 @@ class Builder implements BuilderInterface, InjectionAwareInterface
             $selectedModels = array();
             foreach ($models as $modelAlias => $model) {
                 if (is_string($modelAlias) === true) {
-                    $selectedModels[] = '['.$model.'] AS ['.$modelAlias.']';
+                    $selectedModels[] = '[' . $model . '] AS [' . $modelAlias . ']';
                 } else {
-                    $selectedModels[] = '['.$model.']';
+                    $selectedModels[] = '[' . $model . ']';
                 }
             }
 
-            $phql .= ' FROM '.implode(', ', $selectedModels);
+            $phql .= ' FROM ' . implode(', ', $selectedModels);
         } else {
-            $phql .= ' FROM ['.$models.']';
+            $phql .= ' FROM [' . $models . ']';
         }
 
         //Check if joins were passed to the builders
@@ -1110,19 +1103,19 @@ class Builder implements BuilderInterface, InjectionAwareInterface
 
                 //Create the join according to the type
                 if (isset($joinType)) {
-                    $phql .= ' '.$joinType.' JOIN ['.$joinModel.']';
+                    $phql .= ' ' . $joinType . ' JOIN [' . $joinModel . ']';
                 } else {
-                    $phql .= ' JOIN ['.$joinModel.']';
+                    $phql .= ' JOIN [' . $joinModel . ']';
                 }
 
                 //Alias comes first
                 if (isset($joinAlias) === true) {
-                    $phql .= ' AS ['.$joinAlias.']';
+                    $phql .= ' AS [' . $joinAlias . ']';
                 }
 
                 //Conditions then
                 if (isset($joinConditions) === true) {
-                    $phql .= ' ON '.$joinConditions;
+                    $phql .= ' ON ' . $joinConditions;
                 }
             }
         }
@@ -1130,7 +1123,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
         //Only append conditions if it's a string
         if (is_string($conditions) === true &&
             empty($conditions) === false) {
-            $phql .= ' WHERE '.$conditions;
+            $phql .= ' WHERE ' . $conditions;
         }
 
         //Process group parameters
@@ -1144,27 +1137,27 @@ class Builder implements BuilderInterface, InjectionAwareInterface
                         if (strpos($groupItem, '.') !== false) {
                             $groupItems[] = $groupItem;
                         } else {
-                            $groupItems[] = '['.$groupItem.']';
+                            $groupItems[] = '[' . $groupItem . ']';
                         }
                     }
                 }
 
-                $phql .= ' GROUP BY '.implode(', ', $groupItems);
+                $phql .= ' GROUP BY ' . implode(', ', $groupItems);
             } else {
                 if (is_null($group) === true) {
-                    $phql .= ' GROUP BY '.$group;
+                    $phql .= ' GROUP BY ' . $group;
                 } else {
                     if (strpos($group, '.') !== false) {
-                        $phql .= ' GROUP BY '.$group;
+                        $phql .= ' GROUP BY ' . $group;
                     } else {
-                        $phql .= ' GROUP BY ['.$group.']';
+                        $phql .= ' GROUP BY [' . $group . ']';
                     }
                 }
             }
 
             //Process having parameters
             if (is_null($having) === false && empty($having) === false) {
-                $phql .= ' HAVING '.$having;
+                $phql .= ' HAVING ' . $having;
             }
         }
 
@@ -1179,14 +1172,14 @@ class Builder implements BuilderInterface, InjectionAwareInterface
                         if (strpos($orderItem, '.') !== false) {
                             $orderItems[] = $orderItem;
                         } else {
-                            $orderItems[] = '['.$orderItem.']';
+                            $orderItems[] = '[' . $orderItem . ']';
                         }
                     }
                 }
 
-                $phql .= ' ORDER BY '.implode(', ', $orderItems);
+                $phql .= ' ORDER BY ' . implode(', ', $orderItems);
             } else {
-                $phql .= ' ORDER BY '.$order;
+                $phql .= ' ORDER BY ' . $order;
             }
         }
 
@@ -1197,21 +1190,21 @@ class Builder implements BuilderInterface, InjectionAwareInterface
                 if (isset($limit['offset']) === true) {
                     $offset = $limit['offset'];
                     if (is_null($offset) === true) {
-                        $phql .= ' LIMIT '.$number.' OFFSET '.$offset;
+                        $phql .= ' LIMIT ' . $number . ' OFFSET ' . $offset;
                     } else {
-                        $phql .= ' LIMIT '.$number.' OFFSET 0';
+                        $phql .= ' LIMIT ' . $number . ' OFFSET 0';
                     }
                 } else {
-                    $phql .= ' LIMIT '.$number;
+                    $phql .= ' LIMIT ' . $number;
                 }
             } else {
                 if (is_null($limit) === true) {
-                    $phql .= 'LIMIT '.$limit;
+                    $phql .= 'LIMIT ' . $limit;
 
                     $offset = $this->_offset;
                     if (is_null($offset) === false) {
                         if (is_null($offset) === true) {
-                            $phql .= ' OFFSET '.$offset;
+                            $phql .= ' OFFSET ' . $offset;
                         } else {
                             $phql .= ' OFFSET 0';
                         }
@@ -1231,7 +1224,7 @@ class Builder implements BuilderInterface, InjectionAwareInterface
     public function getQuery()
     {
         //Process the PHQL
-        $phql = $this->getPhql();
+        $phql  = $this->getPhql();
         $query = new Query($phql, $this->_dependencyInjector);
 
         //Set default bind params
@@ -1248,4 +1241,5 @@ class Builder implements BuilderInterface, InjectionAwareInterface
 
         return $query;
     }
+
 }

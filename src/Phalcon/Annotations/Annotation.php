@@ -1,13 +1,5 @@
 <?php
-/**
- * Annotation
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations;
 
 use \Phalcon\Annotations\Exception;
@@ -21,67 +13,68 @@ use \Phalcon\Annotations\Exception;
  */
 class Annotation
 {
+
     /**
      * Integer Type
      *
      * @var int
-    */
+     */
     const PHANNOT_T_INTEGER = 301;
 
     /**
      * Double Type
      *
      * @var int
-    */
+     */
     const PHANNOT_T_DOUBLE = 302;
 
     /**
      * String Type
      *
      * @var int
-    */
+     */
     const PHANNOT_T_STRING = 303;
 
     /**
      * Null Type
      *
      * @var int
-    */
+     */
     const PHANNOT_T_NULL = 304;
 
     /**
      * False Type
      *
      * @var int
-    */
-    const PHANNOT_T_FALSE =  305;
+     */
+    const PHANNOT_T_FALSE = 305;
 
     /**
      * True Type
      *
      * @var int
-    */
+     */
     const PHANNOT_T_TRUE = 306;
 
     /**
      * Identifer Type
      *
      * @var int
-    */
+     */
     const PHANNOT_T_IDENTIFIER = 307;
 
     /**
      * Array Type
      *
      * @var int
-    */
+     */
     const PHANNOT_T_ARRAY = 308;
 
     /**
      * Annotation Type
      *
      * @var int
-    */
+     */
     const PHANNOT_T_ANNOTATION = 300;
 
     /**
@@ -89,7 +82,7 @@ class Annotation
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_name;
 
     /**
@@ -97,7 +90,7 @@ class Annotation
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_arguments;
 
     /**
@@ -105,7 +98,7 @@ class Annotation
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_exprArguments;
 
     /**
@@ -120,7 +113,7 @@ class Annotation
             throw new Exception('Reflection data must be an array');
         }
 
-        $this->_name = (string)$reflectionData['name'];
+        $this->_name = (string) $reflectionData['name'];
 
         if (isset($reflectionData['arguments']) === true) {
             $exprArguments = $reflectionData['arguments'];
@@ -128,7 +121,7 @@ class Annotation
             $arguments = array();
 
             foreach ($exprArguments as $argument) {
-                $expr = $argument['expr'];
+                $expr             = $argument['expr'];
                 $resolvedArgument = $this->getExpression($expr);
                 if (isset($argument['name']) === true) {
                     $arguments[$argument['name']] = $resolvedArgument;
@@ -137,7 +130,7 @@ class Annotation
                 }
             }
 
-            $this->_arguments = $arguments;
+            $this->_arguments     = $arguments;
             $this->_exprArguments = $exprArguments;
         }
     }
@@ -149,7 +142,7 @@ class Annotation
      */
     public function getName()
     {
-        return (string)$this->_name;
+        return (string) $this->_name;
     }
 
     /**
@@ -165,12 +158,12 @@ class Annotation
             throw new Exception('The expression is not valid.');
         }
 
-        switch ((int)$expr['type']) {
+        switch ((int) $expr['type']) {
             case self::PHANNOT_T_INTEGER:
             case self::PHANNOT_T_DOUBLE:
             case self::PHANNOT_T_STRING:
             case self::PHANNOT_T_IDENTIFIER:
-                return (string)$expr['value'];
+                return (string) $expr['value'];
                 break;
             case self::PHANNOT_T_NULL:
                 return null;
@@ -183,7 +176,7 @@ class Annotation
                 break;
             case PHANNOT_T_ARRAY:
                 foreach ($expr['items'] as $item) {
-                    $resolvedItem = $this->getExpression((string)$item);
+                    $resolvedItem = $this->getExpression((string) $item);
 
                     if (isset($item['name']) === true) {
                         return array($item['name'] => $resolvedItem);
@@ -196,7 +189,7 @@ class Annotation
                 return new Annotation($expr);
                 break;
             default:
-                throw new Exception('The expression '.(int)$expr['type'].'is unknown.');
+                throw new Exception('The expression ' . (int) $expr['type'] . 'is unknown.');
                 break;
         }
     }
@@ -228,7 +221,7 @@ class Annotation
      */
     public function numberArguments()
     {
-        return (int)count($this->_arguments);
+        return (int) count($this->_arguments);
     }
 
     /**
@@ -301,4 +294,5 @@ class Annotation
     {
         return $this->hasArgument($position);
     }
+
 }

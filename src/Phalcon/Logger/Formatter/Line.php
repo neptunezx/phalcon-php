@@ -1,13 +1,5 @@
 <?php
-/**
- * Line Formatter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger\Formatter;
 
 use \Phalcon\Logger\Formatter;
@@ -23,12 +15,13 @@ use \Phalcon\Logger\Exception;
  */
 class Line extends Formatter implements FormatterInterface
 {
+
     /**
      * Date Format
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_dateFormat = 'D, d M y H:i:s O';
 
     /**
@@ -36,7 +29,7 @@ class Line extends Formatter implements FormatterInterface
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_format = '[%date%][%type%] %message%';
 
     /**
@@ -128,9 +121,7 @@ class Line extends Formatter implements FormatterInterface
 
         if (strpos($format, '%date%') !== false) {
             $format = str_replace(
-                '%date%',
-                date($this->_dateFormat, $timestamp),
-                $format
+                '%date%', date($this->_dateFormat, $timestamp), $format
             );
         }
 
@@ -138,6 +129,7 @@ class Line extends Formatter implements FormatterInterface
             $format = str_replace('%type%', $this->getTypeString($type), $format);
         }
 
-        return str_replace('%message%', $message, $format).\PHP_EOL;
+        return str_replace('%message%', $message, $format) . \PHP_EOL;
     }
+
 }

@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Paginator Model Adapter
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Paginator Model Adapter
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Paginator\Adapter;
 
 use \Phalcon\Paginator\AdapterInterface;
@@ -23,12 +25,13 @@ use \stdClass;
  */
 class Model implements AdapterInterface
 {
+
     /**
      * Limit Rows
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_limitRows;
 
     /**
@@ -36,7 +39,7 @@ class Model implements AdapterInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_config;
 
     /**
@@ -44,7 +47,7 @@ class Model implements AdapterInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_page;
 
     /**
@@ -94,8 +97,8 @@ class Model implements AdapterInterface
     public function getPaginate()
     {
         $pageNumber = $this->_page;
-        $show = $this->_limitRows;
-        $items = $this->_config['data'];
+        $show       = $this->_limitRows;
+        $items      = $this->_config['data'];
 
         if (is_int($pageNumber) === false) {
             $pageNumber = 1;
@@ -105,18 +108,18 @@ class Model implements AdapterInterface
             throw new Exception('The start page number is zero or less');
         }
 
-        $n =  count($items);
-        $lastShowPage = $pageNumber - 1;
-        $start = $show * $lastShowPage;
+        $n             = count($items);
+        $lastShowPage  = $pageNumber - 1;
+        $start         = $show * $lastShowPage;
         $possiblePages = $n / $show;
-        $totalPages = ceil($possiblePages);
+        $totalPages    = ceil($possiblePages);
 
         if (is_object($items) === false) {
             throw new Exception('Invalid data for paginator');
         }
 
         $pageItems = array();
-        $page = new stdClass();
+        $page      = new stdClass();
 
         if ($n > 0) {
             //Seek to the desired position
@@ -124,9 +127,9 @@ class Model implements AdapterInterface
                 $items->seek($start);
             } else {
                 $items->seek(0);
-                $pageNumber = 1;
+                $pageNumber   = 1;
                 $lastShowPage = 0;
-                $start = 0;
+                $start        = 0;
             }
 
             //The record must be iterable
@@ -152,9 +155,9 @@ class Model implements AdapterInterface
             if ($maximumPages === $n) {
                 $next = $n;
             } else {
-                $possiblePages = $n / $show;
+                $possiblePages  = $n / $show;
                 $additionalPage = $possiblePages + 1;
-                $next = (int)$additionalPage;
+                $next           = (int) $additionalPage;
             }
         }
 
@@ -170,24 +173,25 @@ class Model implements AdapterInterface
             $before = 1;
         }
 
-        $page->first = 1;
-        $page->before = $before;
+        $page->first   = 1;
+        $page->before  = $before;
         $page->current = $pageNumber;
 
-        $reminder = $n % $show;
+        $reminder      = $n % $show;
         $possiblePages = $n / $show;
 
         if (is_int($reminder) === false) {
-            $next = $possiblePages + 1;
-            $pagesTotal = (int)$next;
+            $next       = $possiblePages + 1;
+            $pagesTotal = (int) $next;
         } else {
             $pagesTotal = $possiblePages;
         }
 
-        $page->last = $pagesTotal;
+        $page->last        = $pagesTotal;
         $page->total_pages = $totalPages;
         $page->total_items = $n;
 
         return $page;
     }
+
 }

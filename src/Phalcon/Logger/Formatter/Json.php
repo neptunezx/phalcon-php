@@ -1,13 +1,5 @@
 <?php
-/**
- * JSON Formatter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger\Formatter;
 
 use \Phalcon\Logger\Formatter;
@@ -23,6 +15,7 @@ use \Phalcon\Logger\Exception;
  */
 class Json extends Formatter implements FormatterInterface
 {
+
     /**
      * Applies a format to a message before sent it to the internal log
      *
@@ -44,10 +37,11 @@ class Json extends Formatter implements FormatterInterface
         //@note no exception handeling
         return json_encode(
             array(
-                'type' => $this->getTypeString($type),
-                'message' => $message,
+                'type'      => $this->getTypeString($type),
+                'message'   => $message,
                 'timestamp' => $timestamp
             )
         );
     }
+
 }

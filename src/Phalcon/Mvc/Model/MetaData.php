@@ -1,13 +1,5 @@
 <?php
-/**
- * Metadata
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Di\InjectionAwareInterface;
@@ -35,102 +27,103 @@ use \Phalcon\Mvc\ModelInterface;
  */
 abstract class MetaData implements InjectionAwareInterface
 {
+
     /**
      * Models: Attributes
      *
      * @var int
-    */
+     */
     const MODELS_ATTRIBUTES = 0;
 
     /**
      * Models: Primary Key
      *
      * @var int
-    */
+     */
     const MODELS_PRIMARY_KEY = 1;
 
     /**
      * Models: Non Primary Key
      *
      * @var int
-    */
+     */
     const MODELS_NON_PRIMARY_KEY = 2;
 
     /**
      * Models: Not Null
      *
      * @var int
-    */
+     */
     const MODELS_NOT_NULL = 3;
 
     /**
      * Models: Data Types
      *
      * @var int
-    */
+     */
     const MODELS_DATA_TYPES = 4;
 
     /**
      * Models: Data Types Numeric
      *
      * @var int
-    */
+     */
     const MODELS_DATA_TYPES_NUMERIC = 5;
 
     /**
      * Models: Date At
      *
      * @var int
-    */
+     */
     const MODELS_DATE_AT = 6;
 
     /**
      * Models: Date In
      *
      * @var int
-    */
+     */
     const MODELS_DATE_IN = 7;
 
     /**
      * Models: Identity Column
      *
      * @var int
-    */
+     */
     const MODELS_IDENTITY_COLUMN = 8;
 
     /**
      * Models: Data Types Bind
      *
      * @var int
-    */
+     */
     const MODELS_DATA_TYPES_BIND = 9;
 
     /**
      * Models: Automatic Default Insert
      *
      * @var int
-    */
+     */
     const MODELS_AUTOMATIC_DEFAULT_INSERT = 10;
 
     /**
      * Models: AUtomatic Default Update
      *
      * @var int
-    */
+     */
     const MODELS_AUTOMATIC_DEFAULT_UPDATE = 11;
 
     /**
      * Models: Column Map
      *
      * @var int
-    */
+     */
     const MODELS_COLUMN_MAP = 0;
 
     /**
      * Models: Reverse Column Map
      *
      * @var int
-    */
+     */
     const MODELS_REVERSE_COLUMN_MAP = 1;
 
     /**
@@ -138,7 +131,7 @@ abstract class MetaData implements InjectionAwareInterface
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -146,7 +139,7 @@ abstract class MetaData implements InjectionAwareInterface
      *
      * @var null|\Phalcon\Mvc\Model\MetaData\Strategy\Introspection
      * @access protected
-    */
+     */
     protected $_strategy;
 
     /**
@@ -154,7 +147,7 @@ abstract class MetaData implements InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_metaData;
 
     /**
@@ -162,7 +155,7 @@ abstract class MetaData implements InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_columnMap;
 
     /**
@@ -176,13 +169,13 @@ abstract class MetaData implements InjectionAwareInterface
      */
     protected function _initialize(ModelInterface $model, $key = null, $table, $schema)
     {
-        if ((is_string($table) === false &&  is_null($table) === false) ||
+        if ((is_string($table) === false && is_null($table) === false) ||
             (is_string($schema) === false && is_null($schema) === false) ||
             (is_string($key) === false && is_null($key) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $strategy = null;
+        $strategy  = null;
         $className = get_class($model);
 
         if (is_null($key) === false) {
@@ -190,8 +183,8 @@ abstract class MetaData implements InjectionAwareInterface
             $metaData = $this->_metaData;
             if (isset($metaData[$key]) === false) {
                 //The meta-data is read from the adapter always
-                $prefixKey = 'meta-'.$key;
-                $data = $this->read($prefixKey);
+                $prefixKey = 'meta-' . $key;
+                $data      = $this->read($prefixKey);
 
                 if (is_null($data) === false) {
                     //Store the adapters metadata locally
@@ -199,14 +192,14 @@ abstract class MetaData implements InjectionAwareInterface
                         $metaData = array();
                     }
 
-                    $metaData[$key] = $data;
+                    $metaData[$key]  = $data;
                     $this->_metaData = $metaData;
                 } else {
                     //Check if there is a method 'metaData' in the model to retrieve meta-data form it
                     if (method_exists($model, 'metaData') === true) {
                         $modelMetadata = $model->metaData();
                         if (is_array($modelMetadata) === false) {
-                            throw new Exception('Invalid meta-data for model '.$className);
+                            throw new Exception('Invalid meta-data for model ' . $className);
                         }
                     } else {
                         //Get the meta-data extraction strategy
@@ -241,7 +234,7 @@ abstract class MetaData implements InjectionAwareInterface
         }
 
         //Create the map key name
-        $prefixKey = 'map-'.$keyName;
+        $prefixKey = 'map-' . $keyName;
 
         //Check if the meta-data is already in the adapter
         $data = $this->read($prefixKey);
@@ -323,9 +316,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Reads the complete meta-data for certain model
      *
-     *<code>
+     * <code>
      *  print_r($metaData->readMetaData(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -338,11 +331,11 @@ abstract class MetaData implements InjectionAwareInterface
             throw new Exception('A model instance is required to retrieve the meta-data');
         }
 
-        $table = $model->getSource();
+        $table  = $model->getSource();
         $schema = $model->getSchema();
 
         //Unique key for meta-data is created using class-name-schema-table
-        $key = strtolower(get_class($model)).'-'.$schema.$table;
+        $key = strtolower(get_class($model)) . '-' . $schema . $table;
         if (isset($this->_metaData[$key]) === false) {
             $this->_initialize($model, $key, $table, $schema);
         }
@@ -353,9 +346,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Reads meta-data for certain model using a MODEL_* constant
      *
-     *<code>
+     * <code>
      *  print_r($metaData->writeColumnMapIndex(new Robots(), MetaData::MODELS_REVERSE_COLUMN_MAP, array('leName' => 'name')));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @param int $index
@@ -373,11 +366,11 @@ abstract class MetaData implements InjectionAwareInterface
             throw new Exception('Index must be a valid integer constant');
         }
 
-        $table = $model->getSource();
+        $table  = $model->getSource();
         $schema = $model->getSchema();
 
         //Unique key for meta-data is created using class-name-schema-table
-        $key = strtolower(get_class($model)).'-'.$schema.$table;
+        $key = strtolower(get_class($model)) . '-' . $schema . $table;
         if (isset($this->_metaData[$key]) === false) {
             $this->_initialize($model, $key, $table, $schema);
         }
@@ -388,9 +381,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Writes meta-data for certain model using a MODEL_* constant
      *
-     *<code>
+     * <code>
      *  print_r($metaData->writeColumnMapIndex(new Robots(), MetaData::MODELS_REVERSE_COLUMN_MAP, array('leName' => 'name')));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @param int $index
@@ -418,11 +411,11 @@ abstract class MetaData implements InjectionAwareInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $table = $model->getSource();
+        $table  = $model->getSource();
         $schema = $model->getSchema();
 
         //Unique key for meta-data is created using class-name-schema-table
-        $key = strtolower(get_class($model)).'-'.$schema.$table;
+        $key = strtolower(get_class($model)) . '-' . $schema . $table;
 
         if (isset($this->_metaData[$key]) === false) {
             $this->_initialize($model, $key, $table, $schema);
@@ -441,9 +434,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Reads the ordered/reversed column map for certain model
      *
-     *<code>
+     * <code>
      *  print_r($metaData->readColumnMap(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -468,9 +461,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Reads column-map information for certain model using a MODEL_* constant
      *
-     *<code>
+     * <code>
      *  print_r($metaData->readColumnMapIndex(new Robots(), MetaData::MODELS_REVERSE_COLUMN_MAP));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @param int $index
@@ -499,9 +492,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns table attributes names (fields)
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getAttributes(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -525,9 +518,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns an array of fields which are part of the primary key
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getPrimaryKeyAttributes(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -551,9 +544,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns an arrau of fields which are not part of the primary key
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getNonPrimaryKeyAttributes(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -577,9 +570,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns an array of not null attributes
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getNotNullAttributes(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -603,9 +596,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns attributes and their data types
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getDataTypes(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -629,9 +622,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns attributes which types are numerical
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getDataTypesNumeric(new Robots()));
-     *</code>
+     * </code>
      *
      * @param  \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -655,9 +648,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns the name of identity field (if one is present)
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getIdentityField(new Robots()));
-     *</code>
+     * </code>
      *
      * @param  \Phalcon\Mvc\ModelInterface $model
      * @return string
@@ -676,9 +669,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns attributes and their bind data types
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getBindTypes(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -702,9 +695,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns attributes that must be ignored from the INSERT SQL generation
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getAutomaticCreateAttributes(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -728,9 +721,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns attributes that must be ignored from the UPDATE SQL generation
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getAutomaticUpdateAttributes(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -754,9 +747,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Set the attributes that must be ignored from the INSERT SQL generation
      *
-     *<code>
+     * <code>
      *  $metaData->setAutomaticCreateAttributes(new Robots(), array('created_at' => true));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @param array $attributes
@@ -770,9 +763,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Set the attributes that must be ignored from the UPDATE SQL generation
      *
-     *<code>
+     * <code>
      *  $metaData->setAutomaticUpdateAttributes(new Robots(), array('modified_at' => true));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @param array $attributes
@@ -786,9 +779,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns the column map if any
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getColumnMap(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -806,9 +799,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Returns the reverse column map if any
      *
-     *<code>
+     * <code>
      *  print_r($metaData->getReverseColumnMap(new Robots()));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
@@ -826,9 +819,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Check if a model has certain attribute
      *
-     *<code>
+     * <code>
      *  var_dump($metaData->hasAttribute(new Robots(), 'name'));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @param string $attribute
@@ -853,9 +846,9 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Checks if the internal meta-data container is empty
      *
-     *<code>
+     * <code>
      *  var_dump($metaData->isEmpty());
-     *</code>
+     * </code>
      *
      * @return boolean
      */
@@ -867,13 +860,14 @@ abstract class MetaData implements InjectionAwareInterface
     /**
      * Resets internal meta-data in order to regenerate it
      *
-     *<code>
+     * <code>
      *  $metaData->reset();
-     *</code>
+     * </code>
      */
     public function reset()
     {
-        $this->_metaData = array();
+        $this->_metaData  = array();
         $this->_columnMap = array();
     }
+
 }

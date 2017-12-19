@@ -1,13 +1,5 @@
 <?php
-/**
- * Message
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Mvc\Model\MessageInterface;
@@ -19,7 +11,7 @@ use \Phalcon\Mvc\Model\Exception;
  *
  * Encapsulates validation info generated before save/delete records fails
  *
- *<code>
+ * <code>
  *  use Phalcon\Mvc\Model\Message as Message;
  *
  *  class Robots extends Phalcon\Mvc\Model
@@ -43,12 +35,13 @@ use \Phalcon\Mvc\Model\Exception;
  */
 class Message implements MessageInterface
 {
+
     /**
      * Type
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_type;
 
     /**
@@ -56,7 +49,7 @@ class Message implements MessageInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_message;
 
     /**
@@ -64,7 +57,7 @@ class Message implements MessageInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_field;
 
     /**
@@ -72,7 +65,7 @@ class Message implements MessageInterface
      *
      * @var null|\Phalcon\Mvc\ModelInterface
      * @access protected
-    */
+     */
     protected $_model;
 
     /**
@@ -106,8 +99,8 @@ class Message implements MessageInterface
         } //@note no interface validation
 
         $this->_message = $message;
-        $this->_field = $field;
-        $this->_type = $type;
+        $this->_field   = $field;
+        $this->_type    = $type;
 
         if (is_object($model) === true) {
             $this->_model = $model;
@@ -252,4 +245,5 @@ class Message implements MessageInterface
 
         return new Message($message["_message"], $message["_field"], $message["_type"]);
     }
+
 }

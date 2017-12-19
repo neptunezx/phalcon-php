@@ -1,13 +1,5 @@
 <?php
-/**
- * Application
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc;
 
 use \Phalcon\Di\Injectable;
@@ -24,7 +16,7 @@ use \Closure;
  * This component encapsulates all the complex operations behind instantiating every component
  * needed and integrating it with the rest to allow the MVC pattern to operate as desired.
  *
- *<code>
+ * <code>
  *
  * class Application extends \Phalcon\Mvc\Application
  * {
@@ -58,12 +50,13 @@ use \Closure;
  *  $application = new Application();
  *  $application->main();
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/application.c
  */
 class Application extends Injectable
 {
+
     /**
      * Default Module
      *
@@ -85,7 +78,7 @@ class Application extends Injectable
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_moduleObject;
 
     /**
@@ -93,7 +86,7 @@ class Application extends Injectable
      *
      * @var bool
      * @access protected
-    */
+     */
     protected $_implicitView = true;
 
     /**
@@ -130,7 +123,7 @@ class Application extends Injectable
     /**
      * Register an array of modules present in the application
      *
-     *<code>
+     * <code>
      *  $this->registerModules(array(
      *      'frontend' => array(
      *          'className' => 'Multiple\Frontend\Module',
@@ -141,7 +134,7 @@ class Application extends Injectable
      *          'path' => '../apps/backend/Module.php'
      *      )
      *  ));
-     *</code>
+     * </code>
      *
      * @param array $modules
      * @param boolean|null $merge
@@ -257,7 +250,7 @@ class Application extends Injectable
 
             //Check if the module passed by the router is registered in the modules container
             if (isset($this->_modules[$moduleName]) === false) {
-                throw new Exception("Module '".$moduleName."' isn't registered in the application container");
+                throw new Exception("Module '" . $moduleName . "' isn't registered in the application container");
             }
 
             //A module definition must be an array or an object
@@ -277,7 +270,7 @@ class Application extends Injectable
                         if (file_exists($module['path']) === true) {
                             require_once($module['path']);
                         } else {
-                            throw new Exception("Module definition path '".$module['path']."' doesn't exist");
+                            throw new Exception("Module definition path '" . $module['path'] . "' doesn't exist");
                         }
                     }
                 }
@@ -314,9 +307,9 @@ class Application extends Injectable
 
         //We get the parameters from the router and assign them to the dispatcher
         $controllerName = $router->getControllerName();
-        $actionName = $router->getActionName();
-        $params = $router->getParams();
-        $exact = $router->isExactControllerName();
+        $actionName     = $router->getActionName();
+        $params         = $router->getParams();
+        $exact          = $router->isExactControllerName();
 
         $dispatcher = $this->_dependencyInjector->getShared('dispatcher');
         $dispatcher->setModuleName($router->getModuleName());
@@ -367,8 +360,8 @@ class Application extends Injectable
                 //Check if the view progress has been treated by the developer
                 if ($renderStatus !== false) {
                     $controllerName = $dispatcher->getControllerName();
-                    $actionName = $dispatcher->getActionName();
-                    $params = $dispatcher->getParams();
+                    $actionName     = $dispatcher->getActionName();
+                    $params         = $dispatcher->getParams();
 
                     //Automatic render based on the latest controller executed
                     $view->render($controllerName, $actionName, $params);
@@ -406,4 +399,5 @@ class Application extends Injectable
         //Return the response
         return $response;
     }
+
 }

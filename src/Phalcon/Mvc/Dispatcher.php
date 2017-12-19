@@ -1,13 +1,5 @@
 <?php
-/**
- * Dispatcher
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc;
 
 use \Phalcon\Dispatcher as DefaultDispatcher;
@@ -24,7 +16,7 @@ use \Phalcon\Mvc\Dispatcher\Exception;
  * controller name, action name, and optional parameters contained in it, and then
  * instantiating a controller and calling an action of that controller.
  *
- *<code>
+ * <code>
  *
  *  $di = new Phalcon\Di();
  *
@@ -38,52 +30,53 @@ use \Phalcon\Mvc\Dispatcher\Exception;
  *
  *  $controller = $dispatcher->dispatch();
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/dispatcher.c
  */
 class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, InjectionAwareInterface, DispatcherInterface, PhalconDispatcherInterface
 {
+
     /**
      * Exception: No Dependency Injector
      *
      * @var int
-    */
+     */
     const EXCEPTION_NO_DI = 0;
 
     /**
      * Exception: Cyclic Routing
      *
      * @var int
-    */
+     */
     const EXCEPTION_CYCLIC_ROUTING = 1;
 
     /**
      * Exception: Handler Not Found
      *
      * @var int
-    */
+     */
     const EXCEPTION_HANDLER_NOT_FOUND = 2;
 
     /**
      * Exception: Invalid Handler
      *
      * @var int
-    */
+     */
     const EXCEPTION_INVALID_HANDLER = 3;
 
     /**
      * Exception: Invalid Parameters
      *
      * @var int
-    */
+     */
     const EXCEPTION_INVALID_PARAMS = 4;
 
     /**
      * Exception: Action Not Found
      *
      * @var int
-    */
+     */
     const EXCEPTION_ACTION_NOT_FOUND = 5;
 
     /**
@@ -91,7 +84,7 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_handlerSuffix = 'Controller';
 
     /**
@@ -99,7 +92,7 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_defaultHandler = 'index';
 
     /**
@@ -107,7 +100,7 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_defaultAction = 'index';
 
     /**
@@ -150,10 +143,10 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
     public function setControllerName($controllerName, $isExact = null)
     {
         if (is_bool($isExact) === true && $isExact === true) {
-            $this->_handlerName = '\\'.$controllerName;
+            $this->_handlerName    = '\\' . $controllerName;
             $this->_isExactHandler = true;
         } else {
-            $this->_handlerName = $controllerName;
+            $this->_handlerName    = $controllerName;
             $this->_isExactHandler = false;
         }
     }
@@ -267,4 +260,5 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
     {
         return $this->_activeHandler;
     }
+
 }

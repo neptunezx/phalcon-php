@@ -1,13 +1,5 @@
 <?php
-/**
- * Oracle
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db\Dialect;
 
 use \Phalcon\Db\Dialect;
@@ -24,12 +16,13 @@ use \Phalcon\Db\ColumnInterface;
  */
 class Oracle extends Dialect implements DialectInterface
 {
+
     /**
      * Escape Char
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_escapeChar = '';
 
     /**
@@ -46,23 +39,23 @@ class Oracle extends Dialect implements DialectInterface
             throw new Exception('Column definition must be an object compatbiel with Phalcon\\Db\\ColumnInterface');
         }
 
-        switch ((int)$column->getType()) {
+        switch ((int) $column->getType()) {
             case 0:
                 return 'INTEGER';
             case 1:
                 return 'DATE';
             case 2:
-                return 'VARCHAR2('.$column->getSize().')';
+                return 'VARCHAR2(' . $column->getSize() . ')';
             case 3:
-                return 'NUMBER('.$column->getSize().','.$column->getScale().')';
+                return 'NUMBER(' . $column->getSize() . ',' . $column->getScale() . ')';
             case 4:
                 return 'TIMESTAMP';
             case 5:
-                return 'CHAR('.$column->getSize().')';
+                return 'CHAR(' . $column->getSize() . ')';
             case 6:
                 return 'TEXT';
             case 7:
-                return 'FLOAT('.$column->getSize().','.$column->getScale().')';
+                return 'FLOAT(' . $column->getSize() . ',' . $column->getScale() . ')';
             case 8:
                 return 'TINYINT(1)';
             default:
@@ -243,15 +236,15 @@ class Oracle extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $table = $schemaName.'.'.$tableName;
+            $table = $schemaName . '.' . $tableName;
         } else {
             $table = $tableName;
         }
 
         if ($ifExists === true) {
-            return 'DROP TABLE IF EXISTS '.$table;
+            return 'DROP TABLE IF EXISTS ' . $table;
         } else {
-            return 'DROP TABLE '.$table;
+            return 'DROP TABLE ' . $table;
         }
     }
 
@@ -277,12 +270,12 @@ class Oracle extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $view = $viewName.'.'.$schemaName;
+            $view = $viewName . '.' . $schemaName;
         } else {
             $view = $viewName;
         }
 
-        return 'CREATE VIEW '.$view.' AS '.$definition['sql'];
+        return 'CREATE VIEW ' . $view . ' AS ' . $definition['sql'];
     }
 
     /**
@@ -309,25 +302,25 @@ class Oracle extends Dialect implements DialectInterface
         //@note this is the first time anything is escaped
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $view = '`'.$schemaName.'`.`'.$viewName.'`';
+            $view = '`' . $schemaName . '`.`' . $viewName . '`';
         } else {
-            $view = '`'.$viewName.'`';
+            $view = '`' . $viewName . '`';
         }
 
         if ($ifExists === true) {
-            return 'DROP VIEW IF EXISTS '.$view;
+            return 'DROP VIEW IF EXISTS ' . $view;
         } else {
-            return 'DROP VIEW '.$view;
+            return 'DROP VIEW ' . $view;
         }
     }
 
     /**
      * Generates SQL checking for the existence of a schema.table
      *
-     *<code>
+     * <code>
      *  var_dump($dialect->tableExists("posts", "blog"));
      *  var_dump($dialect->tableExists("posts"));
-     *</code>
+     * </code>
      *
      * @param string $tableName
      * @param string|null $schemaName
@@ -342,9 +335,9 @@ class Oracle extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END RET FROM ALL_TABLES WHERE TABLE_NAME='".$tableName."' AND OWNER = '".$schemaName."'";
+            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END RET FROM ALL_TABLES WHERE TABLE_NAME='" . $tableName . "' AND OWNER = '" . $schemaName . "'";
         } else {
-            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END RET FROM ALL_TABLES WHERE TABLE_NAME='".$tableName."'";
+            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END RET FROM ALL_TABLES WHERE TABLE_NAME='" . $tableName . "'";
         }
     }
 
@@ -364,18 +357,18 @@ class Oracle extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END RET FROM ALL_VIEWS WHERE VIEW_NAME='".$viewName."' AND OWNER='".$schemaName."'";
+            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END RET FROM ALL_VIEWS WHERE VIEW_NAME='" . $viewName . "' AND OWNER='" . $schemaName . "'";
         } else {
-            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END RET FROM ALL_VIEWS WHERE VIEW_NAME='".$viewName."'";
+            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END RET FROM ALL_VIEWS WHERE VIEW_NAME='" . $viewName . "'";
         }
     }
 
     /**
      * Generates a SQL describing a table
      *
-     *<code>
+     * <code>
      *  print_r($dialect->describeColumns("posts")); ?>
-     *</code>
+     * </code>
      *
      * @param string $table
      * @param string|null $schema
@@ -390,18 +383,18 @@ class Oracle extends Dialect implements DialectInterface
 
         if (is_string($schema) === true &&
             $schema == true) {
-            return "SELECT TC.COLUMN_NAME, TC.DATA_TYPE, TC.DATA_LENGTH, TC.DATA_PRECISION, TC.DATA_SCALE, TC.NULLABLE, C.CONSTRAINT_TYPE, TC.DATA_DEFAULT, CC.POSITION FROM ALL_TAB_COLUMNS TC LEFT JOIN (ALL_CONS_COLUMNS CC JOIN ALL_CONSTRAINTS C ON (CC.CONSTRAINT_NAME = C.CONSTRAINT_NAME AND CC.TABLE_NAME = C.TABLE_NAME AND CC.OWNER = C.OWNER AND C.CONSTRAINT_TYPE = 'P')) ON TC.TABLE_NAME = CC.TABLE_NAME AND TC.COLUMN_NAME = CC.COLUMN_NAME WHERE TC.TABLE_NAME = '".$table."' AND TC.OWNER = '".$schema."' ORDER BY TC.COLUMN_ID";
+            return "SELECT TC.COLUMN_NAME, TC.DATA_TYPE, TC.DATA_LENGTH, TC.DATA_PRECISION, TC.DATA_SCALE, TC.NULLABLE, C.CONSTRAINT_TYPE, TC.DATA_DEFAULT, CC.POSITION FROM ALL_TAB_COLUMNS TC LEFT JOIN (ALL_CONS_COLUMNS CC JOIN ALL_CONSTRAINTS C ON (CC.CONSTRAINT_NAME = C.CONSTRAINT_NAME AND CC.TABLE_NAME = C.TABLE_NAME AND CC.OWNER = C.OWNER AND C.CONSTRAINT_TYPE = 'P')) ON TC.TABLE_NAME = CC.TABLE_NAME AND TC.COLUMN_NAME = CC.COLUMN_NAME WHERE TC.TABLE_NAME = '" . $table . "' AND TC.OWNER = '" . $schema . "' ORDER BY TC.COLUMN_ID";
         } else {
-            return "SELECT TC.COLUMN_NAME, TC.DATA_TYPE, TC.DATA_LENGTH, TC.DATA_PRECISION, TC.DATA_SCALE, TC.NULLABLE, C.CONSTRAINT_TYPE, TC.DATA_DEFAULT, CC.POSITION FROM ALL_TAB_COLUMNS TC LEFT JOIN (ALL_CONS_COLUMNS CC JOIN ALL_CONSTRAINTS C ON (CC.CONSTRAINT_NAME = C.CONSTRAINT_NAME AND CC.TABLE_NAME = C.TABLE_NAME AND CC.OWNER = C.OWNER AND C.CONSTRAINT_TYPE = 'P')) ON TC.TABLE_NAME = CC.TABLE_NAME AND TC.COLUMN_NAME = CC.COLUMN_NAME WHERE TC.TABLE_NAME = '".$table."' ORDER BY TC.COLUMN_ID";
+            return "SELECT TC.COLUMN_NAME, TC.DATA_TYPE, TC.DATA_LENGTH, TC.DATA_PRECISION, TC.DATA_SCALE, TC.NULLABLE, C.CONSTRAINT_TYPE, TC.DATA_DEFAULT, CC.POSITION FROM ALL_TAB_COLUMNS TC LEFT JOIN (ALL_CONS_COLUMNS CC JOIN ALL_CONSTRAINTS C ON (CC.CONSTRAINT_NAME = C.CONSTRAINT_NAME AND CC.TABLE_NAME = C.TABLE_NAME AND CC.OWNER = C.OWNER AND C.CONSTRAINT_TYPE = 'P')) ON TC.TABLE_NAME = CC.TABLE_NAME AND TC.COLUMN_NAME = CC.COLUMN_NAME WHERE TC.TABLE_NAME = '" . $table . "' ORDER BY TC.COLUMN_ID";
         }
     }
 
     /**
      * List all tables on database
      *
-     *<code>
+     * <code>
      *  print_r($dialect->listTables("blog")) ?>
-     *</code>
+     * </code>
      *
      * @param string|null $schemaName
      * @return string
@@ -410,7 +403,7 @@ class Oracle extends Dialect implements DialectInterface
     {
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT TABLE_NAME, OWNER FROM ALL_TABLES WHERE OWNER='".$schemaName."' ORDER BY OWNER, TABLE_NAME";
+            return "SELECT TABLE_NAME, OWNER FROM ALL_TABLES WHERE OWNER='" . $schemaName . "' ORDER BY OWNER, TABLE_NAME";
         } else {
             return "SELECT TABLE_NAME, OWNER FROM ALL_TABLES ORDER BY OWNER, TABLE_NAME "; //@note one should remove the additional whitespace at the end
         }
@@ -426,7 +419,7 @@ class Oracle extends Dialect implements DialectInterface
     {
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT VIEW_NAME FROM ALL_VIEWS WHERE OWNER='".$schemaName."' ORDER BY VIEW_NAME";
+            return "SELECT VIEW_NAME FROM ALL_VIEWS WHERE OWNER='" . $schemaName . "' ORDER BY VIEW_NAME";
         } else {
             return "SELECT VIEW_NAME FROM ALL_VIEWS VIEW_NAME";
         }
@@ -448,9 +441,9 @@ class Oracle extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT I.TABLE_NAME, 0 AS C0, I.INDEX_NAME, IC.COLUMN_POSITION, IC.COLUMN_NAME FROM ALL_INDEXES I JOIN ALL_IND_COLUMNS IC ON I.INDEX_NAME = IC.INDEX_NAME WHERE  I.TABLE_NAME = '".$table."' AND IC.INDEX_OWNER = '".$schema."'";
+            return "SELECT I.TABLE_NAME, 0 AS C0, I.INDEX_NAME, IC.COLUMN_POSITION, IC.COLUMN_NAME FROM ALL_INDEXES I JOIN ALL_IND_COLUMNS IC ON I.INDEX_NAME = IC.INDEX_NAME WHERE  I.TABLE_NAME = '" . $table . "' AND IC.INDEX_OWNER = '" . $schema . "'";
         } else {
-            return "SELECT I.TABLE_NAME, 0 AS C0, I.INDEX_NAME, IC.COLUMN_POSITION, IC.COLUMN_NAME FROM ALL_INDEXES I JOIN ALL_IND_COLUMNS IC ON I.INDEX_NAME = IC.INDEX_NAME WHERE  I.TABLE_NAME = '".$table."'";
+            return "SELECT I.TABLE_NAME, 0 AS C0, I.INDEX_NAME, IC.COLUMN_POSITION, IC.COLUMN_NAME FROM ALL_INDEXES I JOIN ALL_IND_COLUMNS IC ON I.INDEX_NAME = IC.INDEX_NAME WHERE  I.TABLE_NAME = '" . $table . "'";
         }
     }
 
@@ -472,9 +465,9 @@ class Oracle extends Dialect implements DialectInterface
 
         if (is_string($schema) === true &&
             $schema == true) {
-            return $sql."AND AC.OWNER='".$schema."' AND AC.TABLE_NAME = '".$table."'";
+            return $sql . "AND AC.OWNER='" . $schema . "' AND AC.TABLE_NAME = '" . $table . "'";
         } else {
-            return $sql."AND AC.TABLE_NAME = '".$table."'";
+            return $sql . "AND AC.TABLE_NAME = '" . $table . "'";
         }
     }
 
@@ -512,7 +505,7 @@ class Oracle extends Dialect implements DialectInterface
         if (is_array($table) === true) {
             //The index '0' is the table name
             if ($escapeIdentifiers === true) {
-                $sqlTable = $escapeChar.$table[0].$escapeChar;
+                $sqlTable = $escapeChar . $table[0] . $escapeChar;
             } else {
                 $sqlTable = $table[0];
             }
@@ -520,9 +513,9 @@ class Oracle extends Dialect implements DialectInterface
             //The index '1' is the schema name
             if (is_null($table[1]) === false) {
                 if ($escapeIdentifiers === true) {
-                    $sqlSchema = $escapeChar.$table[1].$escapeChar.'.'.$sqlTable;
+                    $sqlSchema = $escapeChar . $table[1] . $escapeChar . '.' . $sqlTable;
                 } else {
-                    $sqlSchema = $table[1].'.'.$sqlTable;
+                    $sqlSchema = $table[1] . '.' . $sqlTable;
                 }
             } else {
                 $sqlSchema = $sqlTable;
@@ -531,9 +524,9 @@ class Oracle extends Dialect implements DialectInterface
             //The index '2' is the table alias
             if (isset($table[2]) === true) {
                 if ($escapeIdentifiers === true) {
-                    $sqlTableAlias = $sqlSchema.' '.$escapeChar.$table[2].$escapeChar;
+                    $sqlTableAlias = $sqlSchema . ' ' . $escapeChar . $table[2] . $escapeChar;
                 } else {
-                    $sqlTableAlias = $sqlSchema.' '.$table[2];
+                    $sqlTableAlias = $sqlSchema . ' ' . $table[2];
                 }
             } else {
                 $sqlTableAlias = $sqlSchema;
@@ -542,7 +535,7 @@ class Oracle extends Dialect implements DialectInterface
             return $sqlTableAlias;
         } elseif (is_string($table) === true) {
             if ($escapeIdentifiers === true) {
-                return $escapeChar.$table.$escapeChar;
+                return $escapeChar . $table . $escapeChar;
             } else {
                 return $table;
             }
@@ -554,10 +547,10 @@ class Oracle extends Dialect implements DialectInterface
     /**
      * Generates the SQL for LIMIT clause
      *
-     *<code>
+     * <code>
      * $sql = $dialect->limit('SELECT * FROM robots', 10);
      * echo $sql; // SELECT * FROM robots LIMIT 10
-     *</code>
+     * </code>
      *
      * @param string $sqlQuery
      * @param int $number
@@ -571,7 +564,7 @@ class Oracle extends Dialect implements DialectInterface
         }
 
         if (is_numeric($number) === true) {
-            return $sqlQuery.' LIMIT '.(int)$number;
+            return $sqlQuery . ' LIMIT ' . (int) $number;
         }
 
         return $sqlQuery;
@@ -606,7 +599,7 @@ class Oracle extends Dialect implements DialectInterface
         } else {
             $escapeChar = null;
         }
-    
+
         $columns = $definition['columns'];
         if (is_array($columns) === true) {
             $selectedColumns = array();
@@ -620,7 +613,7 @@ class Oracle extends Dialect implements DialectInterface
                         $columnSql = $columnItem;
                     } else {
                         if ($escapeIdentifiers === true) {
-                            $columnSql = $escapeChar.$columnItem.$escapeChar;
+                            $columnSql = $escapeChar . $columnItem . $escapeChar;
                         } else {
                             $columnSql = $columnItem;
                         }
@@ -632,9 +625,9 @@ class Oracle extends Dialect implements DialectInterface
                     $columnDomain = $column[1];
                     if ($columnDomain == true) {
                         if ($escapeIdentifiers === true) {
-                            $columnDomainSql = $escapeChar.$columnDomain.$escapeChar.'.'.$columnSql;
+                            $columnDomainSql = $escapeChar . $columnDomain . $escapeChar . '.' . $columnSql;
                         } else {
-                            $columnDomainSql = $columnDomain.'.'.$columnSql;
+                            $columnDomainSql = $columnDomain . '.' . $columnSql;
                         }
                     } else {
                         $columnDomainSql = $columnSql;
@@ -648,9 +641,9 @@ class Oracle extends Dialect implements DialectInterface
                     $columnAlias = $column[2];
                     if ($columnAlias == true) {
                         if ($escapeIdentifiers === true) {
-                            $columnAliasSql = $columnDomainSql.' '.$escapeChar.$columnAlias.$escapeChar;
+                            $columnAliasSql = $columnDomainSql . ' ' . $escapeChar . $columnAlias . $escapeChar;
                         } else {
-                            $columnAliasSql = $columnDomainSql.' '.$columnAlias;
+                            $columnAliasSql = $columnDomainSql . ' ' . $columnAlias;
                         }
                     } else {
                         $columnAliasSql = $columnDomainSql;
@@ -683,12 +676,12 @@ class Oracle extends Dialect implements DialectInterface
             $tablesSql = $tables;
         }
 
-        $sql = 'SELECT '.$columnsSql.' FROM '.$tablesSql;
+        $sql = 'SELECT ' . $columnsSql . ' FROM ' . $tablesSql;
 
         //Check for joins
         if (isset($definition['joins']) === true) {
             foreach ($definition['joins'] as $join) {
-                $sqlJoin = ' '.$join['type'].' JOIN '.$this->getSqlTable($join['source'], $escapeChar);
+                $sqlJoin = ' ' . $join['type'] . ' JOIN ' . $this->getSqlTable($join['source'], $escapeChar);
 
                 //Check if the join has conditions
                 if (isset($join['conditions']) === true) {
@@ -696,12 +689,12 @@ class Oracle extends Dialect implements DialectInterface
                     if (count($joinConditionsArray) > 0) {
                         $joinExpressions = array();
                         foreach ($joinConditionsArray as $joinCondition) {
-                            $joinExpression = $this->getSqlExpression($joinCondition, $escapeChar);
+                            $joinExpression    = $this->getSqlExpression($joinCondition, $escapeChar);
                             $joinExpressions[] = $joinExpression;
                         }
 
                         $joinConditions = implode(' AND ', $joinExpressions);
-                        $sqlJoin .= ' ON '.$joinConditions;
+                        $sqlJoin        .= ' ON ' . $joinConditions;
                     }
                 }
 
@@ -712,10 +705,10 @@ class Oracle extends Dialect implements DialectInterface
         //Check for a WHERE clause
         if (isset($definition['where']) === true) {
             if (is_array($definition['where']) === true) {
-                $sql .= ' WHERE '.$this->getSqlExpression($definition['where'], $escapeChar);
+                $sql .= ' WHERE ' . $this->getSqlExpression($definition['where'], $escapeChar);
             } else {
                 //@note better check for string and add exception fallback
-                $sql .= ' WHERE '.$definition['where'];
+                $sql .= ' WHERE ' . $definition['where'];
             }
         }
 
@@ -727,11 +720,11 @@ class Oracle extends Dialect implements DialectInterface
             }
 
             $groupSql = implode(', ', $groupItems);
-            $sql .= ' GROUP BY '.$groupSql;
+            $sql      .= ' GROUP BY ' . $groupSql;
 
             //Check for a HAVING clause
             if (isset($definition['having']) === true) {
-                $sql .= ' HAVING '.$this->getSqlExpression($definition['having'], $escapeChar);
+                $sql .= ' HAVING ' . $this->getSqlExpression($definition['having'], $escapeChar);
             }
         }
 
@@ -743,7 +736,7 @@ class Oracle extends Dialect implements DialectInterface
 
                 //In the numeric position 1 could be a ASC/DESC clause
                 if (isset($orderItem[1]) === true) {
-                    $orderSqlItemType = $orderSqlItem.' '.$orderItem[1];
+                    $orderSqlItemType = $orderSqlItem . ' ' . $orderItem[1];
                 } else {
                     $orderSqlItemType = $orderSqlItem;
                 }
@@ -751,24 +744,24 @@ class Oracle extends Dialect implements DialectInterface
                 $orderItems[] = $orderSqlItemType;
             }
 
-            $sql .= ' ORDER BY '.implode(', ', $orderItems);
+            $sql .= ' ORDER BY ' . implode(', ', $orderItems);
         }
 
         /*
-        * Oracle does not implement the LIMIT clause as some RDBMS do.
-        * We have to simulate it with subqueries and ROWNUM.
-        * Unfortunately because we use the column wildard "*",
-        * this puts an extra column into the query result set.
-        */
+         * Oracle does not implement the LIMIT clause as some RDBMS do.
+         * We have to simulate it with subqueries and ROWNUM.
+         * Unfortunately because we use the column wildard "*",
+         * this puts an extra column into the query result set.
+         */
         if (isset($definition['limit']) === true) {
             $limitValue = $definition['limit'];
             if (is_array($limitValue) === true) {
                 $number = $limitValue['number'];
                 $offset = (isset($limitValue['offset']) === true ? $limitValue['offset'] : 0);
 
-                $sql = "SELECT Z2.* FROM (SELECT Z1.*, ROWNUM DB_ROWNUM FROM ( ".$sql." ) Z1 ) Z2 WHERE Z2.DB_ROWNUM BETWEEN ".($offset + 1)." AND ".($offset + $number);
+                $sql = "SELECT Z2.* FROM (SELECT Z1.*, ROWNUM DB_ROWNUM FROM ( " . $sql . " ) Z1 ) Z2 WHERE Z2.DB_ROWNUM BETWEEN " . ($offset + 1) . " AND " . ($offset + $number);
             } else {
-                $sql = "SELECT Z2.* FROM (SELECT Z1.*, ROWNUM DB_ROWNUM FROM ( ".$sql." ) Z1 ) Z2 WHERE Z2.DB_ROWNUM BETWEEN 1 AND ".(int)$limitValue;
+                $sql = "SELECT Z2.* FROM (SELECT Z1.*, ROWNUM DB_ROWNUM FROM ( " . $sql . " ) Z1 ) Z2 WHERE Z2.DB_ROWNUM BETWEEN 1 AND " . (int) $limitValue;
             }
         }
 
@@ -794,4 +787,5 @@ class Oracle extends Dialect implements DialectInterface
     {
         return false;
     }
+
 }

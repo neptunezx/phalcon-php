@@ -1,13 +1,5 @@
 <?php
-/**
- * Item
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger;
 
 use \Phalcon\Logger\Exception;
@@ -21,12 +13,13 @@ use \Phalcon\Logger\Exception;
  */
 class Item
 {
+
     /**
      * Type
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_type;
 
     /**
@@ -34,7 +27,7 @@ class Item
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_message;
 
     /**
@@ -42,7 +35,7 @@ class Item
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_time;
 
     /**
@@ -66,8 +59,8 @@ class Item
         }
 
         $this->_message = $message;
-        $this->_type = $type;
-        $this->_time = $time;
+        $this->_type    = $type;
+        $this->_time    = $time;
     }
 
     /**
@@ -99,4 +92,5 @@ class Item
     {
         return $this->_time;
     }
+
 }

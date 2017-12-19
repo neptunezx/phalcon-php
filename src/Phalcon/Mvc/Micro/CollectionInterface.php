@@ -1,12 +1,5 @@
 <?php
-/**
- * Collection Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Micro;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Mvc\Micro;
  */
 interface CollectionInterface
 {
+
     /**
      * Sets a prefix for all routes added to the collection
      *

@@ -1,14 +1,5 @@
 <?php
-/**
- * INI Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @author Liu Yuan <lewisay@163.com>
- * @version 1.2.6
- * @package Phalcon
- */
+
 namespace Phalcon\Config\Adapter;
 
 use \Phalcon\Config;
@@ -21,32 +12,33 @@ use \Phalcon\Config\Exception;
  *
  * Given the next configuration file:
  *
- *<code>
- *[database]
- *adapter = Mysql
- *host = localhost
- *username = scott
- *password = cheetah
- *dbname = test_db
+ * <code>
+ * [database]
+ * adapter = Mysql
+ * host = localhost
+ * username = scott
+ * password = cheetah
+ * dbname = test_db
  *
- *[phalcon]
- *controllersDir = "../app/controllers/"
- *modelsDir = "../app/models/"
- *viewsDir = "../app/views/"
- *</code>
+ * [phalcon]
+ * controllersDir = "../app/controllers/"
+ * modelsDir = "../app/models/"
+ * viewsDir = "../app/views/"
+ * </code>
  *
  * You can read it as follows:
  *
- *<code>
+ * <code>
  *  $config = new Phalcon\Config\Adapter\Ini("path/config.ini");
  *  echo $config->phalcon->controllersDir;
  *  echo $config->database->username;
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/config/adapter/ini.c
  */
 class Ini extends Config
 {
+
     /**
      * \Phalcon\Config\Adapter\Ini constructor
      *
@@ -63,7 +55,7 @@ class Ini extends Config
         @$d = parse_ini_file($filePath, true);
 
         if ($d === false) {
-            throw new Exception('Configuration file '.$filePath." can't be loaded");
+            throw new Exception('Configuration file ' . $filePath . " can't be loaded");
         }
 
         foreach ($d as $section => $directives) {
@@ -106,7 +98,7 @@ class Ini extends Config
                     $config[$k] = array();
                 }
             } else {
-                throw new Exception("Invalid key '".$key."'");
+                throw new Exception("Invalid key '" . $key . "'");
             }
 
             $config[$k] = self::_parseKey($config[$k], $v, $value);
@@ -116,4 +108,5 @@ class Ini extends Config
 
         return $config;
     }
+
 }

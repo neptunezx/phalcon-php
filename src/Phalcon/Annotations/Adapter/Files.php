@@ -1,13 +1,5 @@
 <?php
-/**
- * Annotations Files Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations\Adapter;
 
 use \Phalcon\Annotations\AdapterInterface;
@@ -20,22 +12,23 @@ use \Phalcon\Annotations\Exception;
  *
  * Stores the parsed annotations in files. This adapter is suitable for production
  *
- *<code>
+ * <code>
  * $annotations = new \Phalcon\Annotations\Adapter\Files(array(
  *    'annotationsDir' => 'app/cache/annotations/'
  * ));
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/annotations/adapter/files.c
  */
 class Files extends Adapter implements AdapterInterface
 {
+
     /**
      * Annotations Directory
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_annotationsDir = './';
 
     /**
@@ -63,7 +56,7 @@ class Files extends Adapter implements AdapterInterface
      * @param string $key
      * @param string $virtualSeperator
      * @return string
-    */
+     */
     private function prepareVirtualPath($key, $virtualSeperator)
     {
         $keylen = strlen($key);
@@ -90,7 +83,7 @@ class Files extends Adapter implements AdapterInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $path = $this->_annotationsDir.$this->prepareVirtualPath($key, '_').'.phpr';
+        $path = $this->_annotationsDir . $this->prepareVirtualPath($key, '_') . '.phpr';
 
         if (file_exists($path) === true) {
             $data = file_get_contents($path);
@@ -116,16 +109,17 @@ class Files extends Adapter implements AdapterInterface
     public function write($key, $data)
     {
         if (is_string($key) === false ||
-        is_object($data) === false ||
-        $data instanceof Reflection === false) {
+            is_object($data) === false ||
+            $data instanceof Reflection === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $exp = '';
-        $path = $this->_annotationsDir.$this->prepareVirtualPath($key, '_').'.phpr';
+        $exp  = '';
+        $path = $this->_annotationsDir . $this->prepareVirtualPath($key, '_') . '.phpr';
 
         if (file_put_contents($path, serialize($data)) === false) {
             throw new Exception('Annotations directory cannot be written');
         }
     }
+
 }

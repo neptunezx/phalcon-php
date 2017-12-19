@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Paginator Native Array Adapter
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Paginator Native Array Adapter
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Paginator\Adapter;
 
 use \Phalcon\Paginator\AdapterInterface;
@@ -19,7 +21,7 @@ use \stdClass;
  *
  * Pagination using a PHP array as source of data
  *
- *<code>
+ * <code>
  *  $paginator = new \Phalcon\Paginator\Adapter\Model(
  *      array(
  *          "data"  => array(
@@ -33,18 +35,19 @@ use \stdClass;
  *          "page"  => $currentPage
  *      )
  *  );
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/paginator/adapter/nativearray.c
  */
 class NativeArray implements AdapterInterface
 {
+
     /**
      * Limit Rows
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_limitRows;
 
     /**
@@ -52,7 +55,7 @@ class NativeArray implements AdapterInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_config;
 
     /**
@@ -60,7 +63,7 @@ class NativeArray implements AdapterInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_page;
 
     /**
@@ -116,7 +119,7 @@ class NativeArray implements AdapterInterface
         }
 
         //@note no is_null check for $this->_limitRows
-        $show = $this->_limitRows;
+        $show       = $this->_limitRows;
         $pageNumber = $this->_page;
 
         if (is_null($pageNumber) === true) {
@@ -126,7 +129,7 @@ class NativeArray implements AdapterInterface
         $number = count($items);
 
         $roundedTotal = $number / $show;
-        $totalPages = (int)$roundedTotal;
+        $totalPages   = (int) $roundedTotal;
 
         //Increase total pages if it wasn't iteger
         if ($totalPages !== $roundedTotal) {
@@ -134,16 +137,17 @@ class NativeArray implements AdapterInterface
         }
 
         /* Generate stdClass object */
-        $page = new stdClass();
-        $page->items = array_slice($items, ($show * ($pageNumber - 1)), $show);
-        $page->first = 1;
-        $page->last = $totalPages;
-        $page->next = ($pageNumber < $totalPages ? $pageNumber + 1 : $totalPages);
-        $page->before = ($pageNumber > 1 ? $pageNumber - 1 : 1);
-        $page->current = $pageNumber;
+        $page              = new stdClass();
+        $page->items       = array_slice($items, ($show * ($pageNumber - 1)), $show);
+        $page->first       = 1;
+        $page->last        = $totalPages;
+        $page->next        = ($pageNumber < $totalPages ? $pageNumber + 1 : $totalPages);
+        $page->before      = ($pageNumber > 1 ? $pageNumber - 1 : 1);
+        $page->current     = $pageNumber;
         $page->total_pages = $totalPages;
         $page->total_items = $number;
 
         return $page;
     }
+
 }

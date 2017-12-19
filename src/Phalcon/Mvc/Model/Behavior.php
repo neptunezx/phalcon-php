@@ -1,13 +1,5 @@
 <?php
-/**
- * Behavior
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Mvc\Model\Exception;
@@ -21,12 +13,13 @@ use \Phalcon\Mvc\Model\Exception;
  */
 abstract class Behavior
 {
+
     /**
      * Options
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_options;
 
     /**
@@ -98,6 +91,7 @@ abstract class Behavior
      */
     public function notify($type, $model)
     {
+        
     }
 
     /**
@@ -109,5 +103,7 @@ abstract class Behavior
      */
     public function missingMethod($model, $method, $arguments = null)
     {
+        
     }
+
 }

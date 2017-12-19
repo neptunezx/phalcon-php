@@ -1,13 +1,5 @@
 <?php
-/**
- * Dispatcher
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon;
 
 use \ReflectionMethod;
@@ -30,46 +22,47 @@ use \Phalcon\Events\ManagerInterface;
  */
 abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterface, EventsAwareInterface
 {
+
     /**
      * Exception: No DI
      *
      * @var int
-    */
+     */
     const EXCEPTION_NO_DI = 0;
 
     /**
      * Exception: Cyclic Routing
      *
      * @var int
-    */
+     */
     const EXCEPTION_CYCLIC_ROUTING = 1;
 
     /**
      * Exception: Handler not found
      *
      * @var int
-    */
+     */
     const EXCEPTION_HANDLER_NOT_FOUND = 2;
 
     /**
      * Exception: Invalid handler
      *
      * @var int
-    */
+     */
     const EXCEPTION_INVALID_HANDLER = 3;
 
     /**
      * Exception: Invalid params
      *
      * @var int
-    */
+     */
     const EXCEPTION_INVALID_PARAMS = 4;
 
     /**
      * Exception: Action not found
      *
      * @var int
-    */
+     */
     const EXCEPTION_ACTION_NOT_FOUND = 5;
 
     /**
@@ -77,7 +70,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector = null;
 
     /**
@@ -85,7 +78,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|\Phalcon\Events\ManagerInterface
      * @access protected
-    */
+     */
     protected $_eventsManager = null;
 
     /**
@@ -93,7 +86,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|object
      * @access protected
-    */
+     */
     protected $_activeHandler = null;
 
     /**
@@ -101,7 +94,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|boolean
      * @access protected
-    */
+     */
     protected $_finished = null;
 
     /**
@@ -109,7 +102,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_forwarded = false;
 
     /**
@@ -117,7 +110,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_moduleName = null;
 
     /**
@@ -125,7 +118,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_namespaceName = null;
 
     /**
@@ -133,7 +126,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_handlerName = null;
 
     /**
@@ -141,7 +134,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_actionName = null;
 
     /**
@@ -149,7 +142,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_params = null;
 
     /**
@@ -157,7 +150,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var mixed
      * @access protected
-    */
+     */
     protected $_returnedValue = null;
 
     /**
@@ -165,7 +158,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|object
      * @access protected
-    */
+     */
     protected $_lastHandler = null;
 
     /**
@@ -173,7 +166,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_defaultNamespace = null;
 
     /**
@@ -181,7 +174,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var null|object
      * @access protected
-    */
+     */
     protected $_defaultHandler = null;
 
     /**
@@ -189,7 +182,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_defaultAction = '';
 
     /**
@@ -197,7 +190,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_handlerSuffix = '';
 
     /**
@@ -205,7 +198,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_actionSuffix = 'Action';
 
     /**
@@ -213,7 +206,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_isExactHandler = false;
 
     /**
@@ -486,7 +479,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      */
     public function getActiveMethod()
     {
-        return $this->_actionName.$this->_actionSuffix;
+        return $this->_actionName . $this->_actionSuffix;
     }
 
     /**
@@ -538,7 +531,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
         }
 
         $numberDispatches = 0;
-        $this->_finished = false;
+        $this->_finished  = false;
 
         $handler = null;
 
@@ -590,27 +583,27 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                 $camelizedClass = Text::camelize($this->_handlerName);
             } elseif ($p === 0) {
                 //@note this only handles one leading slash
-                $camelizedClass = substr($this->_handlerName, strlen($this->_handlerName)+1);
+                $camelizedClass = substr($this->_handlerName, strlen($this->_handlerName) + 1);
             } else {
                 $camelizedClass = $this->_handlerName;
             }
 
             //Create the complete controller class name prepending the namespace
             if (is_null($this->_namespaceName) === false) {
-                if (strrpos($this->_namespaceName, '\\') === (strlen($this->_namespaceName)-1)) {
-                    $handlerClass = $this->_namespaceName.$camelizedClass.$this->_handlerSuffix;
+                if (strrpos($this->_namespaceName, '\\') === (strlen($this->_namespaceName) - 1)) {
+                    $handlerClass = $this->_namespaceName . $camelizedClass . $this->_handlerSuffix;
                 } else {
-                    $handlerClass = $this->_namespaceName.'\\'.$camelizedClass.$this->_handlerSuffix;
+                    $handlerClass = $this->_namespaceName . '\\' . $camelizedClass . $this->_handlerSuffix;
                 }
             } else {
-                $handlerClass = $camelizedClass.$this->_handlerSuffix;
+                $handlerClass = $camelizedClass . $this->_handlerSuffix;
             }
 
             //Handlers are retrieved as shared instances from the Service Container
             if ($this->_dependencyInjector->has($handlerClass) === false) {
                 //Check using autoloading
                 if (class_exists($handlerClass) === false) {
-                    if ($this->_throwDispatchException($handlerClass.' handler class cannot be loaded', self::EXCEPTION_HANDLER_NOT_FOUND) === false) {
+                    if ($this->_throwDispatchException($handlerClass . ' handler class cannot be loaded', self::EXCEPTION_HANDLER_NOT_FOUND) === false) {
                         if ($this->_finished === false) {
                             continue;
                         }
@@ -638,7 +631,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
             $this->_activeHandler = $handler;
 
             //Check if the method exists in the handler
-            $actionMethod = $this->_actionName.$this->_actionSuffix;
+            $actionMethod = $this->_actionName . $this->_actionSuffix;
 
             if (method_exists($handler, $actionMethod) === false) {
                 //Call beforeNotFoundAction
@@ -652,7 +645,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                     }
                 }
 
-                if ($this->_throwDispatchException('Action \''.$this->_actionName.'\' was not found on handler \''.$this->_handlerName.'\'', self::EXCEPTION_ACTION_NOT_FOUND) === false) {
+                if ($this->_throwDispatchException('Action \'' . $this->_actionName . '\' was not found on handler \'' . $this->_handlerName . '\'', self::EXCEPTION_ACTION_NOT_FOUND) === false) {
                     if ($this->_finished === false) {
                         continue;
                     }
@@ -708,11 +701,10 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
             if (is_object($this->_eventsManager) === true) {
                 try {
                     //Call the method allowing exceptions
-                    $m = new ReflectionMethod($handler, $actionMethod);
+                    $m     = new ReflectionMethod($handler, $actionMethod);
                     $value = $m->invokeArgs($handler, $this->_params);
                 } catch (\Exception $exception) {
                     //Copy the exception to rethrow it later if needed
-
                     //Try to handle the exception
                     if ($this->_handleException($exception) === false) {
                         if ($this->_finished === false) {
@@ -723,7 +715,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                         throw new Exception($exception);
                     }
                 }
-            
+
                 //Update the latest value produced by the latest handler
                 $this->_returnedValue = $value;
             } else {
@@ -771,9 +763,9 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      * Forwards the execution flow to another controller/action
      * Dispatchers are unique per module. Forwarding between modules is not allowed
      *
-     *<code>
+     * <code>
      *  $this->dispatcher->forward(array('controller' => 'posts', 'action' => 'index'));
-     *</code>
+     * </code>
      *
      * @param array $forward
      */
@@ -809,16 +801,15 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
 
         //Check if we need to forward changing the current parameters
 
-        if (isset($forward['params']) === true
-            && is_array($forward['params']) === true) {
+        if (isset($forward['params']) === true && is_array($forward['params']) === true) {
             //@note Changed "fetch_string" to "fetch_array", since the parameters are passed
             //as an array
             $this->_params = $forward['params'];
         }
 
         $this->_isExactHandler = false;
-        $this->_finished = false;
-        $this->_forwarded = true;
+        $this->_finished       = false;
+        $this->_forwarded      = true;
     }
 
     /**
@@ -854,20 +845,21 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
             $camelizedClass = Text::camelize($this->_handlerName);
         } elseif ($p === 0) {
             //@note this only handles one leading slash
-            $camelizedClass = substr($this->_handlerName, strlen($this->_handlerName)+1);
+            $camelizedClass = substr($this->_handlerName, strlen($this->_handlerName) + 1);
         } else {
             $camelizedClass = $this->_handlerName;
         }
 
         //Create the complete controller class name prepending the namespace
         if (is_null($this->_namespaceName) === false) {
-            if (strrpos($this->_namespaceName, '\\') === (strlen($this->_namespaceName)-1)) {
-                return $this->_namespaceName.$camelizedClass.$this->_handlerSuffix;
+            if (strrpos($this->_namespaceName, '\\') === (strlen($this->_namespaceName) - 1)) {
+                return $this->_namespaceName . $camelizedClass . $this->_handlerSuffix;
             } else {
-                return $this->_namespaceName.'\\'.$camelizedClass.$this->_handlerSuffix;
+                return $this->_namespaceName . '\\' . $camelizedClass . $this->_handlerSuffix;
             }
         } else {
-            return $camelizedClass.$this->_handlerSuffix;
+            return $camelizedClass . $this->_handlerSuffix;
         }
     }
+
 }

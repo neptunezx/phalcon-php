@@ -1,13 +1,5 @@
 <?php
-/**
- * XCache Cache Backend
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Cache\Backend;
 
 use \Phalcon\Cache\Backend;
@@ -20,7 +12,7 @@ use \Phalcon\Text;
  *
  * Allows to cache output fragments, PHP data and raw data using an XCache backend
  *
- *<code>
+ * <code>
  *  //Cache data for 2 days
  *  $frontCache = new Phalcon\Cache\Frontend\Data(array(
  *      'lifetime' => 172800
@@ -36,12 +28,13 @@ use \Phalcon\Text;
  *  //Get data
  *  $data = $cache->get('my-data');
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/backend/xcache.c
  */
 class Xcache extends Backend implements BackendInterface
 {
+
     /**
      * \Phalcon\Cache\Backend\Xcache constructor
      *
@@ -81,7 +74,7 @@ class Xcache extends Backend implements BackendInterface
         }
 
         /* Get content */
-        $this->_lastKey = '_PHCX'.$this->_prefix.$keyName;
+        $this->_lastKey = '_PHCX' . $this->_prefix . $keyName;
 
         $content = xcache_get($this->_lastKey);
         if (is_null($content) === true) {
@@ -109,7 +102,7 @@ class Xcache extends Backend implements BackendInterface
                 throw new Exception('The cache must be started first');
             }
         } elseif (is_string($keyName) === true) {
-            $keyName = '_PHCX'.$this->_prefix.$keyName;
+            $keyName = '_PHCX' . $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -138,7 +131,7 @@ class Xcache extends Backend implements BackendInterface
         /* Store */
         $preparedContent = $this->_frontend->beforeStore($content);
 
-        $success = xcache_set($keyName, $preparedContent, $lifetime);
+        $success     = xcache_set($keyName, $preparedContent, $lifetime);
         $isBuffering = $this->_frontend->isBuffering();
 
         if ($stopBuffer === true) {
@@ -183,7 +176,7 @@ class Xcache extends Backend implements BackendInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $keyName = '_PHCX'.$this->_prefix.$keyName;
+        $keyName = '_PHCX' . $this->_prefix . $keyName;
 
         $success = xcache_unset($keyName);
 
@@ -207,15 +200,15 @@ class Xcache extends Backend implements BackendInterface
         if (is_null($prefix) === true) {
             $prefix = '_PHCX';
         } elseif (is_string($prefix) === true) {
-            $prefix = '_PHCX'.$prefix;
+            $prefix = '_PHCX' . $prefix;
         } else {
             throw new Exception('Invalid parameter type.');
         }
 
         /*
-        *Get the key from XCache (we cannot use xcache_list() as it is available only to
-        * the administrator)
-        */
+         * Get the key from XCache (we cannot use xcache_list() as it is available only to
+         * the administrator)
+         */
         $keys = xcache_get($this->_options['statsKey']);
         if (is_array($keys) === true) {
             $prefixedKeys = array();
@@ -246,7 +239,7 @@ class Xcache extends Backend implements BackendInterface
         if (is_null($keyName) === true) {
             $keyName = $this->_lastKey;
         } elseif (is_string($keyName) === true) {
-            $keyName = '_PHCX'.$this->_prefix.$keyName;
+            $keyName = '_PHCX' . $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -261,4 +254,5 @@ class Xcache extends Backend implements BackendInterface
 
         return false;
     }
+
 }

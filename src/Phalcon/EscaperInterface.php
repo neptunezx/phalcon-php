@@ -1,12 +1,5 @@
 <?php
-/**
- * Escaper Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon;
  */
 interface EscaperInterface
 {
+
     /**
      * Sets the encoding to be used by the escaper
      *

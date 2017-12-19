@@ -1,13 +1,5 @@
 <?php
-/**
- * PostgreSQL
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db\Dialect;
 
 use \Phalcon\Db\Dialect;
@@ -24,12 +16,13 @@ use \Phalcon\Db\Exception;
  */
 class Postgresql extends Dialect implements DialectInterface
 {
+
     /**
      * Ecape Character
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_escapeChar = '"';
 
     /**
@@ -46,19 +39,19 @@ class Postgresql extends Dialect implements DialectInterface
             throw new Exception('Column definition must be an object compatible with Phalcon\\Db\\ColumnInterface');
         }
 
-        switch ((int)$column->getType()) {
+        switch ((int) $column->getType()) {
             case 0:
                 return 'INT';
             case 1:
                 return 'DATE';
             case 2:
-                return 'CHARACTER VARYING('.$column->getSize().')';
+                return 'CHARACTER VARYING(' . $column->getSize() . ')';
             case 3:
-                return 'NUMERIC('.$column->getSize().','.$column->getScale().')';
+                return 'NUMERIC(' . $column->getSize() . ',' . $column->getScale() . ')';
             case 4:
                 return 'TIMESTAMP';
             case 5:
-                return 'CHARACTER('.$column->getSIze().')';
+                return 'CHARACTER(' . $column->getSIze() . ')';
             case 6:
                 return 'TEXT';
             case 7:
@@ -69,7 +62,6 @@ class Postgresql extends Dialect implements DialectInterface
                 throw new Exception('Unrecognized PostgreSQL data type');
         }
     }
-
 
     /**
      * Generates SQL to add a column to a table
@@ -85,7 +77,6 @@ class Postgresql extends Dialect implements DialectInterface
         throw new Exception('Not implemented yet');
     }
 
-
     /**
      * Generates SQL to modify a column in a table
      *
@@ -99,7 +90,6 @@ class Postgresql extends Dialect implements DialectInterface
     {
         throw new Exception('Not implemented yet');
     }
-
 
     /**
      * Generates SQL to delete a column from a table
@@ -115,7 +105,6 @@ class Postgresql extends Dialect implements DialectInterface
         throw new Exception('Not implemented yet');
     }
 
-
     /**
      * Generates SQL to add an index to a table
      *
@@ -129,7 +118,6 @@ class Postgresql extends Dialect implements DialectInterface
     {
         throw new Exception('Not implemented yet');
     }
-
 
     /**
      * Generates SQL to delete an index from a table
@@ -145,7 +133,6 @@ class Postgresql extends Dialect implements DialectInterface
         throw new Exception('Not implemented yet');
     }
 
-
     /**
      * Generates SQL to add the primary key to a table
      *
@@ -160,7 +147,6 @@ class Postgresql extends Dialect implements DialectInterface
         throw new Exception('Not implemented yet');
     }
 
-
     /**
      * Generates SQL to delete primary key from a table
      *
@@ -173,7 +159,6 @@ class Postgresql extends Dialect implements DialectInterface
     {
         throw new Exception('Not implemented yet');
     }
-
 
     /**
      * Generates SQL to add an index to a table
@@ -189,7 +174,6 @@ class Postgresql extends Dialect implements DialectInterface
         throw new Exception('Not implemented yet');
     }
 
-
     /**
      * Generates SQL to delete a foreign key from a table
      *
@@ -204,7 +188,6 @@ class Postgresql extends Dialect implements DialectInterface
         throw new Exception('Not implemented yet');
     }
 
-
     /**
      * Generates SQL to add the table creation options
      *
@@ -215,7 +198,6 @@ class Postgresql extends Dialect implements DialectInterface
     {
         return array();
     }
-
 
     /**
      * Generates SQL to create a table in PostgreSQL
@@ -230,7 +212,6 @@ class Postgresql extends Dialect implements DialectInterface
     {
         throw new Exception('Not implemented yet');
     }
-
 
     /**
      * Generates SQL to drop a table
@@ -255,18 +236,17 @@ class Postgresql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $table = $schemaName.'.'.$tableName;
+            $table = $schemaName . '.' . $tableName;
         } else {
             $table = $tableName;
         }
 
         if ($ifExists === true) {
-            return 'DROP TABLE IF EXISTS '.$table;
+            return 'DROP TABLE IF EXISTS ' . $table;
         }
 
-        return 'DROP TABLE '.$table;
+        return 'DROP TABLE ' . $table;
     }
-
 
     /**
      * Generates SQL to create a view
@@ -289,14 +269,13 @@ class Postgresql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $view = $viewName.'.'.$schemaName;
+            $view = $viewName . '.' . $schemaName;
         } else {
             $view = $viewName;
         }
 
-        return 'CREATE VIEW '.$view.' AS '.$definition['sql'];
+        return 'CREATE VIEW ' . $view . ' AS ' . $definition['sql'];
     }
-
 
     /**
      * Generates SQL to drop a view
@@ -321,18 +300,17 @@ class Postgresql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $view = $viewName.'.'.$schemaName;
+            $view = $viewName . '.' . $schemaName;
         } else {
             $view = $viewName;
         }
 
         if ($ifExists === true) {
-            return 'DROP VIEW IF EXISTS '.$view;
+            return 'DROP VIEW IF EXISTS ' . $view;
         } else {
-            return 'DROP VIEW '.$view;
+            return 'DROP VIEW ' . $view;
         }
     }
-
 
     /**
      * Generates SQL checking for the existence of a schema.table
@@ -353,12 +331,11 @@ class Postgresql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM information_schema.tables WHERE table_schema = '".$schemaName."' AND table_name='".$tableName."'";
+            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM information_schema.tables WHERE table_schema = '" . $schemaName . "' AND table_name='" . $tableName . "'";
         } else {
-            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM information_schema.tables WHERE table_schema = 'public' AND table_name='".$tableName."'";
+            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM information_schema.tables WHERE table_schema = 'public' AND table_name='" . $tableName . "'";
         }
     }
-
 
     /**
      * Generates SQL checking for the existence of a schema.view
@@ -376,12 +353,11 @@ class Postgresql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM pg_views WHERE viewname='".$viewName."' AND schemaname='".$schemaName."'";
+            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM pg_views WHERE viewname='" . $viewName . "' AND schemaname='" . $schemaName . "'";
         } else {
-            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM pg_views WHERE viewname='".$viewName."'";
+            return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM pg_views WHERE viewname='" . $viewName . "'";
         }
     }
-
 
     /**
      * Generates a SQL describing a table
@@ -401,19 +377,18 @@ class Postgresql extends Dialect implements DialectInterface
 
         if (is_string($schema) === true &&
             $schema == true) {
-            return "SELECT DISTINCT c.column_name AS Field, c.data_type AS Type, c.character_maximum_length AS Size, c.numeric_precision AS NumericSize, c.numeric_scale AS NumericScale, c.is_nullable AS Null, CASE WHEN pkc.column_name NOTNULL THEN 'PRI' ELSE '' END AS Key, CASE WHEN c.data_type LIKE '%int%' AND c.column_default LIKE '%nextval%' THEN 'auto_increment' ELSE '' END AS Extra, c.ordinal_position AS Position FROM information_schema.columns c LEFT JOIN ( SELECT kcu.column_name, kcu.table_name, kcu.table_schema FROM information_schema.table_constraints tc INNER JOIN information_schema.key_column_usage kcu on (kcu.constraint_name = tc.constraint_name and kcu.table_name=tc.table_name and kcu.table_schema=tc.table_schema) WHERE tc.constraint_type='PRIMARY KEY') pkc ON (c.column_name=pkc.column_name AND c.table_schema = pkc.table_schema AND c.table_name=pkc.table_name) WHERE c.table_schema='".$schema."' AND c.table_name='".$table."' ORDER BY c.ordinal_position";
+            return "SELECT DISTINCT c.column_name AS Field, c.data_type AS Type, c.character_maximum_length AS Size, c.numeric_precision AS NumericSize, c.numeric_scale AS NumericScale, c.is_nullable AS Null, CASE WHEN pkc.column_name NOTNULL THEN 'PRI' ELSE '' END AS Key, CASE WHEN c.data_type LIKE '%int%' AND c.column_default LIKE '%nextval%' THEN 'auto_increment' ELSE '' END AS Extra, c.ordinal_position AS Position FROM information_schema.columns c LEFT JOIN ( SELECT kcu.column_name, kcu.table_name, kcu.table_schema FROM information_schema.table_constraints tc INNER JOIN information_schema.key_column_usage kcu on (kcu.constraint_name = tc.constraint_name and kcu.table_name=tc.table_name and kcu.table_schema=tc.table_schema) WHERE tc.constraint_type='PRIMARY KEY') pkc ON (c.column_name=pkc.column_name AND c.table_schema = pkc.table_schema AND c.table_name=pkc.table_name) WHERE c.table_schema='" . $schema . "' AND c.table_name='" . $table . "' ORDER BY c.ordinal_position";
         } else {
-            return "SELECT DISTINCT c.column_name AS Field, c.data_type AS Type, c.character_maximum_length AS Size, c.numeric_precision AS NumericSize, c.numeric_scale AS NumericScale, c.is_nullable AS Null, CASE WHEN pkc.column_name NOTNULL THEN 'PRI' ELSE '' END AS Key, CASE WHEN c.data_type LIKE '%int%' AND c.column_default LIKE '%nextval%' THEN 'auto_increment' ELSE '' END AS Extra, c.ordinal_position AS Position FROM information_schema.columns c LEFT JOIN ( SELECT kcu.column_name, kcu.table_name, kcu.table_schema FROM information_schema.table_constraints tc INNER JOIN information_schema.key_column_usage kcu on (kcu.constraint_name = tc.constraint_name and kcu.table_name=tc.table_name and kcu.table_schema=tc.table_schema) WHERE tc.constraint_type='PRIMARY KEY') pkc ON (c.column_name=pkc.column_name AND c.table_schema = pkc.table_schema AND c.table_name=pkc.table_name) WHERE c.table_schema='public' AND c.table_name='".$table."' ORDER BY c.ordinal_position";
+            return "SELECT DISTINCT c.column_name AS Field, c.data_type AS Type, c.character_maximum_length AS Size, c.numeric_precision AS NumericSize, c.numeric_scale AS NumericScale, c.is_nullable AS Null, CASE WHEN pkc.column_name NOTNULL THEN 'PRI' ELSE '' END AS Key, CASE WHEN c.data_type LIKE '%int%' AND c.column_default LIKE '%nextval%' THEN 'auto_increment' ELSE '' END AS Extra, c.ordinal_position AS Position FROM information_schema.columns c LEFT JOIN ( SELECT kcu.column_name, kcu.table_name, kcu.table_schema FROM information_schema.table_constraints tc INNER JOIN information_schema.key_column_usage kcu on (kcu.constraint_name = tc.constraint_name and kcu.table_name=tc.table_name and kcu.table_schema=tc.table_schema) WHERE tc.constraint_type='PRIMARY KEY') pkc ON (c.column_name=pkc.column_name AND c.table_schema = pkc.table_schema AND c.table_name=pkc.table_name) WHERE c.table_schema='public' AND c.table_name='" . $table . "' ORDER BY c.ordinal_position";
         }
     }
-
 
     /**
      * List all tables on database
      *
-     *<code>
+     * <code>
      *  print_r($dialect->listTables("blog")) ?>
-     *</code>
+     * </code>
      *
      * @param string|null $schemaName
      * @return string
@@ -422,12 +397,11 @@ class Postgresql extends Dialect implements DialectInterface
     {
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT table_name FROM information_schema.tables WHERE table_schema = '".$schemaName."' ORDER BY table_name";
+            return "SELECT table_name FROM information_schema.tables WHERE table_schema = '" . $schemaName . "' ORDER BY table_name";
         } else {
             return "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name";
         }
     }
-
 
     /**
      * Generates the SQL to list all views of a schema or user
@@ -439,12 +413,11 @@ class Postgresql extends Dialect implements DialectInterface
     {
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT viewname AS view_name FROM pg_views WHERE schemaname = '".$schemaName."' ORDER BY view_name";
+            return "SELECT viewname AS view_name FROM pg_views WHERE schemaname = '" . $schemaName . "' ORDER BY view_name";
         } else {
             return "SELECT viewname AS view_name FROM pg_views WHERE schemaname = 'public' ORDER BY view_name";
         }
     }
-
 
     /**
      * Generates SQL to query indexes on a table
@@ -461,9 +434,8 @@ class Postgresql extends Dialect implements DialectInterface
         }
 
         //@note no schema
-        return "SELECT 0 as c0, t.relname as table_name, i.relname as key_name, 3 as c3, a.attname as column_name FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND a.attnum = ANY(ix.indkey) AND t.relkind = 'r' AND t.relname = '".$table."' ORDER BY t.relname, i.relname;";
+        return "SELECT 0 as c0, t.relname as table_name, i.relname as key_name, 3 as c3, a.attname as column_name FROM pg_class t, pg_class i, pg_index ix, pg_attribute a WHERE t.oid = ix.indrelid AND i.oid = ix.indexrelid AND a.attrelid = t.oid AND a.attnum = ANY(ix.indkey) AND t.relkind = 'r' AND t.relname = '" . $table . "' ORDER BY t.relname, i.relname;";
     }
-
 
     /**
      * Generates SQL to query foreign keys on a table
@@ -483,12 +455,11 @@ class Postgresql extends Dialect implements DialectInterface
 
         if (is_string($schema) === true &&
             $schema == true) {
-            return $sql."tc.table_schema = '".$schema."' AND tc.table_name='".$table."'";
+            return $sql . "tc.table_schema = '" . $schema . "' AND tc.table_name='" . $table . "'";
         } else {
-            return $sql."tc.table_name='".$table."'";
+            return $sql . "tc.table_name='" . $table . "'";
         }
     }
-
 
     /**
      * Generates the SQL to describe the table creation options
@@ -501,4 +472,5 @@ class Postgresql extends Dialect implements DialectInterface
     {
         return '';
     }
+
 }

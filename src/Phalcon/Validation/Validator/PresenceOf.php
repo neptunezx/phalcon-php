@@ -1,13 +1,5 @@
 <?php
-/**
- * PresenceOf Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation\Validator;
 
 use \Phalcon\Validation\Validator;
@@ -21,18 +13,19 @@ use \Phalcon\Validation;
  *
  * Validates that a value is not null or empty string
  *
- *<code>
- *use Phalcon\Validation\Validator\PresenceOf;
+ * <code>
+ * use Phalcon\Validation\Validator\PresenceOf;
  *
- *$validator->add('name', new PresenceOf(array(
+ * $validator->add('name', new PresenceOf(array(
  *   'message' => 'The name is required'
- *)));
- *</code>
+ * )));
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/presenceof.c
  */
 class PresenceOf extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validation
      *
@@ -57,7 +50,7 @@ class PresenceOf extends Validator implements ValidatorInterface
             $message = $this->getOption('message');
 
             if (empty($message) === true) {
-                $message = $attribute.' is required';
+                $message = $attribute . ' is required';
             }
 
             $validator->appendMessage(new Message($message, $attribute, 'PresenceOf'));
@@ -67,4 +60,5 @@ class PresenceOf extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

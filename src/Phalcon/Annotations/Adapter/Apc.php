@@ -1,13 +1,5 @@
 <?php
-/**
- * Annotations APC Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations\Adapter;
 
 use \Phalcon\Annotations\AdapterInterface;
@@ -20,14 +12,15 @@ use \Phalcon\Annotations\Exception;
  *
  * Stores the parsed annotations in APC. This adapter is suitable for production
  *
- *<code>
+ * <code>
  * $annotations = new \Phalcon\Annotations\Adapter\Apc();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/annotations/adapter/apc.c
  */
 class Apc extends Adapter implements AdapterInterface
 {
+
     /**
      * Reads parsed annotations from APC
      *
@@ -41,7 +34,7 @@ class Apc extends Adapter implements AdapterInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $value = apc_fetch(strtolower('_PHAN'.$key));
+        $value = apc_fetch(strtolower('_PHAN' . $key));
         if (isset($value) === true &&
             is_object($value) === true &&
             $value instanceof Reflection === true) {
@@ -65,9 +58,10 @@ class Apc extends Adapter implements AdapterInterface
             $data instanceof Reflection === false) {
             throw new Exception('Invalid parameter type.');
         }
-        
-        if (apc_store(strtolower('_PHAN'.$key), $data) === false) {
+
+        if (apc_store(strtolower('_PHAN' . $key), $data) === false) {
             throw new Exception('Unable to store parsed annotations (APC).');
         }
     }
+
 }

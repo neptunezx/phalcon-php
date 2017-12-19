@@ -1,13 +1,5 @@
 <?php
-/**
- * Email Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation\Validator;
 
 use \Phalcon\Validation\Validator;
@@ -21,18 +13,19 @@ use \Phalcon\Validation;
  *
  * Checks if a value has a correct e-mail format
  *
- *<code>
- *use Phalcon\Validation\Validator\Email as EmailValidator;
+ * <code>
+ * use Phalcon\Validation\Validator\Email as EmailValidator;
  *
- *$validator->add('email', new EmailValidator(array(
+ * $validator->add('email', new EmailValidator(array(
  *   'message' => 'The e-mail is not valid'
- *)));
- *</code>
+ * )));
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/email.c
  */
 class Email extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validation
      *
@@ -56,7 +49,7 @@ class Email extends Validator implements ValidatorInterface
         if (filter_var($value, \FILTER_VALIDATE_EMAIL) === false) {
             $message = $this->getOption('message');
             if (empty($message) === true) {
-                $message = "Value of field '".$attribute."' must have a valid e-mail format";
+                $message = "Value of field '" . $attribute . "' must have a valid e-mail format";
             }
 
             $validator->appendMessage(new Message($message, $attribute, 'Email'));
@@ -66,4 +59,5 @@ class Email extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

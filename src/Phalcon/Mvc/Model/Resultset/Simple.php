@@ -1,13 +1,5 @@
 <?php
-/**
- * Simple Resultset
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Resultset;
 
 use \Phalcon\Mvc\Model\Resultset;
@@ -32,39 +24,40 @@ use \Iterator;
  */
 class Simple extends Resultset implements Serializable, ArrayAccess, Countable, SeekableIterator, Iterator, ResultsetInterface
 {
+
     /**
      * Type: Full Result
      *
      * @var int
-    */
+     */
     const TYPE_RESULT_FULL = 0;
 
     /**
      * Type: Partial Result
      *
      * @var int
-    */
+     */
     const TYPE_RESULT_PARTIAL = 1;
 
     /**
      * Hydrate: Records
      *
      * @var int
-    */
+     */
     const HYDRATE_RECORDS = 0;
 
     /**
      * Hydrate: Objects
      *
      * @var int
-    */
+     */
     const HYDRATE_OBJECTS = 2;
 
     /**
      * Hydrate: Arrays
      *
      * @var int
-    */
+     */
     const HYDRATE_ARRAYS = 1;
 
     /**
@@ -72,7 +65,7 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
      *
      * @var null|\Phalcon\Mvc\ModelInterface
      * @access protected
-    */
+     */
     protected $_model;
 
     /**
@@ -80,7 +73,7 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_columnMap;
 
     /**
@@ -88,7 +81,7 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_keepSnapshots = false;
 
     /**
@@ -111,7 +104,7 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
 
         if (is_null($cache) === false &&
             (is_object($cache) === false ||
-                $cache instanceof BackendInterface === false)) {
+            $cache instanceof BackendInterface === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -120,10 +113,10 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->_model = $model;
-        $this->_result = $result;
-        $this->_cache = $cache;
-        $this->_columnMap = $columnMap;
+        $this->_model         = $model;
+        $this->_result        = $result;
+        $this->_cache         = $cache;
+        $this->_columnMap     = $columnMap;
         $this->_keepSnapshots = $keepSnapshots;
 
         if (is_object($result) === false &&
@@ -165,7 +158,7 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
             if (is_array($rows) === false) {
                 $result = $this->_result;
                 if (is_object($result) === true) {
-                    $rows = $result->fetchAll();
+                    $rows        = $result->fetchAll();
                     $this->_rows = $rows;
                 }
             }
@@ -198,7 +191,7 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
         $columnMap = $this->_columnMap;
 
         //Hydrate based on the current hydration
-        switch ((int)$hydrateMode) {
+        switch ((int) $hydrateMode) {
             case 0:
                 //$this->model is the base entity
                 $model = $this->_model;
@@ -261,7 +254,7 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
                     }
 
                     //We fetch all the results in memory again
-                    $records = $result->fetchAll();
+                    $records     = $result->fetchAll();
                     $this->_rows = $records;
 
                     //Update the row count
@@ -287,7 +280,7 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
                     foreach ($record as $key => $value) {
                         //Check if the key is part of the column map
                         if (isset($columnMap[$key]) === false) {
-                            throw new Exception("Column '".$key."' is not part of the column map");
+                            throw new Exception("Column '" . $key . "' is not part of the column map");
                         }
 
                         //Add the value renamed
@@ -313,10 +306,10 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
     public function serialize()
     {
         $data = array(
-            'model' => $this->_model,
-            'cache' => $this->_cache,
-            'rows' => $this->toArray(false),
-            'columnMap' => $this->_columnMap,
+            'model'       => $this->_model,
+            'cache'       => $this->_cache,
+            'rows'        => $this->toArray(false),
+            'columnMap'   => $this->_columnMap,
             'hydrateMode' => $this->_hydrateMode
         );
 
@@ -347,10 +340,11 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
             throw new Exception('Invalid serialization data');
         }
 
-        $this->_model = $resultset['model'];
-        $this->_rows = $resultset['rows'];
-        $this->_cache = $resultset['cache'];
-        $this->_columnMap = $resultset['columnMap'];
+        $this->_model       = $resultset['model'];
+        $this->_rows        = $resultset['rows'];
+        $this->_cache       = $resultset['cache'];
+        $this->_columnMap   = $resultset['columnMap'];
         $this->_hydrateMode = $resultset['hydrateMode'];
     }
+
 }

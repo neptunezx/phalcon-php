@@ -1,13 +1,5 @@
 <?php
-/**
- * Index
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db;
 
 use \Phalcon\Db\IndexInterface;
@@ -24,12 +16,13 @@ use \Phalcon\Db\Exception;
  */
 class Index implements IndexInterface
 {
+
     /**
      * Index Name
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_indexName;
 
     /**
@@ -37,7 +30,7 @@ class Index implements IndexInterface
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_columns;
 
     /**
@@ -55,7 +48,7 @@ class Index implements IndexInterface
         }
 
         $this->_indexName = $indexName;
-        $this->_columns = $columns;
+        $this->_columns   = $columns;
     }
 
     /**
@@ -102,4 +95,5 @@ class Index implements IndexInterface
         //Return a Phalcon\Db\Index as part of the returning state
         return new Index($data['_indexName'], $data['_columns']);
     }
+
 }

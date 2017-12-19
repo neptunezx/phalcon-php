@@ -1,12 +1,5 @@
 <?php
-/**
- * Route Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Router;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Mvc\Router;
  */
 interface RouteInterface
 {
+
     /**
      * \Phalcon\Mvc\Router\Route constructor
      *

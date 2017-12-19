@@ -1,13 +1,5 @@
 <?php
-/**
- * Firephp Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger\Adapter;
 
 use \Phalcon\Logger\Adapter;
@@ -20,23 +12,24 @@ use \Phalcon\Logger\Formatter\Firephp as FirephpFormatter;
  *
  * Sends logs to FirePHP
  *
- *<code>
+ * <code>
  *  $logger = new \Phalcon\Logger\Adapter\Firephp("");
  *  $logger->log("This is a message");
  *  $logger->log("This is an error", \Phalcon\Logger::ERROR);
  *  $logger->error("This is another error");
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/firephp.c
  */
 class Firephp extends Adapter implements AdapterInterface
 {
+
     /**
      * Initialized
      *
      * @var boolean
      * @access private
-    */
+     */
     private static $_initialized = false;
 
     /**
@@ -44,7 +37,7 @@ class Firephp extends Adapter implements AdapterInterface
      *
      * @var int
      * @access private
-    */
+     */
     private static $_index = 1;
 
     /**
@@ -78,7 +71,7 @@ class Firephp extends Adapter implements AdapterInterface
             is_int($time) === false) {
             throw new Exception('Invalid parameter type.');
         }
-    
+
         if (headers_sent() === true) {
             throw new Exception('Headers have already been sent.');
         }
@@ -101,13 +94,13 @@ class Firephp extends Adapter implements AdapterInterface
             throw new Exception('The formatted message is not valid');
         }
 
-        $index = self::$_index;
-        $size = strlen($appliedFormat);
+        $index  = self::$_index;
+        $size   = strlen($appliedFormat);
         $offset = 0;
 
         //We need to send the data in chunks not exceeding 5,000 bytes.
         while ($size > 0) {
-            $str = 'X-Wf-1-1-1-'.$index.': ';
+            $str      = 'X-Wf-1-1-1-' . $index . ': ';
             $numBytes = ($size > 4500 ? 4500 : $size);
 
             if ($offset !== 0) {
@@ -116,7 +109,7 @@ class Firephp extends Adapter implements AdapterInterface
 
             $str .= substr($appliedFormat, $offset, $offset + 4500);
 
-            $size -= $numBytes;
+            $size   -= $numBytes;
             $offset += $numBytes;
 
             if ($size > 0) {
@@ -139,4 +132,5 @@ class Firephp extends Adapter implements AdapterInterface
     {
         return true;
     }
+
 }

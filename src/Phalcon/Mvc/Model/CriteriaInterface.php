@@ -1,12 +1,5 @@
 <?php
-/**
- * Criteria Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Mvc\Model;
  */
 interface CriteriaInterface
 {
+
     /**
      * Set a model on which the query will be executed
      *
@@ -120,9 +114,9 @@ interface CriteriaInterface
     /**
      * Appends a BETWEEN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $builder->betweenWhere('price', 100.25, 200.50);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param mixed $minimum
@@ -134,9 +128,9 @@ interface CriteriaInterface
     /**
      * Appends a NOT BETWEEN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $builder->notBetweenWhere('price', 100.25, 200.50);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param mixed $minimum
@@ -148,9 +142,9 @@ interface CriteriaInterface
     /**
      * Appends an IN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $builder->inWhere('id', [1, 2, 3]);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param array $values
@@ -161,9 +155,9 @@ interface CriteriaInterface
     /**
      * Appends a NOT IN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $builder->notInWhere('id', [1, 2, 3]);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param array $values

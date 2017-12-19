@@ -1,13 +1,5 @@
 <?php
-/**
- * Logging Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger;
 
 use \Phalcon\Logger\Exception;
@@ -24,12 +16,13 @@ use \Phalcon\Logger;
  */
 abstract class Adapter
 {
+
     /**
      * Transaction
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_transaction = false;
 
     /**
@@ -37,7 +30,7 @@ abstract class Adapter
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_queue;
 
     /**
@@ -45,7 +38,7 @@ abstract class Adapter
      *
      * @var null|\Phalcon\Logger\FormatterInterface
      * @access protected
-    */
+     */
     protected $_formatter;
 
     /**
@@ -53,7 +46,7 @@ abstract class Adapter
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_logLevel = 9;
 
     /**
@@ -135,8 +128,8 @@ abstract class Adapter
             foreach ($this->_queue as $message) {
                 //@note no interface validation
                 $messageStr = $message->getMessage();
-                $type = $message->getType();
-                $time = $message->getTime();
+                $type       = $message->getType();
+                $time       = $message->getTime();
                 $this->logInternal($messageStr, $type, $time);
             }
         }
@@ -160,7 +153,7 @@ abstract class Adapter
         }
 
         $this->_transaction = false;
-        $this->_queue = array();
+        $this->_queue       = array();
 
         return $this;
     }
@@ -288,4 +281,5 @@ abstract class Adapter
 
         return $this;
     }
+
 }

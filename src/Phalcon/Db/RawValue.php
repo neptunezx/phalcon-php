@@ -1,13 +1,5 @@
 <?php
-/**
- * Raw Value
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db;
 
 use \Phalcon\Db\Exception;
@@ -17,25 +9,26 @@ use \Phalcon\Db\Exception;
  *
  * This class allows to insert/update raw data without quoting or formating.
  *
- *The next example shows how to use the MySQL now() function as a field value.
+ * The next example shows how to use the MySQL now() function as a field value.
  *
- *<code>
+ * <code>
  *  $subscriber = new Subscribers();
  *  $subscriber->email = 'andres@phalconphp.com';
  *  $subscriber->created_at = new Phalcon\Db\RawValue('now()');
  *  $subscriber->save();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/rawvalue.c
  */
 class RawValue
 {
+
     /**
      * Value
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_value;
 
     /**
@@ -69,4 +62,5 @@ class RawValue
     {
         return $this->_value;
     }
+
 }

@@ -1,12 +1,5 @@
 <?php
-/**
- * View Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Mvc;
  */
 interface ViewInterface
 {
+
     /**
      * Sets views directory. Depending of your platform, always add a trailing slash or backslash
      *

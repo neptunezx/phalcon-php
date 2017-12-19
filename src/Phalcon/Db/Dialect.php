@@ -1,13 +1,5 @@
 <?php
-/**
- * Dialect
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db;
 
 use \Phalcon\Db\Exception;
@@ -22,21 +14,22 @@ use \Phalcon\Db\Exception;
  */
 abstract class Dialect
 {
+
     /**
      * Escape Char
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_escapeChar;
 
     /**
      * Generates the SQL for LIMIT clause
      *
-     *<code>
+     * <code>
      * $sql = $dialect->limit('SELECT * FROM robots', 10);
      * echo $sql; // SELECT * FROM robots LIMIT 10
-     *</code>
+     * </code>
      *
      * @param string $sqlQuery
      * @param int $number
@@ -50,7 +43,7 @@ abstract class Dialect
         }
 
         if (is_numeric($number) === true) {
-            return $sqlQuery.' LIMIT '.(int)$number;
+            return $sqlQuery . ' LIMIT ' . (int) $number;
         }
 
         return $sqlQuery;
@@ -59,10 +52,10 @@ abstract class Dialect
     /**
      * Returns a SQL modified with a FOR UPDATE clause
      *
-     *<code>
+     * <code>
      * $sql = $dialect->forUpdate('SELECT * FROM robots');
      * echo $sql; // SELECT * FROM robots FOR UPDATE
-     *</code>
+     * </code>
      *
      * @param string $sqlQuery
      * @return string
@@ -74,16 +67,16 @@ abstract class Dialect
             throw new Exception('Invalid parameter type.');
         }
 
-        return $sqlQuery.' FOR UPDATE';
+        return $sqlQuery . ' FOR UPDATE';
     }
 
     /**
      * Returns a SQL modified with a LOCK IN SHARE MODE clause
      *
-     *<code>
+     * <code>
      * $sql = $dialect->sharedLock('SELECT * FROM robots');
      * echo $sql; // SELECT * FROM robots LOCK IN SHARE MODE
-     *</code>
+     * </code>
      *
      * @param string $sqlQuery
      * @return string
@@ -93,16 +86,16 @@ abstract class Dialect
         if (is_string($sqlQuery) === false) {
             throw new Exception('Invalid parameter type.');
         }
-        
-        return $sqlQuery.' LOCK IN SHARE MODE';
+
+        return $sqlQuery . ' LOCK IN SHARE MODE';
     }
 
     /**
      * Gets a list of columns with escaped identifiers
      *
-     *<code>
+     * <code>
      * echo $dialect->getColumnList(array('column1', 'column'));
-     *</code>
+     * </code>
      *
      * @param array $columnList
      * @return string
@@ -114,10 +107,10 @@ abstract class Dialect
             throw new Exception('Invalid parameter type.');
         }
 
-        $strList = array();
+        $strList    = array();
         $escapeChar = $this->_escapeChar;
         foreach ($columnList as $column) {
-            $strList[] = $escapeChar.$column.$escapeChar;
+            $strList[] = $escapeChar . $column . $escapeChar;
         }
 
         return implode(', ', $strList);
@@ -159,7 +152,7 @@ abstract class Dialect
             $name = $expression['name'];
             if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                 $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                $name = $escapeChar.$name.$escapeChar;
+                $name = $escapeChar . $name . $escapeChar;
             }
 
             //A domain could be a table/schema
@@ -167,9 +160,9 @@ abstract class Dialect
                 $domain = $expression['domain'];
                 if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                     $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                    $domain = $escapeChar.$domain.$escapeChar.'.'.$name;
+                    $domain = $escapeChar . $domain . $escapeChar . '.' . $name;
                 } else {
-                    $domain = $domain.'.'.$name;
+                    $domain = $domain . '.' . $name;
                 }
 
                 return $domain;
@@ -181,25 +174,24 @@ abstract class Dialect
             return $expression['value'];
         } elseif ($type === 'binary-op') {
             //Resolve binary operations expressions
-            return $this->getSqlExpression($expression['left']).' '.$expression['op'].' '.$this->getSqlExpression($expression['right']);
+            return $this->getSqlExpression($expression['left']) . ' ' . $expression['op'] . ' ' . $this->getSqlExpression($expression['right']);
         } elseif ($type === 'unary-op') {
             //Resolve unary operations expressions
-
             //Some unary operators uses the left operand...
             if (isset($expression['left']) === true) {
-                return $this->getSqlExpression($expression['left'], $escapeChar).$expression['op'];
+                return $this->getSqlExpression($expression['left'], $escapeChar) . $expression['op'];
             }
 
             //...Others uses the right operand
             if (isset($expression['right']) === true) {
-                return $expression['op'].$this->getSqlExpression($expression['right'], $escapeChar);
+                return $expression['op'] . $this->getSqlExpression($expression['right'], $escapeChar);
             }
         } elseif ($type === 'placeholder') {
             //Resolve placeholder
             return $expression['value'];
         } elseif ($type === 'parentheses') {
             //Resolve parentheses
-            return '('.$this->getSqlExpression($expression['left']).')';
+            return '(' . $this->getSqlExpression($expression['left']) . ')';
         } elseif ($type === 'functionCall') {
             $sqlArguments = array();
             if (isset($expression['arguments']) === true) {
@@ -207,9 +199,9 @@ abstract class Dialect
                     $sqlArguments[] = $this->getSqlExpression($argument, $escapeChar);
                 }
 
-                return $expression['name'].implode(', ', $sqlArguments).')';
+                return $expression['name'] . implode(', ', $sqlArguments) . ')';
             } else {
-                return $expression['name'].'()';
+                return $expression['name'] . '()';
             }
         } elseif ($type === 'list') {
             //Resolve lists
@@ -218,20 +210,20 @@ abstract class Dialect
                 $sqlItems[] = $this->getSqlExpression($item, $escapeChar);
             }
 
-            return '('.implode(', ', $sqlItems).')';
+            return '(' . implode(', ', $sqlItems) . ')';
         } elseif ($type === 'all') {
             //Resolve *
             return '*';
         } elseif ($type === 'cast') {
             //Resolve CAST of values
-            return 'CAST('.$this->getSqlExpression($expression['left'], $escapeChar).' AS '.$this->getSqlExpression($expression['right'], $escapeChar).')';
+            return 'CAST(' . $this->getSqlExpression($expression['left'], $escapeChar) . ' AS ' . $this->getSqlExpression($expression['right'], $escapeChar) . ')';
         } elseif ($type === 'convert') {
             //Resolve CONVERT of values encodings
-            return 'CONVERT('.$this->getSqlExpression($expression['left'], $escapeChar).' USING '.$this->getSqlExpression($expression['right'], $escapeChar).')';
+            return 'CONVERT(' . $this->getSqlExpression($expression['left'], $escapeChar) . ' USING ' . $this->getSqlExpression($expression['right'], $escapeChar) . ')';
         }
 
         //Expression type wasn't found
-        throw new Exception("Invalid SQL expression type '".$type."'");
+        throw new Exception("Invalid SQL expression type '" . $type . "'");
     }
 
     /**
@@ -255,7 +247,7 @@ abstract class Dialect
             $tableName = $table[0];
             if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                 $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                $str = $escapeChar.$tableName.$escapeChar;
+                $str = $escapeChar . $tableName . $escapeChar;
             } else {
                 $str = $tableName;
             }
@@ -265,9 +257,9 @@ abstract class Dialect
                 $schemaName = $table[1];
                 if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                     $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                    $str = $escapeChar.$schemaName.$escapeChar.$str;
+                    $str = $escapeChar . $schemaName . $escapeChar . $str;
                 } else {
-                    $str = $schemaName.'.'.$str;
+                    $str = $schemaName . '.' . $str;
                 }
             }
 
@@ -276,9 +268,9 @@ abstract class Dialect
                 $aliasName = $table[2];
                 if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                     $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                    $str = $sqlSchema.' AS '.$escapeChar.$aliasName.$escapeChar;
+                    $str = $sqlSchema . ' AS ' . $escapeChar . $aliasName . $escapeChar;
                 } else {
-                    $str = $sqlSchema.' AS '.$aliasName;
+                    $str = $sqlSchema . ' AS ' . $aliasName;
                 }
             }
 
@@ -286,7 +278,7 @@ abstract class Dialect
         } elseif (is_string($table) === true) {
             if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                 $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                return $escapeChar.$table.$escapeChar;
+                return $escapeChar . $table . $escapeChar;
             }
 
             return $table;
@@ -335,7 +327,7 @@ abstract class Dialect
                     $columnSql = $columnItem;
                 } elseif (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                     $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                    $columnSql = $escapeChar.$columnItem.$escapeChar;
+                    $columnSql = $escapeChar . $columnItem . $escapeChar;
                 } else {
                     $columnSql = $columnItem;
                 }
@@ -346,9 +338,9 @@ abstract class Dialect
                     if ($columnDomain == true) {
                         if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                             $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                            $columnDomainSql = $escapeChar.$columnDomain.$escapeChar.$columnSql;
+                            $columnDomainSql = $escapeChar . $columnDomain . $escapeChar . $columnSql;
                         } else {
-                            $columnDomainSql = $columnDomain.'.'.$columnSql;
+                            $columnDomainSql = $columnDomain . '.' . $columnSql;
                         }
                     } else {
                         $columnDomainSql = $columnSql;
@@ -363,9 +355,9 @@ abstract class Dialect
                     if ($columnAlias == true) {
                         if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                             $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                            $columnAliasSql = $columnDomainSql.' AS '.$escapeChar.$columnAlias.$escapeChar;
+                            $columnAliasSql = $columnDomainSql . ' AS ' . $escapeChar . $columnAlias . $escapeChar;
                         } else {
-                            $columnAliasSql = $columnDomainSql.' AS '.$columnAlias;
+                            $columnAliasSql = $columnDomainSql . ' AS ' . $columnAlias;
                         }
                     } else {
                         $columnAliasSql = $columnDomainSql;
@@ -395,16 +387,16 @@ abstract class Dialect
             $tablesSql = $tables;
         }
 
-        $sql = 'SELECT '.$columnSql.' FROM '.$tablesSql;
+        $sql = 'SELECT ' . $columnSql . ' FROM ' . $tablesSql;
 
         //Check for joins
         if (isset($definition['joins']) === true) {
             $joins = $definition['joins'];
             foreach ($joins as $join) {
-                $type = $join['type'];
-                $sqlTable = $this->getSqlTable($join['source'], $escapeChar);
+                $type             = $join['type'];
+                $sqlTable         = $this->getSqlTable($join['source'], $escapeChar);
                 $selectedTables[] = $sqlTable;
-                $sqlJoin = ' '.$type.' JOIN '.$sqlTable;
+                $sqlJoin          = ' ' . $type . ' JOIN ' . $sqlTable;
 
                 //Check if the join has conditions
                 if (isset($join['conditions']) === true) {
@@ -415,7 +407,7 @@ abstract class Dialect
                             $joinExpressions[] = $this->getSqlExpression($joinCondition, $escapeChar);
                         }
 
-                        $sqlJoin .= ' ON '.implode(' AND ', $joinExpressions).' ';
+                        $sqlJoin .= ' ON ' . implode(' AND ', $joinExpressions) . ' ';
                     }
                 }
 
@@ -427,40 +419,40 @@ abstract class Dialect
         if (isset($definition['where']) === true) {
             $whereConditions = $definition['where'];
             if (is_array($whereConditions) === true) {
-                $sql .= ' WHERE '.$this->getSqlExpression($whereConditions, $escapeChar);
+                $sql .= ' WHERE ' . $this->getSqlExpression($whereConditions, $escapeChar);
             } else {
-                $sql .= ' WHERE '.$whereConditions;
+                $sql .= ' WHERE ' . $whereConditions;
             }
         }
 
         //Check for a GROUP clause
         if (isset($definition['group']) === true) {
-            $groupItems = array();
+            $groupItems  = array();
             $groupFields = $definition['group'];
 
             foreach ($groupFields as $groupField) {
                 $groupItems[] = $this->getSqlExpression($groupField, $escapeChar);
             }
 
-            $sql .= ' GROUP BY '.implode(', ', $groupItems);
+            $sql .= ' GROUP BY ' . implode(', ', $groupItems);
 
             //Check for a HAVING clause
             if (isset($definition['having']) === true) {
-                $sql .= ' HAVING '.$this->getSqlExpression($definition['having'], $escapeChar);
+                $sql .= ' HAVING ' . $this->getSqlExpression($definition['having'], $escapeChar);
             }
         }
 
         //Check for a ORDER clause
         if (isset($definition['order']) === true) {
             $orderFields = $definition['order'];
-            $orderItems = array();
+            $orderItems  = array();
 
             foreach ($orderFields as $orderItem) {
                 $orderSqlItem = $this->getSqlExpression($orderItem[0], $escapeChar);
 
                 //In the numeric 1 position could be a ASC/DESC clause
                 if (isset($orderItem[1]) === true) {
-                    $orderSqlItemType = $orderSqlItem.' '.$orderItem[1];
+                    $orderSqlItemType = $orderSqlItem . ' ' . $orderItem[1];
                 } else {
                     $orderSqlItemType = $orderSqlItem;
                 }
@@ -468,7 +460,7 @@ abstract class Dialect
                 $orderItems[] = $orderSqlItem;
             }
 
-            $sql .= ' ORDER BY '.implode(', ', $orderItems);
+            $sql .= ' ORDER BY ' . implode(', ', $orderItems);
         }
 
         //Check for a LIMIT condition
@@ -479,12 +471,12 @@ abstract class Dialect
 
                 //Check for a OFFSET condition
                 if (isset($limitValue['offset']) === true) {
-                    $sql .= ' LIMIT '.$number.' OFFSET '.$limitValue['offset'];
+                    $sql .= ' LIMIT ' . $number . ' OFFSET ' . $limitValue['offset'];
                 } else {
-                    $sql .= ' LIMIT '.$number;
+                    $sql .= ' LIMIT ' . $number;
                 }
             } else {
-                $sql .= ' LIMIT '.$limitValue;
+                $sql .= ' LIMIT ' . $limitValue;
             }
         }
 
@@ -524,7 +516,7 @@ abstract class Dialect
             throw new Exception('Invalid parameter type.');
         }
 
-        return 'SAVEPOINT '.$name;
+        return 'SAVEPOINT ' . $name;
     }
 
     /**
@@ -540,7 +532,7 @@ abstract class Dialect
             throw new Exception('Invalid parameter type.');
         }
 
-        return 'RELEASE SAVEPOINT '.$name;
+        return 'RELEASE SAVEPOINT ' . $name;
     }
 
     /**
@@ -556,6 +548,7 @@ abstract class Dialect
             throw new Exception('Invalid parameter type.');
         }
 
-        return 'ROLLBACK TO SAVEPOINT '.$name;
+        return 'ROLLBACK TO SAVEPOINT ' . $name;
     }
+
 }

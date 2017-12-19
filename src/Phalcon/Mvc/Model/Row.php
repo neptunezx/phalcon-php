@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Row
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Row
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Mvc\Model\ResultInterface;
@@ -24,6 +26,7 @@ use \ArrayAccess;
  */
 class Row implements ArrayAccess, ResultInterface
 {
+
     /**
      * Set the current object's state
      *
@@ -104,4 +107,5 @@ class Row implements ArrayAccess, ResultInterface
         $vars = get_object_vars($this);
         return (empty($vars) === true ? false : $vars);
     }
+
 }

@@ -1,12 +1,5 @@
 <?php
-/**
- * Filter Exception
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Filter;
 
 /**
@@ -18,4 +11,5 @@ namespace Phalcon\Filter;
  */
 class Exception extends \Phalcon\Exception
 {
+    
 }

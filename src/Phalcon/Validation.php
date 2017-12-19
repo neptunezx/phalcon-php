@@ -1,13 +1,5 @@
 <?php
-/**
- * Validation
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon;
 
 use \Phalcon\Di\Injectable;
@@ -24,12 +16,13 @@ use \Phalcon\FilterInterface;
  */
 class Validation extends Injectable implements EventsAwareInterface, InjectionAwareInterface
 {
+
     /**
      * Data
      *
      * @var null|array|object
      * @access protected
-    */
+     */
     protected $_data = null;
 
     /**
@@ -37,7 +30,7 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
      *
      * @var null|object
      * @access protected
-    */
+     */
     protected $_entity = null;
 
     /**
@@ -45,7 +38,7 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_validators = null;
 
     /**
@@ -53,7 +46,7 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_filters = null;
 
     /**
@@ -61,7 +54,7 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
      *
      * @var null|\Phalcon\Validation\Message\Group
      * @access protected
-    */
+     */
     protected $_messages = null;
 
     /**
@@ -69,7 +62,7 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_values = null;
 
     /**
@@ -281,7 +274,7 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
         }
 
         $this->_entity = $entity;
-        $this->_data = $data;
+        $this->_data   = $data;
 
         return $this;
     }
@@ -295,7 +288,7 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
      */
     public function getValue($attribute)
     {
-        $method = 'get'.$attribute;
+        $method = 'get' . $attribute;
         if (is_object($this->_entity) === true) {
             if (method_exists($this->_entity, $method) === true) {
                 return call_user_method($method, $this->_entity);
@@ -354,4 +347,5 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
 
         return null;
     }
+
 }

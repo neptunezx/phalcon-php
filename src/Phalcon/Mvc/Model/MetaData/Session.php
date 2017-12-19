@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Session Adapter
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Session Adapter
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model\MetaData;
 
 use \Phalcon\Mvc\Model\MetaData;
@@ -23,11 +25,11 @@ use \Phalcon\Di\InjectionAwareInterface;
  *
  * You can query the meta-data by printing $_SESSION['$PMM$']
  *
- *<code>
+ * <code>
  * $metaData = new Phalcon\Mvc\Model\Metadata\Session(array(
  *    'prefix' => 'my-app-id'
  * ));
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/metadata/session.c
  * @note This class works directly with the $_SESSION variable. It might be useful to use
@@ -35,102 +37,103 @@ use \Phalcon\Di\InjectionAwareInterface;
  */
 class Session extends MetaData implements InjectionAwareInterface, MetaDataInterface
 {
+
     /**
      * Models: Attributes
      *
      * @var int
-    */
+     */
     const MODELS_ATTRIBUTES = 0;
 
     /**
      * Models: Primary Key
      *
      * @var int
-    */
+     */
     const MODELS_PRIMARY_KEY = 1;
 
     /**
      * Models: Non Primary Key
      *
      * @var int
-    */
+     */
     const MODELS_NON_PRIMARY_KEY = 2;
 
     /**
      * Models: Not Null
      *
      * @var int
-    */
+     */
     const MODELS_NOT_NULL = 3;
 
     /**
      * Models: Data Types
      *
      * @var int
-    */
+     */
     const MODELS_DATA_TYPES = 4;
 
     /**
      * Models: Data Types Numeric
      *
      * @var int
-    */
+     */
     const MODELS_DATA_TYPES_NUMERIC = 5;
 
     /**
      * Models: Date At
      *
      * @var int
-    */
+     */
     const MODELS_DATE_AT = 6;
 
     /**
      * Models: Date In
      *
      * @var int
-    */
+     */
     const MODELS_DATE_IN = 7;
 
     /**
      * Models: Identity Column
      *
      * @var int
-    */
+     */
     const MODELS_IDENTITY_COLUMN = 8;
 
     /**
      * Models: Data Types Bind
      *
      * @var int
-    */
+     */
     const MODELS_DATA_TYPES_BIND = 9;
 
     /**
      * Models: Automatic Default Insert
      *
      * @var int
-    */
+     */
     const MODELS_AUTOMATIC_DEFAULT_INSERT = 10;
 
     /**
      * Models: Automatic Default Update
      *
      * @var int
-    */
+     */
     const MODELS_AUTOMATIC_DEFAULT_UPDATE = 11;
 
     /**
      * Models: Column Map
      *
      * @var int
-    */
+     */
     const MODELS_COLUMN_MAP = 0;
 
     /**
      * Models: Reverse Column Map
      *
      * @var int
-    */
+     */
     const MODELS_REVERSE_COLUMN_MAP = 1;
 
     /**
@@ -138,7 +141,7 @@ class Session extends MetaData implements InjectionAwareInterface, MetaDataInter
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_prefix = '';
 
     /**
@@ -169,7 +172,7 @@ class Session extends MetaData implements InjectionAwareInterface, MetaDataInter
             throw new Exception('Invalid parameter type.');
         }
 
-        $prefixKey = '$PMM$'.$this->_prefix;
+        $prefixKey = '$PMM$' . $this->_prefix;
         if (isset($_SESSION[$prefixKey]) === true &&
             isset($_SESSION[$prefixKey][$key])) {
             return $_SESSION[$prefixKey][$key];
@@ -190,7 +193,7 @@ class Session extends MetaData implements InjectionAwareInterface, MetaDataInter
             throw new Exception('Invalid parameter type.');
         }
 
-        $prefixKey = '$PMM$'.$this->_prefix;
+        $prefixKey = '$PMM$' . $this->_prefix;
 
         if (is_array($_SESSION[$prefixKey]) === false) {
             $_SESSION[$prefixKey] = array();
@@ -198,4 +201,5 @@ class Session extends MetaData implements InjectionAwareInterface, MetaDataInter
 
         $_SESSION[$prefixKey][$key] = $data;
     }
+
 }

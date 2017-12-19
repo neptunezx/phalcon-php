@@ -1,13 +1,5 @@
 <?php
-/**
- * Group
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Router;
 
 use \Phalcon\Mvc\Router\Exception;
@@ -18,7 +10,7 @@ use \Phalcon\Mvc\Router\Route;
  *
  * Helper class to create a group of routes with common attributes
  *
- *<code>
+ * <code>
  * $router = new Phalcon\Mvc\Router();
  *
  * //Create a group with a common module and controller
@@ -48,18 +40,19 @@ use \Phalcon\Mvc\Router\Route;
  *
  * //Add the group to the router
  * $router->mount($blog);
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/router/group.c
  */
 class Group
 {
+
     /**
      * Prefix
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_prefix;
 
     /**
@@ -67,7 +60,7 @@ class Group
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_hostname;
 
     /**
@@ -75,7 +68,7 @@ class Group
      *
      * @var null|array|string
      * @access protected
-    */
+     */
     protected $_paths;
 
     /**
@@ -83,7 +76,7 @@ class Group
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_routes;
 
     /**
@@ -91,7 +84,7 @@ class Group
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_beforeMatch;
 
     /**
@@ -250,7 +243,7 @@ class Group
         }
 
         //Add the prefix to the pattern
-        $pattern = (string)$this->_prefix.$pattern;
+        $pattern = (string) $this->_prefix . $pattern;
 
         //Check if the paths need to be merged with current paths
         if (is_array($this->_paths) === true) {
@@ -263,7 +256,7 @@ class Group
         }
 
         //Every route is internally stored as a Phalcon\Mvc\Router\Route
-        $route = new Route($pattern, $paths, $httpMethods);
+        $route           = new Route($pattern, $paths, $httpMethods);
         $this->_routes[] = $route;
         return $route;
     }
@@ -271,9 +264,9 @@ class Group
     /**
      * Adds a route to the router on any HTTP method
      *
-     *<code>
+     * <code>
      * $router->add('/about', 'About::index');
-     *</code>
+     * </code>
      *
      * @param string $pattern
      * @param string|array|null $paths
@@ -376,4 +369,5 @@ class Group
     {
         $this->_routes = array();
     }
+
 }

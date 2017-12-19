@@ -1,13 +1,5 @@
 <?php
-/**
- * Micro Model
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc;
 
 use \Phalcon\Di\Injectable;
@@ -28,7 +20,7 @@ use \ArrayAccess;
  * write a minimal amount of code to create a PHP application. Micro applications are suitable
  * to small applications, APIs and prototypes in a practical way.
  *
- *<code>
+ * <code>
  *
  * $app = new Phalcon\Mvc\Micro();
  *
@@ -38,18 +30,19 @@ use \ArrayAccess;
  *
  * $app->handle();
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/micro.c
  */
 class Micro extends Injectable implements EventsAwareInterface, InjectionAwareInterface, ArrayAccess
 {
+
     /**
      * Dependency Injector
      *
      * @var \Phalcon\DiInterface|null
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -57,7 +50,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_handlers;
 
     /**
@@ -65,7 +58,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      *
      * @var null|\Phalcon\Mvc\RouterInterface
      * @access protected
-    */
+     */
     protected $_router;
 
     /**
@@ -73,7 +66,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      *
      * @var null|boolean
      * @access protected
-    */
+     */
     protected $_stopped;
 
     /**
@@ -81,7 +74,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      *
      * @var null|callable
      * @access protected
-    */
+     */
     protected $_notFoundHandler;
 
     /**
@@ -89,7 +82,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      *
      * @var null|callable
      * @access protected
-    */
+     */
     protected $_activeHandler;
 
     /**
@@ -97,7 +90,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_beforeHandlers;
 
     /**
@@ -105,7 +98,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_afterHandlers;
 
     /**
@@ -113,7 +106,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_finishHandlers;
 
     /**
@@ -121,7 +114,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      *
      * @var mixed
      * @access protected
-    */
+     */
     protected $_returnedValue;
 
     /**
@@ -420,14 +413,14 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
                     throw new Exception('One of the registered handlers is invalid');
                 }
 
-                $methods = $handler[0];
-                $pattern = $handler[1];
+                $methods    = $handler[0];
+                $pattern    = $handler[1];
                 $subHandler = $handler[2];
 
                 //Create a real handler
                 if (empty($prefix) === false) {
                     if ($pattern !== '/') {
-                        $prefixedPattern = $prefix.$pattern;
+                        $prefixedPattern = $prefix . $pattern;
                     } else {
                         $prefixedPattern = $prefix;
                     }
@@ -615,7 +608,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
             }
 
             //Updating active handler
-            $handler = $this->_handlers[$routeId];
+            $handler              = $this->_handlers[$routeId];
             $this->_activeHandler = $handler;
 
             //Calling beforeExecuteRoute event
@@ -664,7 +657,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
             }
 
             //Update the returned value
-            $params = $router->getParams();
+            $params               = $router->getParams();
             $this->_returnedValue = call_user_func_array($handler, $params);
 
             //Calling afterExecuteRoute event
@@ -722,7 +715,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
 
         if (is_array($this->_finishHandlers) === true) {
             $this->_stopped = false;
-            $params = null;
+            $params         = null;
 
             foreach ($this->_finishHandlers as $finish) {
                 //Try to execute middleware as plugins
@@ -827,9 +820,9 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      * Allows to register a shared service in the internal services container using the array syntax.
      * Alias for \Phalcon\Mvc\Micro::setService()
      *
-     *<code>
+     * <code>
      *  $app['request'] = new \Phalcon\Http\Request();
-     *</code>
+     * </code>
      *
      * @param string $alias
      * @param mixed $definition
@@ -843,9 +836,9 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      * Allows to obtain a shared service in the internal services container using the array syntax.
      * Alias for \Phalcon\Mvc\Micro::getService()
      *
-     *<code>
+     * <code>
      *  var_dump($di['request']);
-     *</code>
+     * </code>
      *
      * @param string $alias
      * @return mixed
@@ -945,4 +938,5 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
     {
         return $this->_handlers;
     }
+
 }

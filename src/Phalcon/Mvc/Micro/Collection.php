@@ -1,13 +1,5 @@
 <?php
-/**
- * Micro Collection
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Micro;
 
 use \Phalcon\Mvc\Micro\CollectionInterface;
@@ -18,7 +10,7 @@ use \Phalcon\Mvc\Micro\Exception;
  *
  * Groups Micro-Mvc handlers as controllers
  *
- *<code>
+ * <code>
  *
  * $app = new Phalcon\Mvc\Micro();
  *
@@ -30,18 +22,19 @@ use \Phalcon\Mvc\Micro\Exception;
  *
  * $app->mount($collection);
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/micro/collection.c
  */
 class Collection implements CollectionInterface
 {
+
     /**
      * Prefix
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_prefix;
 
     /**
@@ -49,7 +42,7 @@ class Collection implements CollectionInterface
      *
      * @var null|boolean
      * @access protected
-    */
+     */
     protected $_lazy;
 
     /**
@@ -57,7 +50,7 @@ class Collection implements CollectionInterface
      *
      * @var null|mixed
      * @access protected
-    */
+     */
     protected $_handler;
 
     /**
@@ -65,16 +58,16 @@ class Collection implements CollectionInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_handlers;
-    
+
     /**
      * Add a hander to the group
      *
      * @param string|array $method
      * @param string $routePattern
      * @param mixed $handler
-    */
+     */
     private function addToMap($method, $routePattern, $handler)
     {
         if (is_array($this->_handlers) === false) {
@@ -139,7 +132,7 @@ class Collection implements CollectionInterface
         }
 
         $this->_handler = $handler;
-        $this->_lazy = $lazy;
+        $this->_lazy    = $lazy;
 
         return $this;
     }
@@ -341,4 +334,5 @@ class Collection implements CollectionInterface
 
         return $this;
     }
+
 }

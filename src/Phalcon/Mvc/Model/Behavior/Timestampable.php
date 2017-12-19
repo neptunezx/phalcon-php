@@ -1,13 +1,5 @@
 <?php
-/**
- * Timestampable Behavior
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Behavior;
 
 use \Phalcon\Mvc\Model\Behavior;
@@ -25,6 +17,7 @@ use \Phalcon\Mvc\ModelInterface;
  */
 class Timestampable extends Behavior implements BehaviorInterface
 {
+
     /**
      * Listens for notifications from the models manager
      *
@@ -83,4 +76,5 @@ class Timestampable extends Behavior implements BehaviorInterface
             }
         }
     }
+
 }

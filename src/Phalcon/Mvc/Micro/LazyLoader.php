@@ -1,13 +1,5 @@
 <?php
-/**
- * Lazy Loader
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Micro;
 
 use \Phalcon\Mvc\Micro\Exception;
@@ -21,12 +13,13 @@ use \Phalcon\Mvc\Micro\Exception;
  */
 class LazyLoader
 {
+
     /**
      * Handler
      *
      * @var null|object
      * @access protected
-    */
+     */
     protected $_handler;
 
     /**
@@ -34,7 +27,7 @@ class LazyLoader
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_definition;
 
     /**
@@ -74,4 +67,5 @@ class LazyLoader
         //Call the handler
         return call_user_func_array(array($this->_handler, $method), $arguments);
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Escapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon;
 
 use \Phalcon\EscaperInterface;
@@ -21,22 +13,23 @@ use \Phalcon\Escaper\Exception as EscaperException;
  *
  * This component only works with UTF-8. The PREG extension needs to be compiled with UTF-8 support.
  *
- *<code>
+ * <code>
  *  $escaper = new Phalcon\Escaper();
  *  $escaped = $escaper->escapeCss("font-family: <Verdana>");
  *  echo $escaped; // font\2D family\3A \20 \3C Verdana\3E
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/escaper.c
  */
 class Escaper implements EscaperInterface
 {
+
     /**
      * Encoding
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_encoding = 'utf-8';
 
     /**
@@ -44,7 +37,7 @@ class Escaper implements EscaperInterface
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_htmlEscapeMap = null;
 
     /**
@@ -52,15 +45,15 @@ class Escaper implements EscaperInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_htmlQuoteType = 3;
 
     /**
      * Sets the encoding to be used by the escaper
      *
-     *<code>
+     * <code>
      * $escaper->setEncoding('utf-8');
-     *</code>
+     * </code>
      *
      * @param string $encoding
      * @throws EscaperException
@@ -87,9 +80,9 @@ class Escaper implements EscaperInterface
     /**
      * Sets the HTML quoting type for htmlspecialchars
      *
-     *<code>
+     * <code>
      * $escaper->setHtmlQuoteType(ENT_XHTML);
-     *</code>
+     * </code>
      *
      * @param int $quoteType
      * @throws EscaperException
@@ -108,12 +101,12 @@ class Escaper implements EscaperInterface
      *
      * @param string $str
      * @return string|boolean
-    */
+     */
     private static function basicCharset($str)
     {
-        $l = strlen($str);
+        $l   = strlen($str);
         $iso = false;
-        $n = chr(0);
+        $n   = chr(0);
 
 
         for ($i = 0; $i < $l; ++$i) {
@@ -229,7 +222,7 @@ class Escaper implements EscaperInterface
     {
         if (is_string($css) === true && empty($css) === false) {
             $css = $this->normalizeEncoding($css);
-            $l = strlen($css);
+            $l   = strlen($css);
 
             if ($l <= 0 || $l % 4 !== 0) {
                 return false;
@@ -238,13 +231,13 @@ class Escaper implements EscaperInterface
             $a = '';
             for ($i = 0; $i < $l; $i += 4) {
                 //Get UTF-32 ASCII code (4 bytes)
-                $d = ord($css[$i])+ord($css[$i+1])+ord($css[$i+2])+ord($css[$i+3]);
+                $d = ord($css[$i]) + ord($css[$i + 1]) + ord($css[$i + 2]) + ord($css[$i + 3]);
 
                 if ($d === 0) {
                     /*
-                    * CSS 2.1 section 4.1.3: "It is undefined in CSS 2.1 what happens if a
-                    * style sheet does contain a character with Unicode codepoint zero."
-                    */
+                     * CSS 2.1 section 4.1.3: "It is undefined in CSS 2.1 what happens if a
+                     * style sheet does contain a character with Unicode codepoint zero."
+                     */
                     return false;
                 } elseif (($d > 49 && $d < 58) ||
                     ($d > 96 && $d < 123) || ($d > 64 && $d < 91)) {
@@ -255,8 +248,8 @@ class Escaper implements EscaperInterface
                 } else {
                     /**
                      * Escape character
-                    */
-                    $a .=  '\\'.dechex($d).' ';
+                     */
+                    $a .= '\\' . dechex($d) . ' ';
                 }
             }
 
@@ -284,7 +277,7 @@ class Escaper implements EscaperInterface
             }
 
             for ($i = 0; $i < $l; $i += 4) {
-                $d = ord($no[$i])+ord($no[$i+1])+ord($no[$i+2])+ord($no[$i+3]);
+                $d = ord($no[$i]) + ord($no[$i + 1]) + ord($no[$i + 2]) + ord($no[$i + 3]);
                 if ($d === 0) {
                     return false;
                 } elseif (($d > 49 && $d < 58) || ($d > 96 && $d < 123) ||
@@ -295,7 +288,7 @@ class Escaper implements EscaperInterface
                     ($d > 122 && $d < 127)) {
                     $a .= chr($d);
                 } else {
-                    $a .= '\\x'.dechex($d);
+                    $a .= '\\x' . dechex($d);
                 }
             }
 
@@ -320,4 +313,5 @@ class Escaper implements EscaperInterface
 
         return rawurlencode($url);
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Soft Delete Behavior
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Behavior;
 
 use \Phalcon\Mvc\Model\Behavior;
@@ -25,6 +17,7 @@ use \Phalcon\Mvc\ModelInterface;
  */
 class SoftDelete extends Behavior implements BehaviorInterface
 {
+
     /**
      * Listens for notifications from the models manager
      *
@@ -57,7 +50,7 @@ class SoftDelete extends Behavior implements BehaviorInterface
             $value = $options['field'];
 
             //'field' is the attribute to be updated instead of delete the record
-            $field = $options['field'];
+            $field       = $options['field'];
             $actualValue = $model->readAttribute($field);
 
             //If the record is already flagged as 'deleted' we don't delete it again
@@ -82,4 +75,5 @@ class SoftDelete extends Behavior implements BehaviorInterface
             }
         }
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * CLI Router
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\CLI;
 
 use \Phalcon\Di\InjectionAwareInterface;
@@ -22,7 +14,7 @@ use \Phalcon\DiInterface;
  * decomposing it into parameters to determine which module, task, and
  * action of that task should receive the request</p>
  *
- *<code>
+ * <code>
  *  $router = new Phalcon\CLI\Router();
  *  $router->handle(array(
  *      'module' => 'main',
@@ -30,18 +22,19 @@ use \Phalcon\DiInterface;
  *      'action' => 'process'
  *  ));
  *  echo $router->getTaskName();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cli/router.c
  */
 class Router implements InjectionAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector = null;
 
     /**
@@ -49,7 +42,7 @@ class Router implements InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_module = null;
 
     /**
@@ -57,7 +50,7 @@ class Router implements InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_task = null;
 
     /**
@@ -65,7 +58,7 @@ class Router implements InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_action = null;
 
     /**
@@ -73,7 +66,7 @@ class Router implements InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_params = null;
 
     /**
@@ -81,7 +74,7 @@ class Router implements InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_defaultModule = null;
 
     /**
@@ -89,7 +82,7 @@ class Router implements InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_defaultTask = null;
 
     /**
@@ -97,7 +90,7 @@ class Router implements InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_defaultAction = null;
 
     /**
@@ -105,7 +98,7 @@ class Router implements InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_defaultParams = null;
 
     /**
@@ -113,7 +106,7 @@ class Router implements InjectionAwareInterface
      */
     public function __construct()
     {
-        $this->_params = array();
+        $this->_params        = array();
         $this->_defaultParams = array();
     }
 
@@ -228,7 +221,7 @@ class Router implements InjectionAwareInterface
         }
 
         $this->_module = $moduleName;
-        $this->_task = $taskName;
+        $this->_task   = $taskName;
         $this->_action = $actionName;
         $this->_params = $arguments;
     }
@@ -272,4 +265,5 @@ class Router implements InjectionAwareInterface
     {
         return $this->_params;
     }
+
 }

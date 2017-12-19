@@ -1,13 +1,5 @@
 <?php
-/**
- * Native Array Translation Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Translate\Adapter;
 
 use \Phalcon\Translate\Adapter;
@@ -24,12 +16,13 @@ use \Phalcon\Translate\Exception;
  */
 class NativeArray extends Adapter implements \ArrayAccess, AdapterInterface
 {
+
     /**
      * Translate
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_translate;
 
     /**
@@ -78,7 +71,7 @@ class NativeArray extends Adapter implements \ArrayAccess, AdapterInterface
             $translation = $this->_translate[$index];
             if (is_array($placeholders) === true && empty($placeholders) === false) {
                 foreach ($placeholders as $key => $value) {
-                    $translation = str_replace('%'.$key.'%', $value, $translation);
+                    $translation = str_replace('%' . $key . '%', $value, $translation);
                 }
             }
 
@@ -103,4 +96,5 @@ class NativeArray extends Adapter implements \ArrayAccess, AdapterInterface
 
         return isset($this->_translate[$index]);
     }
+
 }

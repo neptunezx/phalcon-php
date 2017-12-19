@@ -1,13 +1,5 @@
 <?php
-/**
- * PHP
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\View\Engine;
 
 use \Phalcon\Mvc\View\Engine;
@@ -25,6 +17,7 @@ use \Phalcon\Events\EventsAwareInterface;
  */
 class Php extends Engine implements InjectionAwareInterface, EventsAwareInterface, EngineInterface
 {
+
     /**
      * Renders a view using the template engine
      *
@@ -64,4 +57,5 @@ class Php extends Engine implements InjectionAwareInterface, EventsAwareInterfac
             $this->_view->setContent(ob_get_contents());
         }
     }
+
 }

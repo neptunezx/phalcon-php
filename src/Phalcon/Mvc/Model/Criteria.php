@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Criteria
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Criteria
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Di\InjectionAwareInterface;
@@ -21,25 +23,26 @@ use \Phalcon\DiInterface;
  * This class allows to build the array parameter required by Phalcon\Mvc\Model::find
  * and Phalcon\Mvc\Model::findFirst using an object-oriented interface
  *
- *<code>
- *$robots = Robots::query()
+ * <code>
+ * $robots = Robots::query()
  *    ->where("type = :type:")
  *    ->andWhere("year < 2000")
  *    ->bind(array("type" => "mechanical"))
  *    ->order("name")
  *    ->execute();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/criteria.c
  */
 class Criteria implements CriteriaInterface, InjectionAwareInterface
 {
+
     /**
      * Model
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_model;
 
     /**
@@ -47,7 +50,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      *
      * @var array
      * @access protected
-    */
+     */
     protected $_params = array();
 
     /**
@@ -55,7 +58,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_hiddenParamNumber = 0;
 
     /**
@@ -154,9 +157,9 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Sets the columns to be queried
      *
-     *<code>
+     * <code>
      *  $criteria->columns(array('id', 'name'));
-     *</code>
+     * </code>
      *
      * @param string|array $columns
      * @return \Phalcon\Mvc\Model\CriteriaInterface
@@ -176,12 +179,12 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Adds a INNER join to the query
      *
-     *<code>
+     * <code>
      *  $criteria->join('Robots');
      *  $criteria->join('Robots', 'r.id = RobotsParts.robots_id');
      *  $criteria->join('Robots', 'r.id = RobotsParts.robots_id', 'r');
      *  $criteria->join('Robots', 'r.id = RobotsParts.robots_id', 'r', 'LEFT');
-     *</code>
+     * </code>
      *
      * @param string $model
      * @param string|null $conditions
@@ -194,11 +197,11 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     {
         if (is_string($model) === false ||
             (is_string($conditions) === false &&
-                is_null($conditions) === false) ||
+            is_null($conditions) === false) ||
             (is_string($alias) === false &&
-                is_null($alias) === false) ||
+            is_null($alias) === false) ||
             (is_string($type) === false &&
-                is_null($type) === false)) {
+            is_null($type) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -222,11 +225,11 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Adds a INNER join to the query
      *
-     *<code>
+     * <code>
      *  $criteria->innerJoin('Robots');
      *  $criteria->innerJoin('Robots', 'r.id = RobotsParts.robots_id');
      *  $criteria->innerJoin('Robots', 'r.id = RobotsParts.robots_id', 'r');
-     *</code>
+     * </code>
      *
      * @param string $model
      * @param string|null $conditions
@@ -241,9 +244,9 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Adds a LEFT join to the query
      *
-     *<code>
+     * <code>
      *  $criteria->leftJoin('Robots', 'r.id = RobotsParts.robots_id', 'r');
-     *</code>
+     * </code>
      *
      * @param string $model
      * @param string|null $conditions
@@ -258,9 +261,9 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Adds a RIGHT join to the query
      *
-     *<code>
+     * <code>
      *  $criteria->rightJoin('Robots', 'r.id = RobotsParts.robots_id', 'r');
-     *</code>
+     * </code>
      *
      * @param string $model
      * @param string|null $conditions
@@ -344,7 +347,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         }
 
         if (isset($this->_params['conditions']) === true) {
-            $conditions = '('.$this->_params['conditions'].') AND ('.$conditions.')';
+            $conditions = '(' . $this->_params['conditions'] . ') AND (' . $conditions . ')';
         }
 
         $this->_params['conditions'] = $conditions;
@@ -386,7 +389,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         }
 
         if (isset($this->_params['conditions']) === true) {
-            $conditions = '('.$this->_params['conditions'].') OR ('.$conditions.')';
+            $conditions = '(' . $this->_params['conditions'] . ') OR (' . $conditions . ')';
         }
 
         $this->_params['conditions'] = $conditions;
@@ -415,9 +418,9 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Appends a BETWEEN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $criteria->betweenWhere('price', 100.25, 200.50);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param mixed $minimum
@@ -431,17 +434,17 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $hiddenParam = $this->_hiddenParamNumber;
+        $hiddenParam     = $this->_hiddenParamNumber;
         $nextHiddenParam = $hiddenParam++;
 
         //Minimum key with auto bind-params
-        $minimumKey = 'phb'.$hiddenParam;
+        $minimumKey = 'phb' . $hiddenParam;
 
         //Maximum key with auto bind-params
-        $maximumKey = 'phb'.$nextHiddenParam;
+        $maximumKey = 'phb' . $nextHiddenParam;
 
         //Create a standard BETWEEN condition with bind params
-        $conditions = $expr.' BETWEEN :'.$minimumKey.': AND :'.$maximumKey.':';
+        $conditions = $expr . ' BETWEEN :' . $minimumKey . ': AND :' . $maximumKey . ':';
 
         //Append the BETWEEN to the current conditions using 'AND'
         $this->addWhere($condition, array($minimumKey, $maximumKey));
@@ -453,9 +456,9 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Appends a NOT BETWEEN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $criteria->notBetweenWhere('price', 100.25, 200.50);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param mixed $minimum
@@ -469,17 +472,17 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $hiddenParam = $this->_hiddenParamNumber;
+        $hiddenParam     = $this->_hiddenParamNumber;
         $nextHiddenParam = $hiddenParam++;
 
         //Minimum key with auto bind-params
-        $minimumKey = 'phb'.$hiddenParam;
+        $minimumKey = 'phb' . $hiddenParam;
 
         //Maximum key with auto bind-params
-        $maximumKey = 'phb'.$nextHiddenParam;
+        $maximumKey = 'phb' . $nextHiddenParam;
 
         //Create a standard BETWEEN condition with bind params
-        $conditions = $expr.' NOT BETWEEN :'.$minimumKey.': AND :'.$maximumKey.':';
+        $conditions = $expr . ' NOT BETWEEN :' . $minimumKey . ': AND :' . $maximumKey . ':';
 
         //Append the BETWEEN to the current conditions using 'AND'
         $this->addWhere($conditions, array($minimumKey, $maximumKey));
@@ -491,9 +494,9 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Appends an IN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $criteria->inWhere('id', [1, 2, 3]);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param array $values
@@ -511,21 +514,21 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         }
 
         $hiddenParam = $this->_hiddenParamNumber;
-        $bindParams = array();
-        $bindKeys = array();
+        $bindParams  = array();
+        $bindKeys    = array();
 
         foreach ($values as $value) {
             //Key with auto bind-params
-            $key = 'phi'.$hiddenParam;
-            $bindKeys[] = $key;
-            $bindParams[$key] = ':'.$key.':';
+            $key              = 'phi' . $hiddenParam;
+            $bindKeys[]       = $key;
+            $bindParams[$key] = ':' . $key . ':';
             $hiddenParam++;
         }
 
         $joinedKeys = implode(', ', $bindKeys);
 
         //Create a standard IN condition with bind params
-        $conditions = $expr.' IN ('.$joinedKeys.')';
+        $conditions = $expr . ' IN (' . $joinedKeys . ')';
 
         //Append the IN to the current conditions using 'AND'
         $this->andWhere($conditions, $bindParams);
@@ -537,9 +540,9 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Appends a NOT IN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $criteria->notInWhere('id', [1, 2, 3]);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param array $values
@@ -553,13 +556,13 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         }
 
         $hiddenParam = $this->_hiddenParamNumber;
-        $bindParams = array();
-        $bindKeys = array();
+        $bindParams  = array();
+        $bindKeys    = array();
 
         foreach ($values as $value) {
             //Key with auto bind-params
-            $key = 'phi'.$hiddenParam;
-            $bindKeys[] = ':'.$key.':';
+            $key              = 'phi' . $hiddenParam;
+            $bindKeys[]       = ':' . $key . ':';
             $bindParams[$key] = $value;
             $hiddenParam++;
         }
@@ -567,7 +570,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         $joinedKeys = implode(', ', $bindKeys);
 
         //Create a standard NOT IN condition with bind params
-        $conditions = $expr.' NOT IN ('.$joinedKeys.')';
+        $conditions = $expr . ' NOT IN (' . $joinedKeys . ')';
 
         //Append the IN to the current conditions using 'AND'
         $this->andWhere($conditions, $bindParams);
@@ -645,9 +648,9 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         }
 
         if (is_null($offset) === true) {
-            $this->_params['limit'] = (int)$limit;
+            $this->_params['limit'] = (int) $limit;
         } else {
-            $this->_params['limit'] = array('number' => (int)$limit, 'offset' => $offset);
+            $this->_params['limit'] = array('number' => (int) $limit, 'offset' => $offset);
         }
 
         return $this;
@@ -789,10 +792,10 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
 
         if (empty($data) === false) {
             $conditions = array();
-            $metaData = $dependencyInjector->getShared('modelsMetadata');
-            $model = new $modelName();
-            $dataTypes = $metaData->getDataTypes($model);
-            $bind = array();
+            $metaData   = $dependencyInjector->getShared('modelsMetadata');
+            $model      = new $modelName();
+            $dataTypes  = $metaData->getDataTypes($model);
+            $bind       = array();
 
             //We look for attributes in the array passed as data
             foreach ($data as $field => $value) {
@@ -800,11 +803,11 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
                     is_null($value) === false && $value !== '') {
                     if ($dataTypes[$field] === 2) {
                         //For varchar types we use LIKE operator
-                        $condition = $field.' LIKE :'.$field.':';
-                        $bind[$field] = '%'.$value.'%';
+                        $condition    = $field . ' LIKE :' . $field . ':';
+                        $bind[$field] = '%' . $value . '%';
                     } else {
                         //For the rest of data types we use a plain = operator
-                        $condition = $field.'=:'.$field.':';
+                        $condition    = $field . '=:' . $field . ':';
                         $bind[$field] = $value;
                     }
 
@@ -837,9 +840,10 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         }
 
         $params = $this->getParams();
-        
+
         $resultset = forward_static_call_array(array($this->_model, 'find'), $params);
 
         return $resultset;
     }
+
 }

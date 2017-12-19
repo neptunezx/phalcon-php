@@ -1,13 +1,5 @@
 <?php
-/**
- * Memcache Cache Backend
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Cache\Backend;
 
 use \Phalcon\Cache\Backend;
@@ -22,7 +14,7 @@ use \Phalcon\Text;
  *
  * This adapter uses the special memcached key "_PHCM" to store all the keys internally used by the adapter
  *
- *<code>
+ * <code>
  *
  * // Cache data for 2 days
  * $frontCache = new Phalcon\Cache\Frontend\Data(array(
@@ -42,18 +34,19 @@ use \Phalcon\Text;
  * //Get data
  * $data = $cache->get('my-data');
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/backend/memcache.c
  */
 class Memcache extends Backend implements BackendInterface
 {
+
     /**
      * Memcache Instance
      *
      * @var null|\Memcache
      * @access protected
-    */
+     */
     protected $_memcache;
 
     /**
@@ -134,8 +127,8 @@ class Memcache extends Backend implements BackendInterface
         }
 
         /* Get data */
-        $this->_lastKey = $this->_prefix.$keyName;
-        $cachedContent = $this->_memcache->get($this->_lastKey);
+        $this->_lastKey = $this->_prefix . $keyName;
+        $cachedContent  = $this->_memcache->get($this->_lastKey);
         if ($cachedContent === false) {
             return null;
         }
@@ -157,7 +150,7 @@ class Memcache extends Backend implements BackendInterface
         if (is_null($keyName) === true) {
             $keyName = $this->_lastKey;
         } elseif (is_string($keyName) === true) {
-            $keyName = $this->_prefix.$keyName;
+            $keyName = $this->_prefix . $keyName;
         }
 
         if (is_null($content) === false) {
@@ -181,7 +174,7 @@ class Memcache extends Backend implements BackendInterface
         if (isset($keyName) !== true) {
             throw new Exception('The cache must be started first');
         }
-        
+
         //Check if a connection is created or make a new one
         if (is_object($this->_memcache) === false) {
             $this->_connect();
@@ -241,7 +234,7 @@ class Memcache extends Backend implements BackendInterface
             $this->_connect();
         }
 
-        $prefixedKey = $this->_prefix.$keyName;
+        $prefixedKey = $this->_prefix . $keyName;
 
         /* Update stats key */
         $keys = $this->_memcache->get($this->_options['statsKey']);
@@ -288,7 +281,7 @@ class Memcache extends Backend implements BackendInterface
                 //Don't use prefix
                 $prefixedKeys = array_keys($keys);
             }
-            
+
             return $prefixedKeys;
         }
 
@@ -309,7 +302,7 @@ class Memcache extends Backend implements BackendInterface
         if (is_null($keyName) === true) {
             $keyName = $this->_lastKey;
         } elseif (is_string($keyName) === true) {
-            $keyName = $this->_prefix.$keyName;
+            $keyName = $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -331,4 +324,5 @@ class Memcache extends Backend implements BackendInterface
 
         return false;
     }
+
 }

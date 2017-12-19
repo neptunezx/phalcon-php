@@ -1,13 +1,5 @@
 <?php
-/**
- * Manager
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Collection;
 
 use \Phalcon\Di\InjectionAwareInterface;
@@ -39,12 +31,13 @@ use \Phalcon\Mvc\CollectionInterface;
  */
 class Manager implements InjectionAwareInterface, EventsAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var \Phalcon\DiInterface|null
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -52,7 +45,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_initialized;
 
     /**
@@ -60,7 +53,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      *
      * @var null|\Phalcon\Mvc\CollectionInterface
      * @access protected
-    */
+     */
     protected $_lastInitialized;
 
     /**
@@ -68,7 +61,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      *
      * @var \Phalcon\Events\ManagerInterface|null
      * @access protected
-    */
+     */
     protected $_eventsManager;
 
     /**
@@ -76,7 +69,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      *
      * @var array|null
      * @access protected
-    */
+     */
     protected $_customEventsManager;
 
     /**
@@ -84,7 +77,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_connectionServices;
 
     /**
@@ -92,7 +85,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_implicitObjectsIds;
 
     /**
@@ -184,7 +177,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        
+
         if (is_array($this->_customEventsManager) === true) {
             $c = strtolower(get_class($model));
             if (isset($this->_customEventsManager[$c]) === true) {
@@ -225,7 +218,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
             }
 
             $this->_initialized[$className] = $model;
-            $this->_lastInitialized = $model;
+            $this->_lastInitialized         = $model;
         }
     }
 
@@ -383,7 +376,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
 
         //Dispatch events to the global events manager
         if (is_object($this->_eventsManager) === true) {
-            $status = $this->_eventsManager->fire('collection:'.$eventName, $model);
+            $status = $this->_eventsManager->fire('collection:' . $eventName, $model);
             if ($status === false) {
                 return false;
             }
@@ -393,10 +386,11 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
         if (is_array($this->_customEventsManager) === true) {
             $entityName = strtolower(get_class($model));
             if (isset($this->_customEventsManager[$entityName]) === true) {
-                $status = $this->_customEventsManager[$entityName]->fire('collection:'.$eventName, $model);
+                $status = $this->_customEventsManager[$entityName]->fire('collection:' . $eventName, $model);
             }
         }
 
         return $status;
     }
+
 }

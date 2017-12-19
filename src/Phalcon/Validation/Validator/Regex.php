@@ -1,13 +1,5 @@
 <?php
-/**
- * Regex Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation\Validator;
 
 use \Phalcon\Validation\Validator;
@@ -21,19 +13,20 @@ use \Phalcon\Validation;
  *
  * Allows validate if the value of a field matches a regular expression
  *
- *<code>
- *use Phalcon\Validation\Validator\Regex as RegexValidator;
+ * <code>
+ * use Phalcon\Validation\Validator\Regex as RegexValidator;
  *
- *$validator->add('created_at', new RegexValidator(array(
+ * $validator->add('created_at', new RegexValidator(array(
  *   'pattern' => '/^[0-9]{4}[-\/](0[1-9]|1[12])[-\/](0[1-9]|[12][0-9]|3[01])$/',
  *   'message' => 'The creation date is invalid'
- *)));
- *</code>
+ * )));
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/regex.c
  */
 class Regex extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validation
      *
@@ -72,7 +65,7 @@ class Regex extends Validator implements ValidatorInterface
             $message = $this->getOption('message');
 
             if (empty($message) === true) {
-                $message = "Value of field '".$attribute."' doesn't match regular expression";
+                $message = "Value of field '" . $attribute . "' doesn't match regular expression";
             }
 
             $validator->appendMessage(new Message($message, $attribute, 'Regex'));
@@ -82,4 +75,5 @@ class Regex extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

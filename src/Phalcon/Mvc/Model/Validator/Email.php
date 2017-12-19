@@ -1,13 +1,5 @@
 <?php
-/**
- * Email Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Validator;
 
 use \Phalcon\Mvc\Model\Validator;
@@ -20,7 +12,7 @@ use \Phalcon\Mvc\ModelInterface;
  *
  * Allows to validate if email fields has correct values
  *
- *<code>
+ * <code>
  *  use Phalcon\Mvc\Model\Validator\Email as EmailValidator;
  *
  *  class Subscriptors extends Phalcon\Mvc\Model
@@ -37,12 +29,13 @@ use \Phalcon\Mvc\ModelInterface;
  *      }
  *
  *  }
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/email.c
  */
 class Email extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validator
      *
@@ -79,7 +72,7 @@ class Email extends Validator implements ValidatorInterface
             //Check if the developer has defined a custom message
             $message = $this->getOption('message');
             if (isset($message) === false) {
-                $message = "Value of field '".$fieldName."' must have a valid e-mail format";
+                $message = "Value of field '" . $fieldName . "' must have a valid e-mail format";
             }
 
             $this->appendMessage($message, $fieldName, 'Email');
@@ -88,4 +81,5 @@ class Email extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

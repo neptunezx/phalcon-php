@@ -1,13 +1,5 @@
 <?php
-/**
- * Reference
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db;
 
 use \Phalcon\Db\ReferenceInterface;
@@ -18,25 +10,26 @@ use \Phalcon\Db\Exception;
  *
  * Allows to define reference constraints on tables
  *
- *<code>
+ * <code>
  *  $reference = new Phalcon\Db\Reference("field_fk", array(
  *      'referencedSchema' => "invoicing",
  *      'referencedTable' => "products",
  *      'columns' => array("product_type", "product_code"),
  *      'referencedColumns' => array("type", "code")
  *  ));
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/reference.c
  */
 class Reference implements ReferenceInterface
 {
+
     /**
      * Schema Name
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_schemaName;
 
     /**
@@ -44,7 +37,7 @@ class Reference implements ReferenceInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_referencedSchema;
 
     /**
@@ -52,7 +45,7 @@ class Reference implements ReferenceInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_referenceName;
 
     /**
@@ -60,7 +53,7 @@ class Reference implements ReferenceInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_referencedTable;
 
     /**
@@ -68,7 +61,7 @@ class Reference implements ReferenceInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_columns;
 
     /**
@@ -76,7 +69,7 @@ class Reference implements ReferenceInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_referencedColumns;
 
     /**
@@ -205,12 +198,13 @@ class Reference implements ReferenceInterface
             $constraintName = $data['_referenceName'];
         }
 
-        $definition = array();
-        $definition['_referencedSchema'] = (isset($data['_referencedSchema']) === true ? $data['_referencedSchema'] : null);
-        $definition['_referencedTable'] = (isset($data['_referencedTable']) === true ? $data['_referencedTable'] : null);
-        $definition['_columns'] = (isset($data['_columns']) === true ? $data['_columns'] : null);
+        $definition                       = array();
+        $definition['_referencedSchema']  = (isset($data['_referencedSchema']) === true ? $data['_referencedSchema'] : null);
+        $definition['_referencedTable']   = (isset($data['_referencedTable']) === true ? $data['_referencedTable'] : null);
+        $definition['_columns']           = (isset($data['_columns']) === true ? $data['_columns'] : null);
         $definition['_referencedColumns'] = (isset($data['_referencedColumns']) === true ? $data['_referencedColumns'] : null);
 
         return new Reference($constraintName, $definition);
     }
+
 }

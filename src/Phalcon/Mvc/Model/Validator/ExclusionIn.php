@@ -1,13 +1,5 @@
 <?php
-/**
- * Exclusion In Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Validator;
 
 use \Phalcon\Mvc\Model\Validator;
@@ -20,7 +12,7 @@ use \Phalcon\Mvc\ModelInterface;
  *
  * Check if a value is not included into a list of values
  *
- *<code>
+ * <code>
  *  use Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionInValidator;
  *
  *  class Subscriptors extends Phalcon\Mvc\Model
@@ -38,12 +30,13 @@ use \Phalcon\Mvc\ModelInterface;
  *      }
  *
  *  }
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/exclusionin.c
  */
 class ExclusionIn extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validator
      *
@@ -57,7 +50,7 @@ class ExclusionIn extends Validator implements ValidatorInterface
             $record instanceof ModelInterface === false) {
             throw new Exception('Invalid parameter type.');
         }
-        
+
         $fieldName = $this->getOption('field');
         if (is_string($fieldName) === false) {
             throw new Exception('Field name must be a string');
@@ -80,7 +73,7 @@ class ExclusionIn extends Validator implements ValidatorInterface
             //Check if the developer has defined a custom message
             $message = $this->getOption('message');
             if (isset($message) === false) {
-                $message = "Value of field '".$fieldName."' must not be part of list: ".implode(', ', $domain);
+                $message = "Value of field '" . $fieldName . "' must not be part of list: " . implode(', ', $domain);
             }
 
             $this->appendMessage($message, $fieldName, 'Exclusion');
@@ -89,4 +82,5 @@ class ExclusionIn extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

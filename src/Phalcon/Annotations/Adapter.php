@@ -1,13 +1,5 @@
 <?php
-/**
- * Annotations Adapter Class
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations;
 
 use \Phalcon\Annotations\Exception;
@@ -31,7 +23,7 @@ abstract class Adapter
      *
      * @var null|object
      * @access protected
-    */
+     */
     protected $_reader;
 
     /**
@@ -39,7 +31,7 @@ abstract class Adapter
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_annotations;
 
     /**
@@ -95,11 +87,11 @@ abstract class Adapter
         //Try to read the annotations from the adapter
         $classAnnotations = $this->read($realClassName);
         if (is_null($classAnnotations) === true) {
-            $reader = $this->getReader();
+            $reader            = $this->getReader();
             $parsedAnnotations = $reader->parse($realClassName);
 
             if (is_array($parsedAnnotations) === true) {
-                $classAnnotations = new Reflection($parsedAnnotations);
+                $classAnnotations                   = new Reflection($parsedAnnotations);
                 $this->_annotations[$realClassName] = $classAnnotations;
                 $this->write($realClassName, $classAnnotations);
             }
@@ -201,4 +193,5 @@ abstract class Adapter
 
         return new Collection();
     }
+
 }

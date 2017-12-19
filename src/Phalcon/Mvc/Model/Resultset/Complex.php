@@ -1,13 +1,5 @@
 <?php
-/**
- * Complex Resultset
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Resultset;
 
 use \Phalcon\Mvc\Model\Resultset;
@@ -34,39 +26,40 @@ use \stdClass;
  */
 class Complex extends Resultset implements Serializable, ArrayAccess, Countable, SeekableIterator, Iterator, ResultsetInterface
 {
+
     /**
      * Type: Full Result
      *
      * @var int
-    */
+     */
     const TYPE_RESULT_FULL = 0;
 
     /**
      * Type: Partial Result
      *
      * @var int
-    */
+     */
     const TYPE_RESULT_PARTIAL = 1;
 
     /**
      * Hydrate: Records
      *
      * @var int
-    */
+     */
     const HYDRATE_RECORDS = 0;
 
     /**
      * Hydrate: Objects
      *
      * @var int
-    */
+     */
     const HYDRATE_OBJECTS = 2;
 
     /**
      * Hydrate: Arrays
      *
      * @var int
-    */
+     */
     const HYDRATE_ARRAYS = 1;
 
     /**
@@ -74,7 +67,7 @@ class Complex extends Resultset implements Serializable, ArrayAccess, Countable,
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_columnTypes;
 
     /**
@@ -151,7 +144,7 @@ class Complex extends Resultset implements Serializable, ArrayAccess, Countable,
             //The result type=1 so we need to build every row
             if ($this->_type === 1) {
                 //Each row in a complex result is a Phalcon\Mvc\Model\Row instance
-                switch ((int)$this->_hydrateMode) {
+                switch ((int) $this->_hydrateMode) {
                     case 0:
                         $activeRow = new Row();
                         break;
@@ -170,19 +163,19 @@ class Complex extends Resultset implements Serializable, ArrayAccess, Countable,
                 foreach ($this->_columnTypes as $alias => $column) {
                     if ($column['type'] === 'object') {
                         //Object columns are assigned column by column
-                        $columnMap = $column['columnMap'];
+                        $columnMap  = $column['columnMap'];
                         $attributes = $column['attributes'];
 
                         $rowModel = array();
                         foreach ($column['attributes'] as $attribute) {
                             //Columns are supposed to be in the form _table_field
-                            $rowModel[$attribute] = $row['_'.$column['column'].'_'.$attribute];
+                            $rowModel[$attribute] = $row['_' . $column['column'] . '_' . $attribute];
                         }
 
                         //Generate the column value according to the hydration type
-                        switch ((int)$this->_hydrateMode) {
+                        switch ((int) $this->_hydrateMode) {
                             case 0:
-                                    //Check if the resultset must keep snapshots
+                                //Check if the resultset must keep snapshots
                                 if (isset($column['keepSnapshots']) === true) {
                                     $keepSnapshots = $column['keepSnapshots'];
                                 } else {
@@ -232,7 +225,7 @@ class Complex extends Resultset implements Serializable, ArrayAccess, Countable,
                     }
 
                     //Assign the instance according to the hydration type
-                    switch ((int)$this->_hydrateMode) {
+                    switch ((int) $this->_hydrateMode) {
                         case 1:
                             $activeRow[$attribute] = $value;
                             break;
@@ -282,7 +275,7 @@ class Complex extends Resultset implements Serializable, ArrayAccess, Countable,
      */
     public function serialize()
     {
-        $serialized = serialize(array('cache' => $this->_cache, 'rows' => $this->toArray(),
+        $serialized = serialize(array('cache'       => $this->_cache, 'rows'        => $this->toArray(),
             'columnTypes' => $this->_columnTypes, 'hydrateMode' => $this->_hydrateMode));
 
         if (is_string($serialized) === false) {
@@ -312,9 +305,10 @@ class Complex extends Resultset implements Serializable, ArrayAccess, Countable,
             throw new Exception('Invalid serialization data');
         }
 
-        $this->_rows = $resultset['rows'];
-        $this->_cache = $resultset['cache'];
+        $this->_rows        = $resultset['rows'];
+        $this->_cache       = $resultset['cache'];
         $this->_columnTypes = $resultset['columnTypes'];
         $this->_hydrateMode = $resultset['hydrateMode'];
     }
+
 }

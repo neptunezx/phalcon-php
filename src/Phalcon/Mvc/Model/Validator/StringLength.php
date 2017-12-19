@@ -1,13 +1,5 @@
 <?php
-/**
- * String Length Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Validator;
 
 use \Phalcon\Mvc\Model\Validator;
@@ -20,11 +12,11 @@ use \Phalcon\Mvc\ModelInterface;
  *
  * Simply validates specified string length constraints
  *
- *<code>
- *use Phalcon\Mvc\Model\Validator\StringLength as StringLengthValidator;
+ * <code>
+ * use Phalcon\Mvc\Model\Validator\StringLength as StringLengthValidator;
  *
- *class Subscriptors extends Phalcon\Mvc\Model
- *{
+ * class Subscriptors extends Phalcon\Mvc\Model
+ * {
  *
  *  public function validation()
  *  {
@@ -40,13 +32,14 @@ use \Phalcon\Mvc\ModelInterface;
  *      }
  *  }
  *
- *}
- *</code>
+ * }
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/stringlength.c
  */
 class StringLength extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validator
      *
@@ -91,7 +84,7 @@ class StringLength extends Validator implements ValidatorInterface
                 //Check if the developer has defined a custom message
                 $message = $this->getOption('messageMaximum');
                 if (isset($message) === false) {
-                    $message = "Value of field '".$field."' exceeds the maximum ".$maximum.' characters';
+                    $message = "Value of field '" . $field . "' exceeds the maximum " . $maximum . ' characters';
                 }
 
                 $this->appendMessage($message, $field, 'TooLong');
@@ -106,7 +99,7 @@ class StringLength extends Validator implements ValidatorInterface
                 //Check if the developer has defined a custom message
                 $message = $this->getOption('messageMinimum');
                 if (isset($message) === false) {
-                    $message = "Value of field '".$field."' is less than the minimum ".$minimum.' characters';
+                    $message = "Value of field '" . $field . "' is less than the minimum " . $minimum . ' characters';
                 }
 
                 $this->appendMessage($message, $field, 'TooShort');
@@ -116,4 +109,5 @@ class StringLength extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

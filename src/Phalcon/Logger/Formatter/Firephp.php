@@ -1,13 +1,5 @@
 <?php
-/**
- * FirePHP Formatter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger\Formatter;
 
 use \Phalcon\Logger\Formatter;
@@ -23,12 +15,13 @@ use \Phalcon\Logger\Exception;
  */
 class Firephp extends Formatter implements FormatterInterface
 {
+
     /**
      * Show Backtrace
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_showBacktrace = true;
 
     /**
@@ -41,7 +34,7 @@ class Firephp extends Formatter implements FormatterInterface
     {
         $lut = array('ERROR', 'ERROR', 'WARN', 'ERROR', 'WARN', 'INFO', 'INFO', 'LOG', 'INFO', 'LOG');
 
-        $type = (int)$type;
+        $type = (int) $type;
         if ($type > 0 && $type < 10) {
             return $lut[$type];
         }
@@ -53,7 +46,7 @@ class Firephp extends Formatter implements FormatterInterface
      * Get _showBacktrace member variable
      *
      * @return boolean
-    */
+     */
     public function getShowBacktrace()
     {
         return $this->_showBacktrace;
@@ -64,7 +57,7 @@ class Firephp extends Formatter implements FormatterInterface
      *
      * @param boolean $show
      * @throws Exception
-    */
+     */
     public function setShowBacktrace($show)
     {
         if (is_bool($show) === false) {
@@ -164,6 +157,7 @@ class Firephp extends Formatter implements FormatterInterface
         $encoded = json_encode($payload);
         unset($payload);
 
-        return (string)strlen($encoded).'|'.$encoded.'|';
+        return (string) strlen($encoded) . '|' . $encoded . '|';
     }
+
 }

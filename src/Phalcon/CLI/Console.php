@@ -1,13 +1,5 @@
 <?php
-/**
- * CLI Console
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\CLI;
 
 use \Phalcon\Di\InjectionAwareInterface;
@@ -26,12 +18,13 @@ use \Phalcon\DispatcherInterface;
  */
 class Console implements InjectionAwareInterface, EventsAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -39,7 +32,7 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
      *
      * @var null|\Phalcon\Events\ManagerInterface
      * @access protected
-    */
+     */
     protected $_eventsManager;
 
     /**
@@ -47,7 +40,7 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_modules;
 
     /**
@@ -55,7 +48,7 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_moduleObject;
 
     /**
@@ -120,7 +113,7 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
     /**
      * Register an array of modules present in the console
      *
-     *<code>
+     * <code>
      *  $application->registerModules(array(
      *      'frontend' => array(
      *          'className' => 'Multiple\Frontend\Module',
@@ -131,7 +124,7 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
      *          'path' => '../apps/backend/Module.php'
      *      )
      *  ));
-     *</code>
+     * </code>
      *
      * @param array $modules
      * @throws Exception
@@ -148,14 +141,14 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
     /**
      * Merge modules with the existing ones
      *
-     *<code>
+     * <code>
      *  $application->addModules(array(
      *      'admin' => array(
      *          'className' => 'Multiple\Admin\Module',
      *          'path' => '../apps/admin/Module.php'
      *      )
      *  ));
-     *</code>
+     * </code>
      *
      * @param array $modules
      * @throws Exception
@@ -213,10 +206,10 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
             throw new Exception('A dependency injection object is required to access internal services');
         }
 
-        $router = $this->_dependencyInjector->getShared('router');
+        $router     = $this->_dependencyInjector->getShared('router');
         $router->handle($arguments);
         $moduleName = $router->getModuleName();
-        
+
         if (isset($moduleName) === true) {
             //Event: console:beforeStartModule
             if (is_object($this->_eventsManager) === true) {
@@ -228,7 +221,7 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
             //Validate module structure
             if (is_array($this->_modules) === false ||
                 isset($this->_modules[$moduleName]) === false) {
-                throw new Exception('Module \''.$moduleName.'\' isn\'t registered in the console container');
+                throw new Exception('Module \'' . $moduleName . '\' isn\'t registered in the console container');
             }
 
             if (is_array($this->_modules[$moduleName]) === false) {
@@ -240,7 +233,7 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
                 if (file_exists($this->_modules[$moduleName]['path']) === true) {
                     require($this->_modules[$moduleName]['path']);
                 } else {
-                    throw new Exception('Module definition path \''.$this->_modules[$moduleName]['path'].'" doesn\'t exist');
+                    throw new Exception('Module definition path \'' . $this->_modules[$moduleName]['path'] . '" doesn\'t exist');
                 }
             }
 
@@ -267,9 +260,9 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
         }
 
         //Get route
-        $taskName = $router->getTaskName();
+        $taskName   = $router->getTaskName();
         $actionName = $router->getActionName();
-        $params = $router->getParams();
+        $params     = $router->getParams();
 
         //Get dispatcher
         $dispatcher = $this->_dependencyInjector->getShared('dispatcher');
@@ -299,4 +292,5 @@ class Console implements InjectionAwareInterface, EventsAwareInterface
 
         return $task;
     }
+
 }

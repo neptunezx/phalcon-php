@@ -1,13 +1,5 @@
 <?php
-/**
- * Memory Cache Backend
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Cache\Backend;
 
 use \Phalcon\Cache\Backend;
@@ -20,7 +12,7 @@ use \Phalcon\Text;
  *
  * Stores content in memory. Data is lost when the request is finished
  *
- *<code>
+ * <code>
  *  //Cache data
  *  $frontCache = new Phalcon\Cache\Frontend\Data();
  *
@@ -32,18 +24,19 @@ use \Phalcon\Text;
  *  //Get data
  *  $data = $cache->get('my-data');
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/backend/memory.c
  */
 class Memory extends Backend implements BackendInterface
 {
+
     /**
      * Data
      *
      * @var array
      * @access protected
-    */
+     */
     protected $_data = array();
 
     /**
@@ -59,7 +52,7 @@ class Memory extends Backend implements BackendInterface
         if (is_null($keyName) === true) {
             $keyName = $this->_lastKey;
         } elseif (is_string($keyName) === true) {
-            $keyName = $this->_prefix.$keyName;
+            $keyName = $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -95,7 +88,7 @@ class Memory extends Backend implements BackendInterface
         if (is_null($keyName) === true) {
             $keyName = $this->_lastKey;
         } elseif (is_string($keyName) === true) {
-            $keyName = $this->_prefix.$keyName;
+            $keyName = $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -115,7 +108,7 @@ class Memory extends Backend implements BackendInterface
         }
 
         /* Store data */
-        $preparedContent = $this->_frontend->beforeStore($content);
+        $preparedContent       = $this->_frontend->beforeStore($content);
         $this->_data[$keyName] = $preparedContent;
 
         /* Handle buffer */
@@ -144,7 +137,7 @@ class Memory extends Backend implements BackendInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $keyName = $this->_prefix.$keyName;
+        $keyName = $this->_prefix . $keyName;
 
         if (isset($this->_data[$keyName]) === true) {
             unset($this->_data[$keyName]);
@@ -163,7 +156,7 @@ class Memory extends Backend implements BackendInterface
     public function queryKeys($prefix = null)
     {
         if (is_null($prefix) === false) {
-            $prefix = (string)$prefix;
+            $prefix = (string) $prefix;
         }
 
         if (is_array($this->_data) === true) {
@@ -199,7 +192,7 @@ class Memory extends Backend implements BackendInterface
         if (is_null($keyName) === true) {
             $keyName = $this->_lastKey;
         } elseif (is_string($keyName) === true) {
-            $keyName = $this->_prefix.$keyName;
+            $keyName = $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -215,4 +208,5 @@ class Memory extends Backend implements BackendInterface
 
         return false;
     }
+
 }

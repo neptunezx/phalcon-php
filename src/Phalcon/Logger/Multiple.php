@@ -1,13 +1,5 @@
 <?php
-/**
- * Multiple
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger;
 
 use \Phalcon\Logger\Exception;
@@ -24,12 +16,13 @@ use \Phalcon\Logger;
  */
 class Multiple
 {
+
     /**
      * Loggers
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_loggers;
 
     /**
@@ -37,7 +30,7 @@ class Multiple
      *
      * @var null|\Phalcon\Logger\FormatterInterface
      * @access protected
-    */
+     */
     protected $_formatter;
 
     /**
@@ -197,4 +190,5 @@ class Multiple
     {
         $this->log($message, Logger::ALERT);
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Relation
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Mvc\Model\RelationInterface;
@@ -21,60 +13,61 @@ use \Phalcon\Mvc\Model\RelationInterface;
  */
 class Relation implements RelationInterface
 {
+
     /**
      * Belongs To
      *
      * @var int
-    */
+     */
     const BELONGS_TO = 0;
 
     /**
      * Has One
      *
      * @var int
-    */
+     */
     const HAS_ONE = 1;
 
     /**
      * Has Many
      *
      * @var int
-    */
+     */
     const HAS_MANY = 2;
 
     /**
      * Has One Through
      *
      * @var int
-    */
+     */
     const HAS_ONE_THROUGH = 3;
 
     /**
      * Has Many Through
      *
      * @var int
-    */
+     */
     const HAS_MANY_THROUGH = 4;
 
     /**
      * No Action
      *
      * @var int
-    */
+     */
     const NO_ACTION = 0;
 
     /**
      * Action Restrict
      *
      * @var int
-    */
+     */
     const ACTION_RESTRICT = 1;
 
     /**
      * Action Cascade
      *
      * @var int
-    */
+     */
     const ACTION_CASCADE = 2;
 
     /**
@@ -82,7 +75,7 @@ class Relation implements RelationInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_type;
 
     /**
@@ -90,7 +83,7 @@ class Relation implements RelationInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_referencedModel;
 
     /**
@@ -98,7 +91,7 @@ class Relation implements RelationInterface
      *
      * @var null|string|array
      * @access protected
-    */
+     */
     protected $_fields;
 
     /**
@@ -106,7 +99,7 @@ class Relation implements RelationInterface
      *
      * @var null|string|array
      * @access protected
-    */
+     */
     protected $_referencedFields;
 
     /**
@@ -114,7 +107,7 @@ class Relation implements RelationInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_intermediateModel;
 
     /**
@@ -122,7 +115,7 @@ class Relation implements RelationInterface
      *
      * @var null|string|array
      * @access protected
-    */
+     */
     protected $_intermediateFields;
 
     /**
@@ -130,7 +123,7 @@ class Relation implements RelationInterface
      *
      * @var null|string|array
      * @access protected
-    */
+     */
     protected $_intermediateReferencedFields;
 
     /**
@@ -138,7 +131,7 @@ class Relation implements RelationInterface
      *
      * @var null|array|null
      * @access protected
-    */
+     */
     protected $_options;
 
     /**
@@ -173,11 +166,11 @@ class Relation implements RelationInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->_type = $type;
-        $this->_referencedModel = $referencedModel;
-        $this->_fields = $fields;
+        $this->_type             = $type;
+        $this->_referencedModel  = $referencedModel;
+        $this->_fields           = $fields;
         $this->_referencedFields = $referencedFields;
-        $this->_options = $options;
+        $this->_options          = $options;
     }
 
     /**
@@ -204,8 +197,8 @@ class Relation implements RelationInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->_intermediateFields = $intermediateFields;
-        $this->_intermediateModel = $intermediateModel;
+        $this->_intermediateFields           = $intermediateFields;
+        $this->_intermediateModel            = $intermediateModel;
         $this->_intermediateReferencedFields = $intermediateReferencedFields;
     }
 
@@ -350,4 +343,5 @@ class Relation implements RelationInterface
     {
         return $this->_intermediateReferencedFields;
     }
+
 }

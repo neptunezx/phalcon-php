@@ -1,13 +1,5 @@
 <?php
-/**
- * Annotations Memory Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations\Adapter;
 
 use \Phalcon\Annotations\AdapterInterface;
@@ -24,12 +16,13 @@ use \Phalcon\Annotations\Exception;
  */
 class Memory extends Adapter implements AdapterInterface
 {
+
     /**
      * Annotations
      *
      * @var array|null
      * @access protected
-    */
+     */
     protected $_data;
 
     /**
@@ -71,4 +64,5 @@ class Memory extends Adapter implements AdapterInterface
 
         $this->_data[strtolower($key)] = $data;
     }
+
 }

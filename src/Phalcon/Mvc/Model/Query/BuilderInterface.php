@@ -1,12 +1,5 @@
 <?php
-/**
- * Builder Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Query;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Mvc\Model\Query;
  */
 interface BuilderInterface
 {
+
     /**
      * \Phalcon\Mvc\Model\Query\Builder
      *
@@ -145,9 +139,9 @@ interface BuilderInterface
     /**
      * Appends a NOT BETWEEN condition to the current conditions
      *
-     *<code>
+     * <code>
      *  $builder->notBetweenWhere('price', 100.25, 200.50);
-     *</code>
+     * </code>
      *
      * @param string $expr
      * @param mixed $minimum

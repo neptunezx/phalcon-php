@@ -1,12 +1,5 @@
 <?php
-/**
- * Dialect Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Db;
  */
 interface DialectInterface
 {
+
     /**
      * Generates the SQL for LIMIT clause
      *

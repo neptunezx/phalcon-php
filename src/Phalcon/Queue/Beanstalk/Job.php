@@ -1,13 +1,5 @@
 <?php
-/**
- * Beanstalk Job
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Queue\Beanstalk;
 
 use \Phalcon\Queue\Beanstalk;
@@ -22,12 +14,13 @@ use \Phalcon\Exception;
  */
 class Job
 {
+
     /**
      * Queue
      *
      * @var null|\Phalcon\Queue\Beanstalk
      * @access protected
-    */
+     */
     protected $_queue;
 
     /**
@@ -35,7 +28,7 @@ class Job
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_id;
 
     /**
@@ -43,7 +36,7 @@ class Job
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_body;
 
     /**
@@ -61,8 +54,8 @@ class Job
         }
 
         $this->_queue = $queue;
-        $this->_id = $id;
-        $this->_body = $body;
+        $this->_id    = $id;
+        $this->_body  = $body;
     }
 
     /**
@@ -92,7 +85,7 @@ class Job
      */
     public function delete()
     {
-        $this->_queue->write('delete '.$this->_id);
+        $this->_queue->write('delete ' . $this->_id);
 
         $response = $this->_queue->readStatus();
 
@@ -102,4 +95,5 @@ class Job
 
         return false;
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Security
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon;
 
 use \Phalcon\Di\InjectionAwareInterface;
@@ -24,7 +16,7 @@ use \Phalcon\Http\RequestInterface;
  *
  * This component provides a set of functions to improve the security in Phalcon applications
  *
- *<code>
+ * <code>
  *  $login = $this->request->getPost('login');
  *  $password = $this->request->getPost('password');
  *
@@ -34,18 +26,19 @@ use \Phalcon\Http\RequestInterface;
  *          //The password is valid
  *      }
  *  }
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/security.c
  */
 class Security implements InjectionAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @var protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -53,7 +46,7 @@ class Security implements InjectionAwareInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_workFactor = 8;
 
     /**
@@ -61,7 +54,7 @@ class Security implements InjectionAwareInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_numberBytes = 16;
 
     /**
@@ -69,7 +62,7 @@ class Security implements InjectionAwareInterface
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_csrf;
 
     /**
@@ -157,13 +150,13 @@ class Security implements InjectionAwareInterface
      *
      * @param string $value
      * @return string
-    */
+     */
     private static function filterAlnum($value)
     {
-        $filtered = '';
-        $value = (string)$value;
+        $filtered    = '';
+        $value       = (string) $value;
         $valueLength = strlen($value);
-        $zeroChar = chr(0);
+        $zeroChar    = chr(0);
 
         for ($i = 0; $i < $valueLength; ++$i) {
             if ($value[$i] == $zeroChar) {
@@ -233,9 +226,9 @@ class Security implements InjectionAwareInterface
             throw new FlashException('Invalid parameter type.');
         }
 
-        $factor = sprintf('%02s', $workFactor);
+        $factor    = sprintf('%02s', $workFactor);
         $saltBytes = $this->getSaltBytes();
-        $salt = '$2a$'.$factor.'$'.$saltBytes;
+        $salt      = '$2a$' . $factor . '$' . $saltBytes;
         return crypt($password, $salt);
     }
 
@@ -272,7 +265,7 @@ class Security implements InjectionAwareInterface
         }
 
         if (is_string($hash) === false) {
-            $hash = (string)$hash;
+            $hash = (string) $hash;
         }
 
         if (strlen($hash) === strlen($passwordHash)) {
@@ -283,7 +276,7 @@ class Security implements InjectionAwareInterface
                 $check |= (ord($hash[$i])) ^ (ord($passwordHash[$i]));
             }
 
-            return (bool)($check === 0 ? true : false);
+            return (bool) ($check === 0 ? true : false);
         }
 
         return false;
@@ -326,7 +319,7 @@ class Security implements InjectionAwareInterface
 
         $randomBytes = openssl_random_pseudo_bytes($numberBytes);
         $base64bytes = base64_encode($randomBytes);
-        $safeBytes = self::filterAlnum($base64bytes);
+        $safeBytes   = self::filterAlnum($base64bytes);
 
         //@warning no length check for $safeBytes
 
@@ -456,4 +449,5 @@ class Security implements InjectionAwareInterface
 
         return $session->get('$PHALCON/CSRF$');
     }
+
 }

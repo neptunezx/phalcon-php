@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Transaction
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Transaction
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Mvc\Model\Transaction\Failed;
@@ -23,8 +25,8 @@ use \Phalcon\DiInterface;
  * all succeed as one atomic action. Phalcon\Transaction is intended to be used with Phalcon_Model_Base.
  * Phalcon Transactions should be created using Phalcon\Transaction\Manager.
  *
- *<code>
- *try {
+ * <code>
+ * try {
  *
  *  $manager = new Phalcon\Mvc\Model\Transaction\Manager();
  *
@@ -47,22 +49,23 @@ use \Phalcon\DiInterface;
  *
  *  $transaction->commit();
  *
- *} catch(Phalcon\Mvc\Model\Transaction\Failed $e) {
+ * } catch(Phalcon\Mvc\Model\Transaction\Failed $e) {
  *  echo 'Failed, reason: ', $e->getMessage();
- *}
+ * }
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/transaction.c
  */
 class Transaction implements TransactionInterface
 {
+
     /**
      * Connection
      *
      * @var null|\Phalcon\Db\AdapterInterface
      * @access protected
-    */
+     */
     protected $_connection;
 
     /**
@@ -70,7 +73,7 @@ class Transaction implements TransactionInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_activeTransaction = false;
 
     /**
@@ -78,7 +81,7 @@ class Transaction implements TransactionInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_isNewTransaction = true;
 
     /**
@@ -86,7 +89,7 @@ class Transaction implements TransactionInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_rollbackOnAbort = false;
 
     /**
@@ -94,7 +97,7 @@ class Transaction implements TransactionInterface
      *
      * @var null|\Phalcon\Mvc\Model\Transaction\ManagerInterface
      * @access protected
-    */
+     */
     protected $_manager;
 
     /**
@@ -102,7 +105,7 @@ class Transaction implements TransactionInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_messages;
 
     /**
@@ -110,7 +113,7 @@ class Transaction implements TransactionInterface
      *
      * @var null|\Phalcon\Mvc\ModelInterface
      * @access protected
-    */
+     */
     protected $_rollbackRecord;
 
     /**
@@ -315,4 +318,5 @@ class Transaction implements TransactionInterface
 
         $this->_rollbackRecord = $record;
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Simple
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\View;
 
 use \Phalcon\Di\Injectable;
@@ -21,21 +13,22 @@ use \Phalcon\Mvc\View\Engine\Php;
  *
  * This component allows to render views without hicherquical levels
  *
- *<code>
+ * <code>
  * $view = new Phalcon\Mvc\View\Simple();
  * echo $view->render('templates/my-view', array('content' => $html));
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/view/simple.c
  */
 class Simple extends Injectable implements EventsAwareInterface, InjectionAwareInterface
 {
+
     /**
      * Options
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_options;
 
     /**
@@ -43,7 +36,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_viewsDir;
 
     /**
@@ -51,7 +44,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_partialsDir;
 
     /**
@@ -59,7 +52,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_viewParams;
 
     /**
@@ -67,7 +60,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_engines = false;
 
     /**
@@ -75,7 +68,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_registeredEngines;
 
     /**
@@ -83,7 +76,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_activeRenderPath;
 
     /**
@@ -91,7 +84,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_content;
 
     /**
@@ -99,7 +92,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
      *
      * @var boolean|\Phalcon\Cache\BackendInterface
      * @access protected
-    */
+     */
     protected $_cache = false;
 
     /**
@@ -107,7 +100,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_cacheOptions;
 
     /**
@@ -150,13 +143,13 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * Register templating engines
      *
-     *<code>
-     *$this->view->registerEngines(array(
+     * <code>
+     * $this->view->registerEngines(array(
      *  ".phtml" => "Phalcon\Mvc\View\Engine\Php",
      *  ".volt" => "Phalcon\Mvc\View\Engine\Volt",
      *  ".mhtml" => "MyCustomEngine"
-     *));
-     *</code>
+     * ));
+     * </code>
      *
      * @param array $engines
      * @throws Exception
@@ -209,14 +202,14 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
                         if (is_string($engine_service) === true) {
                             $engine_object = $this->_dependencyInjector->getShared($engine_service, $arguments);
                         } else {
-                            throw new Exception('Invalid template engine registration for extension: '.$extension);
+                            throw new Exception('Invalid template engine registration for extension: ' . $extension);
                         }
                     }
 
                     $engines[$extension] = $engine_object;
                 }
             }
-            $this->_engines = true;
+            $this->_engines           = true;
             $this->_registeredEngines = $engines;
         }
 
@@ -254,7 +247,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
 
         //Views are rendered in each engine
         foreach ($engines as $extension => $engine) {
-            $view_engine_path = $this->_viewsDir.$extension;
+            $view_engine_path = $this->_viewsDir . $extension;
 
             if (file_exists($view_engine_path) === true) {
                 //Call beforeRenderView if there is an events manager aviailable
@@ -278,7 +271,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
 
         //Always throw an exception if the view does not exist
         if ($not_exists === true) {
-            throw new Exception("View '".$this->_viewsDir."' was not found in the views directory");
+            throw new Exception("View '" . $this->_viewsDir . "' was not found in the views directory");
         }
 
         //Call afterRender event
@@ -313,7 +306,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
             //Check if the cache is started, the first time a cache is started we start
             //the cache
             if ($cache->isStarted() === false) {
-                $key = null;
+                $key      = null;
                 $lifetime = null;
 
                 if (is_array($this->_cacheOptions) === true) {
@@ -500,9 +493,9 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * Cache the actual view render to certain level
      *
-     *<code>
+     * <code>
      *  $this->view->cache(array('key' => 'my-key', 'lifetime' => 86400));
-     *</code>
+     * </code>
      *
      * @param boolean|array|null $options
      * @return \Phalcon\Mvc\View\Simple
@@ -515,7 +508,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
         }
 
         if (is_array($options) === true) {
-            $this->_cache = true;
+            $this->_cache        = true;
             $this->_cacheOptions = $options;
         } elseif (is_bool($options) === true) {
             $this->_cache = true;
@@ -531,9 +524,9 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * Adds parameters to views (alias of setVar)
      *
-     *<code>
+     * <code>
      *  $this->view->setParamToView('products', $products);
-     *</code>
+     * </code>
      *
      * @param string $key
      * @param mixed $value
@@ -558,9 +551,9 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * Set all the render params
      *
-     *<code>
+     * <code>
      *  $this->view->setVars(array('products' => $products));
-     *</code>
+     * </code>
      *
      * @param array $params
      * @param boolean|null $merge
@@ -595,9 +588,9 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * Set a single view parameter
      *
-     *<code>
+     * <code>
      *  $this->view->setVar('products', $products);
-     *</code>
+     * </code>
      *
      * @param string $key
      * @param mixed $value
@@ -652,9 +645,9 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * Externally sets the view content
      *
-     *<code>
+     * <code>
      *  $this->view->setContent("<h1>hello</h1>");
-     *</code>
+     * </code>
      *
      * @param string $content
      * @return \Phalcon\Mvc\View\Simple
@@ -694,9 +687,9 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * Magic method to pass variables to the views
      *
-     *<code>
+     * <code>
      *  $this->view->products = $products;
-     *</code>
+     * </code>
      *
      * @param string $key
      * @param mixed $value
@@ -718,9 +711,9 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * Magic method to retrieve a variable passed to the view
      *
-     *<code>
+     * <code>
      *  echo $this->view->products;
-     *</code>
+     * </code>
      *
      * @param string $key
      * @return mixed
@@ -738,4 +731,5 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
 
         return null;
     }
+
 }

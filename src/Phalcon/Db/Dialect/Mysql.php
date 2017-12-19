@@ -1,13 +1,5 @@
 <?php
-/**
- * Mysql
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db\Dialect;
 
 use \Phalcon\Db\Dialect;
@@ -26,12 +18,13 @@ use \Phalcon\Db\Exception;
  */
 class Mysql extends Dialect implements DialectInterface
 {
+
     /**
      * Escape Char
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_escapeChar = '`';
 
     /**
@@ -50,25 +43,25 @@ class Mysql extends Dialect implements DialectInterface
 
         $size = $column->getSize();
 
-        switch ((int)$column->getType()) {
+        switch ((int) $column->getType()) {
             case 0:
-                return 'INT('.$size.')'.($column->isUnsigned() === true ? ' UNSIGNED' : '');
+                return 'INT(' . $size . ')' . ($column->isUnsigned() === true ? ' UNSIGNED' : '');
                 break;
             case 1:
                 return 'DATE';
                 break;
             case 2:
-                return 'VARCHAR('.$size.')';
+                return 'VARCHAR(' . $size . ')';
                 break;
             case 3:
-                return 'DECIMAL('.$size.','.$column->getScale().')'.
-                ($column->isUnsigned() === true ? ' UNSIGNED' : '');
+                return 'DECIMAL(' . $size . ',' . $column->getScale() . ')' .
+                    ($column->isUnsigned() === true ? ' UNSIGNED' : '');
                 break;
             case 4:
                 return 'DATETIME';
                 break;
             case 5:
-                return 'CHAR('.$size.')';
+                return 'CHAR(' . $size . ')';
                 break;
             case 6:
                 return 'TEXT';
@@ -78,9 +71,9 @@ class Mysql extends Dialect implements DialectInterface
 
                 $scale = $column->getScale();
                 if ($size == true) {
-                    $columnSql .= '('.$size;
+                    $columnSql .= '(' . $size;
                     if ($scale == true) {
-                        $columnSql .= ','.$scale.')';
+                        $columnSql .= ',' . $scale . ')';
                     } else {
                         $columnSql .= ')';
                     }
@@ -116,18 +109,18 @@ class Mysql extends Dialect implements DialectInterface
         }
 
         if (is_object($column) === false ||
-           $column instanceof ColumnInterface === false) {
+            $column instanceof ColumnInterface === false) {
             throw new Exception('Column parameter must be an instance of Phalcon\\Db\\Column');
         }
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'ALTER TABLE `'.$schemaName.'`.`'.$tableName.'` ADD ';
+            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` ADD ';
         } else {
-            $sql = 'ALTER TABLE `'.$tableName.'` ADD ';
+            $sql = 'ALTER TABLE `' . $tableName . '` ADD ';
         }
 
-        $sql .= '`'.$column->getName().'` '.$this->getColumnDefinition($column);
+        $sql .= '`' . $column->getName() . '` ' . $this->getColumnDefinition($column);
 
         if ($column->isNotNull() === true) {
             $sql .= ' NOT NULL';
@@ -138,7 +131,7 @@ class Mysql extends Dialect implements DialectInterface
         } else {
             $afterPosition = $column->getAfterPosition();
             if ($afterPosition == true) {
-                $sql .= ' AFTER '.$afterPosition;
+                $sql .= ' AFTER ' . $afterPosition;
             }
         }
 
@@ -167,12 +160,12 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'ALTER TABLE `'.$schemaName.'`.`'.$tableName.'` MODIFY ';
+            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` MODIFY ';
         } else {
-            $sql = 'ALTER TABLE `'.$tableName.'` MODIFY ';
+            $sql = 'ALTER TABLE `' . $tableName . '` MODIFY ';
         }
 
-        $sql .= '`'.$column->getName().'` '.$this->getColumnDefinition($column);
+        $sql .= '`' . $column->getName() . '` ' . $this->getColumnDefinition($column);
 
         if ($column->isNotNull() === true) {
             $sql .= ' NOT NULL';
@@ -199,12 +192,12 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'ALTER TABLE `'.$schemaName.'`.`'.$tableName.'` DROP COLUMN ';
+            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` DROP COLUMN ';
         } else {
-            $sql = 'ALTER TABLE `'.$tableName.'` DROP COLUMN ';
+            $sql = 'ALTER TABLE `' . $tableName . '` DROP COLUMN ';
         }
 
-        return $sql.'`'.$columnName.'`';
+        return $sql . '`' . $columnName . '`';
     }
 
     /**
@@ -229,14 +222,14 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'ALTER TABLE `'.$schemaName.'`.`'.$tableName.'` ADD INDEX ';
+            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` ADD INDEX ';
         } else {
-            $sql = 'ALTER TABLE `'.$tableName.'` ADD INDEX ';
+            $sql = 'ALTER TABLE `' . $tableName . '` ADD INDEX ';
         }
 
         $columns = $index->getColumns();
 
-        return $sql.'`'.$index->getName().'` ('.$this->getColumnList($columns).')';
+        return $sql . '`' . $index->getName() . '` (' . $this->getColumnList($columns) . ')';
     }
 
     /**
@@ -257,12 +250,12 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'ALTER TABLE `'.$schemaName.'`.`'.$tableName.'` DROP INDEX ';
+            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` DROP INDEX ';
         } else {
-            $sql = 'ALTER TABLE `'.$tableName.'` DROP INDEX ';
+            $sql = 'ALTER TABLE `' . $tableName . '` DROP INDEX ';
         }
 
-        return $sql.'`'.$indexName.'`';
+        return $sql . '`' . $indexName . '`';
     }
 
     /**
@@ -287,12 +280,12 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'ALTER TABLE `'.$schemaName.'`.`'.$tableName.'` ADD PRIMARY KEY ';
+            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` ADD PRIMARY KEY ';
         } else {
-            $sql = 'ALTER TABLE `'.$tableName.'` ADD PRIMARY KEY ';
+            $sql = 'ALTER TABLE `' . $tableName . '` ADD PRIMARY KEY ';
         }
 
-        return $sql.'('.$this->getColumnList($index->getColumns()).')';
+        return $sql . '(' . $this->getColumnList($index->getColumns()) . ')';
     }
 
     /**
@@ -311,9 +304,9 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return 'ALTER TABLE `'.$schemaName.'`.`'.$tableName.'` DROP PRIMARY KEY';
+            return 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` DROP PRIMARY KEY';
         } elseif (is_null($schemaName) === true) {
-            return 'ALTER TABLE `'.$tableName.'` DROP PRIMARY KEY';
+            return 'ALTER TABLE `' . $tableName . '` DROP PRIMARY KEY';
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -341,22 +334,22 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'ALTER TABLE `'.$schemaName.'`.`'.$tableName.'` ';
+            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` ';
         } else {
-            $sql = 'ALTER TABLE `'.$tableName.'` ';
+            $sql = 'ALTER TABLE `' . $tableName . '` ';
         }
 
-        $sql .= 'ADD CONSTRAINT `'.$reference->getName().'` FOREIGN KEY ('.
-        $this->getColumnList($reference->getColumns()).') REFERENCES ';
+        $sql .= 'ADD CONSTRAINT `' . $reference->getName() . '` FOREIGN KEY (' .
+            $this->getColumnList($reference->getColumns()) . ') REFERENCES ';
 
         //Add the schema
         $referencedSchema = $reference->getReferencedSchema();
         if (is_string($referencedSchema) === true) {
-            $sql .= '`'.$referencedSchema.'`.';
+            $sql .= '`' . $referencedSchema . '`.';
         }
 
-        return $sql.'`'.$reference->getReferencedTable().'`('.
-            $this->getColumnList($reference->getReferencedColumns()).')';
+        return $sql . '`' . $reference->getReferencedTable() . '`(' .
+            $this->getColumnList($reference->getReferencedColumns()) . ')';
     }
 
     /**
@@ -377,12 +370,12 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'ALTER TABLE `'.$schemaName.'`.`'.$tableName.'` DROP FOREIGN KEY ';
+            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` DROP FOREIGN KEY ';
         } else {
-            $sql = 'ALTER TABLE `'.$tableName.'` DROP FOREIGN KEY ';
+            $sql = 'ALTER TABLE `' . $tableName . '` DROP FOREIGN KEY ';
         }
 
-        return $sql.'`'.$referenceName.'`';
+        return $sql . '`' . $referenceName . '`';
     }
 
     /**
@@ -400,26 +393,26 @@ class Mysql extends Dialect implements DialectInterface
 
         if (isset($definition['options']) === true) {
             $tableOptions = array();
-            $options = $definition['options'];
+            $options      = $definition['options'];
 
             //Check if there is an ENGINE option
             if (isset($options['ENGINE']) === true &&
                 $options['ENGINE'] == true) {
-                $tableOptions[] = 'ENGINE='.$options['ENGINE'];
+                $tableOptions[] = 'ENGINE=' . $options['ENGINE'];
             }
 
             //Check if there is a n AUTO_INCREMENT option
             if (isset($options['AUTO_INCREMENT']) === true &&
                 $options['AUTO_INCREMENT'] == true) {
-                $tableOptions[] = 'AUTO_INCREMENT='.$options['AUTO_INCREMENT'];
+                $tableOptions[] = 'AUTO_INCREMENT=' . $options['AUTO_INCREMENT'];
             }
 
             //Check if there is an TABLE_COLLATION option
             if (isset($options['TABLE_COLLATION']) === true &&
                 $options['TABLE_COLLATION'] == true) {
                 $collationParts = explode('_', $options['TABLE_COLLATION']);
-                $tableOptions[] = 'DEFAULT CHARSET='.$collationParts[0];
-                $tableOptions[] = 'COLLATE='.$options['TABLE_COLLATION'];
+                $tableOptions[] = 'DEFAULT CHARSET=' . $collationParts[0];
+                $tableOptions[] = 'COLLATE=' . $options['TABLE_COLLATION'];
             }
 
             if (count($tableOptions) > 0) {
@@ -450,28 +443,28 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $table = '`'.$schemaName.'`.`'.$tableName.'`';
+            $table = '`' . $schemaName . '`.`' . $tableName . '`';
         } else {
-            $table = '`'.$tableName.'`';
+            $table = '`' . $tableName . '`';
         }
 
         $temporary = false;
         if (isset($definition['options']) === true &&
             isset($definition['options']['temporary']) === true) {
-            $temporary = (bool)$definition['options']['temporary'];
+            $temporary = (bool) $definition['options']['temporary'];
         }
 
         //Create a temporary or normal table
         if ($temporary === true) {
-            $sql = 'CREATE TEMPORARY TABLE '.$table." (\n\t";
+            $sql = 'CREATE TEMPORARY TABLE ' . $table . " (\n\t";
         } else {
-            $sql = 'CREATE TABLE '.$table." (\n\t";
+            $sql = 'CREATE TABLE ' . $table . " (\n\t";
         }
 
         $createLines = array();
 
         foreach ($definition['columns'] as $column) {
-            $columnLine = '`'.$column->getName().'` '.$this->getColumnDefinition($column);
+            $columnLine = '`' . $column->getName() . '` ' . $this->getColumnDefinition($column);
 
             //Add a NOT NULL clause
             if ($column->isNotNull() === true) {
@@ -496,9 +489,9 @@ class Mysql extends Dialect implements DialectInterface
             foreach ($definition['indexes'] as $index) {
                 $indexName = $index->getName();
                 if ($indexName === 'PRIMARY') {
-                    $createLines[] = 'PRIMARY KEY ('.$this->getColumnList($index->getColumns()).')';
+                    $createLines[] = 'PRIMARY KEY (' . $this->getColumnList($index->getColumns()) . ')';
                 } else {
-                    $createLines[] = 'KEY `'.$indexName.'` ('.$this->getColumnList($index->getColumns()).')';
+                    $createLines[] = 'KEY `' . $indexName . '` (' . $this->getColumnList($index->getColumns()) . ')';
                 }
             }
         }
@@ -506,20 +499,20 @@ class Mysql extends Dialect implements DialectInterface
         //Create related references
         if (isset($definition['references']) === true) {
             foreach ($definition['references'] as $reference) {
-                $name = $reference->getName();
+                $name              = $reference->getName();
                 //$columns = $reference->getColumns();
                 //$columnList = $this->getColumnList($columns);
-                $referencedTable = $reference->getReferencedTable();
+                $referencedTable   = $reference->getReferencedTable();
                 $referencedColumns = $reference->getReferencedColumns();
-                $columnList = $this->getColumnList($referencedColumns);
+                $columnList        = $this->getColumnList($referencedColumns);
 
-                $constraintSql = 'CONSTRAINT `'.$name.'` FOREIGN KEY ('.$columnList.')';
-                $createLines[] = $constraintSql.' REFERENCES `'.$referencedTable.'`('.$columnList.')';
+                $constraintSql = 'CONSTRAINT `' . $name . '` FOREIGN KEY (' . $columnList . ')';
+                $createLines[] = $constraintSql . ' REFERENCES `' . $referencedTable . '`(' . $columnList . ')';
                 //@note there should be two different kinds of $columnList
             }
         }
 
-        $sql .= implode(",\n\t", $createLines)."\n)";
+        $sql .= implode(",\n\t", $createLines) . "\n)";
         if (isset($definition['options']) === true) {
             $sql .= $this->_getTableOptions($definition);
         }
@@ -550,15 +543,15 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $table = '`'.$schemaName.'`.`'.$tableName.'`';
+            $table = '`' . $schemaName . '`.`' . $tableName . '`';
         } else {
-            $table = '`'.$tableName.'`';
+            $table = '`' . $tableName . '`';
         }
 
         if ($ifExists === true) {
-            return 'DROP TABLE IF EXISTS '.$table;
+            return 'DROP TABLE IF EXISTS ' . $table;
         } else {
-            return 'DROP TABLE '.$table;
+            return 'DROP TABLE ' . $table;
         }
     }
 
@@ -584,12 +577,12 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $view = '`'.$schemaName.'`.`'.$viewName.'`';
+            $view = '`' . $schemaName . '`.`' . $viewName . '`';
         } else {
-            $view = '`'.$viewName.'`';
+            $view = '`' . $viewName . '`';
         }
 
-        return 'CREATE VIEW '.$view.' AS '.$definition['sql'];
+        return 'CREATE VIEW ' . $view . ' AS ' . $definition['sql'];
     }
 
     /**
@@ -615,15 +608,15 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $view = $schemaName.'.'.$viewName; //@note no escape
+            $view = $schemaName . '.' . $viewName; //@note no escape
         } else {
             $view = $viewName;
         }
 
         if ($ifExists === true) {
-            return 'DROP VIEW IF EXISTS '.$view;
+            return 'DROP VIEW IF EXISTS ' . $view;
         } else {
-            return 'DROP VIEW '.$view;
+            return 'DROP VIEW ' . $view;
         }
     }
 
@@ -648,10 +641,10 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName === true) {
-            return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME`= '".$tableName."' AND `TABLE_SCHEMA`='".$schemaName."'";
+            return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME`= '" . $tableName . "' AND `TABLE_SCHEMA`='" . $schemaName . "'";
         }
 
-        return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME`='".$tableName."'";
+        return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME`='" . $tableName . "'";
     }
 
     /**
@@ -670,18 +663,18 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_NAME`= '".$viewName."' AND `TABLE_SCHEMA`='".$schemaName."'";
+            return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_NAME`= '" . $viewName . "' AND `TABLE_SCHEMA`='" . $schemaName . "'";
         }
 
-        return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_NAME`='".$viewName."'";
+        return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_NAME`='" . $viewName . "'";
     }
 
     /**
      * Generates SQL describing a table
      *
-     *<code>
+     * <code>
      *  print_r($dialect->describeColumns("posts")) ?>
-     *</code>
+     * </code>
      *
      * @param string $table
      * @param string|null $schema
@@ -696,18 +689,18 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schema) === true &&
             $schema == true) {
-            return 'DESCRIBE `'.$schema.'`.`'.$table.'`';
+            return 'DESCRIBE `' . $schema . '`.`' . $table . '`';
         }
 
-        return 'DESCRIBE `'.$table.'`';
+        return 'DESCRIBE `' . $table . '`';
     }
 
     /**
      * List all tables on database
      *
-     *<code>
+     * <code>
      *  print_r($dialect->listTables("blog")) ?>
-     *</code>
+     * </code>
      *
      * @param string|null $schemaName
      * @return array
@@ -716,7 +709,7 @@ class Mysql extends Dialect implements DialectInterface
     {
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return 'SHOW TABLES FROM `'.$schemaName.'`';
+            return 'SHOW TABLES FROM `' . $schemaName . '`';
         }
 
         return 'SHOW TABLES';
@@ -732,7 +725,7 @@ class Mysql extends Dialect implements DialectInterface
     {
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return "SELECT `TABLE_NAME` AS view_name FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_SCHEMA` = '".$schemaName."' ORDER BY view_name";
+            return "SELECT `TABLE_NAME` AS view_name FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_SCHEMA` = '" . $schemaName . "' ORDER BY view_name";
         }
 
         return 'SELECT `TABLE_NAME` AS view_name FROM `INFORMATION_SCHEMA`.`VIEWS` ORDER BY view_name';
@@ -754,10 +747,10 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schema) === true &&
             $schema == true) {
-            return 'SHOW INDEXES FROM `'.$schema.'`.`'.$table.'`';
+            return 'SHOW INDEXES FROM `' . $schema . '`.`' . $table . '`';
         }
 
-        return 'SHOW INDEXES FROM `'.$table.'`';
+        return 'SHOW INDEXES FROM `' . $table . '`';
     }
 
     /**
@@ -778,9 +771,9 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schema) === true &&
             $schema == true) {
-            $sql .= 'CONSTRAINT_SCHEMA = "'.$schema.'" AND TABLE_NAME "'.$table.'"';
+            $sql .= 'CONSTRAINT_SCHEMA = "' . $schema . '" AND TABLE_NAME "' . $table . '"';
         } else {
-            $sql .= 'TABLE NAME = "'.$table.'"';
+            $sql .= 'TABLE NAME = "' . $table . '"';
         }
 
         return $sql;
@@ -804,11 +797,12 @@ class Mysql extends Dialect implements DialectInterface
 
         if (is_string($schema) === true &&
             $schema == true) {
-            $sql .= 'TABLES.TABLE_SCHEMA = "'.$schema.'" AND TABLES.TABLE_NAME = "'.$table.'"';
+            $sql .= 'TABLES.TABLE_SCHEMA = "' . $schema . '" AND TABLES.TABLE_NAME = "' . $table . '"';
         } else {
-            $sql .= 'TABLES.TABLE_NAME = "'.$table.'"';
+            $sql .= 'TABLES.TABLE_NAME = "' . $table . '"';
         }
 
         return $sql;
     }
+
 }

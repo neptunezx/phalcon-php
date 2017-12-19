@@ -1,13 +1,5 @@
 <?php
-/**
- * PDO
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db\Result;
 
 use \Phalcon\Db\Exception;
@@ -31,12 +23,13 @@ use \PDOStatement;
  */
 class Pdo
 {
+
     /**
      * Connection
      *
      * @var null|\Phalcon\Db\AdapterInterface
      * @access protected
-    */
+     */
     protected $_connection;
 
     /**
@@ -44,7 +37,7 @@ class Pdo
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_result;
 
     /**
@@ -52,7 +45,7 @@ class Pdo
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_fetchMode = 4;
 
     /**
@@ -60,7 +53,7 @@ class Pdo
      *
      * @var null|\PDOStatement
      * @access protected
-    */
+     */
     protected $_pdoStatement;
 
     /**
@@ -68,7 +61,7 @@ class Pdo
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_sqlStatement;
 
     /**
@@ -76,7 +69,7 @@ class Pdo
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_bindParams;
 
     /**
@@ -84,7 +77,7 @@ class Pdo
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_bindTypes;
 
     /**
@@ -92,7 +85,7 @@ class Pdo
      *
      * @var boolean|int
      * @access protected
-    */
+     */
     protected $_rowCount = false;
 
     /**
@@ -100,7 +93,7 @@ class Pdo
      *
      * @var null|int
      * @access private
-    */
+     */
     private $_rowOffset;
 
     /**
@@ -124,7 +117,7 @@ class Pdo
             throw new Exception('Invalid PDOStatement supplied to Phalcon\\Db\\Result\\Pdo');
         }
 
-        $this->_connection = $connection;
+        $this->_connection   = $connection;
         $this->_pdoStatement = $result;
 
         if (is_string($sqlStatement) === true) {
@@ -161,13 +154,13 @@ class Pdo
      * Fetches an array/object of strings that corresponds to the fetched row, or FALSE if there are no more rows.
      * This method is affected by the active fetch flag set using \Phalcon\Db\Result\Pdo::setFetchMode
      *
-     *<code>
+     * <code>
      *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
      *  $result->setFetchMode(Phalcon\Db::FETCH_OBJ);
      *  while ($robot = $result->fetch()) {
      *      echo $robot->name;
      *  }
-     *</code>
+     * </code>
      *
      * @return mixed
      */
@@ -177,9 +170,7 @@ class Pdo
             return $this->_pdoStatement->fetch();
         } else {
             return $this->_pdoStatement->fetch(
-                $this->_fetchMode,
-                \PDO::FETCH_ORI_ABS,
-                $this->_rowOffset
+                    $this->_fetchMode, \PDO::FETCH_ORI_ABS, $this->_rowOffset
             );
         }
     }
@@ -188,13 +179,13 @@ class Pdo
      * Returns an array of strings that corresponds to the fetched row, or FALSE if there are no more rows.
      * This method is affected by the active fetch flag set using \Phalcon\Db\Result\Pdo::setFetchMode
      *
-     *<code>
+     * <code>
      *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
      *  $result->setFetchMode(Phalcon\Db::FETCH_NUM);
      *  while ($robot = $result->fetchArray()) {
      *      print_r($robot);
      *  }
-     *</code>
+     * </code>
      *
      * @return mixed
      */
@@ -207,10 +198,10 @@ class Pdo
      * Returns an array of arrays containing all the records in the result
      * This method is affected by the active fetch flag set using \Phalcon\Db\Result\Pdo::setFetchMode
      *
-     *<code>
+     * <code>
      *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
      *  $robots = $result->fetchAll();
-     *</code>
+     * </code>
      *
      * @return array
      */
@@ -222,10 +213,10 @@ class Pdo
     /**
      * Gets number of rows returned by a resulset
      *
-     *<code>
+     * <code>
      *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
      *  echo 'There are ', $result->numRows(), ' rows in the resulset';
-     *</code>
+     * </code>
      *
      * @return int
      */
@@ -250,15 +241,13 @@ class Pdo
                 //If the sql_statement starts with SELECT COUNT(*) we don't make the count
                 if (strpos($sqlStatement, 'SELECT COUNT(*) ') !== 0) {
                     $bindParams = $this->_bindParams;
-                    $bindTypes = $this->_bindTypes;
-                    $matches = null;
+                    $bindTypes  = $this->_bindTypes;
+                    $matches    = null;
 
                     if (preg_match("/^SELECT\\s+(.*)$/i", $sqlStatement, $matches) == true) {
                         $rowCount = $this->_connection->query(
-                            "SELECT COUNT(*) \"numrows\" FROM (SELECT ".$matches[0].')',
-                            $bindParams,
-                            $bindTypes
-                        )->fetch()->numRows();
+                                "SELECT COUNT(*) \"numrows\" FROM (SELECT " . $matches[0] . ')', $bindParams, $bindTypes
+                            )->fetch()->numRows();
                     }
                 } else {
                     $rowCount = 1;
@@ -275,11 +264,11 @@ class Pdo
     /**
      * Moves internal resulset cursor to another position letting us to fetch a certain row
      *
-     *<code>
+     * <code>
      *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
      *  $result->dataSeek(2); // Move to third row on result
      *  $row = $result->fetch(); // Fetch third row
-     *</code>
+     * </code>
      *
      * @param int $number
      * @return null|false
@@ -301,7 +290,7 @@ class Pdo
     /**
      * Changes the fetching mode affecting \Phalcon\Db\Result\Pdo::fetch()
      *
-     *<code>
+     * <code>
      *  //Return array with integer indexes
      *  $result->setFetchMode(Phalcon\Db::FETCH_NUM);
      *
@@ -313,7 +302,7 @@ class Pdo
      *
      *  //Return an object
      *  $result->setFetchMode(Phalcon\Db::FETCH_OBJ);
-     *</code>
+     * </code>
      *
      * @param int $fetchMode
      * @throws Exception
@@ -357,4 +346,5 @@ class Pdo
     {
         return $this->_pdoStatement;
     }
+
 }

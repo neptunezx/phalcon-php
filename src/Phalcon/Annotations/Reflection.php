@@ -1,13 +1,5 @@
 <?php
-/**
- * Reflection
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations;
 
 /**
@@ -15,7 +7,7 @@ namespace Phalcon\Annotations;
  *
  * Allows to manipulate the annotations reflection in an OO manner
  *
- *<code>
+ * <code>
  * //Parse the annotations in a class
  * $reader = new \Phalcon\Annotations\Reader();
  * $parsing = $reader->parse('MyComponent');
@@ -25,18 +17,19 @@ namespace Phalcon\Annotations;
  *
  * //Get the annotations in the class docblock
  * $classAnnotations = $reflection->getClassAnnotations();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/annotations/reflection.c
  */
 class Reflection
 {
+
     /**
      * Reflection Data
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_reflectionData;
 
     /**
@@ -44,7 +37,7 @@ class Reflection
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_classAnnotations;
 
     /**
@@ -52,7 +45,7 @@ class Reflection
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_methodAnnotations;
 
     /**
@@ -60,7 +53,7 @@ class Reflection
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_propertyAnnotations;
 
     /**
@@ -105,7 +98,7 @@ class Reflection
                 $this->_methodAnnotations = array();
                 if (empty($this->_reflectionData['methods']) === false) {
                     foreach ($this->_reflectionData['methods'] as $methodName => $reflectionMethod) {
-                        $collection = new Collection($reflectionMethod);
+                        $collection                            = new Collection($reflectionMethod);
                         $this->_methodAnnotations[$methodName] = $collection;
                     }
 
@@ -132,7 +125,7 @@ class Reflection
                 $this->_propertyAnnotations = array();
                 if (empty($this->_reflectionData['properties']) === false) {
                     foreach ($this->_reflectionData['properties'] as $property => $reflectionProperty) {
-                        $collection = new Collection($reflectionProperty);
+                        $collection                            = new Collection($reflectionProperty);
                         $this->_propertyAnnotations[$property] = $collection;
                     }
 
@@ -173,4 +166,5 @@ class Reflection
 
         return new Reflection();
     }
+
 }

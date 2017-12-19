@@ -1,13 +1,5 @@
 <?php
-/**
- * Annotations XCache Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations\Adapter;
 
 use \Phalcon\Annotations\AdapterInterface;
@@ -20,14 +12,15 @@ use \Phalcon\Annotations\Reflection;
  *
  * Stores the parsed annotations to XCache. This adapter is suitable for production
  *
- *<code>
+ * <code>
  * $annotations = new \Phalcon\Annotations\Adapter\Xcache();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/annotations/adapter/xcache.c
  */
 class Xcache extends Adapter implements AdapterInterface
 {
+
     /**
      * Reads parsed annotations from XCache
      *
@@ -41,7 +34,7 @@ class Xcache extends Adapter implements AdapterInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $serialized = xcache_get(strtolower('_PHAN'.$key));
+        $serialized = xcache_get(strtolower('_PHAN' . $key));
         if (is_string($serialized) === true) {
             $unserialized = unserialize($serialized);
             return (is_object($unserialized) === true ? $unserialized : null);
@@ -64,6 +57,7 @@ class Xcache extends Adapter implements AdapterInterface
         }
 
         $serialized = serialize($data);
-        xcache_set(strtolower('_PHAN'.$key), $serialized);
+        xcache_set(strtolower('_PHAN' . $key), $serialized);
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Engine
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\View;
 
 use \Phalcon\Di\Injectable;
@@ -26,12 +18,13 @@ use \Phalcon\Mvc\View\Exception;
  */
 abstract class Engine extends Injectable implements EventsAwareInterface, InjectionAwareInterface
 {
+
     /**
      * View
      *
      * @var null|\Phalcon\Mvc\ViewInterface
      * @access protected
-    */
+     */
     protected $_view;
 
     /**
@@ -53,7 +46,7 @@ abstract class Engine extends Injectable implements EventsAwareInterface, Inject
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->_view = $view;
+        $this->_view               = $view;
         $this->_dependencyInjector = $dependencyInjector;
     }
 
@@ -98,4 +91,5 @@ abstract class Engine extends Injectable implements EventsAwareInterface, Inject
     {
         return $this->_view;
     }
+
 }

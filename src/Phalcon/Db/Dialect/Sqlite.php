@@ -1,13 +1,5 @@
 <?php
-/**
- * SQLite
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db\Dialect;
 
 use \Phalcon\Db\Dialect;
@@ -25,12 +17,13 @@ use \Phalcon\Db\Exception;
  */
 class Sqlite extends Dialect implements DialectInterface
 {
+
     /**
      * Escape Character
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_escapeChar = '"';
 
     /**
@@ -47,19 +40,19 @@ class Sqlite extends Dialect implements DialectInterface
             throw new Exception('Column definition must be an instance of Phalcon\\Db\\Column');
         }
 
-        switch ((int)$column->getType()) {
+        switch ((int) $column->getType()) {
             case 0:
                 return 'INT';
             case 1:
                 return 'DATE';
             case 2:
-                return 'VARCHAR('.$column->getSize().')';
+                return 'VARCHAR(' . $column->getSize() . ')';
             case 3:
-                return 'NUMERIC('.$column->getSize().','.$column->getScale().')';
+                return 'NUMERIC(' . $column->getSize() . ',' . $column->getScale() . ')';
             case 4:
                 return 'TIMESTAMP';
             case 5:
-                return 'CHARACTER('.$column->getSize().')';
+                return 'CHARACTER(' . $column->getSize() . ')';
             case 6:
                 return 'TEXT';
             case 7:
@@ -91,12 +84,12 @@ class Sqlite extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'ALTER TABLE "'.$schemaName.'"."'.$tableName.'" ADD COLUMN ';
+            $sql = 'ALTER TABLE "' . $schemaName . '"."' . $tableName . '" ADD COLUMN ';
         } else {
-            $sql = 'ALTER TABLE "'.$tableName.'" ADD COLUMN ';
+            $sql = 'ALTER TABLE "' . $tableName . '" ADD COLUMN ';
         }
 
-        $sql .= '"'.$column->getName().'" '.$this->getColumnDefinition($column);
+        $sql .= '"' . $column->getName() . '" ' . $this->getColumnDefinition($column);
 
         if ($column->isNotNull() === true) {
             $sql .= ' NOT NULL';
@@ -155,12 +148,12 @@ class Sqlite extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $sql = 'CREATE INDEX "'.$schemaName.'"."'.$index->getName().'" ON "'.$tableName.'" (';
+            $sql = 'CREATE INDEX "' . $schemaName . '"."' . $index->getName() . '" ON "' . $tableName . '" (';
         } else {
-            $sql = 'CREATE INDEX "'.$index->getName().'" ON "'.$tableName.'" (';
+            $sql = 'CREATE INDEX "' . $index->getName() . '" ON "' . $tableName . '" (';
         }
 
-        return $sql.$this->getColumnList($index->getColumns()).')';
+        return $sql . $this->getColumnList($index->getColumns()) . ')';
     }
 
     /**
@@ -179,9 +172,9 @@ class Sqlite extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            return 'DROP INDEX "'.$schemaName.'"."'.$indexName.'"';
+            return 'DROP INDEX "' . $schemaName . '"."' . $indexName . '"';
         } else {
-            return 'DROP INDEX "'.$indexName.'"';
+            return 'DROP INDEX "' . $indexName . '"';
         }
     }
 
@@ -287,15 +280,15 @@ class Sqlite extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $table = $schemaName.'"'."".$tableName;
+            $table = $schemaName . '"' . "" . $tableName;
         } else {
             $table = $tableName;
         }
 
         if ($ifExists === true) {
-            return 'DROP TABLE IF EXISTS "'.$table.'"';
+            return 'DROP TABLE IF EXISTS "' . $table . '"';
         } else {
-            return 'DROP TABLE "'.$table.'"';
+            return 'DROP TABLE "' . $table . '"';
         }
     }
 
@@ -321,12 +314,12 @@ class Sqlite extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $view = $schemaName.'"."'.$viewName;
+            $view = $schemaName . '"."' . $viewName;
         } else {
             $view = $viewName;
         }
 
-        return 'CREATE VIEW "'.$view.'" AS '.$definition['sql'];
+        return 'CREATE VIEW "' . $view . '" AS ' . $definition['sql'];
     }
 
     /**
@@ -352,15 +345,15 @@ class Sqlite extends Dialect implements DialectInterface
 
         if (is_string($schemaName) === true &&
             $schemaName == true) {
-            $view = $schemaName.'"."'.$viewName;
+            $view = $schemaName . '"."' . $viewName;
         } else {
             $view = $viewName;
         }
 
         if ($ifExists === true) {
-            return 'DROP VIEW IF EXISTS "'.$view.'"';
+            return 'DROP VIEW IF EXISTS "' . $view . '"';
         } else {
-            return 'DROP VIEW "'.$view.'"';
+            return 'DROP VIEW "' . $view . '"';
         }
     }
 
@@ -382,7 +375,7 @@ class Sqlite extends Dialect implements DialectInterface
         }
 
         //@note no schema
-        return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM sqlite_master WHERE type='table' AND tbl_name='".$tableName."'";
+        return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM sqlite_master WHERE type='table' AND tbl_name='" . $tableName . "'";
     }
 
     /**
@@ -400,7 +393,7 @@ class Sqlite extends Dialect implements DialectInterface
         }
 
         //@note no schema
-        return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM sqlite_master WHERE type='view' AND tbl_name='".$viewName."'";
+        return "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM sqlite_master WHERE type='view' AND tbl_name='" . $viewName . "'";
     }
 
     /**
@@ -420,7 +413,7 @@ class Sqlite extends Dialect implements DialectInterface
         }
 
         //@note no schema
-        return "PRAGMA table_info('".$table."')";
+        return "PRAGMA table_info('" . $table . "')";
     }
 
     /**
@@ -434,7 +427,7 @@ class Sqlite extends Dialect implements DialectInterface
     public function listTables($schemaName = null)
     {
         //@note no schema
-        return  "SELECT tbl_name FROM sqlite_master WHERE type = 'table' ORDER BY tbl_name";
+        return "SELECT tbl_name FROM sqlite_master WHERE type = 'table' ORDER BY tbl_name";
     }
 
     /**
@@ -463,7 +456,7 @@ class Sqlite extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        return "PRAGMA index_list('".$table."')";
+        return "PRAGMA index_list('" . $table . "')";
     }
 
     /**
@@ -479,7 +472,7 @@ class Sqlite extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        return "'PRAGMA index_info('".$indexName."')";
+        return "'PRAGMA index_info('" . $indexName . "')";
     }
 
     /**
@@ -497,7 +490,7 @@ class Sqlite extends Dialect implements DialectInterface
         }
 
         //@note no schema
-        return "PRAGMA foreign_key_list('".$table."')";
+        return "PRAGMA foreign_key_list('" . $table . "')";
     }
 
     /**
@@ -511,4 +504,5 @@ class Sqlite extends Dialect implements DialectInterface
     {
         return '';
     }
+
 }

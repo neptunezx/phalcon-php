@@ -1,13 +1,5 @@
 <?php
-/**
- * Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db;
 
 use \Phalcon\Db\Exception;
@@ -27,6 +19,7 @@ use \Phalcon\Events\ManagerInterface;
  */
 abstract class Adapter implements EventsAwareInterface
 {
+
     /**
      * Events Manager
      *
@@ -80,7 +73,7 @@ abstract class Adapter implements EventsAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_sqlStatement;
 
     /**
@@ -138,20 +131,20 @@ abstract class Adapter implements EventsAwareInterface
 
         //Every new connection created obtain a consecutive number from the static
         //property self::$_connectionConsecutive
-        $this->_connectionId = self::$_connectionConsecutive;
+        $this->_connectionId          = self::$_connectionConsecutive;
         self::$_connectionConsecutive = $this->_connectionId + 1;
 
         //Dialect class can override the default dialect
         //@note no interface validation
         if (isset($descriptor['dialectClass']) === false) {
-            $dialectClass = 'Phalcon\\Db\\Dialect\\'.$this->_dialectType;
+            $dialectClass = 'Phalcon\\Db\\Dialect\\' . $this->_dialectType;
         } else {
             $dialectClass = $descriptor['dialectClass'];
         }
 
         //Create the instance only if the dialect is a string
         if (is_string($dialectClass) === true) {
-            $dialectObject = new $dialectClass();
+            $dialectObject  = new $dialectClass();
             $this->_dialect = $dialectObject;
         }
 
@@ -215,7 +208,7 @@ abstract class Adapter implements EventsAwareInterface
     /**
      * Returns the first row in a SQL query result
      *
-     *<code>
+     * <code>
      *  //Getting first robot
      *  $robot = $connection->fetchOne("SELECT * FROM robots");
      *  print_r($robot);
@@ -223,7 +216,7 @@ abstract class Adapter implements EventsAwareInterface
      *  //Getting first robot with associative indexes only
      *  $robot = $connection->fetchOne("SELECT * FROM robots", \Phalcon\Db::FETCH_ASSOC);
      *  print_r($robot);
-     *</code>
+     * </code>
      *
      * @param string $sqlQuery
      * @param int|null $fetchMode
@@ -236,11 +229,11 @@ abstract class Adapter implements EventsAwareInterface
     {
         if (is_string($sqlQuery) === false ||
             (is_int($fetchMode) === false &&
-                is_null($fetchMode) === false) ||
+            is_null($fetchMode) === false) ||
             (is_array($bindParams) === false &&
-                is_null($bindParams) === false) ||
+            is_null($bindParams) === false) ||
             (is_array($bindTypes) === false &&
-                is_null($bindTypes) === false)) {
+            is_null($bindTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -259,7 +252,7 @@ abstract class Adapter implements EventsAwareInterface
     /**
      * Dumps the complete result of a query into an array
      *
-     *<code>
+     * <code>
      *  //Getting all robots with associative indexes only
      *  $robots = $connection->fetchAll("SELECT * FROM robots", \Phalcon\Db::FETCH_ASSOC);
      *  foreach ($robots as $robot) {
@@ -274,7 +267,7 @@ abstract class Adapter implements EventsAwareInterface
      *  foreach($robots as $robot){
      *      print_r($robot);
      *  }
-     *</code>
+     * </code>
      *
      * @param string $sqlQuery
      * @param int|null $fetchMode
@@ -287,16 +280,16 @@ abstract class Adapter implements EventsAwareInterface
     {
         if (is_string($sqlQuery) === false ||
             (is_int($fetchMode) === false &&
-                is_null($fetchMode) === false) ||
+            is_null($fetchMode) === false) ||
             (is_array($bindParams) === false &&
-                is_null($bindParams) === false) ||
+            is_null($bindParams) === false) ||
             (is_array($bindTypes) === false &&
-                is_null($bindTypes) === false)) {
+            is_null($bindTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
         $results = array();
-        $result = $this->query($sqlQuery, $bindParams, $bindTypes);
+        $result  = $this->query($sqlQuery, $bindParams, $bindTypes);
         if (is_object($result) === true) {
             if (is_null($fetchMode) === false) {
                 $result->setFetchMode($fetchMode);
@@ -336,9 +329,9 @@ abstract class Adapter implements EventsAwareInterface
     {
         if (is_string($table) === false ||
             (is_array($fields) === false &&
-                is_null($fields) === false) ||
+            is_null($fields) === false) ||
             (is_array($dataTypes) === false &&
-                is_null($dataTypes) === false)) {
+            is_null($dataTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -348,7 +341,7 @@ abstract class Adapter implements EventsAwareInterface
 
         //A valid array with elements is required
         if (empty($values) === true) {
-            throw new Exception('Unable to insert into '.$table.' without data');
+            throw new Exception('Unable to insert into ' . $table . ' without data');
         }
 
         $placeholders = array();
@@ -403,9 +396,9 @@ abstract class Adapter implements EventsAwareInterface
             }
 
             $joinedFields = implode(', ', $escapedFields);
-            $insertSql = 'INSERT INTO '.$escapedTable.' ('.$joinedFields.') VALUES ('.$joinedValues.')';
+            $insertSql    = 'INSERT INTO ' . $escapedTable . ' (' . $joinedFields . ') VALUES (' . $joinedValues . ')';
         } else {
-            $insertSql = 'INSERT INTO '.$escapedTable.' VALUES ('.$joinedValues.')';
+            $insertSql = 'INSERT INTO ' . $escapedTable . ' VALUES (' . $joinedValues . ')';
         }
 
         //Perform the execution via PDO::execute
@@ -442,9 +435,9 @@ abstract class Adapter implements EventsAwareInterface
             is_array($fields) === false ||
             is_array($values) === false ||
             (is_string($whereCondition) === false &&
-                is_null($whereCondition) === false) ||
+            is_null($whereCondition) === false) ||
             (is_array($dataTypes) === false &&
-                is_null($dataTypes) === false)) {
+            is_null($dataTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -473,12 +466,12 @@ abstract class Adapter implements EventsAwareInterface
             }
 
             if (is_object($value) === true) {
-                $placeholders[] = $field.' = '.$value;
+                $placeholders[] = $field . ' = ' . $value;
             } elseif (is_null($value) === true) {
-                $placeholders[] = $field.' = null';
+                $placeholders[] = $field . ' = null';
             } else {
                 $updateValues[] = $value;
-                $placeholders[] = $field.' = ?';
+                $placeholders[] = $field . ' = ?';
                 if (is_array($dataTypes) === true) {
                     if (isset($dataTypes[$position]) === false) {
                         throw new Exception('Incomplete number of bind types');
@@ -496,7 +489,7 @@ abstract class Adapter implements EventsAwareInterface
 
         $setClause = implode(', ', $placeholders);
         if (is_null($whereCondition) === false) {
-            $updateSql = 'UPDATE '.$table.' SET '.$setClause.' WHERE ';
+            $updateSql = 'UPDATE ' . $table . ' SET ' . $setClause . ' WHERE ';
 
             //String conditions are simply appended to the SQL
             if (is_string($whereCondition) === true) {
@@ -525,7 +518,7 @@ abstract class Adapter implements EventsAwareInterface
                 }
             }
         } else {
-            $updateSql = 'UPDATE '.$table.' SET '.$setClause;
+            $updateSql = 'UPDATE ' . $table . ' SET ' . $setClause;
         }
 
         //Perform the update via PDO::execute
@@ -557,11 +550,11 @@ abstract class Adapter implements EventsAwareInterface
     {
         if (is_string($table) === false ||
             (is_string($whereCondition) === false &&
-                is_null($whereCondition) === false) ||
+            is_null($whereCondition) === false) ||
             (is_array($placeholders) === false &&
-                is_null($placeholders) === false) ||
+            is_null($placeholders) === false) ||
             (is_array($dataTypes) === false &&
-                is_null($dataTypes) === false)) {
+            is_null($dataTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -572,9 +565,7 @@ abstract class Adapter implements EventsAwareInterface
 
         //Perform the update via PDO::execute
         return $this->execute(
-            'DELETE FROM '.$table.(empty($whereCondition) === false ? ' WHERE '.$whereCondition : ''),
-            $placeholders,
-            $dataTypes
+                'DELETE FROM ' . $table . (empty($whereCondition) === false ? ' WHERE ' . $whereCondition : ''), $placeholders, $dataTypes
         );
     }
 
@@ -618,7 +609,7 @@ abstract class Adapter implements EventsAwareInterface
      */
     public function tableExists($tableName, $schemaName = null)
     {
-        $sql = $this->_dialect->tableExists($tableName, $schemaName);
+        $sql      = $this->_dialect->tableExists($tableName, $schemaName);
         $fetchOne = $this->fetchOne($sql, 3);
         return $fetchOne[0];
     }
@@ -626,9 +617,9 @@ abstract class Adapter implements EventsAwareInterface
     /**
      * Generates SQL checking for the existence of a schema.view
      *
-     *<code>
+     * <code>
      * var_dump($connection->viewExists("active_users", "posts"));
-     *</code>
+     * </code>
      *
      * @param string $viewName
      * @param string|null $schemaName
@@ -636,7 +627,7 @@ abstract class Adapter implements EventsAwareInterface
      */
     public function viewExists($viewName, $schemaName = null)
     {
-        $sql = $this->_dialect->viewExists($viewName, $schemaName);
+        $sql      = $this->_dialect->viewExists($viewName, $schemaName);
         $fetchOne = $this->fetchOne($sql, 3);
         return $fetchOne[0];
     }
@@ -675,7 +666,7 @@ abstract class Adapter implements EventsAwareInterface
     public function createTable($tableName, $schemaName, $definition)
     {
         if (is_array($definition) === false) {
-            throw new Exception("Invalid definition to create the table '".$tableName."'");
+            throw new Exception("Invalid definition to create the table '" . $tableName . "'");
         }
 
         if (isset($definition['columns']) === false ||
@@ -718,7 +709,7 @@ abstract class Adapter implements EventsAwareInterface
     public function createView($viewName, $definition, $schemaName = null)
     {
         if (is_array($definition) === false) {
-            throw new Exception("Invalid definition to create the view '".$viewName."'");
+            throw new Exception("Invalid definition to create the view '" . $viewName . "'");
         }
 
         if (isset($definition['sql']) === false) {
@@ -878,9 +869,9 @@ abstract class Adapter implements EventsAwareInterface
     /**
      * List all tables on a database
      *
-     *<code>
+     * <code>
      *  print_r($connection->listTables("blog"));
-     *</code>
+     * </code>
      *
      * @param string $schemaName
      * @return array
@@ -904,9 +895,9 @@ abstract class Adapter implements EventsAwareInterface
     /**
      * List all views on a database
      *
-     *<code>
+     * <code>
      *  print_r($connection->listViews("blog")); ?>
-     *</code>
+     * </code>
      *
      * @param string|null $schemaName
      * @return array
@@ -930,9 +921,9 @@ abstract class Adapter implements EventsAwareInterface
     /**
      * Lists table indexes
      *
-     *<code>
+     * <code>
      *  print_r($connection->describeIndexes('robots_parts'));
-     *</code>
+     * </code>
      *
      * @param string $table
      * @param string|null $schema
@@ -967,9 +958,9 @@ abstract class Adapter implements EventsAwareInterface
     /**
      * Lists table references
      *
-     *<code>
+     * <code>
      * print_r($connection->describeReferences('robots_parts'));
-     *</code>
+     * </code>
      *
      * @param string $table
      * @param string|null $schema
@@ -990,14 +981,14 @@ abstract class Adapter implements EventsAwareInterface
             $constraintName = $reference[2];
             if (isset($references[$constraintName]) === false) {
                 $references[$constraintName] = array(
-                    'referencedSchema' => $reference[3],
-                    'referencedTable' => $reference[4],
-                    'columns' => array(),
+                    'referencedSchema'  => $reference[3],
+                    'referencedTable'   => $reference[4],
+                    'columns'           => array(),
                     'referencedColumns' => array()
                 );
             }
 
-            $references[$constraintName]['columns'][] = $reference[1];
+            $references[$constraintName]['columns'][]           = $reference[1];
             $references[$constraintName]['referencedColumns'][] = $reference[5];
         }
 
@@ -1012,9 +1003,9 @@ abstract class Adapter implements EventsAwareInterface
     /**
      * Gets creation options from a table
      *
-     *<code>
+     * <code>
      * print_r($connection->tableOptions('robots'));
-     *</code>
+     * </code>
      *
      * @param string $tableName
      * @param string|null $schemaName
@@ -1126,20 +1117,20 @@ abstract class Adapter implements EventsAwareInterface
      */
     public function getNestedTransactionSavepointName()
     {
-        return 'PHALCON_SAVEPOINT_'.$this->_transactionLevel;
+        return 'PHALCON_SAVEPOINT_' . $this->_transactionLevel;
     }
 
     /**
      * Returns the default identity value to be inserted in an identity column
      *
-     *<code>
+     * <code>
      * //Inserting a new robot with a valid default value for the column 'id'
      * $success = $connection->insert(
      *     "robots",
      *     array($connection->getDefaultIdValue(), "Astro Boy", 1952),
      *     array("id", "name", "year")
      * );
-     *</code>
+     * </code>
      *
      * @return \Phalcon\Db\RawValue
      */
@@ -1185,7 +1176,7 @@ abstract class Adapter implements EventsAwareInterface
      */
     public function getConnectionId()
     {
-        return (string)$this->_connectionId;
+        return (string) $this->_connectionId;
     }
 
     /**
@@ -1247,4 +1238,5 @@ abstract class Adapter implements EventsAwareInterface
     {
         return $this->_dialectType;
     }
+
 }

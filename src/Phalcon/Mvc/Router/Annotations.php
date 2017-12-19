@@ -1,13 +1,5 @@
 <?php
-/**
- * Annotations
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Router;
 
 use \Phalcon\Text;
@@ -23,7 +15,7 @@ use \Phalcon\Annotations\Annotation;
  *
  * A router that reads routes annotations from classes/resources
  *
- *<code>
+ * <code>
  * $di['router'] = function() {
  *
  *      //Use the annotations router
@@ -34,24 +26,25 @@ use \Phalcon\Annotations\Annotation;
  *
  *      return $router;
  *  };
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/router/annotations.c
  */
 class Annotations extends Router implements InjectionAwareInterface, RouterInterface
 {
+
     /**
      * URI source: _url
      *
      * @var int
-    */
+     */
     const URI_SOURCE_GET_URL = 0;
 
     /**
      * URI source: REQUEST_URI
      *
      * @var int
-    */
+     */
     const URI_SOURCE_SERVER_REQUEST_URI = 1;
 
     /**
@@ -59,7 +52,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_handlers;
 
     /**
@@ -67,7 +60,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_processed = false;
 
     /**
@@ -75,7 +68,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_controllerSuffix = 'Controller';
 
     /**
@@ -83,7 +76,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_actionSuffix = 'Action';
 
     /**
@@ -91,7 +84,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_routePrefix;
 
     /**
@@ -110,7 +103,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
         }
 
         if (is_string($prefix) === false &&
-        is_null($prefix) === false) {
+            is_null($prefix) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -119,7 +112,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
         }
 
         $this->_handlers[] = array($prefix, $handler);
-        $this->_processed = false;
+        $this->_processed  = false;
 
         return $this;
     }
@@ -155,7 +148,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
         }
 
         $this->_handlers[] = array($prefix, $handler, $module);
-        $this->_processed = false;
+        $this->_processed  = false;
 
         return $this;
     }
@@ -205,11 +198,11 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
                             //Extract the namespace from the namespaced class
                             $pos = strrpos($classWithNamespace, '\\');
                             if ($pos !== false) {
-                                $namespaceName = substr($classWithNamespace, 0, $pos);
+                                $namespaceName  = substr($classWithNamespace, 0, $pos);
                                 $controllerName = substr($classWithNamespace, $pos);
                             } else {
                                 $controllerName = $classWithNamespace;
-                                $namespaceName = null;
+                                $namespaceName  = null;
                             }
 
                             $this->_routePrefix = null;
@@ -222,7 +215,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
                             }
 
                             //Get the annotations from the class
-                            $handlerAnnotations = $annotationsService->get($handler.$this->_controllerSuffix);
+                            $handlerAnnotations = $annotationsService->get($handler . $this->_controllerSuffix);
 
                             //Process class annotations
                             $classAnnotations = $handlerAnnotations->getClassAnnotations();
@@ -307,7 +300,7 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
             throw new Exception('Invalid parameter type.');
         }
 
-        $name = $annotation->getName();
+        $name    = $annotation->getName();
         $methods = null;
 
         //Find if the route is for adding routes
@@ -348,20 +341,20 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
             }
 
             $paths['controller'] = $controller;
-            $paths['action'] = $actionName;
-            $paths["\0exact"] = true;
+            $paths['action']     = $actionName;
+            $paths["\0exact"]    = true;
 
             $value = $annotation->getArgument(0);
 
             //Create the route using the prefix
             if (is_null($value) === false) {
                 if ($value !== '/') {
-                    $uri = $this->_routePrefix.$value;
+                    $uri = $this->_routePrefix . $value;
                 } else {
                     $uri = $this->_routePrefix;
                 }
             } else {
-                $uri = $this->_routePrefix.$actionName;
+                $uri = $this->_routePrefix . $actionName;
             }
 
             //Add the route to the router
@@ -441,4 +434,5 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
     {
         return $this->_handlers;
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Message
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation;
 
 use \Phalcon\Validation\Exception;
@@ -21,12 +13,13 @@ use \Phalcon\Validation\Exception;
  */
 class Message
 {
+
     /**
      * Type
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_type;
 
     /**
@@ -34,7 +27,7 @@ class Message
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_message;
 
     /**
@@ -42,7 +35,7 @@ class Message
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_field;
 
     /**
@@ -68,8 +61,8 @@ class Message
         }
 
         $this->_message = $message;
-        $this->_field = $field;
-        $this->_type = $type;
+        $this->_field   = $field;
+        $this->_type    = $type;
     }
 
     /**
@@ -175,4 +168,5 @@ class Message
 
         return new Message($message['_message'], $message['_field'], $message['_type']);
     }
+
 }

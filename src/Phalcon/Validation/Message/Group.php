@@ -1,13 +1,5 @@
 <?php
-/**
- * Group
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation\Message;
 
 use \Phalcon\Validation\Message;
@@ -26,12 +18,13 @@ use \Iterator;
  */
 class Group implements Countable, ArrayAccess, Iterator
 {
+
     /**
      * Position
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_position;
 
     /**
@@ -39,7 +32,7 @@ class Group implements Countable, ArrayAccess, Iterator
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_messages;
 
     /**
@@ -59,9 +52,9 @@ class Group implements Countable, ArrayAccess, Iterator
     /**
      * Gets an attribute a message using the array syntax
      *
-     *<code>
+     * <code>
      * print_r($messages[0]);
-     *</code>
+     * </code>
      *
      * @param scalar $index
      * @return \Phalcon\Validation\Message|null
@@ -72,7 +65,7 @@ class Group implements Countable, ArrayAccess, Iterator
         if (is_scalar($index) === false) {
             throw new Exception('Invalid parameter type.');
         }
-        
+
         if (isset($this->_messages[$index]) === true) {
             return $this->_messages[$index];
         }
@@ -83,9 +76,9 @@ class Group implements Countable, ArrayAccess, Iterator
     /**
      * Sets an attribute using the array-syntax
      *
-     *<code>
+     * <code>
      * $messages[0] = new \Phalcon\Validation\Message('This is a message');
-     *</code>
+     * </code>
      *
      * @param scalar $index
      * @param \Phalcon\Validation\Message $message
@@ -96,7 +89,7 @@ class Group implements Countable, ArrayAccess, Iterator
         if (is_scalar($index) === false) {
             throw new Exception('Invalid parameter type.');
         }
-        
+
         if (is_object($message) === false &&
             $message instanceof Message === false) {
             throw new Exception('The message must be an object');
@@ -108,9 +101,9 @@ class Group implements Countable, ArrayAccess, Iterator
     /**
      * Checks if an index exists
      *
-     *<code>
+     * <code>
      * var_dump(isset($message['database']));
-     *</code>
+     * </code>
      *
      * @param scalar $index
      * @return boolean
@@ -121,16 +114,16 @@ class Group implements Countable, ArrayAccess, Iterator
         if (is_scalar($index) === false) {
             throw new Exception('Invalid parameter type.');
         }
-        
+
         return isset($this->_messages[$index]);
     }
 
     /**
      * Removes a message from the list
      *
-     *<code>
+     * <code>
      * unset($message['database']);
-     *</code>
+     * </code>
      *
      * @param scalar $index
      * @throws Exception
@@ -140,16 +133,16 @@ class Group implements Countable, ArrayAccess, Iterator
         if (is_scalar($index) === false) {
             throw new Exception('Invalid parameter type.');
         }
-        
+
         unset($this->_messages[$index]);
     }
 
     /**
      * Appends a message to the group
      *
-     *<code>
+     * <code>
      * $messages->appendMessage(new \Phalcon\Validation\Message('This is a message'));
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Validation\MessageInterface $message
      * @throws Exception
@@ -167,9 +160,9 @@ class Group implements Countable, ArrayAccess, Iterator
     /**
      * Appends an array of messages to the group
      *
-     *<code>
+     * <code>
      * $messages->appendMessages($messagesArray);
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Validation\MessageInterface[]|array $messages
      * @throws Exception
@@ -300,4 +293,5 @@ class Group implements Countable, ArrayAccess, Iterator
 
         return new Group($group['_messages']);
     }
+
 }

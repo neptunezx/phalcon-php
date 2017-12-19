@@ -1,13 +1,5 @@
 <?php
-/**
- * Events Manager
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Events;
 
 use \Phalcon\Events\ManagerInterface;
@@ -27,12 +19,13 @@ use \Closure;
  */
 class Manager implements ManagerInterface
 {
+
     /**
      * Events
      *
      * @var array|null
      * @access protected
-    */
+     */
     protected $_events;
 
     /**
@@ -40,7 +33,7 @@ class Manager implements ManagerInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_collect = false;
 
     /**
@@ -48,7 +41,7 @@ class Manager implements ManagerInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_enablePriorities = false;
 
     /**
@@ -56,7 +49,7 @@ class Manager implements ManagerInterface
      *
      * @var array|null
      * @access protected
-    */
+     */
     protected $_responses;
 
     /**
@@ -91,7 +84,7 @@ class Manager implements ManagerInterface
         if (isset($this->_events[$eventType]) === false) {
             if ($this->_enablePriorities === true) {
                 //Create a SplPriorityQueue to store the events with priorities
-                $priorityQueue = new SplPriorityQueue();
+                $priorityQueue             = new SplPriorityQueue();
                 $priorityQueue->setExtractFlags(1);
                 $this->_events[$eventType] = $priorityQueue;
             } else {
@@ -215,7 +208,7 @@ class Manager implements ManagerInterface
     {
         if (is_array($queue) === false &&
             (is_object($queue) === false ||
-                $queue instanceof SplPriorityQueue === false)) {
+            $queue instanceof SplPriorityQueue === false)) {
             throw new Exception('The SplPriorityQueue is not valid');
         }
 
@@ -224,7 +217,7 @@ class Manager implements ManagerInterface
             throw new Exception('The event is not valid');
         }
 
-        $status = null;
+        $status    = null;
         $arguments = null;
 
         //Get the event type
@@ -234,8 +227,8 @@ class Manager implements ManagerInterface
             throw new Exception('The event type not vaid');
         }
 
-        $source = $event->getSource();
-        $data = $event->getData();
+        $source     = $event->getSource();
+        $data       = $event->getData();
         $cancelable = $event->getCancelable();
 
         if (is_object($queue) === true) {
@@ -347,9 +340,9 @@ class Manager implements ManagerInterface
     /**
      * Fires an event in the events manager causing that active listeners be notified about it
      *
-     *<code>
+     * <code>
      *  $eventsManager->fire('db', $connection);
-     *</code>
+     * </code>
      *
      * @param string $eventType
      * @param object $source
@@ -380,21 +373,20 @@ class Manager implements ManagerInterface
 
         //All valid events must be a colon seperator
         if (strpos($eventType, ':') === false) {
-            throw new Exception('Invalid event type '.$eventType);
+            throw new Exception('Invalid event type ' . $eventType);
         }
 
         $eventParts = explode(':', $eventType);
         //@note no isset check for $eventParts[0], $eventParts[1]
         //type: 0
         //name: 1
-
         //Responses must be traces?
         if ($this->_collect === true) {
             $this->_responses = null;
         }
 
         $status = null;
-        $event = null;
+        $event  = null;
         //Check if events are grouped by type
         if (isset($this->_events[$eventParts[0]]) === true) {
             $fireEvents = $this->_events[$eventParts[0]];
@@ -402,7 +394,7 @@ class Manager implements ManagerInterface
             if (is_array($fireEvents) === true ||
                 is_object($fireEvents) === true) {
                 //Create the event context
-                $event = new Event($eventParts[1], $source, $data, $cancelable);
+                $event  = new Event($eventParts[1], $source, $data, $cancelable);
                 $status = $this->fireQueue($fireEvents, $event);
             }
         }
@@ -466,4 +458,5 @@ class Manager implements ManagerInterface
 
         return array();
     }
+
 }

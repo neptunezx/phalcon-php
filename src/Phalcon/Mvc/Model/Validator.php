@@ -1,13 +1,5 @@
 <?php
-/**
- * Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Mvc\Model\Message;
@@ -22,12 +14,13 @@ use \Phalcon\Mvc\Model\Exception;
  */
 abstract class Validator
 {
+
     /**
      * Options
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_options;
 
     /**
@@ -35,7 +28,7 @@ abstract class Validator
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_messages;
 
     /**
@@ -139,4 +132,5 @@ abstract class Validator
 
         return isset($this->_options[$option]);
     }
+
 }

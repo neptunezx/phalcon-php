@@ -1,12 +1,14 @@
 <?php
+
 /**
-* Exception
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Exception
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model\Transaction;
 
 /**
@@ -18,4 +20,5 @@ namespace Phalcon\Mvc\Model\Transaction;
  */
 class Exception extends \Phalcon\Mvc\Model\Exception
 {
+    
 }

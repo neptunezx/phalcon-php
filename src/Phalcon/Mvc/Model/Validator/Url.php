@@ -1,13 +1,5 @@
 <?php
-/**
- * URL Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Validator;
 
 use \Phalcon\Mvc\Model\Validator;
@@ -20,11 +12,11 @@ use \Phalcon\Mvc\ModelInterface;
  *
  * Allows to validate if a field has a url format
  *
- *<code>
- *use Phalcon\Mvc\Model\Validator\Url as UrlValidator;
+ * <code>
+ * use Phalcon\Mvc\Model\Validator\Url as UrlValidator;
  *
- *class Posts extends Phalcon\Mvc\Model
- *{
+ * class Posts extends Phalcon\Mvc\Model
+ * {
  *
  *  public function validation()
  *  {
@@ -36,13 +28,14 @@ use \Phalcon\Mvc\ModelInterface;
  *      }
  *  }
  *
- *}
- *</code>
+ * }
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/url.c
  */
 class Url extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validator
      *
@@ -70,7 +63,7 @@ class Url extends Validator implements ValidatorInterface
             $message = $this->getOption('message');
 
             if (isset($message) === false) {
-                $message = "'".$field."' does not have a valid url format";
+                $message = "'" . $field . "' does not have a valid url format";
             }
 
             $this->appendMessage($message, $field, 'Url');
@@ -79,4 +72,5 @@ class Url extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

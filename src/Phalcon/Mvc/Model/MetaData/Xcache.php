@@ -1,13 +1,15 @@
 <?php
+
 /**
-* XCache Adapter
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * XCache Adapter
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model\MetaData;
 
 use \Phalcon\Mvc\Model\MetaData;
@@ -24,113 +26,114 @@ use \Phalcon\Di\InjectionAwareInterface;
  *
  * You can query the meta-data by printing xcache_get('$PMM$') or xcache_get('$PMM$my-app-id')
  *
- *<code>
+ * <code>
  *  $metaData = new Phalcon\Mvc\Model\Metadata\Xcache(array(
  *      'prefix' => 'my-app-id',
  *      'lifetime' => 86400
  *  ));
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/metadata/xcache.c
  */
 class Xcache extends MetaData implements InjectionAwareInterface, MetaDataInterface
 {
+
     /**
      * Models: Attributes
      *
      * @var int
-    */
+     */
     const MODELS_ATTRIBUTES = 0;
 
     /**
      * Models: Primary Key
      *
      * @var int
-    */
+     */
     const MODELS_PRIMARY_KEY = 1;
 
     /**
      * Models: Non Primary Key
      *
      * @var int
-    */
+     */
     const MODELS_NON_PRIMARY_KEY = 2;
 
     /**
      * Models: Not Null
      *
      * @var int
-    */
+     */
     const MODELS_NOT_NULL = 3;
 
     /**
      * Models: Data Types
      *
      * @var int
-    */
+     */
     const MODELS_DATA_TYPES = 4;
 
     /**
      * Models: Data Types Numeric
      *
      * @var int
-    */
+     */
     const MODELS_DATA_TYPES_NUMERIC = 5;
 
     /**
      * Models: Date At
      *
      * @var int
-    */
+     */
     const MODELS_DATE_AT = 6;
 
     /**
      * Models: Date In
      *
      * @var int
-    */
+     */
     const MODELS_DATE_IN = 7;
 
     /**
      * Models: Identity Column
      *
      * @var int
-    */
+     */
     const MODELS_IDENTITY_COLUMN = 8;
 
     /**
      * Models: Data Types Bind
      *
      * @var int
-    */
+     */
     const MODELS_DATA_TYPES_BIND = 9;
 
     /**
      * Models: Automatic Default Insert
      *
      * @var int
-    */
+     */
     const MODELS_AUTOMATIC_DEFAULT_INSERT = 10;
 
     /**
      * Models: Automatic Default Update
      *
      * @var int
-    */
+     */
     const MODELS_AUTOMATIC_DEFAULT_UPDATE = 11;
 
     /**
      * Models: Column Map
      *
      * @var int
-    */
+     */
     const MODELS_COLUMN_MAP = 0;
 
     /**
      * Models: Reverse Column Map
      *
      * @var int
-    */
+     */
     const MODELS_REVERSE_COLUMN_MAP = 1;
 
     /**
@@ -138,7 +141,7 @@ class Xcache extends MetaData implements InjectionAwareInterface, MetaDataInterf
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_prefix = '';
 
     /**
@@ -146,7 +149,7 @@ class Xcache extends MetaData implements InjectionAwareInterface, MetaDataInterf
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_ttl;
 
     /**
@@ -182,7 +185,7 @@ class Xcache extends MetaData implements InjectionAwareInterface, MetaDataInterf
             throw new Exception('Invalid parameter type.');
         }
 
-        $data = xcache_get('$PMM$'.$this->_prefix.$key);
+        $data = xcache_get('$PMM$' . $this->_prefix . $key);
         if (is_array($data) === true) {
             return $data;
         }
@@ -202,6 +205,7 @@ class Xcache extends MetaData implements InjectionAwareInterface, MetaDataInterf
             throw new Exception('Invalid parameter type.');
         }
 
-        xcache_set('$PMM$'.$this->_prefix.$key, $data, $this->_ttl);
+        xcache_set('$PMM$' . $this->_prefix . $key, $data, $this->_ttl);
     }
+
 }

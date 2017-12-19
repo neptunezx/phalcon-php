@@ -1,13 +1,5 @@
 <?php
-/**
- * Mysql
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db\Adapter\Pdo;
 
 use \Phalcon\Db\Adapter\Pdo;
@@ -21,30 +13,31 @@ use \Phalcon\Events\EventsAwareInterface;
  *
  * Specific functions for the Mysql database system
  *
- *<code>
+ * <code>
  *
- *	$config = array(
- *		"host" => "192.168.0.11",
- *		"dbname" => "blog",
- *		"port" => 3306,
- *		"username" => "sigma",
- *		"password" => "secret"
- *	);
+ * 	$config = array(
+ * 		"host" => "192.168.0.11",
+ * 		"dbname" => "blog",
+ * 		"port" => 3306,
+ * 		"username" => "sigma",
+ * 		"password" => "secret"
+ * 	);
  *
- *	$connection = new Phalcon\Db\Adapter\Pdo\Mysql($config);
+ * 	$connection = new Phalcon\Db\Adapter\Pdo\Mysql($config);
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/adapter/pdo/mysql.c
  */
 class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
 {
+
     /**
      * Type
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_type = 'mysql';
 
     /**
@@ -52,7 +45,7 @@ class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_dialectType = 'Mysql';
 
     /**
@@ -67,14 +60,14 @@ class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
         if (is_array($identifier) === true) {
             if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                 $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                return '`'.$identifier[0].'`.`'.$identifier[1].'`';
+                return '`' . $identifier[0] . '`.`' . $identifier[1] . '`';
             } else {
-                return $identifier[0].'.'.$identifier[1];
+                return $identifier[0] . '.' . $identifier[1];
             }
         } elseif (is_string($identifier) === true) {
             if (isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
                 $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true) {
-                return '`'.$identifier.'`';
+                return '`' . $identifier . '`';
             } else {
                 return $identifier;
             }
@@ -99,7 +92,7 @@ class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
     {
         if (is_string($table) === false ||
             (is_string($schema) === false &&
-                is_null($schema) === false)) {
+            is_null($schema) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -109,9 +102,9 @@ class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
         $sql = $dialect->describeColumns($table, $schema);
 
         //Get the describe
-        $describe = $this->fetchAll($sql, 3);
+        $describe  = $this->fetchAll($sql, 3);
         $oldColumn = null;
-        $columns = array();
+        $columns   = array();
 
         //Field Indexes: 0 - Name, 1 - Type, 2 - Not Null, 3 - Key, 4 - Default, 5 - Extra
         foreach ($describe as $field) {
@@ -137,17 +130,17 @@ class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
 
                 //Tinyint(1) is boolean
                 if (strpos($columnType, 'tinyint(1)') !== false) {
-                    $definition['type'] = 8;
+                    $definition['type']     = 8;
                     $definition['bindType'] = 5;
-                    $columnType = 'boolean';
+                    $columnType             = 'boolean';
                     break;
                 }
 
                 //Smallint/Bigint/Integer/Int are int
                 if (strpos($columnType, 'int') !== false) {
-                    $definition['type'] = 0;
+                    $definition['type']      = 0;
                     $definition['isNumeric'] = true;
-                    $definition['bindType'] = 1;
+                    $definition['bindType']  = 1;
                     break;
                 }
 
@@ -165,9 +158,9 @@ class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
 
                 //Decimals are floats
                 if (strpos($columnType, 'decimal') !== false) {
-                    $definition['type'] = 3;
+                    $definition['type']      = 3;
                     $definition['isNumeric'] = true;
-                    $definition['bindType'] = 32;
+                    $definition['bindType']  = 32;
                     break;
                 }
 
@@ -197,17 +190,17 @@ class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
 
                 //Floats/Smallfloats/Decimals are float
                 if (strpos($columnType, 'float') !== false) {
-                    $definition['type'] = 7;
+                    $definition['type']      = 7;
                     $definition['isNumeric'] = true;
-                    $definition['bindType'] = 32;
+                    $definition['bindType']  = 32;
                     break;
                 }
 
                 //Doubles are floats
                 if (strpos($columnType, 'double') !== false) {
-                    $definition['type'] = 9;
+                    $definition['type']      = 9;
                     $definition['isNumeric'] = true;
-                    $definition['bindType'] = 32;
+                    $definition['bindType']  = 32;
                     break;
                 }
 
@@ -219,7 +212,7 @@ class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
             //If the column type has a parentheses we try to get the column size from it
             if (strpos($columnType, '(') !== false) {
                 $matches = null;
-                $pos = preg_match("#\\(([0-9]++)(?:,\\s*([0-9]++))?\\)#", $columnType, $matches);
+                $pos     = preg_match("#\\(([0-9]++)(?:,\\s*([0-9]++))?\\)#", $columnType, $matches);
                 if ($pos == true) {
                     if (isset($matches[1]) === true) {
                         $definition['size'] = $matches[1];
@@ -258,11 +251,12 @@ class Mysql extends Pdo implements EventsAwareInterface, AdapterInterface
                 $definition['autoIncrement'] = true;
             }
 
-            $column = new Column($field[0], $definition);
+            $column    = new Column($field[0], $definition);
             $columns[] = $column;
             $oldColumn = $field[0];
         }
 
         return $columns;
     }
+
 }

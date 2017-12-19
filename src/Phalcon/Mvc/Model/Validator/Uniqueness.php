@@ -1,13 +1,5 @@
 <?php
-/**
- * Uniqueness Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Validator;
 
 use \Phalcon\Mvc\Model\Validator;
@@ -21,11 +13,11 @@ use \Phalcon\Mvc\ModelInterface;
  * Validates that a field or a combination of a set of fields are not
  * present more than once in the existing records of the related table
  *
- *<code>
- *use Phalcon\Mvc\Model\Validator\Uniqueness as Uniqueness;
+ * <code>
+ * use Phalcon\Mvc\Model\Validator\Uniqueness as Uniqueness;
  *
- *class Subscriptors extends Phalcon\Mvc\Model
- *{
+ * class Subscriptors extends Phalcon\Mvc\Model
+ * {
  *
  *  public function validation()
  *  {
@@ -37,13 +29,14 @@ use \Phalcon\Mvc\ModelInterface;
  *      }
  *  }
  *
- *}
- *</code>
+ * }
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/uniqueness.c
  */
 class Uniqueness extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validator
      *
@@ -58,13 +51,13 @@ class Uniqueness extends Validator implements ValidatorInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $field = $this->getOption('field');
+        $field              = $this->getOption('field');
         $dependencyInjector = $record->getDi();
-        $metaData = $dependencyInjector->getShared('modelsMetadata');
+        $metaData           = $dependencyInjector->getShared('modelsMetadata');
 
         //PostgreSQL check if the compared constant has the same type as the column, so we
         //make cast to the data passed to match those column types
-        $bindTypes = array();
+        $bindTypes     = array();
         $bindDataTypes = $metaData->getBindTypes($record);
         if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
             $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === true) {
@@ -75,7 +68,7 @@ class Uniqueness extends Validator implements ValidatorInterface
 
         $conditions = array();
         $bindParams = array();
-        $number = 0;
+        $number     = 0;
 
         if (is_array($field) === true) {
             //The field can be an arary of values
@@ -85,7 +78,7 @@ class Uniqueness extends Validator implements ValidatorInterface
                     if (isset($columnMap[$composeField]) === true) {
                         $columnField = $columnMap[$composeField];
                     } else {
-                        throw new Exception("Column '".$composeField.'" isn\'t part of the column map');
+                        throw new Exception("Column '" . $composeField . '" isn\'t part of the column map');
                     }
                 } else {
                     $columnField = $composeField;
@@ -93,14 +86,14 @@ class Uniqueness extends Validator implements ValidatorInterface
 
                 //Some database system require that we pass the values using bind casting
                 if (isset($bindDataTypes[$columnField]) === false) {
-                    throw new Exception("Column '".$columnField.'" isn\'t part of the table columns');
+                    throw new Exception("Column '" . $columnField . '" isn\'t part of the table columns');
                 }
 
                 //The attribute could be "protected" so we read using "readattribute"
-                $value = $record->readattribute($composeField);
-                $conditions[] = '['.$composeField.'] = ?'.$number;
+                $value        = $record->readattribute($composeField);
+                $conditions[] = '[' . $composeField . '] = ?' . $number;
                 $bindParams[] = $value;
-                $bindTypes[] = $bindDataTypes[$columnField];
+                $bindTypes[]  = $bindDataTypes[$columnField];
                 $number++;
             }
         } else {
@@ -109,7 +102,7 @@ class Uniqueness extends Validator implements ValidatorInterface
                 if (isset($columnMap[$field]) === true) {
                     $columnField = $columnMap[$field];
                 } else {
-                    throw new Exception("Column '".$field.'" isn\'t part of the column map');
+                    throw new Exception("Column '" . $field . '" isn\'t part of the column map');
                 }
             } else {
                 $columnField = $field;
@@ -117,14 +110,14 @@ class Uniqueness extends Validator implements ValidatorInterface
 
             //Some database systems require that we pass the values using bind casting
             if (isset($bindDataTypes[$columnField]) === false) {
-                throw new Exception("Column '".$columnField.'" isn\'t part of the table columns');
+                throw new Exception("Column '" . $columnField . '" isn\'t part of the table columns');
             }
 
             //We're checking the uniqueness with only one field
-            $value = $record->readAttribute($field);
-            $conditions[] = '['.$field.'] = ?0';
+            $value        = $record->readAttribute($field);
+            $conditions[] = '[' . $field . '] = ?0';
             $bindParams[] = $value;
-            $bindTypes[] = $bindDataTypes[$columnField];
+            $bindTypes[]  = $bindDataTypes[$columnField];
             $number++;
         }
 
@@ -141,7 +134,7 @@ class Uniqueness extends Validator implements ValidatorInterface
             $primaryFields = $metaData->getPrimaryKeyAttributes($record);
             foreach ($primaryFields as $primaryField) {
                 if (isset($bindDataTypes[$primaryField]) === false) {
-                    throw new Exception("Column '".$primaryField.'" isn\'t part of the table columns');
+                    throw new Exception("Column '" . $primaryField . '" isn\'t part of the table columns');
                 }
 
                 //Rename the column if there is a column map
@@ -149,7 +142,7 @@ class Uniqueness extends Validator implements ValidatorInterface
                     if (isset($columnMap[$primaryField]) === true) {
                         $attributeField = $columnMap[$primaryField];
                     } else {
-                        throw new Exception("Column '".$primaryField.'" isn\'t part of the column map');
+                        throw new Exception("Column '" . $primaryField . '" isn\'t part of the column map');
                     }
                 } else {
                     $attributeField = $primaryField;
@@ -158,9 +151,9 @@ class Uniqueness extends Validator implements ValidatorInterface
                 //Create a condition based on the renamed primary key
                 $value = $record->readAttribute($primaryField);
 
-                $conditions[] = '['.$attributeField.'] <> ?'.$number;
+                $conditions[] = '[' . $attributeField . '] <> ?' . $number;
                 $bindParams[] = $value;
-                $bindTypes[] = $bindDataTypes[$primaryField];
+                $bindTypes[]  = $bindDataTypes[$primaryField];
                 $number++;
             }
         }
@@ -168,7 +161,7 @@ class Uniqueness extends Validator implements ValidatorInterface
         $joinConditions = implode(' AND ', $conditions);
 
         //We don't trust the user, so we pass the parameters as bound parameters
-        $params = array('di' => $dependencyInjector, 'conditions' => $joinConditions, 'bind' => $bindParams, 'bindTypes' => $bindTypes);
+        $params    = array('di' => $dependencyInjector, 'conditions' => $joinConditions, 'bind' => $bindParams, 'bindTypes' => $bindTypes);
         $className = get_class($record);
 
         //Check using a standard count
@@ -178,9 +171,9 @@ class Uniqueness extends Validator implements ValidatorInterface
             $message = $this->getOption('message');
             if (isset($message) === false) {
                 if (is_array($field) === true) {
-                    $message = "Value of fields: '".implode(', ', $field)."' are already present in another record"; //@note sic!
+                    $message = "Value of fields: '" . implode(', ', $field) . "' are already present in another record"; //@note sic!
                 } else {
-                    $message = "Value of field: '".$field."' is already present in another record";
+                    $message = "Value of field: '" . $field . "' is already present in another record";
                 }
             }
 
@@ -191,4 +184,5 @@ class Uniqueness extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

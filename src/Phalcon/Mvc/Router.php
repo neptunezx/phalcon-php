@@ -1,13 +1,5 @@
 <?php
-/**
- * Router
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc;
 
 use \Phalcon\Mvc\RouterInterface;
@@ -25,7 +17,7 @@ use \Phalcon\DiInterface;
  * decomposing it into parameters to determine which module, controller, and
  * action of that controller should receive the request</p>
  *
- *<code>
+ * <code>
  *
  *  $router = new Phalcon\Mvc\Router();
  *
@@ -40,24 +32,25 @@ use \Phalcon\DiInterface;
  *  $router->handle();
  *
  *  echo $router->getControllerName();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/router.c
  */
 class Router implements RouterInterface, InjectionAwareInterface
 {
+
     /**
      * URI source: _url
      *
      * @var int
-    */
+     */
     const URI_SOURCE_GET_URL = 0;
 
     /**
      * URI source: REQUEST_URI
      *
      * @var int
-    */
+     */
     const URI_SOURCE_SERVER_REQUEST_URI = 1;
 
     /**
@@ -65,7 +58,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -73,7 +66,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_uriSource;
 
     /**
@@ -81,7 +74,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_namespace;
 
     /**
@@ -89,7 +82,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_module;
 
     /**
@@ -97,7 +90,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_controller;
 
     /**
@@ -105,7 +98,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_action;
 
     /**
@@ -113,7 +106,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_params;
 
     /**
@@ -121,7 +114,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_routes;
 
     /**
@@ -129,7 +122,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|\Phalcon\Mvc\Router\Route
      * @access protected
-    */
+     */
     protected $_matchedRoute;
 
     /**
@@ -137,7 +130,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_matches;
 
     /**
@@ -145,7 +138,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_wasMatched = false;
 
     /**
@@ -153,7 +146,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_defaultNamespace;
 
     /**
@@ -161,7 +154,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_defaultModule;
 
     /**
@@ -169,7 +162,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_defaultController;
 
     /**
@@ -177,7 +170,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_defaultAction;
 
     /**
@@ -185,7 +178,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_defaultParams;
 
     /**
@@ -193,7 +186,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|boolean
      * @access protected
-    */
+     */
     protected $_removeExtraSlashes;
 
     /**
@@ -201,7 +194,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_notFoundPaths;
 
     /**
@@ -209,7 +202,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_isExactControllerName = false;
 
     /**
@@ -237,8 +230,7 @@ class Router implements RouterInterface, InjectionAwareInterface
              */
             $routes[] = new Route('#^/([a-zA-Z0-9\\_\\-]+)[/]{0,1}$#', array('controller' => 1));
             $routes[] = new Route(
-                '#^/([a-zA-Z0-9\\_\\-]+)/([a-zA-Z0-9\\.\\_]+)(/.*)*$#',
-                array('controller' => 1, 'action' => 2, 'params' => 3)
+                '#^/([a-zA-Z0-9\\_\\-]+)/([a-zA-Z0-9\\.\\_]+)(/.*)*$#', array('controller' => 1, 'action' => 2, 'params' => 3)
             );
         }
 
@@ -304,9 +296,9 @@ class Router implements RouterInterface, InjectionAwareInterface
     /**
      * Sets the URI source. One of the URI_SOURCE_* constants
      *
-     *<code>
+     * <code>
      *  $router->setUriSource(Router::URI_SOURCE_SERVER_REQUEST_URI);
-     *</code>
+     * </code>
      *
      * @param int $uriSource
      * @return \Phalcon\Mvc\Router
@@ -417,12 +409,12 @@ class Router implements RouterInterface, InjectionAwareInterface
      * Sets an array of default paths. If a route is missing a path the router will use the defined here
      * This method must not be used to set a 404 route
      *
-     *<code>
+     * <code>
      * $router->setDefaults(array(
      *      'module' => 'common',
      *      'action' => 'index'
      * ));
-     *</code>
+     * </code>
      *
      * @param array $defaults
      * @return \Phalcon\Mvc\Router
@@ -464,7 +456,7 @@ class Router implements RouterInterface, InjectionAwareInterface
 
     /**
      * Removes slashes at the end of a string
-    */
+     */
     private static function phalconRemoveExtraSlashes($str)
     {
         if (is_string($str) === false) {
@@ -481,13 +473,13 @@ class Router implements RouterInterface, InjectionAwareInterface
     /**
      * Handles routing information received from the rewrite engine
      *
-     *<code>
+     * <code>
      * //Read the info from the rewrite engine
      * $router->handle();
      *
      * //Manually passing an URL
      * $router->handle('/posts/edit/1');
-     *</code>
+     * </code>
      *
      * @param string|null $uri
      * @throws Exception
@@ -506,17 +498,17 @@ class Router implements RouterInterface, InjectionAwareInterface
         }
 
         //Runtime variables
-        $request = null;
+        $request         = null;
         $currentHostName = null;
-        $routeFound = false;
-        $matches = null;
-        $parts = array();
-        $params = array();
+        $routeFound      = false;
+        $matches         = null;
+        $parts           = array();
+        $params          = array();
 
         //Set status properties
-        $this->_wasMatched = false;
+        $this->_wasMatched   = false;
         $this->_matchedRoute = null;
-        
+
         $routes = (is_array($this->_routes) === true ? $this->_routes : array());
 
         //Routes are traversed in reversed order
@@ -565,7 +557,7 @@ class Router implements RouterInterface, InjectionAwareInterface
                 //Check if the hostname restriction is the same as the current in the route
                 if (strpos($hostname, '(') !== false) {
                     if (strpos($hostname, '#') === false) {
-                        $hostname = '#^'.$hostname.'$#';
+                        $hostname = '#^' . $hostname . '$#';
                     }
 
                     $matched = (preg_match($hostname, $currentHostName) == 0 ? false : true);
@@ -617,7 +609,7 @@ class Router implements RouterInterface, InjectionAwareInterface
 
                                 //Check if the part has a converter
                                 if (isset($converters[$part]) === true) {
-                                    $converter = $converters[$part];
+                                    $converter    = $converters[$part];
                                     $parts[$part] = call_user_func_array($converter, $matchPosition);
                                     continue;
                                 }
@@ -627,7 +619,7 @@ class Router implements RouterInterface, InjectionAwareInterface
                             } else {
                                 //Apply the converters anyway
                                 if (isset($converters[$part]) === true) {
-                                    $converter = $converters[$part];
+                                    $converter    = $converters[$part];
                                     $parts[$part] = call_user_func_array($converter, array($position));
                                 }
                             }
@@ -648,7 +640,7 @@ class Router implements RouterInterface, InjectionAwareInterface
         //The route wasn't found, try to use the not-found paths
         if ($routeFound !== true) {
             if (is_null($this->_notFoundPaths) === false) {
-                $parts = $this->_notFoundPaths;
+                $parts      = $this->_notFoundPaths;
                 $routeFound = true;
             }
         }
@@ -676,7 +668,7 @@ class Router implements RouterInterface, InjectionAwareInterface
             }
 
             //Check for exact controller name
-            $exactStrIdentifer = chr(0).'exact';
+            $exactStrIdentifer = chr(0) . 'exact';
             if (isset($parts[$exactStrIdentifer]) === true) {
                 $this->_isExactControllerName = $parts[$exactStrIdentifer];
                 unset($parts[$exactStrIdentifer]);
@@ -707,7 +699,7 @@ class Router implements RouterInterface, InjectionAwareInterface
             //Check for parameters
             $params = array();
             if (isset($parts['params']) === true) {
-                $paramStr = (string)substr($parts['params'], 1, 0);
+                $paramStr = (string) substr($parts['params'], 1, 0);
                 if (empty($paramStr) === false) {
                     $params = explode($paramStr, '/');
                 }
@@ -724,20 +716,20 @@ class Router implements RouterInterface, InjectionAwareInterface
             $this->_params = $params;
         } else {
             //Use default values if the route hasn't matched
-            $this->_namespace = $this->_defaultNamespace;
-            $this->_module = $this->_defaultModule;
+            $this->_namespace  = $this->_defaultNamespace;
+            $this->_module     = $this->_defaultModule;
             $this->_controller = $this->_defaultController;
-            $this->_action = $this->_defaultAction;
-            $this->_params = $this->_defaultParams;
+            $this->_action     = $this->_defaultAction;
+            $this->_params     = $this->_defaultParams;
         }
     }
 
     /**
      * Adds a route to the router without any HTTP constraint
      *
-     *<code>
+     * <code>
      * $router->add('/about', 'About::index');
-     *</code>
+     * </code>
      *
      * @param string $pattern
      * @param string|array|null $paths
@@ -1051,4 +1043,5 @@ class Router implements RouterInterface, InjectionAwareInterface
     {
         return $this->_isExactControllerName;
     }
+
 }

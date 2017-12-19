@@ -1,13 +1,5 @@
 <?php
-/**
- * Mongo Cache Backend
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Cache\Backend;
 
 use \Phalcon\Cache\Backend;
@@ -21,7 +13,7 @@ use \Mongo as NativeMongo;
  *
  * Allows to cache output fragments, PHP data or raw data to a MongoDb backend
  *
- *<code>
+ * <code>
  *
  * // Cache data for 2 days
  * $frontCache = new Phalcon\Cache\Frontend\Base64(array(
@@ -41,18 +33,19 @@ use \Mongo as NativeMongo;
  * //Get data
  * $data = $cache->get('my-data');
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/backend/mongo.c
  */
 class Mongo extends Backend implements BackendInterface
 {
+
     /**
      * Mongo Collection
      *
      * @var null|\MongoCollection
      * @access protected
-    */
+     */
     protected $_collection;
 
     /**
@@ -116,7 +109,7 @@ class Mongo extends Backend implements BackendInterface
             }
 
             //Make the connection and get the collection
-            $mongoDatabase = $mongo->selectDB($this->_options['db']);
+            $mongoDatabase     = $mongo->selectDB($this->_options['db']);
             $this->_collection = $mongoDatabase->selectCollection($this->_options['collection']);
         }
 
@@ -146,7 +139,7 @@ class Mongo extends Backend implements BackendInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $keyName = $this->_prefix.$keyName;
+        $keyName  = $this->_prefix . $keyName;
         $document = $this->_getCollection->findOne(array('key' => $keyName));
 
         if (is_array($document) === true) {
@@ -182,7 +175,7 @@ class Mongo extends Backend implements BackendInterface
         if (is_null($keyName) === true) {
             $keyName = $this->_lastKey;
         } elseif (is_string($keyName) === true || is_int($keyName) === true) {
-            $keyName = $this->_prefix.$keyName;
+            $keyName = $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -209,9 +202,9 @@ class Mongo extends Backend implements BackendInterface
 
         /* Store */
         $preparedContent = $this->_frontend->beforeStore($content);
-        $collection = $this->_getCollection();
-        $ttl = time() + $lifetime;
-        $document = $collection->findOne(array('key' => $keyName));
+        $collection      = $this->_getCollection();
+        $ttl             = time() + $lifetime;
+        $document        = $collection->findOne(array('key' => $keyName));
         if (is_array($document) === true) {
             $document['time'] = $ttl;
             $document['data'] = $preparedContent;
@@ -248,7 +241,7 @@ class Mongo extends Backend implements BackendInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $keyName = $this->_prefix.$keyName;
+        $keyName    = $this->_prefix . $keyName;
         $collection = $this->_getCollection();
 
         $collection->remove(array('key' => $keyName));
@@ -267,7 +260,7 @@ class Mongo extends Backend implements BackendInterface
         $collection = $this->_getCollection();
 
         if (is_string($prefix) === true) {
-            $regex = new MongoRegex('/^'.$prefix.'/');
+            $regex      = new MongoRegex('/^' . $prefix . '/');
             $conditions = array('key' => $regex);
         } elseif (is_null($prefix) === true) {
             $conditions = array();
@@ -275,7 +268,7 @@ class Mongo extends Backend implements BackendInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $keys = array();
+        $keys      = array();
         $documents = iterator_to_array($collection->find($conditions, array('key')));
 
         foreach ($documents as $key => $document) {
@@ -299,7 +292,7 @@ class Mongo extends Backend implements BackendInterface
         if (is_null($keyName) === true) {
             $keyName = $this->_lastKey;
         } elseif (is_string($keyName) === true) {
-            $keyName = $this->_prefix.$keyName;
+            $keyName = $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -319,4 +312,5 @@ class Mongo extends Backend implements BackendInterface
 
         return false;
     }
+
 }

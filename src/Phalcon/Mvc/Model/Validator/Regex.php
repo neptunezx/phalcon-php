@@ -1,13 +1,5 @@
 <?php
-/**
- * Regex Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Validator;
 
 use \Phalcon\Mvc\Model\Validator;
@@ -20,11 +12,11 @@ use \Phalcon\Mvc\ModelInterface;
  *
  * Allows validate if the value of a field matches a regular expression
  *
- *<code>
- *use Phalcon\Mvc\Model\Validator\Regex as RegexValidator;
+ * <code>
+ * use Phalcon\Mvc\Model\Validator\Regex as RegexValidator;
  *
- *class Subscriptors extends Phalcon\Mvc\Model
- *{
+ * class Subscriptors extends Phalcon\Mvc\Model
+ * {
  *
  *  public function validation()
  *  {
@@ -37,13 +29,14 @@ use \Phalcon\Mvc\ModelInterface;
  *      }
  *  }
  *
- *}
- *</code>
+ * }
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/regex.c
  */
 class Regex extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validator
      *
@@ -71,7 +64,7 @@ class Regex extends Validator implements ValidatorInterface
 
         $value = $this->readAttribute($fieldName);
 
-        $failed = false;
+        $failed  = false;
         $matches = null;
 
         //Check if the value matches using preg_match
@@ -85,7 +78,7 @@ class Regex extends Validator implements ValidatorInterface
             //Check if the develop has defined a custom message
             $message = $this->getOption('message');
             if (isset($message) === false) {
-                $message = "Value of field '".$fieldName."' doesn't match regular expression";
+                $message = "Value of field '" . $fieldName . "' doesn't match regular expression";
             }
 
             $this->appendMessage($message, $fieldName, 'Regex');
@@ -94,4 +87,5 @@ class Regex extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

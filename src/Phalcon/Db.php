@@ -1,13 +1,5 @@
 <?php
-/**
- * Database
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon;
 
 use \Phalcon\Db\Exception as DbException;
@@ -26,7 +18,7 @@ use \Phalcon\Db\Exception as DbException;
  *
  * <code>
  *
- *try {
+ * try {
  *
  *  $connection = new Phalcon\Db\Adapter\Pdo\Mysql(array(
  *     'host' => '192.168.0.11',
@@ -42,9 +34,9 @@ use \Phalcon\Db\Exception as DbException;
  *    print_r($robot);
  *  }
  *
- *} catch (Phalcon\Db\Exception $e) {
+ * } catch (Phalcon\Db\Exception $e) {
  *  echo $e->getMessage(), PHP_EOL;
- *}
+ * }
  *
  * </code>
  *
@@ -52,32 +44,33 @@ use \Phalcon\Db\Exception as DbException;
  */
 abstract class Db
 {
+
     /**
      * Fetch associative array
      *
      * @var int
-    */
+     */
     const FETCH_ASSOC = 1;
 
     /**
      * Fetch associative and numeric array
      *
      * @var int
-    */
+     */
     const FETCH_BOTH = 2;
 
     /**
      * Fetch numeric array
      *
      * @var int
-    */
+     */
     const FETCH_NUM = 3;
 
     /**
      * Fetch object
      *
      * @var int
-    */
+     */
     const FETCH_OBJ = 4;
 
     /**
@@ -93,7 +86,8 @@ abstract class Db
         }
 
         if (isset($options['escapeSqlIdentifiers']) === true) {
-            $GLOBALS['__phalcon_db__escape_identifiers'] = (bool)$options['escapeSqlIdentifiers'];
+            $GLOBALS['__phalcon_db__escape_identifiers'] = (bool) $options['escapeSqlIdentifiers'];
         }
     }
+
 }

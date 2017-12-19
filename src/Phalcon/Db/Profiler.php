@@ -1,13 +1,5 @@
 <?php
-/**
- * Profiler
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db;
 
 use \Phalcon\Db\Profiler\Item;
@@ -20,7 +12,7 @@ use \Phalcon\Db\Profiler\Item;
  * information includes execution time in miliseconds.
  * This helps you to identify bottlenecks in your applications.
  *
- *<code>
+ * <code>
  *
  *  $profiler = new Phalcon\Db\Profiler();
  *
@@ -42,18 +34,19 @@ use \Phalcon\Db\Profiler\Item;
  *  echo "Final Time: ", $profile->getFinalTime(), "\n";
  *  echo "Total Elapsed Time: ", $profile->getTotalElapsedSeconds(), "\n";
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/profiler.c
  */
 class Profiler
 {
+
     /**
      * All Profiles
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_allProfiles;
 
     /**
@@ -61,7 +54,7 @@ class Profiler
      *
      * @var null|\Phalcon\Db\Profiler\Item
      * @access protected
-    */
+     */
     protected $_activeProfile;
 
     /**
@@ -69,7 +62,7 @@ class Profiler
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_totalSeconds = 0;
 
     /**
@@ -101,9 +94,9 @@ class Profiler
     {
         $finalTime = microtime(true);
 
-        $activeProfile = $this->_activeProfile;
+        $activeProfile       = $this->_activeProfile;
         $this->_activeProfile->setFinalTime($finalTime);
-        $difference = $finalTime - $activeProfile->getInitialTime();
+        $difference          = $finalTime - $activeProfile->getInitialTime();
         $this->_totalSeconds = $this->_totalSeconds + $difference;
 
         if (is_array($this->_allProfiles) === false) {
@@ -173,4 +166,5 @@ class Profiler
     {
         return $this->_activeProfile;
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Validation Failed
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Mvc\Model\Exception;
@@ -23,12 +15,13 @@ use \Phalcon\Mvc\Model;
  */
 class ValidationFailed extends Exception
 {
+
     /**
      * Model
      *
      * @var null|\Phalcon\Mvc\Model
      * @access protected
-    */
+     */
     protected $_model;
 
     /**
@@ -36,7 +29,7 @@ class ValidationFailed extends Exception
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_messages;
 
     /**
@@ -55,8 +48,8 @@ class ValidationFailed extends Exception
             throw new Exception('Validation failed');
         }
 
-        $message_str = $validationMessages[0]->getMessage();
-        $this->_model = $model;
+        $message_str     = $validationMessages[0]->getMessage();
+        $this->_model    = $model;
         $this->_messages = $validationMessages;
         parent::__construct($validationMessages[0]);
     }
@@ -80,4 +73,5 @@ class ValidationFailed extends Exception
     {
         return $this->_model;
     }
+
 }

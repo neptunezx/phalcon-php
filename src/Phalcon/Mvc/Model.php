@@ -1,13 +1,5 @@
 <?php
-/**
- * Model
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc;
 
 use \Phalcon\Mvc\ModelInterface;
@@ -65,6 +57,7 @@ use \stdClass;
  */
 abstract class Model implements ModelInterface, ResultInterface, InjectionAwareInterface, Serializable
 {
+
     /**
      * Operation: None
      *
@@ -119,7 +112,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -159,7 +152,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_dirtyState = 1;
 
     /**
@@ -191,7 +184,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_uniqueTypes;
 
     /**
@@ -325,12 +318,12 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     {
         if (is_object($this->_modelsMetaData) === false) {
             /*
-            @see __construct
+              @see __construct
 
-            if(is_object($this->_dependencyInjector) === false) {
-                throw new Exception('A dependency injector container is required to obtain the services related to the ORM');
-            }
-            */
+              if(is_object($this->_dependencyInjector) === false) {
+              throw new Exception('A dependency injector container is required to obtain the services related to the ORM');
+              }
+             */
             $metaData = $this->_dependencyInjector->getShared('modelsMetadata');
             if (is_object($metaData) === false) {
                 //@note no interface validation
@@ -356,11 +349,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Sets a transaction related to the Model instance
      *
-     *<code>
-     *use \Phalcon\Mvc\Model\Transaction\Manager as TxManager;
-     *use \Phalcon\Mvc\Model\Transaction\Failed as TxFailed;
+     * <code>
+     * use \Phalcon\Mvc\Model\Transaction\Manager as TxManager;
+     * use \Phalcon\Mvc\Model\Transaction\Failed as TxFailed;
      *
-     *try {
+     * try {
      *
      *  $txManager = new TxManager();
      *
@@ -383,11 +376,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *
      *  $transaction->commit();
      *
-     *} catch (TxFailed $e) {
+     * } catch (TxFailed $e) {
      *  echo 'Failed, reason: ', $e->getMessage();
-     *}
+     * }
      *
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
      * @return \Phalcon\Mvc\Model
@@ -589,13 +582,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Assigns values to a model from an array
      *
-     *<code>
-     *$robot->assign(array(
+     * <code>
+     * $robot->assign(array(
      *  'type' => 'mechanical',
      *  'name' => 'Astro Boy',
      *  'year' => 1952
-     *));
-     *</code>
+     * ));
+     * </code>
      *
      * @param array $data
      * @param array|null $columnMap
@@ -605,7 +598,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public function assign($data, $columnMap = null)
     {
         if (is_array($data) === false) {
-            throw new  Exception('Data to dump in the object must be an Array');
+            throw new Exception('Data to dump in the object must be an Array');
         }
 
         if (is_array($columnMap) === false &&
@@ -621,7 +614,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 if (isset($columnMap[$key]) === true) {
                     $this->$columnMap[$key] = $value;
                 } else {
-                    throw new Exception("Column \"".$key."\" doesn't make part of the column map");
+                    throw new Exception("Column \"" . $key . "\" doesn't make part of the column map");
                 }
             } else {
                 $this->$key = $value;
@@ -632,13 +625,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Assigns values to a model from an array returning a new model.
      *
-     *<code>
-     *$robot = \Phalcon\Mvc\Model::cloneResultMap(new Robots(), array(
+     * <code>
+     * $robot = \Phalcon\Mvc\Model::cloneResultMap(new Robots(), array(
      *  'type' => 'mechanical',
      *  'name' => 'Astro Boy',
      *  'year' => 1952
-     *));
-     *</code>
+     * ));
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $base
      * @param array $data
@@ -685,7 +678,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     if (isset($columnMap[$key]) === true) {
                         $object->$attribute = $value;
                     } else {
-                        throw new Exception('Column "'.$key.'" doesn\'t make part of the column map');
+                        throw new Exception('Column "' . $key . '" doesn\'t make part of the column map');
                     }
                 } else {
                     $object->$key = $value;
@@ -744,7 +737,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 if (is_array($columnMap) === true) {
                     //Every field must be part of the column map
                     if (isset($columnMap[$key]) === false) {
-                        throw new Exception('Column "'.$key.'" doesn\'t make part of the column map');
+                        throw new Exception('Column "' . $key . '" doesn\'t make part of the column map');
                     }
 
                     $attribute = $columnMap[$key];
@@ -769,13 +762,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Assigns values to a model from an array returning a new model
      *
-     *<code>
-     *$robot = \Phalcon\Mvc\Model::cloneResult(new Robots(), array(
+     * <code>
+     * $robot = \Phalcon\Mvc\Model::cloneResult(new Robots(), array(
      *  'type' => 'mechanical',
      *  'name' => 'Astro Boy',
      *  'year' => 1952
-     *));
-     *</code>
+     * ));
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $base
      * @param array $data
@@ -868,10 +861,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         //Builds a query with the passed parameters
         $builder = new Builder($params);
         $builder->from(get_called_class());
-        $query = $builder->getQuery();
+        $query   = $builder->getQuery();
 
         $bindParams = null;
-        $bindTypes = null;
+        $bindTypes  = null;
 
         //Check for bind parameters
         if (isset($params['bind']) === true) {
@@ -940,7 +933,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         $query = $builder->getQuery();
 
         $bindParams = null;
-        $bindTypes = null;
+        $bindTypes  = null;
 
         //Check for bind parameters
         if (isset($params['bind']) === true) {
@@ -1000,13 +993,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $uniqueParams = null;
-        $uniqueTypes = null;
+        $uniqueParams  = null;
+        $uniqueTypes   = null;
         $numberPrimary = null;
 
         //Builds an unique primary key condition
         if (is_null($this->_uniqueKey) === true) {
-            $primaryKeys = $metaData->getPrimaryKeyAttributes($this);
+            $primaryKeys   = $metaData->getPrimaryKeyAttributes($this);
             $bindDataTypes = $metaData->getBindTypes($this);
             $numberPrimary = count($primaryKeys);
 
@@ -1022,8 +1015,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 $columnMap = null;
             }
 
-            $wherePk = array();
-            $uniqueKeys = array();
+            $wherePk     = array();
+            $uniqueKeys  = array();
             $uniqueTypes = array();
             $numberEmpty = 0;
 
@@ -1033,7 +1026,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     if (isset($columnMap[$field]) === true) {
                         $attributeField = $columnMap[$field];
                     } else {
-                        throw new Exception("Column '".$field."' isn't part of the column map");
+                        throw new Exception("Column '" . $field . "' isn't part of the column map");
                     }
                 } else {
                     $attributeField = $field;
@@ -1056,12 +1049,12 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 }
 
                 if (isset($bindDataTypes[$field]) === false) {
-                    throw new Exception("Column '".$field."' isn't part of the table columns");
+                    throw new Exception("Column '" . $field . "' isn't part of the table columns");
                 }
 
-                $type = $bindDataTypes[$field];
+                $type          = $bindDataTypes[$field];
                 $uniqueTypes[] = $type;
-                $wherePk[] = $connection->escapeIdentifier($field).' = ?';
+                $wherePk[]     = $connection->escapeIdentifier($field) . ' = ?';
             }
 
             //There are no primary key fields defined, assume the record does not eist
@@ -1072,10 +1065,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             $joinWhere = implode(' AND ', $wherePk);
 
             //The unique key is composed of 3 parts _uniqueKey, _uniqueParams, _uniqueTypes
-            $this->_uniqueKey = $joinWhere;
+            $this->_uniqueKey    = $joinWhere;
             $this->_uniqueParams = $uniqueParams;
-            $this->_uniqueTypes = $uniqueTypes;
-            $uniqueKey = $joinWhere;
+            $this->_uniqueTypes  = $uniqueTypes;
+            $uniqueKey           = $joinWhere;
         }
 
         //If we already know if the record exists we don't check it
@@ -1105,8 +1098,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //Here we use a single COUNT(*) without PHQL to make the execution faster
-        $select = 'SELECT COUNT(*) "rowcount" FROM '.$connection->escapeIdentifier($table).' WHERE '.$uniqueKey;
-        $num = $connection->fetchOne($select, null, $uniqueParams, $uniqueTypes);
+        $select = 'SELECT COUNT(*) "rowcount" FROM ' . $connection->escapeIdentifier($table) . ' WHERE ' . $uniqueKey;
+        $num    = $connection->fetchOne($select, null, $uniqueParams, $uniqueTypes);
 
         if ($num['rowcount'] != 0) {
             $this->_dirtyState = 0;
@@ -1152,12 +1145,12 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //Builds the column to query according to the received parameters
         if (isset($params['distinct']) === true) {
-            $columns = $function.'(DISTINCT '.$params['distinct'].') AS '.$alias;
+            $columns = $function . '(DISTINCT ' . $params['distinct'] . ') AS ' . $alias;
         } else {
             if (isset($params['group']) === true) {
-                $columns = $params['group'].', '.$function.'('.$params['group'].') AS '.$alias;
+                $columns = $params['group'] . ', ' . $function . '(' . $params['group'] . ') AS ' . $alias;
             } else {
-                $columns = $function.'('.$groupColumn.') AS '.$alias;
+                $columns = $function . '(' . $groupColumn . ') AS ' . $alias;
             }
         }
 
@@ -1165,10 +1158,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         $builder = new Builder($params);
         $builder->columns($columns);
         $builder->from(get_called_class());
-        $query = $builder->getQuery();
+        $query   = $builder->getQuery();
 
         $bindParams = null;
-        $bindTypes = null;
+        $bindTypes  = null;
         //Check for bind parameters
         if (isset($params['bind']) === true) {
             $bindParams = $params['bind'];
@@ -1400,7 +1393,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     {
         if (is_object($message) === false ||
             $message instanceof MessageInterface === false) {
-            throw new Exception("Invalid message format '".getType($message)."'");
+            throw new Exception("Invalid message format '" . getType($message) . "'");
         }
 
         if (is_array($this->_errorMessages) === false) {
@@ -1415,11 +1408,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Executes validators on every validation call
      *
-     *<code>
-     *use \Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionIn;
+     * <code>
+     * use \Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionIn;
      *
-     *class Subscriptors extends \Phalcon\Mvc\Model
-     *{
+     * class Subscriptors extends \Phalcon\Mvc\Model
+     * {
      *
      *  public function validation()
      *  {
@@ -1432,8 +1425,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *      }
      *  }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param object $validator
      * @return \Phalcon\Mvc\Model
@@ -1464,11 +1457,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Check whether validation process has generated any messages
      *
-     *<code>
-     *use \Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionIn;
+     * <code>
+     * use \Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionIn;
      *
-     *class Subscriptors extends \Phalcon\Mvc\Model
-     *{
+     * class Subscriptors extends \Phalcon\Mvc\Model
+     * {
      *
      *  public function validation()
      *  {
@@ -1481,8 +1474,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *      }
      *  }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @return boolean
      */
@@ -1494,7 +1487,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Returns all the validation messages
      *
-     *<code>
+     * <code>
      *  $robot = new Robots();
      *  $robot->type = 'mechanical';
      *  $robot->name = 'Astro Boy';
@@ -1551,9 +1544,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                         //Since relations can have multiple columns or a single one, we need to build a
                         //condition for each of these cases
-                        $conditions = array();
-                        $bindParams = array();
-                        $fields = $relation->getFields();
+                        $conditions       = array();
+                        $bindParams       = array();
+                        $fields           = $relation->getFields();
                         $referencedFields = $relation->getReferencedFields();
 
                         if (is_array($fields) === true) {
@@ -1565,7 +1558,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                                     $value = null;
                                 }
 
-                                $conditions[] = '['.$referencedFields[$position].'] = ?'.$position;
+                                $conditions[] = '[' . $referencedFields[$position] . '] = ?' . $position;
                                 $bindParams[] = $value;
                             }
                         } else {
@@ -1575,7 +1568,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                             } else {
                                 $value = null;
                             }
-                            $conditions[] = '['.$referencedFields.'] = ?0';
+                            $conditions[] = '[' . $referencedFields . '] = ?0';
                             $bindParams[] = $value;
                         }
 
@@ -1588,7 +1581,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         //parameters
                         $joinConditions = implode(' AND ', $conditions);
 
-                        $parameters[] = $joinConditions;
+                        $parameters[]       = $joinConditions;
                         $parameters['bind'] = $bindParams;
 
                         //Lets make the checking
@@ -1599,9 +1592,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                                 $userMessage = $foreignKey['message'];
                             } else {
                                 if (is_array($fields) === true) {
-                                    $userMessage = 'Value of fields "'.implode(', ', $fields).'" does not exist on referenced table';
+                                    $userMessage = 'Value of fields "' . implode(', ', $fields) . '" does not exist on referenced table';
                                 } else {
-                                    $userMessage = 'Value of field "'.$fields.'" does not exist on referenced table';
+                                    $userMessage = 'Value of field "' . $fields . '" does not exist on referenced table';
                                 }
                             }
 
@@ -1662,8 +1655,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         $relationClass = $relation->getReferencedModel();
 
                         //Load a plain instance from the models manager
-                        $referencedModel = $manager->load($relationClass);
-                        $fields = $relation->getFields();
+                        $referencedModel  = $manager->load($relationClass);
+                        $fields           = $relation->getFields();
                         $referencedFields = $relation->getReferencedFields();
 
                         //Create the checking conditions. A relation can have many fields or a single one
@@ -1680,7 +1673,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                                 $referencedField = $referencedFields[$position];
 
-                                $conditions[] = '['.$referencedField.'] = ?'.$position;
+                                $conditions[] = '[' . $referencedField . '] = ?' . $position;
                                 $bindParams[] = $value;
                             }
                         } else {
@@ -1690,7 +1683,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                                 $value = null;
                             }
 
-                            $conditions[] = '['.$referencedFields.'] = ?0';
+                            $conditions[] = '[' . $referencedFields . '] = ?0';
                             $bindParams[] = $value;
                         }
 
@@ -1703,7 +1696,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         //using bound parmeters
                         $joinConditions = implode(' AND ', $conditions);
 
-                        $parameters = array($joinConditions);
+                        $parameters         = array($joinConditions);
                         $parameters['bind'] = $bindParams;
 
                         //Checking
@@ -1713,7 +1706,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                             if (isset($foreignKey['message']) === true) {
                                 $userMessage = $foreignKey['message'];
                             } else {
-                                $userMessage = 'Record is referenced by model '.$relationClass;
+                                $userMessage = 'Record is referenced by model ' . $relationClass;
                             }
 
                             //Create a message
@@ -1771,8 +1764,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         $relationClass = $relation->getReferencedModel();
 
                         //Load a plain instance from the models manager
-                        $referencedModel = $manager->load($relationClass);
-                        $fields = $relation->getFields();
+                        $referencedModel  = $manager->load($relationClass);
+                        $fields           = $relation->getFields();
                         $referencedFields = $relation->getReferencedFields();
 
                         //Create the checking conditions. A relation can have many fields or a single one.
@@ -1787,7 +1780,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                                     $value = null;
                                 }
 
-                                $conditions[] = '['.$referencedFields[$position].'] = ?'.$position;
+                                $conditions[] = '[' . $referencedFields[$position] . '] = ?' . $position;
                                 $bindParams[] = $value;
                             }
                         } else {
@@ -1797,7 +1790,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                                 $value = null;
                             }
 
-                            $conditions[] = '['.$referencedFields.'] = ?0';
+                            $conditions[] = '[' . $referencedFields . '] = ?0';
                             $bindParams[] = $value;
                         }
 
@@ -1807,7 +1800,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         }
 
                         //Pass the values using bound parameters
-                        $parameters = array(implode(' AND ', $conditions));
+                        $parameters         = array(implode(' AND ', $conditions));
                         $parameters['bind'] = $bindParams;
 
                         //Let's make the checking
@@ -1837,7 +1830,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     protected function _preSave($metaData, $exists, $identityField)
     {
         if (is_object($metaData) === false ||
-            $metaData instanceof MetaDataInterface  === false ||
+            $metaData instanceof MetaDataInterface === false ||
             is_bool($exists) === false ||
             is_string($identityField) === false) {
             throw new Exception('Invalid parameter type.');
@@ -1902,7 +1895,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                             if (isset($columnMap[$field]) === true) {
                                 $attributeField = $columnMap[$field];
                             } else {
-                                throw new Exception("Column '".$field."' isn't part of the column map");
+                                throw new Exception("Column '" . $field . "' isn't part of the column map");
                             }
                         } else {
                             $attributeField = $field;
@@ -1940,8 +1933,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                             }
 
                             //A implicit PresenceOf message is created
-                            $this->_errorMessages[] = new Message($attributeField.' is required', $attributeField, 'PresenceOf');
-                            $error = true;
+                            $this->_errorMessages[] = new Message($attributeField . ' is required', $attributeField, 'PresenceOf');
+                            $error                  = true;
                         }
                     }
                 }
@@ -2068,14 +2061,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $bindSkip = 1024;
-        $fields = array();
-        $values = array();
+        $bindSkip  = 1024;
+        $fields    = array();
+        $values    = array();
         $bindTypes = array();
         $columnMap = null;
 
-        $attributes = $metaData->getAttributes($this);
-        $bindDataTypes = $metaData->getBindTypes($this);
+        $attributes          = $metaData->getAttributes($this);
+        $bindDataTypes       = $metaData->getBindTypes($this);
         $automaticAttributes = $metaData->getAutomaticCreateAttributes($this);
 
         if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
@@ -2090,7 +2083,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 if (isset($columnMap[$field]) === true) {
                     $attributeField = $columnMap[$field];
                 } else {
-                    throw new Exception("Column '".$field."' isn't part of the column map");
+                    throw new Exception("Column '" . $field . "' isn't part of the column map");
                 }
             } else {
                 $attributeField = $field;
@@ -2104,14 +2097,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 if (isset($this->$attributeField) === true) {
                     //Every column must have a bind data type defined
                     if (isset($bindDataTypes[$field]) === false) {
-                        throw new Exception("Column '".$field."' has not defined a bind data type");
+                        throw new Exception("Column '" . $field . "' has not defined a bind data type");
                     }
 
-                    $value = $this->$attributeField;
-                    $values[] = $value;
+                    $value       = $this->$attributeField;
+                    $values[]    = $value;
                     $bindTypes[] = $bindDataTypes[$field];
                 } else {
-                    $values[] = null;
+                    $values[]  = null;
                     $bindTypes = $bindSkip;
                 }
             }
@@ -2133,7 +2126,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 if (isset($columnMap[$identityField]) === true) {
                     $attributeField = $columnMap[$identityField];
                 } else {
-                    throw new Exception("Identity column '".$identityField."' isn't part of the column map");
+                    throw new Exception("Identity column '" . $identityField . "' isn't part of the column map");
                 }
             } else {
                 $attributeField = $identityField;
@@ -2144,7 +2137,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 $value = $this->$attributeField;
                 if (empty($value) === true) {
                     if ($useExplicitIdentity === true) {
-                        $values[] = $defaultValue;
+                        $values[]    = $defaultValue;
                         $bindTypes[] = $bindSkip;
                     }
                 } else {
@@ -2155,15 +2148,15 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                     //The field is valid - we look for a bind value (normally int)
                     if (isset($bindDataTypes[$identityField]) === false) {
-                        throw new Exception("Identity column '".$identityField."' isn't part of the table columns");
+                        throw new Exception("Identity column '" . $identityField . "' isn't part of the table columns");
                     }
 
-                    $values[] = $value;
+                    $values[]    = $value;
                     $bindTypes[] = $bindDataTypes[$identityField];
                 }
             } else {
                 if ($useExplicitIdentity === true) {
-                    $values[] = $defaultValue;
+                    $values[]    = $defaultValue;
                     $bindTypes[] = $bindSkip;
                 }
             }
@@ -2173,19 +2166,19 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         $success = $connection->insert($table, $values, $fields, $bindTypes);
         if ($identityFieldIsNotFalse === true) {
             //We check if the model has sequences
-            $sequenceName = null;
+            $sequenceName     = null;
             $supportSequences = $connection->supportSequences();
             if ($supportSequences == true) {
                 if (method_exists($this, 'getSequenceName') === true) {
                     $sequenceName = $this->getSequenceName();
                 } else {
-                    $source = $this->getSource();
-                    $sequenceName = $source.'_'.$identityField.'_seq';
+                    $source       = $this->getSource();
+                    $sequenceName = $source . '_' . $identityField . '_seq';
                 }
             }
 
             //Recover the last "insert id" and assign it to the object
-            $lastInsertId = $connection->lastInsertId($sequenceName);
+            $lastInsertId          = $connection->lastInsertId($sequenceName);
             $this->$attributeField = $lastInsertId;
 
             //Since the primary key was modified, we delete the _uniqueParams to force any
@@ -2219,12 +2212,12 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $bindSkip = 1024;
-        $fields = array();
-        $values = array();
+        $bindSkip  = 1024;
+        $fields    = array();
+        $values    = array();
         $bindTypes = array();
 
-        $manager = $this->_modelsManager;
+        $manager         = $this->_modelsManager;
         $isDynamicUpdate = $manager->isDynamicUpdate($this);
         if ($isDynamicUpdate === true) {
             if (is_array($this->_snapshot) === false) {
@@ -2232,8 +2225,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             }
         }
 
-        $bindDataTypes = $metaData->getBindTypes($this);
-        $nonPrimary = $metaData->getNonPrimaryKeysAttributes($this);
+        $bindDataTypes       = $metaData->getBindTypes($this);
+        $nonPrimary          = $metaData->getNonPrimaryKeysAttributes($this);
         $automaticAttributes = $metaData->getAutomaticUpdateAttributes($this);
 
         if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
@@ -2249,7 +2242,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             if (isset($automaticAttributes[$field]) === false) {
                 //Check the bind type for field
                 if (isset($bindDataTypes[$field]) === false) {
-                    throw new Exception("Column '".$field."' have not defined a bind data type");
+                    throw new Exception("Column '" . $field . "' have not defined a bind data type");
                 }
 
                 //Check if the model has a column map
@@ -2257,7 +2250,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     if (isset($columnMap[$field]) === true) {
                         $attributeField = $columnMap[$field];
                     } else {
-                        throw new Exception("Column '".$field."' isn't part of the column map");
+                        throw new Exception("Column '" . $field . "' isn't part of the column map");
                     }
                 } else {
                     $attributeField = $field;
@@ -2270,8 +2263,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                     //When dynamic update is not used we pass every field to the update
                     if ($isDynamicUpdate === false) {
-                        $fields[] = $field;
-                        $values[] = $value;
+                        $fields[]    = $field;
+                        $values[]    = $value;
                         $bindTypes[] = $bindDataTypes[$field];
                     } else {
                         //If the field is not part of the snapshot we add them as changed
@@ -2287,14 +2280,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                         //Only changed values are added to the SQL update
                         if ($changed === true) {
-                            $fields[] = $field;
-                            $values[] = $value;
+                            $fields[]    = $field;
+                            $values[]    = $value;
                             $bindTypes[] = $bindDataTypes[$field];
                         }
                     }
                 } else {
-                    $fields[] = $field;
-                    $values[] = null;
+                    $fields[]    = $field;
+                    $values[]    = null;
                     $bindTypes[] = $bindSkip;
                 }
             }
@@ -2305,14 +2298,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             return true;
         }
 
-        $uniqueKey = $this->_uniqueKey;
+        $uniqueKey    = $this->_uniqueKey;
         $uniqueParams = $this->_uniqueParams;
-        $uniqueTypes = $this->_uniqueTypes;
+        $uniqueTypes  = $this->_uniqueTypes;
 
         //When unique params is null we need to rebuild the bind params
         if (is_array($this->_uniqueParams) === false) {
             $uniqueParams = array();
-            $primaryKeys = $metaData->getPrimaryKeyAttributes($this);
+            $primaryKeys  = $metaData->getPrimaryKeyAttributes($this);
 
             //We can't create dynamic SQL without a primary key
             if (empty($primaryKeys) === true) {
@@ -2325,14 +2318,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     if (isset($columnMap[$field]) === true) {
                         $attributeField = $columnMap[$field];
                     } else {
-                        throw new Exception("Column '".$field."' isn't part of the column map");
+                        throw new Exception("Column '" . $field . "' isn't part of the column map");
                     }
                 } else {
                     $attributeField = $field;
                 }
 
                 if (isset($this->$attributeField) === true) {
-                    $value = $this->$attributeField;
+                    $value          = $this->$attributeField;
                     $unqiueParams[] = $value;
                 } else {
                     $unqiueParams[] = null;
@@ -2353,7 +2346,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param object $model
      * @param object $target
      * @return boolean
-    */
+     */
     private static function getMessagesFromModel($pointer, $model, $target)
     {
         try {
@@ -2411,8 +2404,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         throw new Exception('Only objects can be stored as part of belongs-to relations');
                     }
 
-                    $columns = $relation->getFields();
-                    $referencedModel = $relation->getReferencedModel();
+                    $columns          = $relation->getFields();
+                    $referencedModel  = $relation->getReferencedModel();
                     $referencedFields = $relation->getReferencedFields();
                     if (is_array($columns) === true) {
                         $connection->rollback(false);
@@ -2456,9 +2449,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $nesting = false;
+        $nesting     = false;
         $newInstance = true;
-        $manager = $this->getModelsManager();
+        $manager     = $this->getModelsManager();
 
         foreach ($related as $name => $record) {
             //Try to get a relation with the same name
@@ -2476,8 +2469,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     throw new Exception("Only objects/arrays can be stored as part of has-many/has-one/has-many-to-many relations");
                 }
 
-                $columns = $relation->getFields();
-                $referencedModel = $relation->getReferencedModel();
+                $columns          = $relation->getFields();
+                $referencedModel  = $relation->getReferencedModel();
                 $referencedFields = $relation->getReferencedFields();
 
                 if (is_array($columns) === true) {
@@ -2494,7 +2487,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                 if (isset($this->$columns) === false) {
                     $connection->rollback($nesting);
-                    throw new Exception("The column '".$columns."' needs to be present in the model");
+                    throw new Exception("The column '" . $columns . "' needs to be present in the model");
                 }
 
                 //Get the value of the field from the current model
@@ -2505,8 +2498,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                 //Get the rest of intermediate model info
                 if ($isThrough === true) {
-                    $intermediateModelName = $relation->getIntermediateModel();
-                    $intermediateFields = $relation->getIntermediateFields();
+                    $intermediateModelName        = $relation->getIntermediateModel();
+                    $intermediateFields           = $relation->getIntermediateFields();
                     $intermediateReferencedFields = $relation->getIntermediateReferencedFields();
                 }
 
@@ -2559,7 +2552,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             } else {
                 if (is_array($record) === false) {
                     $connection->rollback($nesting);
-                    throw new Exception('There are no defined relations for the model "'.__CLASS__.'" using alias "'.$name.'"');
+                    throw new Exception('There are no defined relations for the model "' . __CLASS__ . '" using alias "' . $name . '"');
                 }
             }
         }
@@ -2572,7 +2565,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Inserts or updates a model instance. Returning true on success or false otherwise.
      *
-     *<code>
+     * <code>
      *  //Creating a new robot
      *  $robot = new Robots();
      *  $robot->type = 'mechanical';
@@ -2584,7 +2577,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *  $robot = Robots::findFirst("id=100");
      *  $robot->name = "Biomass";
      *  $robot->save();
-     *</code>
+     * </code>
      *
      * @param array|null $data
      * @param array|null $whiteList
@@ -2617,8 +2610,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     }
 
                     //We check if the field has a setter
-                    $value = $data[$attribute];
-                    $possibleSetter = 'set'.$attribute;
+                    $value          = $data[$attribute];
+                    $possibleSetter = 'set' . $attribute;
 
                     if (method_exists($this, $possibleSetter) === true) {
                         $this->$possibleSetter($value);
@@ -2723,7 +2716,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * Inserts a model instance. If the instance already exists in the persistance it will throw an exception
      * Returning true on success or false otherwise.
      *
-     *<code>
+     * <code>
      *  //Creating a new robot
      *  $robot = new Robots();
      *  $robot->type = 'mechanical';
@@ -2738,7 +2731,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *      'name' => 'Astroy Boy',
      *      'year' => 1952
      *  ));
-     *</code>
+     * </code>
      *
      * @param array|null $data
      * @param array|null $whiteList
@@ -2775,7 +2768,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     if (isset($columnMap[$attribute]) === true) {
                         $attributeField = $columnMap[$attribute];
                     } else {
-                        throw new Exception("Column '".$attribute."' isn't part of the column map");
+                        throw new Exception("Column '" . $attribute . "' isn't part of the column map");
                     }
                 } else {
                     $attributeField = $attribute;
@@ -2793,7 +2786,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     $value = $data[$attributeField];
 
                     //Check if the field has a possible setter
-                    $possibleSetter = 'set'.$attributeField;
+                    $possibleSetter = 'set' . $attributeField;
 
                     if (method_exists($this, $possibleSetter) === true) {
                         $this->$possibleSetter($value);
@@ -2812,7 +2805,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //If the record already exists we must throw an exception
         if ($exists === true) {
-            $modelMessage = new Message('Record cannot be created because it already exists', null, 'InvalidCreateAttempt');
+            $modelMessage         = new Message('Record cannot be created because it already exists', null, 'InvalidCreateAttempt');
             $this->_errorMessages = array($modelMessage);
             return false;
         }
@@ -2825,12 +2818,12 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * Updates a model instance. If the instance doesn't exist in the persistance it will throw an exception
      * Returning true on success or false otherwise.
      *
-     *<code>
+     * <code>
      *  //Updating a robot name
      *  $robot = Robots::findFirst("id=100");
      *  $robot->name = "Biomass";
      *  $robot->update();
-     *</code>
+     * </code>
      *
      * @param array|null $data
      * @param array|null $whiteList
@@ -2868,7 +2861,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     if (isset($columnMap[$attribute]) === true) {
                         $attributeField = $columnMap[$attribute];
                     } else {
-                        throw new Exception("Column '".$attribute."' isn't part of the column map");
+                        throw new Exception("Column '" . $attribute . "' isn't part of the column map");
                     }
                 } else {
                     $attributeField = $attribute;
@@ -2886,7 +2879,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     $value = $data[$attributeField];
 
                     //Try to find a possible setter
-                    $possibleSetter = 'set'.$attributeField;
+                    $possibleSetter = 'set' . $attributeField;
                     if (method_exists($this, $possibleSetter) === true) {
                         $this->$possibleSetter($value);
                     } else {
@@ -2903,7 +2896,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             }
 
             $readConnection = $this->getReadConnection();
-            $exists = $this->_exists($metaData, $readConnection);
+            $exists         = $this->_exists($metaData, $readConnection);
             if ($exists === false) {
                 $this->_errorMessages = array(new Message('Record cannot be updated because it does not exist', null, 'InvalidUpdateAttempt'));
                 return false;
@@ -2918,12 +2911,12 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * Deletes a model instance. Returning true on success or false otherwise.
      *
      * <code>
-     *$robot = Robots::findFirst("id=100");
-     *$robot->delete();
+     * $robot = Robots::findFirst("id=100");
+     * $robot->delete();
      *
-     *foreach (Robots::find("type = 'mechanical'") as $robot) {
+     * foreach (Robots::find("type = 'mechanical'") as $robot) {
      *   $robot->delete();
-     *}
+     * }
      * </code>
      *
      * @return boolean
@@ -2931,8 +2924,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function delete()
     {
-        $metaData = $this->getModelsMetaData();
-        $writeConnection = $this->getWriteConnection();
+        $metaData             = $this->getModelsMetaData();
+        $writeConnection      = $this->getWriteConnection();
         $this->_errorMessages = array();
 
         //Operation made is OP_DELETE
@@ -2945,10 +2938,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             return false;
         }
 
-        $value = array();
-        $bindTypes = array();
-        $conditions = array();
-        $primaryKeys = $metaData->getPrimaryKeyAttributes($this);
+        $value         = array();
+        $bindTypes     = array();
+        $conditions    = array();
+        $primaryKeys   = $metaData->getPrimaryKeyAttributes($this);
         $bindDataTypes = $metaData->getBindTypes($this);
 
         if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
@@ -2967,7 +2960,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         foreach ($primaryKeys as $primaryKey) {
             //Every column part of the primary key must be in the bind_data_types
             if (isset($bindDataTypes[$primaryKey]) === false) {
-                throw new Exception("Column '".$primaryKey."' have not defined a bind data type");
+                throw new Exception("Column '" . $primaryKey . "' have not defined a bind data type");
             }
 
             //Take the column values based on the column map if any
@@ -2975,7 +2968,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 if (isset($columnMap[$primaryKey]) === true) {
                     $attributeField = $columnMap[$primaryKey];
                 } else {
-                    throw new Exception("Column '".$primaryKey."' isn't part of the column map");
+                    throw new Exception("Column '" . $primaryKey . "' isn't part of the column map");
                 }
             } else {
                 $attributeField = $primaryKey;
@@ -2983,14 +2976,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
             //If the attribute is currently set in the object add it to the conditions
             if (isset($this->$attributeField) === false) {
-                throw new Exception("Cannot delete the record because the priamry key attribute: '".$attributeField."' wasn't set");
+                throw new Exception("Cannot delete the record because the priamry key attribute: '" . $attributeField . "' wasn't set");
             }
 
             $values[] = $this->$attributeField;
 
             //Escape the column identifier
-            $conditions[] = $writeConnection->escapeIdentifier($primaryKey).' = ?';
-            $bindTypes[] = $bindDataTypes[$primaryKey];
+            $conditions[] = $writeConnection->escapeIdentifier($primaryKey) . ' = ?';
+            $bindTypes[]  = $bindDataTypes[$primaryKey];
         }
 
         //Join the conditions in the array using an AND operator
@@ -3065,10 +3058,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('The record cannot be refreshed because it does not exist or is deleted');
         }
 
-        $metaData = $this->getModelsMetaData();
+        $metaData       = $this->getModelsMetaData();
         $readConnection = $this->getReadConnection();
-        $schema = $this->getSchema();
-        $source = $this->getSource();
+        $schema         = $this->getSchema();
+        $source         = $this->getSource();
 
         if ($schema == true) {
             $table = array($schema, $source);
@@ -3096,7 +3089,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //We only refresh the attributes in the model's metadata
         $attributes = $metaData->getAttributes($this);
-        $fields = array();
+        $fields     = array();
 
         foreach ($attributes as $attribute) {
             $fields[] = array($attribute);
@@ -3104,9 +3097,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //We directly build the SELECT to save resources
         $dialect = $readConnection->getDialect();
-        $sql = $dialect->select(array('columns' => $fields, 'tables' => $readConnection->escapeIdentifier($table),
-         'where' => $uniqueKey));
-        $row = $readConnection->fetchOne($sql, 1, $uniqueParams, $uniqueTypes);
+        $sql     = $dialect->select(array('columns' => $fields, 'tables'  => $readConnection->escapeIdentifier($table),
+            'where'   => $uniqueKey));
+        $row     = $readConnection->fetchOne($sql, 1, $uniqueParams, $uniqueTypes);
 
         //Get a column map if any
         $columnMap = $metaData->getColumnMap($this);
@@ -3180,18 +3173,18 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * Sets a list of attributes that must be skipped from the
      * generated INSERT/UPDATE statement
      *
-     *<code>
+     * <code>
      *
-     *class Robots extends \Phalcon\Mvc\Model
-     *{
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
      *       $this->skipAttributes(array('price'));
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param array $attributes
      * @param boolean|null $replace
@@ -3224,18 +3217,18 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * Sets a list of attributes that must be skipped from the
      * generated INSERT statement
      *
-     *<code>
+     * <code>
      *
-     *class Robots extends \Phalcon\Mvc\Model
-     *{
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
      *       $this->skipAttributesOnCreate(array('created_at'));
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param array $attributes
      * @param null|boolean $replace
@@ -3267,18 +3260,18 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * Sets a list of attributes that must be skipped from the
      * generated UPDATE statement
      *
-     *<code>
+     * <code>
      *
-     *class Robots extends \Phalcon\Mvc\Model
-     *{
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
      *       $this->skipAttributesOnUpdate(array('modified_in'));
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param array $attributes
      * @param null|boolean $replace
@@ -3309,18 +3302,18 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Setup a 1-1 relation between two models
      *
-     *<code>
+     * <code>
      *
-     *class Robots extends \Phalcon\Mvc\Model
-     *{
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
      *       $this->hasOne('id', 'RobotsDescription', 'robots_id');
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param mixed $fields
      * @param string $referenceModel
@@ -3336,18 +3329,18 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Setup a relation reverse 1-1  between two models
      *
-     *<code>
+     * <code>
      *
-     *class RobotsParts extends \Phalcon\Mvc\Model
-     *{
+     * class RobotsParts extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
      *       $this->belongsTo('robots_id', 'Robots', 'id');
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param mixed $fields
      * @param string $referenceModel
@@ -3363,18 +3356,18 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Setup a relation 1-n between two models
      *
-     *<code>
+     * <code>
      *
-     *class Robots extends \Phalcon\Mvc\Model
-     *{
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
      *       $this->hasMany('id', 'RobotsParts', 'robots_id');
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param mixed $fields
      * @param string $referenceModel
@@ -3390,10 +3383,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Setup a relation n-n between two models through an intermediate relation
      *
-     *<code>
+     * <code>
      *
-     *class Robots extends \Phalcon\Mvc\Model
-     *{
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
@@ -3408,8 +3401,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *      );
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param string $fields
      * @param string $intermediateModel
@@ -3423,26 +3416,19 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public function hasManyToMany($fields, $intermediateModel, $intermediateFields, $intermediateReferencedFields, $referenceModel, $referencedFields, $options = null)
     {
         return $this->_modelsManager->addHasManyToMany(
-            $this,
-            $fields,
-            $intermediateModel,
-            $intermediateFields,
-            $intermediateReferencedFields,
-            $referenceModel,
-            $referencedFields,
-            $options
+                $this, $fields, $intermediateModel, $intermediateFields, $intermediateReferencedFields, $referenceModel, $referencedFields, $options
         );
     }
 
     /**
      * Setups a behavior in a model
      *
-     *<code>
+     * <code>
      *
-     *use \Phalcon\Mvc\Model\Behavior\Timestampable;
+     * use \Phalcon\Mvc\Model\Behavior\Timestampable;
      *
-     *class Robots extends \Phalcon\Mvc\Model
-     *{
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
@@ -3454,8 +3440,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *      )));
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param \Phalcon\Mvc\Model\BehaviorInterface $behavior
      */
@@ -3467,18 +3453,18 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Sets if the model must keep the original record snapshot in memory
      *
-     *<code>
+     * <code>
      *
-     *class Robots extends \Phalcon\Mvc\Model
-     *{
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
      *      $this->keepSnapshots(true);
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param boolean $keepSnapshots
      */
@@ -3512,7 +3498,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                 //Every field must be part of the column map
                 if (isset($columnMap[$key]) === false) {
-                    throw new Exception('Column "'.$key.'" doesn\'t make part of the column map');
+                    throw new Exception('Column "' . $key . '" doesn\'t make part of the column map');
                 }
 
                 $snapshot[$columnMap[$key]] = $value;
@@ -3578,7 +3564,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //Data types are field indexes
         if (is_array($columnMap) === false) {
-            $attributes = $metaData->getDataTypes($this);
+            $attributes    = $metaData->getDataTypes($this);
             $allAttributes = $attributes;
         } else {
             $allAttributes = $columnMap;
@@ -3589,25 +3575,25 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             //We only make this validation over valid fields
             if (is_array($columnMap) === true) {
                 if (isset($columnMap[$fieldName]) === false) {
-                    throw new Exception("The field '".$fieldName."' is not part of the model");
+                    throw new Exception("The field '" . $fieldName . "' is not part of the model");
                 }
             } else {
                 if (isset($attributes[$fieldName]) === false) {
-                    throw new Exception("The field '".$fieldName."' is not part of the model");
+                    throw new Exception("The field '" . $fieldName . "' is not part of the model");
                 }
             }
 
             //The field is not part of the model - throw exception
             if (isset($this->$fieldName) === false) {
-                throw new Exception("The field '".$fieldName."' is not defined on the model");
+                throw new Exception("The field '" . $fieldName . "' is not defined on the model");
             }
 
             //The field is not part of the data snapshot, throw exception
             if (isset($this->_snapshot[$fieldName]) === false) {
-                throw new Exception("The field '".$fieldName."' was not found in the snapshot");
+                throw new Exception("The field '" . $fieldName . "' was not found in the snapshot");
             }
 
-            $value = $this->$fieldName;
+            $value         = $this->$fieldName;
             $originalValue = $this->_snapshot[$fieldName];
 
             //Check if the field has changed
@@ -3626,7 +3612,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 return true;
             }
 
-            $value = $this->$name;
+            $value         = $this->$name;
             $originalValue = $this->_snapshot[$name];
 
             if ($value !== $originalValue) {
@@ -3696,18 +3682,18 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Sets if a model must use dynamic update instead of the all-field update
      *
-     *<code>
+     * <code>
      *
-     *class Robots extends \Phalcon\Mvc\Model
-     *{
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
      *
      *   public function initialize()
      *   {
      *      $this->useDynamicUpdate(true);
      *   }
      *
-     *}
-     *</code>
+     * }
+     * </code>
      *
      * @param boolean $dynamicUpdate
      */
@@ -3738,20 +3724,19 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         //Query the relation by alias
         $relation = $this->_modelsManager->getRelationByAlias(__CLASS__, $alias);
         if (is_object($relation) === false) {
-            throw new Exception('There is no defined relations for the model "'.__CLASS__.'" using alias "'.$alias.'"'); //@note sic
+            throw new Exception('There is no defined relations for the model "' . __CLASS__ . '" using alias "' . $alias . '"'); //@note sic
         }
 
         //Call the 'getRelationRecords' in the model manager
         return call_user_func_array(
             array(
-                $this->_modelsManager,
-                'getRelationRecords'
-            ),
-            array(
-                $relation,
-                null,
-                $this,
-                $arguments)
+            $this->_modelsManager,
+            'getRelationRecords'
+            ), array(
+            $relation,
+            null,
+            $this,
+            $arguments)
         );
     }
 
@@ -3772,7 +3757,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $relation = null;
+        $relation    = null;
         $queryMethod = null;
 
         //Calling find/findFirst if the method starts with "get"
@@ -3783,7 +3768,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         //Calling count if the method starts with "count"
         if (is_object($relation) === false && strpos($method, 'count') === 0) {
             $queryMethod = 'count';
-            $relation = $this->_modelsManager->getRelationByAlias($modelName, substr($method, 5));
+            $relation    = $this->_modelsManager->getRelationByAlias($modelName, substr($method, 5));
         }
 
         //If the relation was found perform the query via the models manager
@@ -3796,14 +3781,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
             return call_user_func_array(
                 array(
-                    $this->_modelsManager,
-                    'getRelationRecords'
-                    ),
-                array(
-                    $relation,
-                    $queryMethod,
-                    $this,
-                    $extraArgs
+                $this->_modelsManager,
+                'getRelationRecords'
+                ), array(
+                $relation,
+                $queryMethod,
+                $this,
+                $extraArgs
                 )
             );
         }
@@ -3844,7 +3828,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //The method doesn't exist - throw an exception
-        throw new Exception('The method "'.$method.'" doesn\'t exist on model "'.__CLASS__.'"');
+        throw new Exception('The method "' . $method . '" doesn\'t exist on model "' . __CLASS__ . '"');
     }
 
     /**
@@ -3867,16 +3851,16 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         $extraMethod = null;
-        $type = null;
+        $type        = null;
 
         if (strpos($method, 'findFirstBy') === 0) {
-            $type = 'findFirst';
+            $type        = 'findFirst';
             $extraMethod = substr($method, 11);
         } elseif (strpos($method, 'findBy') === 0) {
-            $type = 'find';
+            $type        = 'find';
             $extraMethod = substr($method, 6);
         } elseif (strpos($method, 'countBy') === 0) {
-            $type = 'count';
+            $type        = 'count';
             $extraMethod = substr($method, 7);
         }
 
@@ -3884,11 +3868,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         if (is_null($extraMethod) === true) {
             //The method doesn't exist - throw an exception
-            throw new Exception('The static method "'.$method.'" doesn\'t exist on model"'.$modelName.'"');
+            throw new Exception('The static method "' . $method . '" doesn\'t exist on model"' . $modelName . '"');
         }
 
         if (isset($arguments[0]) === false) {
-            throw new Exception('The static method "'.$method.'" requires one argument');
+            throw new Exception('The static method "' . $method . '" requires one argument');
         }
 
         $value = $arguments[0];
@@ -3916,15 +3900,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 //Get the possible real method name
                 $field = Text::uncamelize($extraMethod);
                 if (isset($attributes[$field]) === false) {
-                    throw new Exception('Cannot resolve attribute "'.$extraMethod.'" in the model');
+                    throw new Exception('Cannot resolve attribute "' . $extraMethod . '" in the model');
                 }
             }
         }
 
         //Execute the query (static call)
         return call_user_func_array(
-            array($modelName, $type),
-            array('conditions' => $field.' = ?0', 'bind' => array($value))
+            array($modelName, $type), array('conditions' => $field . ' = ?0', 'bind' => array($value))
         );
     }
 
@@ -3943,18 +3926,18 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //Values are probably relationships if they are objects
         if (is_object($value) === true && $value instanceof ModelInterface === true) {
-            $lowerProperty = strtolower($property);
-            $this->$lowerProperty = $value;
+            $lowerProperty                  = strtolower($property);
+            $this->$lowerProperty           = $value;
             $this->_related[$lowerProperty] = $value;
-            $this->_dirtyState = 1;
+            $this->_dirtyState              = 1;
             return $value;
         }
 
         //Check if the value is an array
         if (is_array($value) === true) {
-            $lowerProperty = strtolower($property);
+            $lowerProperty                  = strtolower($property);
             $this->_related[$lowerProperty] = $value; //@note ???
-            $this->_dirtyState = 1;
+            $this->_dirtyState              = 1;
             return $value;
         }
 
@@ -3976,14 +3959,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $modelName = get_class($this);
+        $modelName     = get_class($this);
         $lowerProperty = strtolower($property);
-        $manager = $this->getModelsManager();
+        $manager       = $this->getModelsManager();
 
         //Check if the property is a relationship
         $relation = $manager->getRelationByAlias($modelName, $lowerProperty);
         if (is_object($relation) === true) {
-            $callArgs = array($relation, null, $this, null);
+            $callArgs   = array($relation, null, $this, null);
             $callObject = array($manager, 'getRelationRecords');
 
             //Get the related records
@@ -4004,7 +3987,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //A notice is shown if the property is not defined an isn't a relationship
-        trigger_error('Access to undefined property '.$modelName.'::'.$property);
+        trigger_error('Access to undefined property ' . $modelName . '::' . $property);
     }
 
     /**
@@ -4102,9 +4085,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Returns a simple representation of the object that can be used with var_dump
      *
-     *<code>
+     * <code>
      * var_dump($robot->dump());
-     *</code>
+     * </code>
      *
      * @return array
      */
@@ -4116,9 +4099,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Returns the instance as an array representation
      *
-     *<code>
+     * <code>
      * print_r($robot->toArray());
-     *</code>
+     * </code>
      *
      * @return array
      * @throws Exception
@@ -4126,7 +4109,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public function toArray()
     {
         $metaData = $this->getModelsMetaData();
-        $data = array();
+        $data     = array();
 
         //Original attributes
         $attributes = $metaData->getAttributes($this);
@@ -4138,7 +4121,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             //Check if the columns must be renamed
             if (is_array($columnMap) === true) {
                 if (isset($columnMap[$attribute]) === false) {
-                    throw new Exception('Column "'.$attribute.'" doesn\'t make part of the column map');
+                    throw new Exception('Column "' . $attribute . '" doesn\'t make part of the column map');
                 }
                 $attributeField = $columnMap[$attribute];
             } else {
@@ -4204,4 +4187,5 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             $GLOBALS['_PHALCON_ORM_ENABLE_LITERALS'] = ($options['phqlLiterals'] == true ? true : false);
         }
     }
+
 }

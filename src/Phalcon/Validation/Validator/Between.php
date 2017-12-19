@@ -1,13 +1,5 @@
 <?php
-/**
- * Between Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation\Validator;
 
 use \Phalcon\Validation\Validator;
@@ -21,20 +13,21 @@ use \Phalcon\Validation;
  *
  * Validates that a value is between a range of two values
  *
- *<code>
- *use Phalcon\Validation\Validator\Between;
+ * <code>
+ * use Phalcon\Validation\Validator\Between;
  *
- *$validator->add('name', new Between(array(
+ * $validator->add('name', new Between(array(
  *   'minimum' => 0,
  *   'maximum' => 100,
  *   'message' => 'The price must be between 0 and 100'
- *)));
- *</code>
+ * )));
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/between.c
  */
 class Between extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validation
      *
@@ -50,14 +43,14 @@ class Between extends Validator implements ValidatorInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $value = $validator->getValue($attribute);
+        $value   = $validator->getValue($attribute);
         $minimum = $this->getOption('minimum');
         $maximum = $this->getOption('maximum');
 
         if ($value <= $minimum || $value >= $maximum) {
             $messageStr = $this->getOption('message');
             if (empty($messageStr) === true) {
-                $messageStr = $attribute.' is not between a valid range';
+                $messageStr = $attribute . ' is not between a valid range';
             }
 
             $validator->appendMessage(new Message($messageStr, $attribute, 'Between'));
@@ -67,4 +60,5 @@ class Between extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

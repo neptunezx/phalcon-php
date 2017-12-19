@@ -1,13 +1,5 @@
 <?php
-/**
- * File Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger\Adapter;
 
 use \Phalcon\Logger\Adapter;
@@ -20,24 +12,25 @@ use \Phalcon\Logger\Formatter\Line;
  *
  * Adapter to store logs in plain text files
  *
- *<code>
+ * <code>
  *  $logger = new \Phalcon\Logger\Adapter\File("app/logs/test.log");
  *  $logger->log("This is a message");
  *  $logger->log("This is an error", \Phalcon\Logger::ERROR);
  *  $logger->error("This is another error");
  *  $logger->close();
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/file.c
  */
 class File extends Adapter implements AdapterInterface
 {
+
     /**
      * File Handler
      *
      * @var null|resource
      * @access protected
-    */
+     */
     protected $_fileHandler;
 
     /**
@@ -45,7 +38,7 @@ class File extends Adapter implements AdapterInterface
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_path;
 
     /**
@@ -53,7 +46,7 @@ class File extends Adapter implements AdapterInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_options;
 
     /**
@@ -86,11 +79,11 @@ class File extends Adapter implements AdapterInterface
         //We use 'fopen' to respect the open-basedir directive
         $handler = fopen($name, $mode);
         if ($handler === false) {
-            throw new Exception("Can't open lo gfile at '".$name."'");
+            throw new Exception("Can't open lo gfile at '" . $name . "'");
         }
 
-        $this->_path = $name;
-        $this->_options = $options;
+        $this->_path        = $name;
+        $this->_options     = $options;
         $this->_fileHandler = $handler;
     }
 
@@ -165,4 +158,5 @@ class File extends Adapter implements AdapterInterface
         //Re-open the file handler if the logger was serialized
         $this->_fileHandler = fopen($this->_path, $mode);
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Base64 Cache Frontend
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Cache\Frontend;
 
 use \Phalcon\Cache\FrontendInterface;
@@ -20,8 +12,8 @@ use \Phalcon\Cache\Exception;
  *
  * This adapter uses the base64_encode/base64_decode PHP's functions
  *
- *<code>
- *<?php
+ * <code>
+ * <?php
  *
  * // Cache the files for 2 days using a Base64 frontend
  * $frontCache = new \Phalcon\Cache\Frontend\Base64(
@@ -56,16 +48,17 @@ use \Phalcon\Cache\Exception;
  * header("Content-Type: image/jpeg");
  *
  * echo $image;
- *</code>
+ * </code>
  */
 class Base64 implements FrontendInterface
 {
+
     /**
      * Frontend Options
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_frontendOptions;
 
     /**
@@ -114,6 +107,7 @@ class Base64 implements FrontendInterface
      */
     public function start()
     {
+        
     }
 
     /**
@@ -131,6 +125,7 @@ class Base64 implements FrontendInterface
      */
     public function stop()
     {
+        
     }
 
     /**
@@ -155,4 +150,5 @@ class Base64 implements FrontendInterface
         //@note base64_decode can return "false" if an error occurs
         return base64_decode($data);
     }
+
 }

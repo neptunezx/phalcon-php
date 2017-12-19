@@ -1,13 +1,5 @@
 <?php
-/**
- * Collection
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations;
 
 use \Iterator;
@@ -20,7 +12,7 @@ use \Phalcon\Annotations\Annotation;
  *
  * Represents a collection of annotations. This class allows to traverse a group of annotations easily
  *
- *<code>
+ * <code>
  * //Traverse annotations
  * foreach ($classAnnotations as $annotation) {
  *     echo 'Name=', $annotation->getName(), PHP_EOL;
@@ -31,18 +23,19 @@ use \Phalcon\Annotations\Annotation;
  *
  * //Get an specific annotation in the collection
  * $annotation = $classAnnotations->get('Cacheable');
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/annotations/collection.c
  */
 class Collection implements Iterator, Countable
 {
+
     /**
      * Position
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_position = 0;
 
     /**
@@ -50,7 +43,7 @@ class Collection implements Iterator, Countable
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_annotations;
 
     /**
@@ -171,7 +164,7 @@ class Collection implements Iterator, Countable
             }
         }
 
-        throw new Exception('The collection doesn\'t have an annotation called '.$name.'\'');
+        throw new Exception('The collection doesn\'t have an annotation called ' . $name . '\'');
     }
 
     /**
@@ -225,4 +218,5 @@ class Collection implements Iterator, Countable
 
         return false;
     }
+
 }

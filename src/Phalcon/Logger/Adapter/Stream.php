@@ -1,13 +1,5 @@
 <?php
-/**
- * Stream Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Logger\Adapter;
 
 use \Phalcon\Logger\Adapter;
@@ -20,23 +12,24 @@ use \Phalcon\Logger\Formatter\Line;
  *
  * Sends logs to a valid PHP stream
  *
- *<code>
+ * <code>
  *  $logger = new \Phalcon\Logger\Adapter\Stream("php://stderr");
  *  $logger->log("This is a message");
  *  $logger->log("This is an error", \Phalcon\Logger::ERROR);
  *  $logger->error("This is another error");
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/stream.c
  */
 class Stream extends Adapter implements AdapterInterface
 {
+
     /**
      * Stream
      *
      * @var null|resource
      * @access protected
-    */
+     */
     protected $_stream;
 
     /**
@@ -66,7 +59,7 @@ class Stream extends Adapter implements AdapterInterface
         //We use 'fopen' to respect the open-basedir directive
         $stream = fopen($name, $mode);
         if (is_resource($stream) === false) {
-            throw new Exception("Can't open stream '".$name."'");
+            throw new Exception("Can't open stream '" . $name . "'");
         }
 
         $this->_stream = $stream;
@@ -119,4 +112,5 @@ class Stream extends Adapter implements AdapterInterface
     {
         return fclose($this->_stream);
     }
+
 }

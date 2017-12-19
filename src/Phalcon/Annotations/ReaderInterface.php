@@ -1,12 +1,5 @@
 <?php
-/**
- * Reader
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Annotations;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Annotations;
  */
 interface ReaderInterface
 {
+
     /**
      * Reads annotations from the class dockblocks, its methods and/or properties
      *

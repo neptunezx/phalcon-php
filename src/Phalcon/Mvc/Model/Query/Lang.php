@@ -1,11 +1,13 @@
 <?php
+
 /**
-* PHQL Parser
-*
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * PHQL Parser
+ *
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model\Query;
 
 use \Phalcon\Mvc\Model\Query\Scanner;
@@ -32,6 +34,7 @@ use \Phalcon\Mvc\Model\Exception;
  */
 abstract class Lang
 {
+
     /**
      * Parses a PHQL statement returning an intermediate representation (IR)
      *
@@ -51,4 +54,5 @@ abstract class Lang
             return null;
         }
     }
+
 }

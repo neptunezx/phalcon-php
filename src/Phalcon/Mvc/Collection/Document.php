@@ -1,13 +1,5 @@
 <?php
-/**
- * Document
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Collection;
 
 use \ArrayAccess;
@@ -22,6 +14,7 @@ use \ArrayAccess;
  */
 class Document implements ArrayAccess
 {
+
     /**
      * Checks whether an offset exists in the document
      *
@@ -89,9 +82,9 @@ class Document implements ArrayAccess
     /**
      * Reads an attribute value by its name
      *
-     *<code>
+     * <code>
      *  echo $robot->readAttribute('name');
-     *</code>
+     * </code>
      *
      * @param scalar $attribute
      * @return mixed
@@ -113,9 +106,9 @@ class Document implements ArrayAccess
     /**
      * Writes an attribute value by its name
      *
-     *<code>
+     * <code>
      *  $robot->writeAttribute('name', 'Rosey');
-     *</code>
+     * </code>
      *
      * @param scalar $attribute
      * @param mixed $value
@@ -129,4 +122,5 @@ class Document implements ArrayAccess
 
         $this->$attribute = $value;
     }
+
 }

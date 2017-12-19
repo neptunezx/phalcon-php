@@ -1,13 +1,5 @@
 <?php
-/**
- * Manager
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Model\Transaction;
 
 use \Phalcon\Mvc\Model\Transaction\ManagerInterface;
@@ -28,8 +20,8 @@ use \Phalcon\Di;
  * A trasaction produces a unique connection that is passed to every
  * object part of the transaction.
  *
-  *<code>
- *try {
+ * <code>
+ * try {
  *
  *  use Phalcon\Mvc\Model\Transaction\Manager as TransactionManager;
  *
@@ -54,23 +46,24 @@ use \Phalcon\Di;
  *
  *  $transaction->commit();
  *
- *}
- *catch(Phalcon\Mvc\Model\Transaction\Failed $e){
+ * }
+ * catch(Phalcon\Mvc\Model\Transaction\Failed $e){
  *  echo 'Failed, reason: ', $e->getMessage();
- *}
+ * }
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/transaction/manager.c
  */
 class Manager implements ManagerInterface, InjectionAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -78,7 +71,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_initialized = false;
 
     /**
@@ -86,7 +79,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_rollbackPendent = true;
 
     /**
@@ -94,7 +87,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_number = 0;
 
     /**
@@ -102,7 +95,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_service = 'db';
 
     /**
@@ -110,7 +103,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_transactions;
 
     /**
@@ -279,7 +272,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
             }
         }
 
-        $transaction = new Transaction($this->_dependencyInjector, $autoBegin, $this->_service);
+        $transaction           = new Transaction($this->_dependencyInjector, $autoBegin, $this->_service);
         $this->_transactions[] = $transaction;
         $this->_number++;
         return $transaction;
@@ -394,7 +387,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface
     public function collectTransactions()
     {
         //@note optimized code
-        $this->_number -= count($this->_transactions);
+        $this->_number       -= count($this->_transactions);
         $this->_transactions = null;
     }
+
 }

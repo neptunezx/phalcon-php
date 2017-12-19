@@ -1,13 +1,5 @@
 <?php
-/**
- * ExclusionIn Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation\Validator;
 
 use \Phalcon\Validation\Validator;
@@ -21,19 +13,20 @@ use \Phalcon\Validation;
  *
  * Check if a value is not included into a list of values
  *
- *<code>
- *use Phalcon\Validation\Validator\ExclusionIn;
+ * <code>
+ * use Phalcon\Validation\Validator\ExclusionIn;
  *
- *$validator->add('status', new ExclusionIn(array(
+ * $validator->add('status', new ExclusionIn(array(
  *   'message' => 'The status must not be A or B',
  *   'domain' => array('A', 'B')
- *)));
- *</code>
+ * )));
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/exclusionin.c
  */
 class ExclusionIn extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validation
      *
@@ -65,7 +58,7 @@ class ExclusionIn extends Validator implements ValidatorInterface
         if (in_array($value, $domain) === true) {
             $message = $this->getOption('message');
             if (empty($message) === true) {
-                $message = "Value of field '".$attribute."' must not be part of list: ".implode(', ', $domain);
+                $message = "Value of field '" . $attribute . "' must not be part of list: " . implode(', ', $domain);
             }
 
             $validator->appendMessage(new Message($message, $attribute, 'ExclusionIn'));
@@ -75,4 +68,5 @@ class ExclusionIn extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

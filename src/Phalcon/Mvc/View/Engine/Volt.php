@@ -1,13 +1,5 @@
 <?php
-/**
- * Volt
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\View\Engine;
 
 use \Phalcon\Mvc\View\Engine;
@@ -27,12 +19,13 @@ use \Traversable;
  */
 class Volt extends Engine implements InjectionAwareInterface, EventsAwareInterface, EngineInterface
 {
+
     /**
      * Options
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_options;
 
     /**
@@ -40,7 +33,7 @@ class Volt extends Engine implements InjectionAwareInterface, EventsAwareInterfa
      *
      * @var null|\Phalcon\Mvc\View\Engine\Volt\Compiler
      * @access protected
-    */
+     */
     protected $_compiler;
 
     /**
@@ -116,7 +109,7 @@ class Volt extends Engine implements InjectionAwareInterface, EventsAwareInterfa
         }
 
         //The compilation process is done by Phalcon\Mvc\View\Engine\Volt\Compiler
-        $compiler = $this->getCompiler();
+        $compiler               = $this->getCompiler();
         $compiler->compile($templatePath);
         $compiled_template_path = $compiler->getCompiledTemplatePath();
 
@@ -318,4 +311,5 @@ class Volt extends Engine implements InjectionAwareInterface, EventsAwareInterfa
 
         return asort($value);
     }
+
 }

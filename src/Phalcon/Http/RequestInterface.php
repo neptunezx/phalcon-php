@@ -9,6 +9,7 @@ namespace Phalcon\Http;
  */
 interface RequestInterface
 {
+
     /**
      * Gets a variable from the $_REQUEST superglobal applying filters if needed
      *

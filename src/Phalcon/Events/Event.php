@@ -1,13 +1,5 @@
 <?php
-/**
- * Event
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Events;
 
 use \Phalcon\Events\Exception;
@@ -21,12 +13,13 @@ use \Phalcon\Events\Exception;
  */
 class Event
 {
+
     /**
      * Type
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_type;
 
     /**
@@ -34,7 +27,7 @@ class Event
      *
      * @var object|null
      * @access protected
-    */
+     */
     protected $_source;
 
     /**
@@ -42,7 +35,7 @@ class Event
      *
      * @var mixed
      * @access protected
-    */
+     */
     protected $_data;
 
     /**
@@ -50,7 +43,7 @@ class Event
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_stopped = false;
 
     /**
@@ -58,7 +51,7 @@ class Event
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_cancelable = true;
 
     /**
@@ -83,7 +76,7 @@ class Event
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->_type = $type;
+        $this->_type   = $type;
         $this->_source = $source;
 
         if (is_null($data) === false) {
@@ -198,4 +191,5 @@ class Event
     {
         return $this->_stopped;
     }
+
 }

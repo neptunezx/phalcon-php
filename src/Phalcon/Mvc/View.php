@@ -1,13 +1,5 @@
 <?php
-/**
- * View
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc;
 
 use \Closure;
@@ -44,46 +36,47 @@ use \Phalcon\Cache\BackendInterface;
  */
 class View extends Injectable implements EventsAwareInterface, InjectionAwareInterface, ViewInterface
 {
+
     /**
      * Level: Main Layout
      *
      * @var int
-    */
+     */
     const LEVEL_MAIN_LAYOUT = 5;
 
     /**
      * Level: After Template
      *
      * @var int
-    */
+     */
     const LEVEL_AFTER_TEMPLATE = 4;
 
     /**
      * Level: Layout
      *
      * @var int
-    */
+     */
     const LEVEL_LAYOUT = 3;
 
     /**
      * Level: Before Template
      *
      * @var int
-    */
+     */
     const LEVEL_BEFORE_TEMPLATE = 2;
 
     /**
      * Level: Action View
      *
      * @var int
-    */
+     */
     const LEVEL_ACTION_VIEW = 1;
 
     /**
      * Level: No Render
      *
      * @var int
-    */
+     */
     const LEVEL_NO_RENDER = 0;
 
     /**
@@ -91,7 +84,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_options;
 
     /**
@@ -99,7 +92,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_basePath = '';
 
     /**
@@ -107,7 +100,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var string|null
      * @access protected
-    */
+     */
     protected $_content = '';
 
     /**
@@ -115,7 +108,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_renderLevel = 5;
 
     /**
@@ -123,7 +116,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_disabledLevels;
 
     /**
@@ -131,7 +124,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_viewParams;
 
     /**
@@ -139,7 +132,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_layout;
 
     /**
@@ -147,7 +140,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_layoutsDir = '';
 
     /**
@@ -155,7 +148,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_partialsDir = '';
 
     /**
@@ -163,7 +156,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_viewsDir;
 
     /**
@@ -171,7 +164,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_templatesBefore;
 
     /**
@@ -179,7 +172,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_templatesAfter;
 
     /**
@@ -187,7 +180,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_engines = false;
 
     /**
@@ -195,7 +188,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_registeredEngines;
 
     /**
@@ -203,7 +196,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_mainView = 'index';
 
     /**
@@ -211,7 +204,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_controllerName;
 
     /**
@@ -219,7 +212,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_actionName;
 
     /**
@@ -227,7 +220,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_params;
 
     /**
@@ -235,7 +228,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_pickView;
 
     /**
@@ -243,7 +236,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|\Phalcon\Cache\BackendInterface
      * @access protected
-    */
+     */
     protected $_cache;
 
     /**
@@ -251,7 +244,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_cacheLevel = 0;
 
     /**
@@ -259,7 +252,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var null|string
      * @access protected
-    */
+     */
     protected $_activeRenderPath;
 
     /**
@@ -267,7 +260,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      *
      * @var boolean
      * @access protected
-    */
+     */
     protected $_disabled = false;
 
     /**
@@ -313,9 +306,9 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Sets the layouts sub-directory. Must be a directory under the views directory. Depending of your platform, always add a trailing slash or backslash
      *
-     *<code>
+     * <code>
      * $view->setLayoutsDir('../common/layouts/');
-     *</code>
+     * </code>
      *
      * @param string $layoutsDir
      * @return \Phalcon\Mvc\View
@@ -345,9 +338,9 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Sets a partials sub-directory. Must be a directory under the views directory. Depending of your platform, always add a trailing slash or backslash
      *
-     *<code>
+     * <code>
      * $view->setPartialsDir('../common/partials/');
-     *</code>
+     * </code>
      *
      * @param string $partialsDir
      * @return \Phalcon\Mvc\View
@@ -421,10 +414,10 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Disables a specific level of rendering
      *
-     *<code>
+     * <code>
      * //Render all levels except ACTION level
      * $this->view->disableLevel(View::LEVEL_ACTION_VIEW);
-     *</code>
+     * </code>
      *
      * @param int|array $level
      * @return \Phalcon\Mvc\View
@@ -579,9 +572,9 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Adds parameters to views (alias of setVar)
      *
-     *<code>
+     * <code>
      *  $this->view->setParamToView('products', $products);
-     *</code>
+     * </code>
      *
      * @param string $key
      * @param mixed $value
@@ -606,9 +599,9 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Set all the render params
      *
-     *<code>
+     * <code>
      *  $this->view->setVars(array('products' => $products));
-     *</code>
+     * </code>
      *
      * @param array $params
      * @param boolean|null $merge
@@ -643,9 +636,9 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Set a single view parameter
      *
-     *<code>
+     * <code>
      *  $this->view->setVar('products', $products);
-     *</code>
+     * </code>
      *
      * @param string $key
      * @param mixed $value
@@ -773,7 +766,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
                         //Engine can be a string representing a service in the DI
                         $engineObject = $this->_dependencyInjector->getShared($engineService, $arguments);
                     } else {
-                        throw new Exception('Invalid template engine registration for extension: '.$extension);
+                        throw new Exception('Invalid template engine registration for extension: ' . $extension);
                     }
 
                     $engines[$extension] = $engineObject;
@@ -781,7 +774,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
             }
 
             $this->_registeredEngines = $engines;
-            $this->_engines = true;
+            $this->_engines           = true;
         }
 
         return $this->_registeredEngines;
@@ -806,8 +799,8 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
             throw new Exception('Invalid parameter type.');
         }
 
-        $viewsDirPath = $this->_basePath.$this->_viewsDir.$viewPath;
-        $notExists = true;
+        $viewsDirPath = $this->_basePath . $this->_viewsDir . $viewPath;
+        $notExists    = true;
 
         if (is_object($cache) === true &&
             $cache instanceof BackendInterface === true) {
@@ -815,7 +808,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
                 //Check if the cache is started, the first time a cache is started we start the
                 //cache
                 if ($cache->isStarted() === false) {
-                    $key = null;
+                    $key      = null;
                     $lifetime = null;
 
                     //Check if the user has defined different options to the default
@@ -855,7 +848,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
 
         //Views are rendered in each engine
         foreach ($engines as $extension => $engine) {
-            $viewEnginePath = $viewsDirPath.$extension;
+            $viewEnginePath = $viewsDirPath . $extension;
 
             if (file_exists($viewEnginePath) === true) {
                 //Call beforeRenderView if there is a events manager available
@@ -886,7 +879,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
             }
 
             if ($silence === false) {
-                throw new Exception("View '".$viewsDirPath."' was not found in the views directory");
+                throw new Exception("View '" . $viewsDirPath . "' was not found in the views directory");
             }
         }
     }
@@ -894,13 +887,13 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Register templating engines
      *
-     *<code>
-     *$this->view->registerEngines(array(
+     * <code>
+     * $this->view->registerEngines(array(
      *  ".phtml" => "Phalcon\Mvc\View\Engine\Php",
      *  ".volt" => "Phalcon\Mvc\View\Engine\Volt",
      *  ".mhtml" => "MyCustomEngine"
-     *));
-     *</code>
+     * ));
+     * </code>
      *
      * @param array $engines
      * @return \Phalcon\Mvc\View
@@ -920,10 +913,10 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Executes render process from dispatching data
      *
-     *<code>
+     * <code>
      * //Shows recent posts view (app/views/posts/recent.phtml)
      * $view->start()->render('posts', 'recent')->finish();
-     *</code>
+     * </code>
      *
      * @param string $controllerName
      * @param string $actionName
@@ -951,8 +944,8 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
         }
 
         $this->_controllerName = $controllerName;
-        $this->_actionName = $actionName;
-        $this->_params = $params;
+        $this->_actionName     = $actionName;
+        $this->_params         = $params;
 
         //Check if there is a layouts directory set
         $layoutsDir = $this->_layoutsDir;
@@ -971,7 +964,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
 
         //Check if the user has picked a view different that the automatic
         if (is_null($this->_pickView) === true) {
-            $renderView = $controllerName.'/'.$actionName;
+            $renderView = $controllerName . '/' . $actionName;
         } else {
             //@note better check for array type here!
             //The 'picked' view is an array, where the first element is the controller and the
@@ -1012,14 +1005,14 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
                 is_array($this->_templatesBefore) === true) {
                 //Templates before must be an array
                 foreach ($this->_templatesBefore as $templateBefore) {
-                    $this->_engineRender($engines, $layoutsDir.$templateBefore, false, true, $cache);
+                    $this->_engineRender($engines, $layoutsDir . $templateBefore, false, true, $cache);
                 }
             }
 
             //Insert controller layout
             if ($this->_renderLevel >= self::LEVEL_LAYOUT) {
                 if (isset($this->_disabledLevels[self::LEVEL_LAYOUT]) === false) {
-                    $this->_engineRender($engines, $layoutsDir.$layoutName, true, true, $cache);
+                    $this->_engineRender($engines, $layoutsDir . $layoutName, true, true, $cache);
                 }
             }
 
@@ -1029,7 +1022,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
                 //Templates after must be an array
                 if (is_array($this->_templatesAfter) === true) {
                     foreach ($this->_templatesAfter as $templateAfter) {
-                        $this->_engineRender($engines, $layoutsDir.$templateAfter, false, true, $cache);
+                        $this->_engineRender($engines, $layoutsDir . $templateAfter, false, true, $cache);
                     }
                 }
             }
@@ -1090,7 +1083,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
         } else {
             $layout = null;
             if (strpos($renderView, '/') !== false) {
-                $parts = explode('/', $renderView);
+                $parts  = explode('/', $renderView);
                 $layout = $parts[0];
             }
 
@@ -1143,7 +1136,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
         }
 
         //Partials are looked up under the partials directory
-        $realPath = $this->_partialsDir.$partialPath;
+        $realPath = $this->_partialsDir . $partialPath;
 
         //We need to check if the engines are loaded first, this method could be called
         //outside of 'render'
@@ -1291,9 +1284,9 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Cache the actual view render to certain level
      *
-     *<code>
+     * <code>
      *  $this->view->cache(array('key' => 'my-key', 'lifetime' => 86400));
-     *</code>
+     * </code>
      *
      * @param boolean|array|null $options
      * @return \Phalcon\Mvc\View
@@ -1330,7 +1323,7 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
             }
 
             $viewOptions['cache'] = $cacheOptions;
-            $this->_options = $viewOptions;
+            $this->_options       = $viewOptions;
         } elseif (is_bool($options) === true) {
             //If 'options' isn't an arary we enable the cache with the default options
             $this->_cacheLevel = ($options === true ? 5 : 0);
@@ -1344,9 +1337,9 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Externally sets the view content
      *
-     *<code>
+     * <code>
      *  $this->view->setContent("<h1>hello</h1>");
-     *</code>
+     * </code>
      *
      * @param string $content
      * @return \Phalcon\Mvc\View
@@ -1413,14 +1406,14 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
      */
     public function reset()
     {
-        $this->_disabled = false;
-        $this->_engines = false;
-        $this->_cache = null;
-        $this->_renderLevel = 5;
-        $this->_cacheLevel = 0;
-        $this->_content = null;
+        $this->_disabled        = false;
+        $this->_engines         = false;
+        $this->_cache           = null;
+        $this->_renderLevel     = 5;
+        $this->_cacheLevel      = 0;
+        $this->_content         = null;
         $this->_templatesBefore = null;
-        $this->_templatesAfter = null;
+        $this->_templatesAfter  = null;
 
         return $this;
     }
@@ -1428,9 +1421,9 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Magic method to pass variables to the views
      *
-     *<code>
+     * <code>
      *  $this->view->products = $products;
-     *</code>
+     * </code>
      *
      * @param string $key
      * @param mixed $value
@@ -1452,9 +1445,9 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
     /**
      * Magic method to retrieve a variable passed to the view
      *
-     *<code>
+     * <code>
      *  echo $this->view->products;
-     *</code>
+     * </code>
      *
      * @param string $key
      * @return mixed
@@ -1472,4 +1465,5 @@ class View extends Injectable implements EventsAwareInterface, InjectionAwareInt
 
         return null;
     }
+
 }

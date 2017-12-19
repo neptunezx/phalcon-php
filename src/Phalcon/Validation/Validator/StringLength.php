@@ -1,13 +1,5 @@
 <?php
-/**
- * String Length Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation\Validator;
 
 use \Phalcon\Validation\Validator;
@@ -22,21 +14,22 @@ use \Phalcon\Validation;
  *
  * Validates that a string has the specified maximum and minimum constraints
  *
- *<code>
- *use Phalcon\Validation\Validator\StringLength as StringLength;
+ * <code>
+ * use Phalcon\Validation\Validator\StringLength as StringLength;
  *
- *$validation->add('name_last', new StringLength(array(
+ * $validation->add('name_last', new StringLength(array(
  *      'max' => 50,
  *      'min' => 2,
  *      'messageMaximum' => 'We don\'t like really long names',
  *      'messageMinimum' => 'We want more than just their initials'
- *)));
- *</code>
+ * )));
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/stringlength.c
  */
 class StringLength extends Validator implements ValidatorInterface
 {
+
     /**
      * Executes the validation
      *
@@ -82,7 +75,7 @@ class StringLength extends Validator implements ValidatorInterface
                 //Check if the developer has defined a custom message
                 $message = $this->getOption('messageMaximum');
                 if (empty($message) === true) {
-                    $message = "Value of field '".$attribute."' exceeds the maximum ".$maximum." characters";
+                    $message = "Value of field '" . $attribute . "' exceeds the maximum " . $maximum . " characters";
 
                     $validator->appendMessage(new Message($message, $attribute, 'TooLong'));
 
@@ -99,7 +92,7 @@ class StringLength extends Validator implements ValidatorInterface
                 //Check if the developer has defined a custom message
                 $message = $this->getOption('messageMinimum');
                 if (empty($message) === true) {
-                    $message = "Value of field '".$attribute."' is less than the minimum ".$minimum." characters";
+                    $message = "Value of field '" . $attribute . "' is less than the minimum " . $minimum . " characters";
                 }
 
                 $validator->appendMessage(new Message($message, $attribute, 'TooShort'));
@@ -110,4 +103,5 @@ class StringLength extends Validator implements ValidatorInterface
 
         return true;
     }
+
 }

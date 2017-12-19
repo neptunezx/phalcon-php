@@ -1,13 +1,5 @@
 <?php
-/**
- * Sqlite
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db\Adapter\Pdo;
 
 use \Phalcon\Db\Adapter\Pdo;
@@ -36,12 +28,13 @@ use \Phalcon\Events\EventsAwareInterface;
  */
 class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
 {
+
     /**
      * Type
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_type = 'sqlite';
 
     /**
@@ -49,7 +42,7 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_dialectType = 'Sqlite';
 
     /**
@@ -93,12 +86,12 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
     {
         if (is_string($table) === false ||
             (is_string($schema) === false &&
-                is_null($schema) === false)) {
+            is_null($schema) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
         $columns = array();
-        $sql =  $this->_dialect->describeColumns($table, $schema);
+        $sql     = $this->_dialect->describeColumns($table, $schema);
 
         //We're using FETCH_NUM to fetch the columns
         $describe = $this->fetchAll($sql, 3);
@@ -111,16 +104,16 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
             //Check the column type to get the correct Phalcon type
             while (true) {
                 if (strpos($columnType, 'tinyint(1)') !== false) {
-                    $definition['type'] = 8;
+                    $definition['type']     = 8;
                     $definition['bindType'] = 5;
-                    $columnType = 'boolean'; //Change column type to skip size check
+                    $columnType             = 'boolean'; //Change column type to skip size check
                     break;
                 }
 
                 if (strpos($columnType, 'int') !== false) {
-                    $definition['type'] = 0;
+                    $definition['type']      = 0;
                     $definition['isNumeric'] = true;
-                    $definition['bindType'] = 1;
+                    $definition['bindType']  = 1;
 
                     if ($field[5] == true) {
                         $definition['autoIncrement'] = true;
@@ -144,9 +137,9 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
                 }
 
                 if (strpos($columnType, 'decimal') !== false) {
-                    $definition['type'] = 3;
+                    $definition['type']      = 3;
                     $definition['isNumeric'] = true;
-                    $definition['bindType'] = 32;
+                    $definition['bindType']  = 32;
                     break;
                 }
 
@@ -166,9 +159,9 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
                 }
 
                 if (strpos($columnType, 'float') !== false) {
-                    $definition['type'] = 7;
+                    $definition['type']      = 7;
                     $definition['isNumeric'] = true;
-                    $definition['bindType'] = 32;
+                    $definition['bindType']  = 32;
                     break;
                 }
 
@@ -215,7 +208,7 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
             }
 
             //Every column is stored as a Phalcon\Db\Column
-            $column = new Column($field[1], $definition);
+            $column    = new Column($field[1], $definition);
             $columns[] = $column;
             $oldColumn = $field[1];
         }
@@ -242,7 +235,7 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
         $dialect = $this->_dialect;
 
         //We're using FETCH_NUM to fetch the columns
-        $sql = $dialect->describeIndexes($table, $schema);
+        $sql      = $dialect->describeIndexes($table, $schema);
         $describe = $this->fetchAll($sql, 3);
 
         //Cryptic Guide: 0 - position, 1 - name
@@ -254,7 +247,7 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
             }
 
             $sqlIndexDescribe = $dialect->describeIndex($keyName);
-            $describeIndex = $this->fetchAll($sqlIndexDescribe, 3);
+            $describeIndex    = $this->fetchAll($sqlIndexDescribe, 3);
 
             foreach ($describeIndex as $indexColumn) {
                 $indexes[$keyName][] = $indexColumn[2];
@@ -263,7 +256,7 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
 
         $indexObjects = array();
         foreach ($indexes as $name => $indexColumns) {
-            $index = new Index($name, $indexColumns);
+            $index               = new Index($name, $indexColumns);
             $indexObjects[$name] = $index;
         }
 
@@ -297,16 +290,16 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
         //Cryptic Guide: 2 - table, 3 - from, 4 - to
         $referenceObjects = array();
         foreach ($describe as $number => $referenceDescribe) {
-            $constraintName = 'foreign_key_'.$number;
-            $referencedTable = $referenceDescribe[2];
-            $columns = array($referenceDescribe[3]);
+            $constraintName    = 'foreign_key_' . $number;
+            $referencedTable   = $referenceDescribe[2];
+            $columns           = array($referenceDescribe[3]);
             $referencedColumns = array($referenceDescribe[4]);
 
-            $referenceArray = array('referencedSchema' => null, 'referencedTable' => $referencedTable,
-                'columns' => $columns, 'referencedColumns' => $referencedColumns);
+            $referenceArray = array('referencedSchema'  => null, 'referencedTable'   => $referencedTable,
+                'columns'           => $columns, 'referencedColumns' => $referencedColumns);
 
             //Every route is abstracted as a Phalcon\Db\Reference instance
-            $reference = new Reference($constraintName, $referenceArray);
+            $reference                         = new Reference($constraintName, $referenceArray);
             $referenceObjects[$constraintName] = $reference;
         }
 
@@ -322,4 +315,5 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
     {
         return true;
     }
+
 }

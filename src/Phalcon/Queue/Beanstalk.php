@@ -1,13 +1,5 @@
 <?php
-/**
- * Beanstalk Queue
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Queue;
 
 use \Phalcon\Exception;
@@ -24,12 +16,13 @@ use \Phalcon\Queue\Beanstalk\Job;
  */
 class Beanstalk
 {
+
     /**
      * Connection
      *
      * @var null|resource
      * @access protected
-    */
+     */
     protected $_connection;
 
     /**
@@ -37,7 +30,7 @@ class Beanstalk
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_parameters;
 
     /**
@@ -67,7 +60,7 @@ class Beanstalk
      *
      * @throws Exception
      * @return resource
-    */
+     */
     public function connect()
     {
         if (is_resource($this->_connection) === true) {
@@ -122,11 +115,11 @@ class Beanstalk
         }
 
         /* Data is automatically serialized before be sent to the server */
-        $serialized = serialize($data);
+        $serialized       = serialize($data);
         $serializedLength = strlen($serialized);
 
         /* Create the command */
-        $this->write('put '.$options['priority'].' '.$options['delay'].' '.$options['ttr'].' '.$serializedLength);
+        $this->write('put ' . $options['priority'] . ' ' . $options['delay'] . ' ' . $options['ttr'] . ' ' . $serializedLength);
         $this->write($serialized);
 
         /* Response */
@@ -155,7 +148,7 @@ class Beanstalk
 
         /* Build command */
         if ($timeout === true) {
-            $command = 'reserve-with-timeout '.$timeout;
+            $command = 'reserve-with-timeout ' . $timeout;
         } else {
             $command = 'reserve';
         }
@@ -165,12 +158,11 @@ class Beanstalk
         $response = $this->readStatus();
         if ($response[0] === 'RESERVED') {
             //@note there is no further verification
-
             //The job is in the first position
             //Next is the job length
             //The body is serialized
             $serializedBody = $this->read($response[2]);
-            $body = unserialize($serializedBody);
+            $body           = unserialize($serializedBody);
 
             //Create a beanstalk job abstraction
             return new Job($this, $response[1], $body);
@@ -192,7 +184,7 @@ class Beanstalk
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->write('use '.$tube);
+        $this->write('use ' . $tube);
         $response = $this->readStatus();
 
         if ($response[0] === 'USING') {
@@ -215,7 +207,7 @@ class Beanstalk
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->write('watch '.$tube);
+        $this->write('watch ' . $tube);
         $response = $this->readStatus();
 
         if ($response[0] === 'WATCHING') {
@@ -251,7 +243,6 @@ class Beanstalk
     public function readStatus()
     {
         //@note This method was originally `protected`.
-        
         //@note explode() can return false!
         return explode(' ', $this->read());
     }
@@ -320,7 +311,7 @@ class Beanstalk
             }
         }
 
-        $packet = $data."\r\n";
+        $packet = $data . "\r\n";
         return fwrite($this->_connection, $packet, strlen($packet));
     }
 
@@ -339,4 +330,5 @@ class Beanstalk
 
         return true;
     }
+
 }

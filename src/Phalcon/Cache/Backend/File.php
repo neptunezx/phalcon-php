@@ -1,13 +1,5 @@
 <?php
-/**
- * File Cache Backend
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Cache\Backend;
 
 use \Phalcon\Cache\Backend;
@@ -22,7 +14,7 @@ use \Phalcon\Text;
  *
  * Allows to cache output fragments using a file backend
  *
- *<code>
+ * <code>
  *  //Cache the file for 2 days
  *  $frontendOptions = array(
  *      'lifetime' => 172800
@@ -46,12 +38,13 @@ use \Phalcon\Text;
  *  } else {
  *      echo $content;
  *  }
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cache/backend/file.c
  */
 class File extends Backend implements BackendInterface
 {
+
     /**
      * \Phalcon\Cache\Backend\File constructor
      *
@@ -88,8 +81,8 @@ class File extends Backend implements BackendInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->_lastKey = $this->_prefix.$keyName;
-        $cacheFile = $this->_options['cacheDir'].$this->_lastKey;
+        $this->_lastKey = $this->_prefix . $keyName;
+        $cacheFile      = $this->_options['cacheDir'] . $this->_lastKey;
 
         if (file_exists($cacheFile) === true) {
             //Check if the file has expired
@@ -105,7 +98,7 @@ class File extends Backend implements BackendInterface
                 //Use file_get_contents to control that the openbase_dir can't be skipped
                 $cachedContent = file_get_contents($cacheFile);
                 if ($cachedContent === false) {
-                    throw new Exception('Cache file '.$cacheFile.' could not be openend');
+                    throw new Exception('Cache file ' . $cacheFile . ' could not be openend');
                 }
 
                 //Use the fronted to process the content of the cache
@@ -135,7 +128,7 @@ class File extends Backend implements BackendInterface
             }
         } elseif (is_string($keyName) === true ||
             is_int($keyName) === true) {
-            $keyName = $this->_prefix.$keyName;
+            $keyName = $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -164,7 +157,7 @@ class File extends Backend implements BackendInterface
 
         /* Store data */
         //We use file_put_contents to respect open_base_dir directive
-        if (file_put_contents($this->_options['cacheDir'].$keyName, $preparedContent) === false) {
+        if (file_put_contents($this->_options['cacheDir'] . $keyName, $preparedContent) === false) {
             throw new Exception('Cache directory can\'t be written');
         }
 
@@ -196,7 +189,7 @@ class File extends Backend implements BackendInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $cacheFile = $this->_options['cacheDir'].$this->_prefix.$keyName;
+        $cacheFile = $this->_options['cacheDir'] . $this->_prefix . $keyName;
         if (file_exists($cacheFile) === true) {
             return unlink($cacheFile);
         }
@@ -238,7 +231,7 @@ class File extends Backend implements BackendInterface
             //Without using a prefix
             foreach ($ce as $item) {
                 if (is_dir($item) === false) {
-                    $keys[] =  $item->getFileName();
+                    $keys[] = $item->getFileName();
                 }
             }
         }
@@ -259,7 +252,7 @@ class File extends Backend implements BackendInterface
         if (is_null($keyName) === true) {
             $keyName = $this->_lastKey;
         } elseif (is_string($keyName) === true) {
-            $keyName = $this->_prefix.$keyName;
+            $keyName = $this->_prefix . $keyName;
         } else {
             throw new Exception('Invalid parameter type.');
         }
@@ -270,7 +263,7 @@ class File extends Backend implements BackendInterface
 
         /* Check for file */
         if (isset($keyName) === true) {
-            $cacheFile = $this->_options['cacheDir'].$keyName;
+            $cacheFile = $this->_options['cacheDir'] . $keyName;
             if (file_exists($cacheFile) === true) {
                 //Check if the file has expired
                 if (is_null($lifetime) === true) {
@@ -285,4 +278,5 @@ class File extends Backend implements BackendInterface
 
         return false;
     }
+
 }

@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Paginator Query Builder Adapter
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Paginator Query Builder Adapter
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Paginator\Adapter;
 
 use \Phalcon\Paginator\AdapterInterface;
@@ -19,7 +21,7 @@ use \stdClass;
  *
  * Pagination using a PHQL query builder as source of data
  *
- *<code>
+ * <code>
  *  $builder = $this->modelsManager->createBuilder()
  *                   ->columns('id, name')
  *                   ->from('Robots')
@@ -30,18 +32,19 @@ use \stdClass;
  *      "limit"=> 20,
  *      "page" => 1
  *  ));
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/paginator/adapter/querybuilder.c
  */
 class QueryBuilder implements AdapterInterface
 {
+
     /**
      * Configuration
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_config;
 
     /**
@@ -49,7 +52,7 @@ class QueryBuilder implements AdapterInterface
      *
      * @var null|object
      * @access protected
-    */
+     */
     protected $_builder;
 
     /**
@@ -57,7 +60,7 @@ class QueryBuilder implements AdapterInterface
      *
      * @var null|int
      * @access protected
-    */
+     */
     protected $_limitRows;
 
     /**
@@ -65,7 +68,7 @@ class QueryBuilder implements AdapterInterface
      *
      * @var int
      * @access protected
-    */
+     */
     protected $_page;
 
     /**
@@ -121,10 +124,10 @@ class QueryBuilder implements AdapterInterface
     public function getPaginate()
     {
         /* Clone the original builder */
-        $builder = clone $this->_builder;
+        $builder      = clone $this->_builder;
         $totalBuilder = clone $builder;
 
-        $limit = $this->_limitRows;
+        $limit      = $this->_limitRows;
         $numberPage = $this->_page;
 
         if (is_null($numberPage) === true) {
@@ -132,7 +135,7 @@ class QueryBuilder implements AdapterInterface
         }
 
         $prevNumberPage = $numberPage - 1;
-        $number = $limit * $prevNumberPage;
+        $number         = $limit * $prevNumberPage;
 
         //Set the limit clause avoiding negative offsets
         if ($number < $limit) {
@@ -154,25 +157,26 @@ class QueryBuilder implements AdapterInterface
 
         //Obtain the result of the total query
         $result = $totalQuery->execute();
-        $row = $result->getFirst();
+        $row    = $result->getFirst();
 
-        $totalPages = $row['rowcount'] / $limit;
-        $intTotalPages = (int)$totalPages;
+        $totalPages    = $row['rowcount'] / $limit;
+        $intTotalPages = (int) $totalPages;
 
         if ($intTotalPages !== $totalPages) {
             $totalPages = $intTotalPages + 1;
         }
 
-        $page = new stdClass();
-        $page->first = 1;
-        $page->before = ($numberPage === 1 ? 1 : ($numberPage - 1));
-        $page->items = $query->execute();
-        $page->next = ($numberPage < $totalPages ? ($numberPage + 1) : $totalPages);
-        $page->last = $totalPages;
-        $page->current = $numberPage;
+        $page              = new stdClass();
+        $page->first       = 1;
+        $page->before      = ($numberPage === 1 ? 1 : ($numberPage - 1));
+        $page->items       = $query->execute();
+        $page->next        = ($numberPage < $totalPages ? ($numberPage + 1) : $totalPages);
+        $page->last        = $totalPages;
+        $page->current     = $numberPage;
         $page->total_pages = $totalPages;
-        $page->total_items = (int)$row['rowcount'];
+        $page->total_items = (int) $row['rowcount'];
 
         return $page;
     }
+
 }

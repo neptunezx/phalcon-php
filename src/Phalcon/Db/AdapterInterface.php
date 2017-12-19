@@ -1,12 +1,5 @@
 <?php
-/**
- * Adapter Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Db;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Db;
  */
 interface AdapterInterface
 {
+
     /**
      * Constructor for \Phalcon\Db\Adapter
      *

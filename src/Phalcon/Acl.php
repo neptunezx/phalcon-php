@@ -1,12 +1,5 @@
 <?php
-/**
- * ACL
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon;
 
 /**
@@ -16,7 +9,7 @@ namespace Phalcon;
  * of permissions attached to an object. An ACL specifies which users or system processes
  * are granted access to objects, as well as what operations are allowed on given objects.
  *
- *<code>
+ * <code>
  *
  *  $acl = new Phalcon\Acl\Adapter\Memory();
  *
@@ -50,19 +43,21 @@ namespace Phalcon;
  *  $acl->isAllowed('Guests', 'Customers', 'search'); //Returns 1
  *  $acl->isAllowed('Guests', 'Customers', 'create'); //Returns 1
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/acl.c
  */
 abstract class Acl
 {
+
     /**
      * Allow Access
-    */
+     */
     const ALLOW = 1;
 
     /**
      * Deny Access
-    */
+     */
     const DENY = 0;
+
 }

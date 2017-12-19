@@ -1,13 +1,15 @@
 <?php
+
 /**
-* Manager
-*
-* @author Andres Gutierrez <andres@phalconphp.com>
-* @author Eduar Carvajal <eduar@phalconphp.com>
-* @author Wenzel Pünter <wenzel@phelix.me>
-* @version 1.2.6
-* @package Phalcon
-*/
+ * Manager
+ *
+ * @author Andres Gutierrez <andres@phalconphp.com>
+ * @author Eduar Carvajal <eduar@phalconphp.com>
+ * @author Wenzel Pünter <wenzel@phelix.me>
+ * @version 1.2.6
+ * @package Phalcon
+ */
+
 namespace Phalcon\Mvc\Model;
 
 use \Phalcon\Mvc\Model\ManagerInterface;
@@ -45,12 +47,13 @@ use \Phalcon\Text;
  */
 class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareInterface
 {
+
     /**
      * Dependency Injector
      *
      * @var null|\Phalcon\DiInterface
      * @access protected
-    */
+     */
     protected $_dependencyInjector;
 
     /**
@@ -58,7 +61,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|\Phalcon\Events\ManagerInterface
      * @access protected
-    */
+     */
     protected $_eventsManager;
 
     /**
@@ -66,7 +69,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_customEventsManager;
 
     /**
@@ -74,7 +77,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_readConnectionServices;
 
     /**
@@ -82,7 +85,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_writeConnectionServices;
 
     /**
@@ -90,7 +93,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_aliases;
 
     /**
@@ -98,7 +101,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_hasMany;
 
     /**
@@ -106,7 +109,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_hasManySingle;
 
     /**
@@ -114,7 +117,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_hasOne;
 
     /**
@@ -122,7 +125,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_hasOneSingle;
 
     /**
@@ -130,7 +133,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_belongsTo;
 
     /**
@@ -138,7 +141,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_belongsToSingle;
 
     /**
@@ -146,7 +149,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_hasManyToMany;
 
     /**
@@ -154,7 +157,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_hasManyToManySingle;
 
     /**
@@ -162,7 +165,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_initialized;
 
     /**
@@ -170,7 +173,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_sources;
 
     /**
@@ -178,7 +181,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_schemas;
 
     /**
@@ -186,7 +189,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_behaviors;
 
     /**
@@ -194,7 +197,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|\Phalcon\Mvc\ModelInterface
      * @access protected
-    */
+     */
     protected $_lastInitialized;
 
     /**
@@ -202,7 +205,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|\Phalcon\Mvc\Model\QueryInterface
      * @access protected
-    */
+     */
     protected $_lastQuery;
 
     /**
@@ -210,7 +213,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_reusable;
 
     /**
@@ -218,7 +221,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_keepSnapshots;
 
     /**
@@ -226,7 +229,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_dynamicUpdate;
 
     /**
@@ -234,7 +237,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @var null|array
      * @access protected
-    */
+     */
     protected $_namespaceAliases;
 
     /**
@@ -421,7 +424,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         }
 
         $lowercased = strtolower($modelName);
-        
+
         //Check if a model with the same name is already loaded
         if (isset($this->_initialized[$lowercased]) === true) {
             $model = $this->_initialized[$lowercased];
@@ -438,7 +441,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         }
 
         //The model doesn't exist throw an exception
-        throw new Exception("Model '".$modelName."' could not be loaded");
+        throw new Exception("Model '" . $modelName . "' could not be loaded");
     }
 
     /**
@@ -491,7 +494,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $this->_sources = array();
         }
 
-        $source = Text::uncamelize($entity);
+        $source                  = Text::uncamelize($entity);
         $this->_sources[$entity] = $source;
         return $source;
     }
@@ -575,7 +578,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
 
         $entityName = strtolower(get_class($model));
 
-        $this->_readConnectionServices[$entityName] = $connectionService;
+        $this->_readConnectionServices[$entityName]  = $connectionService;
         $this->_writeConnectionServices[$entityName] = $connectionService;
     }
 
@@ -773,7 +776,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $model instanceof ModelInterface === false) {
             throw new Exception('Invalid parameter type.');
         }
-        
+
         $entityName = strtolower(get_class($model));
 
         if (is_array($this->_behaviors) === true &&
@@ -788,7 +791,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
 
         //Dispatch events to the global events manager
         if (is_object($this->_eventsManager) === true) {
-            if ($this->_eventsManager->fire('model:'.$eventName, $model) === false) {
+            if ($this->_eventsManager->fire('model:' . $eventName, $model) === false) {
                 return false;
             }
         }
@@ -796,7 +799,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         //A model can have a specific events manager
         if (is_array($this->_customEventsManager) === true &&
             isset($this->_customEventsManager[$entityName]) === true) {
-            if ($this->_customEventsManager[$entityName]->fire('model:'.$eventName, $model) === false) {
+            if ($this->_customEventsManager[$entityName]->fire('model:' . $eventName, $model) === false) {
                 return false;
             }
         }
@@ -839,7 +842,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
 
         //Dispatch events to the global events manager
         if (is_object($this->_eventsManager) === true) {
-            return $this->_eventsManager->fire('model:'.$eventName, $model, $data);
+            return $this->_eventsManager->fire('model:' . $eventName, $model, $data);
         }
 
         return null;
@@ -919,7 +922,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         if (is_array($this->_keepSnapshots) === true) {
             $entityName = strtolower(get_class($model));
             if (isset($this->_keepSnapshots[$entityName]) === true) {
-                return (bool)$this->_keepSnapshots[$entityName];
+                return (bool) $this->_keepSnapshots[$entityName];
             }
         }
 
@@ -948,8 +951,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         if (is_array($this->_keepSnapshots) === false) {
             $this->_keepSnapshots = array();
         }
- 
-        $entityName = strtolower(get_class($model));
+
+        $entityName                        = strtolower(get_class($model));
         $this->_dynamicUpdate[$entityName] = $dynamicUpdate;
         $this->_keepSnapshots[$entityName] = $dynamicUpdate;
     }
@@ -971,7 +974,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         if (is_array($this->_dynamicUpdate) === true) {
             $entityName = strtolower(get_class($model));
             if (isset($this->_dynamicUpdate[$entityName]) === true) {
-                return (bool)$this->_dynamicUpdate[$entityName];
+                return (bool) $this->_dynamicUpdate[$entityName];
             }
         }
 
@@ -995,13 +998,13 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $model instanceof ModelInterface === false ||
             is_string($referencedModel) === false ||
             (is_array($options) === false &&
-                is_null($options) === false)) {
+            is_null($options) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $entityName = strtolower(get_class($model));
+        $entityName       = strtolower(get_class($model));
         $referencedEntity = strtolower($referencedModel);
-        $keyRelation = $entityName.'$'.$referencedEntity;
+        $keyRelation      = $entityName . '$' . $referencedEntity;
 
         if (isset($this->_hasOne[$keyRelation]) === false) {
             $relations = array();
@@ -1028,7 +1031,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         $relations[] = $relation;
 
         //Update the global alias
-        $this->_aliases[$entityName.'$'.$lowerAlias] = $relation;
+        $this->_aliases[$entityName . '$' . $lowerAlias] = $relation;
 
         //Update the relations
         $this->_hasOne[$keyRelation] = $relations;
@@ -1066,13 +1069,13 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $model instanceof ModelInterface === false ||
             is_string($referencedModel) === false ||
             (is_array($options) === false &&
-                is_null($options) === false)) {
+            is_null($options) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $entityName = strtolower(get_class($model));
+        $entityName       = strtolower(get_class($model));
         $referencedEntity = strtolower($referencedModel);
-        $keyRelation = $entityName.'$'.$referencedEntity;
+        $keyRelation      = $entityName . '$' . $referencedEntity;
 
         if (isset($this->_belongsTo[$keyRelation]) === false) {
             $relations = array();
@@ -1099,7 +1102,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         $relations[] = $relation;
 
         //Update the global alias
-        $this->_aliases[$entityName.'$'.$lowerAlias] = $relation;
+        $this->_aliases[$entityName . '$' . $lowerAlias] = $relation;
 
         //Update the relations
         $this->_belongsTo[$keyRelation] = $relations;
@@ -1137,13 +1140,13 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $model instanceof ModelInterface === false ||
             is_string($referencedModel) === false ||
             (is_array($options) === false &&
-                is_null($options) === false)) {
+            is_null($options) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $entityName = strtolower(get_class($model));
+        $entityName       = strtolower(get_class($model));
         $referencedEntity = strtolower($referencedModel);
-        $keyRelation = $entityName.'$'.$referencedEntity;
+        $keyRelation      = $entityName . '$' . $referencedEntity;
 
         if (isset($this->_hasMany[$keyRelation]) === false) {
             $relations = array();
@@ -1170,7 +1173,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         $relations[] = $relation;
 
         //Update the global alias
-        $this->_aliases[$entityName.'$'.$lowerAlias] = $relation;
+        $this->_aliases[$entityName . '$' . $lowerAlias] = $relation;
 
         //Update the relations
         $this->_hasMany[$keyRelation] = $relations;
@@ -1212,14 +1215,14 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             is_string($intermediateModel) === false ||
             is_string($referencedModel) === false ||
             (is_array($options) === false &&
-                is_null($options) === false)) {
+            is_null($options) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $entityName = strtolower(get_class($model));
+        $entityName         = strtolower(get_class($model));
         $intermediateEntity = strtolower($intermediateModel);
-        $referencedEntity = strtolower($referencedModel);
-        $keyRelation = $entityName.'$'.$referencedEntity;
+        $referencedEntity   = strtolower($referencedModel);
+        $keyRelation        = $entityName . '$' . $referencedEntity;
 
         if (isset($this->_hasManyToMany[$keyRelation]) === false) {
             $relations = array();
@@ -1236,7 +1239,6 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         //@note this check is doing the same as the check before:
         //Check if the number of fields is the same from the intermediate model to the
         //referenced model
-
         //Create a relationship instance
         $relation = new Relation(4, $referencedModel, $fields, $referencedFields, $options);
 
@@ -1253,7 +1255,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         $relations[] = $relation;
 
         //Update the global alias
-        $this->_aliases[$entityName.'$'.$lowerAlias] = $relation;
+        $this->_aliases[$entityName . '$' . $lowerAlias] = $relation;
 
         //Update the relations
         $this->_hasManyToMany[$keyRelation] = $relations;
@@ -1296,7 +1298,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $this->load($modelName);
         }
 
-        return isset($this->_belongsTo[$entityName.'$'.strtolower($modelRelation)]);
+        return isset($this->_belongsTo[$entityName . '$' . strtolower($modelRelation)]);
     }
 
     /**
@@ -1321,7 +1323,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $this->load($modelName);
         }
 
-        return isset($this->_hasMany[$entityName.'$'.strtolower($modelRelation)]);
+        return isset($this->_hasMany[$entityName . '$' . strtolower($modelRelation)]);
     }
 
     /**
@@ -1346,7 +1348,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $this->load($modelName);
         }
 
-        return isset($this->_hasOne[$entityName.'$'.strtolower($modelRelation)]);
+        return isset($this->_hasOne[$entityName . '$' . strtolower($modelRelation)]);
     }
 
     /**
@@ -1371,7 +1373,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $this->load($modelName);
         }
 
-        return isset($this->_hasManyToMany[$entityName.'$'.strtolower($modelRelation)]);
+        return isset($this->_hasManyToMany[$entityName . '$' . strtolower($modelRelation)]);
     }
 
     /**
@@ -1390,7 +1392,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         }
 
         if (is_array($this->_aliases) === true) {
-            $keyLower = strtolower($modelName.'$'.$alias);
+            $keyLower = strtolower($modelName . '$' . $alias);
             if (isset($this->_aliases[$keyLower]) === true) {
                 return $this->_aliases[$keyLower];
             }
@@ -1404,7 +1406,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @param mixed $input
      * @return string
-    */
+     */
     private static function appendPrintableVal($input)
     {
         switch (getType($input)) {
@@ -1417,7 +1419,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             case 'NULL':
                 return '';
             default:
-                return (string)$input;
+                return (string) $input;
                 break;
         }
     }
@@ -1427,7 +1429,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @param array $input
      * @return string
-    */
+     */
     private static function appendPrintableArray($input)
     {
         $str = '[';
@@ -1449,7 +1451,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             ++$pos;
         }
 
-        return $str.']';
+        return $str . ']';
     }
 
     /**
@@ -1458,7 +1460,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param string $prefix
      * @param array|string $value
      * @return string|null
-    */
+     */
     private static function uniqueKey($prefix, $value)
     {
         $implstr = '';
@@ -1467,6 +1469,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         }
 
         if (is_array($value) === true) {
+            
         }
     }
 
@@ -1488,7 +1491,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             is_object($record) === false ||
             $record instanceof ModelInterface === false ||
             (is_array($parameters) === false &&
-                is_null($parameters) === false)) {
+            is_null($parameters) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -1524,15 +1527,15 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
 
         //Check if the relation is through an intermediate model
         if ($relation->isThrough() === true) {
-            $conditions = array();
-            $intermediateModel = $relation->getIntermediateModel();
+            $conditions         = array();
+            $intermediateModel  = $relation->getIntermediateModel();
             $intermediateFields = $relation->getIntermediateFields();
 
             //Appends conditions created from the fields defined in the relation
             $fields = $relation->getFields();
             if (is_array($fields) === false) {
-                $value = $record->readAttribute($fields);
-                $conditions[] = '['.$intermediateModel.'].['.$intermediateFields.'] = ?0';
+                $value          = $record->readAttribute($fields);
+                $conditions[]   = '[' . $intermediateModel . '].[' . $intermediateFields . '] = ?0';
                 $placeholders[] = $value;
             } else {
                 throw new Exception('Not supported');
@@ -1544,7 +1547,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $intermediateFields = $relation->getIntermediateReferencedFields();
             if (is_array($intermediateFields) === false) {
                 $referencedFields = $relation->getReferencedFields();
-                $condition = '['.$intermediateModel.'].['.$intermediateFields.'] = ['.$referencedModel.'].['.$referencedFields.']';
+                $condition        = '[' . $intermediateModel . '].[' . $intermediateFields . '] = [' . $referencedModel . '].[' . $referencedFields . ']';
             } else {
                 throw new Exception('Not supported');
             }
@@ -1582,18 +1585,18 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         //Append conditions create from the fields defined in the relation
         $fields = $relation->getFields();
         if (is_array($fields) === false) {
-            $value = $record->readAttribute($fields);
+            $value           = $record->readAttribute($fields);
             $referencedField = $relation->getReferencedFields();
-            $conditions[] = '['.$referencedField.'] = ?0';
-            $placeholders[] = $value;
+            $conditions[]    = '[' . $referencedField . '] = ?0';
+            $placeholders[]  = $value;
         } else {
             //Compound relation
             $referencedFields = $relation->getReferencedFields();
             foreach ($fields as $refPosition => $field) {
-                $value = $record->readAttribute($field);
+                $value           = $record->readAttribute($field);
                 $referencedField = $referencedFields[$refPosition];
-                $conditions[] = '['.$referencedField.'] = ?'.$refPosition;
-                $placeholders[] = $value;
+                $conditions[]    = '[' . $referencedField . '] = ?' . $refPosition;
+                $placeholders[]  = $value;
             }
         }
 
@@ -1609,8 +1612,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         $arguments = array($findArguments);
 
         //Check the right method to get the data
-        if (is_null($method) ===true) {
-            switch ((int)$relation->getType()) {
+        if (is_null($method) === true) {
+            switch ((int) $relation->getType()) {
                 case Relation::BELONGS_TO:
                 case Relation::HAS_ONE:
                     $method = 'findFirst';
@@ -1625,7 +1628,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         $iReusable = $relation->isReusable();
         if ($iReusable === true) {
             $uniqueKey = self::uniqueKey($referencedModel, $arguments);
-            $records = $this->getReusableRecords($referencedModel, $uniqueKey);
+            $records   = $this->getReusableRecords($referencedModel, $uniqueKey);
             if (is_array($records) === true ||
                 is_object($records) === true) {
                 return $records;
@@ -1717,7 +1720,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
 
         if (is_array($this->_belongsTo) === true) {
             //Check if there is a relation between them
-            $keyRelation = strtolower($modelName).'$'.strtolower($modelRelation);
+            $keyRelation = strtolower($modelName) . '$' . strtolower($modelRelation);
             if (isset($this->_belongsTo[$keyRelation]) === false) {
                 return false;
             }
@@ -1749,7 +1752,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
 
         if (is_array($this->_hasMany) === true) {
             //Check if there is a relation between them
-            $keyRelation = strtolower($modelName).'$'.strtolower($modelRelation);
+            $keyRelation = strtolower($modelName) . '$' . strtolower($modelRelation);
             if (isset($this->_hasMany[$keyRelation]) === false) {
                 return false;
             }
@@ -1781,7 +1784,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
 
         if (is_array($this->_hasOne) === true) {
             //Check if there is a relation between them
-            $keyRelation = strtolower($modelName).'$'.strtolower($modelRelation);
+            $keyRelation = strtolower($modelName) . '$' . strtolower($modelRelation);
             if (isset($this->_hasOne[$keyRelation]) === false) {
                 return false;
             }
@@ -1796,9 +1799,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
     /**
      * Gets all the belongsTo relations defined in a model
      *
-     *<code>
+     * <code>
      *  $relations = $modelsManager->getBelongsTo(new Robots());
-     *</code>
+     * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return \Phalcon\Mvc\Model\RelationInterface[]
@@ -1918,7 +1921,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $entityName = strtolower($modelName);
+        $entityName   = strtolower($modelName);
         $allRelations = array();
 
         //Get belongs-to relations
@@ -1966,7 +1969,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $keyRelation = strtolower($first).'$'.strtolower($second);
+        $keyRelation = strtolower($first) . '$' . strtolower($second);
 
         //Check if it's a belongs-to relationship
         if (is_array($this->_belongsTo) === true &&
@@ -2007,7 +2010,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         }
 
         //Create a query
-        $query = new Query($phql);
+        $query            = new Query($phql);
         $query->setDi($this->_dependencyInjector);
         $this->_lastQuery = $query;
 
@@ -2026,7 +2029,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
     {
         if (is_string($phql) === false ||
             (is_array($placeholders) === false &&
-                is_null($placeholders) === false)) {
+            is_null($placeholders) === false)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -2035,7 +2038,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         }
 
         //Create a query
-        $query = new Query($phql);
+        $query            = new Query($phql);
         $query->setDi($this->_dependencyInjector);
         $this->_lastQuery = $query;
 
@@ -2116,7 +2119,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             return $this->_namespaceAliases[$alias];
         }
 
-        throw new Exception("Namespace alias '".$alias."' is not registered");
+        throw new Exception("Namespace alias '" . $alias . "' is not registered");
     }
 
     /**
@@ -2134,5 +2137,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function __destruct()
     {
+        
     }
+
 }

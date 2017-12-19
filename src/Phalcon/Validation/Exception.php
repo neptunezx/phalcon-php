@@ -1,12 +1,5 @@
 <?php
-/**
- * Validation Exception
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation;
 
 /**
@@ -18,4 +11,5 @@ namespace Phalcon\Validation;
  */
 class Exception extends \Phalcon\Exception
 {
+    
 }

@@ -1,12 +1,5 @@
 <?php
-/**
- * Manager Interface
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Mvc\Collection;
 
 /**
@@ -16,6 +9,7 @@ namespace Phalcon\Mvc\Collection;
  */
 interface ManagerInterface
 {
+
     /**
      * Sets a custom events manager for a specific model
      *

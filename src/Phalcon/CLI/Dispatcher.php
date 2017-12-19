@@ -1,13 +1,5 @@
 <?php
-/**
- * CLI Dispatcher
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\CLI;
 
 use \Phalcon\Events\EventsAwareInterface;
@@ -23,7 +15,7 @@ use \Phalcon\Dispatcher as DefaultDispatcher;
  * task name, action name, and optional parameters contained in it, and then
  * instantiating a task and calling an action on it.
  *
- *<code>
+ * <code>
  *
  *  $di = new Phalcon\Di();
  *
@@ -37,52 +29,53 @@ use \Phalcon\Dispatcher as DefaultDispatcher;
  *
  *  $handle = $dispatcher->dispatch();
  *
- *</code>
+ * </code>
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cli/dispatcher.c
  */
 class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, InjectionAwareInterface, DispatcherInterface
 {
+
     /**
      * Exception: No Dependency Injector
      *
      * @var int
-    */
+     */
     const EXCEPTION_NO_DI = 0;
 
     /**
      * Exception: Cyclic Routing
      *
      * @var int
-    */
+     */
     const EXCEPTION_CYCLIC_ROUTING = 1;
 
     /**
      * Exception: Handler Not Found
      *
      * @var int
-    */
+     */
     const EXCEPTION_HANDLER_NOT_FOUND = 2;
 
     /**
      * Exception: Invalid Handler
      *
      * @var int
-    */
+     */
     const EXCEPTION_INVALID_HANDLER = 3;
 
     /**
      * Exception: Invalid Params
      *
      * @var int
-    */
+     */
     const EXCEPTION_INVALID_PARAMS = 4;
 
     /**
      * Exception: Action Not Found
      *
      * @var int
-    */
+     */
     const EXCEPTION_ACTION_NOT_FOUND = 5;
 
     /**
@@ -90,7 +83,7 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_handlerSuffix = 'Task';
 
     /**
@@ -98,7 +91,7 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_defaultHandler = 'main';
 
     /**
@@ -106,7 +99,7 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
      *
      * @var string
      * @access protected
-    */
+     */
     protected $_defaultAction = 'main';
 
     /**
@@ -235,4 +228,5 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
     {
         return $this->_activeHandler;
     }
+
 }

@@ -1,13 +1,5 @@
 <?php
-/**
- * Validator
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
-*/
+
 namespace Phalcon\Validation;
 
 use \Phalcon\Validation\Exception;
@@ -19,12 +11,13 @@ use \Phalcon\Validation\Exception;
  */
 abstract class Validator
 {
+
     /**
      * Options
      *
      * @var null
      * @access protected
-    */
+     */
     protected $_options;
 
     /**
@@ -105,4 +98,5 @@ abstract class Validator
 
         $this->_options[$key] = $value;
     }
+
 }
