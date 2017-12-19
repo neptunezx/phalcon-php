@@ -298,7 +298,7 @@ class Redis extends Backend implements BackendInterface
 
         if ($keyName === null) {
             $lastKey     = $this->_lastKey;
-            $prefixedKey = substr(lastKey, 5);
+            $prefixedKey = substr($lastKey, 5);
         } else {
             $prefixedKey    = $this->_prefix . $keyName;
             $lastKey        = '_PHCR' . $prefixedKey;
