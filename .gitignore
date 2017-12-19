@@ -7,3 +7,4 @@ phpunit.phar
 # Composer
 composer.lock
 vendor/
+/nbproject/
