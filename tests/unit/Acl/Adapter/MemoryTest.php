@@ -28,6 +28,7 @@ use Phalcon\Acl\Adapter\Memory;
  */
 class MemoryTest extends UnitTest
 {
+
     /**
      * Tests the ACL constants
      *
@@ -37,11 +38,10 @@ class MemoryTest extends UnitTest
     public function testAclConstants()
     {
         $this->specify(
-            "The ACL constants are not correct",
-            function () {
-                expect(Acl::ALLOW)->equals(1);
-                expect(Acl::DENY)->equals(0);
-            }
+            "The ACL constants are not correct", function () {
+            expect(Acl::ALLOW)->equals(1);
+            expect(Acl::DENY)->equals(0);
+        }
         );
     }
 
@@ -54,16 +54,15 @@ class MemoryTest extends UnitTest
     public function testAclDefaultAction()
     {
         $this->specify(
-            'The Acl\Adapter\Memory does not get/set the default action correctly',
-            function () {
-                $acl = new Memory();
+            'The Acl\Adapter\Memory does not get/set the default action correctly', function () {
+            $acl = new Memory();
 
-                $acl->setDefaultAction(Acl::ALLOW);
+            $acl->setDefaultAction(Acl::ALLOW);
 
-                $expected = Acl::ALLOW;
-                $actual   = $acl->getDefaultAction();
-                expect($actual)->equals($expected);
-            }
+            $expected = Acl::ALLOW;
+            $actual   = $acl->getDefaultAction();
+            expect($actual)->equals($expected);
+        }
         );
     }
 
@@ -76,16 +75,15 @@ class MemoryTest extends UnitTest
     public function testAclAddRoleExists()
     {
         $this->specify(
-            'Adding a ACL\Role in the ACL does not exist',
-            function () {
-                $acl     = new Memory();
-                $aclRole = new Role('Administrators', 'Super User access');
+            'Adding a ACL\Role in the ACL does not exist', function () {
+            $acl     = new Memory();
+            $aclRole = new Role('Administrators', 'Super User access');
 
-                $acl->addRole($aclRole);
+            $acl->addRole($aclRole);
 
-                $actual = $acl->isRole('Administrators');
-                expect($actual)->true();
-            }
+            $actual = $acl->isRole('Administrators');
+            expect($actual)->true();
+        }
         );
     }
 
@@ -98,16 +96,15 @@ class MemoryTest extends UnitTest
     public function testAclAddRoleTwiceReturnsFalse()
     {
         $this->specify(
-            'Acl\Role added twice returns true',
-            function () {
-                $acl     = new Memory();
-                $aclRole = new Role('Administrators', 'Super User access');
+            'Acl\Role added twice returns true', function () {
+            $acl     = new Memory();
+            $aclRole = new Role('Administrators', 'Super User access');
 
-                $acl->addRole($aclRole);
-                $actual = $acl->addRole($aclRole);
+            $acl->addRole($aclRole);
+            $actual = $acl->addRole($aclRole);
 
-                expect($actual)->false();
-            }
+            expect($actual)->false();
+        }
         );
     }
 
@@ -120,16 +117,15 @@ class MemoryTest extends UnitTest
     public function testAclAddRoleTwiceByKeyReturnsFalse()
     {
         $this->specify(
-            'Acl\Role added twice by key returns true',
-            function () {
-                $acl     = new Memory();
-                $aclRole = new Role('Administrators', 'Super User access');
+            'Acl\Role added twice by key returns true', function () {
+            $acl     = new Memory();
+            $aclRole = new Role('Administrators', 'Super User access');
 
-                $acl->addRole($aclRole);
-                $actual = $acl->addRole('Administrators');
+            $acl->addRole($aclRole);
+            $actual = $acl->addRole('Administrators');
 
-                expect($actual)->false();
-            }
+            expect($actual)->false();
+        }
         );
     }
 
@@ -142,40 +138,39 @@ class MemoryTest extends UnitTest
     public function testAclWildcardAllowDeny()
     {
         $this->specify(
-            'Acl\Role added twice by key returns true',
-            function () {
-                $acl     = new Memory();
-                $acl->setDefaultAction(Acl::DENY);
+            'Acl\Role added twice by key returns true', function () {
+            $acl = new Memory();
+            $acl->setDefaultAction(Acl::DENY);
 
-                $aclRoles  = [
-                    'Admin'  => new Role('Admin'),
-                    'Users'  => new Role('Users'),
-                    'Guests' => new Role('Guests')
-                ];
+            $aclRoles = [
+                'Admin'  => new Role('Admin'),
+                'Users'  => new Role('Users'),
+                'Guests' => new Role('Guests')
+            ];
 
-                $aclResources = [
-                    'welcome' => ['index', 'about'],
-                    'account' => ['index'],
-                ];
+            $aclResources = [
+                'welcome' => ['index', 'about'],
+                'account' => ['index'],
+            ];
 
-                foreach ($aclRoles as $role => $object) {
-                    $acl->addRole($object);
-                }
-
-                foreach ($aclResources as $resource => $actions) {
-                    $acl->addResource(new Resource($resource), $actions);
-                }
-                $acl->allow("*", "welcome", "index");
-
-                foreach ($aclRoles as $role => $object) {
-                    expect($acl->isAllowed($role, 'welcome', 'index'))->true();
-                }
-
-                $acl->deny("*", "welcome", "index");
-                foreach ($aclRoles as $role => $object) {
-                    expect($acl->isAllowed($role, 'welcome', 'index'))->false();
-                }
+            foreach ($aclRoles as $role => $object) {
+                $acl->addRole($object);
             }
+
+            foreach ($aclResources as $resource => $actions) {
+                $acl->addResource(new Resource($resource), $actions);
+            }
+            $acl->allow("*", "welcome", "index");
+
+            foreach ($aclRoles as $role => $object) {
+                expect($acl->isAllowed($role, 'welcome', 'index'))->true();
+            }
+
+            $acl->deny("*", "welcome", "index");
+            foreach ($aclRoles as $role => $object) {
+                expect($acl->isAllowed($role, 'welcome', 'index'))->false();
+            }
+        }
         );
     }
 
@@ -188,14 +183,13 @@ class MemoryTest extends UnitTest
     public function testAclIsRoleWithWrongKeyReturnsFalse()
     {
         $this->specify(
-            'Acl\Role added with wrong key returns true in isRole',
-            function () {
-                $acl     = new Memory();
+            'Acl\Role added with wrong key returns true in isRole', function () {
+            $acl = new Memory();
 
-                $actual = $acl->isRole('Wrong');
+            $actual = $acl->isRole('Wrong');
 
-                expect($actual)->false();
-            }
+            expect($actual)->false();
+        }
         );
     }
 
@@ -208,17 +202,16 @@ class MemoryTest extends UnitTest
     public function testAclRoleName()
     {
         $this->specify(
-            'Acl\Role does not exist in Acl',
-            function () {
-                $acl     = new Memory();
-                $aclRole = new Role('Administrators', 'Super User access');
+            'Acl\Role does not exist in Acl', function () {
+            $acl     = new Memory();
+            $aclRole = new Role('Administrators', 'Super User access');
 
-                $acl->addRole($aclRole);
+            $acl->addRole($aclRole);
 
-                $actual = $acl->isRole('Administrators');
+            $actual = $acl->isRole('Administrators');
 
-                expect($actual)->true();
-            }
+            expect($actual)->true();
+        }
         );
     }
 
@@ -231,15 +224,14 @@ class MemoryTest extends UnitTest
     public function testAclAddResourceExists()
     {
         $this->specify(
-            'Acl\Resource does not exist in Acl',
-            function () {
-                $acl         = new Memory();
-                $aclResource = new Resource('Customers', 'Customer management');
+            'Acl\Resource does not exist in Acl', function () {
+            $acl         = new Memory();
+            $aclResource = new Resource('Customers', 'Customer management');
 
-                $actual = $acl->addResource($aclResource, 'search');
+            $actual = $acl->addResource($aclResource, 'search');
 
-                expect($actual)->true();
-            }
+            expect($actual)->true();
+        }
         );
     }
 
@@ -252,17 +244,16 @@ class MemoryTest extends UnitTest
     public function testAclResourceName()
     {
         $this->specify(
-            'Acl\Resource by name does not exist in the acl',
-            function () {
-                $acl         = new Memory();
-                $aclResource = new Resource('Customers', 'Customer management');
+            'Acl\Resource by name does not exist in the acl', function () {
+            $acl         = new Memory();
+            $aclResource = new Resource('Customers', 'Customer management');
 
-                $acl->addResource($aclResource, 'search');
+            $acl->addResource($aclResource, 'search');
 
-                $actual = $acl->isResource('Customers');
+            $actual = $acl->isResource('Customers');
 
-                expect($actual)->true();
-            }
+            expect($actual)->true();
+        }
         );
     }
 
@@ -275,39 +266,37 @@ class MemoryTest extends UnitTest
     public function testAclObjectsWithDefaultAction()
     {
         $this->specify(
-            'Acl with default action search does not return correct results',
-            function () {
-                $acl         = new Memory();
-                $aclRole     = new Role('Administrators', 'Super User access');
-                $aclResource = new Resource('Customers', 'Customer management');
+            'Acl with default action search does not return correct results', function () {
+            $acl         = new Memory();
+            $aclRole     = new Role('Administrators', 'Super User access');
+            $aclResource = new Resource('Customers', 'Customer management');
 
-                $acl->setDefaultAction(Acl::DENY);
+            $acl->setDefaultAction(Acl::DENY);
 
-                $acl->addRole($aclRole);
-                $acl->addResource($aclResource, ['search', 'destroy']);
+            $acl->addRole($aclRole);
+            $acl->addResource($aclResource, ['search', 'destroy']);
 
-                $expected = Acl::DENY;
-                $actual   = $acl->isAllowed('Administrators', 'Customers', 'search');
-                expect($actual)->equals($expected);
-            }
+            $expected = Acl::DENY;
+            $actual   = $acl->isAllowed('Administrators', 'Customers', 'search');
+            expect($actual)->equals($expected);
+        }
         );
 
         $this->specify(
-            'Acl with default action destroy does not return correct results',
-            function () {
-                $acl         = new Memory();
-                $aclRole     = new Role('Administrators', 'Super User access');
-                $aclResource = new Resource('Customers', 'Customer management');
+            'Acl with default action destroy does not return correct results', function () {
+            $acl         = new Memory();
+            $aclRole     = new Role('Administrators', 'Super User access');
+            $aclResource = new Resource('Customers', 'Customer management');
 
-                $acl->setDefaultAction(Acl::DENY);
+            $acl->setDefaultAction(Acl::DENY);
 
-                $acl->addRole($aclRole);
-                $acl->addResource($aclResource, ['search', 'destroy']);
+            $acl->addRole($aclRole);
+            $acl->addResource($aclResource, ['search', 'destroy']);
 
-                $expected = Acl::DENY;
-                $actual   = $acl->isAllowed('Administrators', 'Customers', 'destroy');
-                expect($actual)->equals($expected);
-            }
+            $expected = Acl::DENY;
+            $actual   = $acl->isAllowed('Administrators', 'Customers', 'destroy');
+            expect($actual)->equals($expected);
+        }
         );
     }
 
@@ -320,45 +309,43 @@ class MemoryTest extends UnitTest
     public function testAclObjects()
     {
         $this->specify(
-            'Acl search does not return correct results',
-            function () {
-                $acl         = new Memory();
-                $aclRole     = new Role('Administrators', 'Super User access');
-                $aclResource = new Resource('Customers', 'Customer management');
+            'Acl search does not return correct results', function () {
+            $acl         = new Memory();
+            $aclRole     = new Role('Administrators', 'Super User access');
+            $aclResource = new Resource('Customers', 'Customer management');
 
-                $acl->setDefaultAction(Acl::DENY);
+            $acl->setDefaultAction(Acl::DENY);
 
-                $acl->addRole($aclRole);
-                $acl->addResource($aclResource, ['search', 'destroy']);
+            $acl->addRole($aclRole);
+            $acl->addResource($aclResource, ['search', 'destroy']);
 
-                $acl->allow('Administrators', 'Customers', 'search');
-                $acl->deny('Administrators', 'Customers', 'destroy');
+            $acl->allow('Administrators', 'Customers', 'search');
+            $acl->deny('Administrators', 'Customers', 'destroy');
 
-                $expected = Acl::ALLOW;
-                $actual   = $acl->isAllowed('Administrators', 'Customers', 'search');
-                expect($actual)->equals($expected);
-            }
+            $expected = Acl::ALLOW;
+            $actual   = $acl->isAllowed('Administrators', 'Customers', 'search');
+            expect($actual)->equals($expected);
+        }
         );
 
         $this->specify(
-            'Acl destroy does not return correct results',
-            function () {
-                $acl         = new Memory();
-                $aclRole     = new Role('Administrators', 'Super User access');
-                $aclResource = new Resource('Customers', 'Customer management');
+            'Acl destroy does not return correct results', function () {
+            $acl         = new Memory();
+            $aclRole     = new Role('Administrators', 'Super User access');
+            $aclResource = new Resource('Customers', 'Customer management');
 
-                $acl->setDefaultAction(Acl::DENY);
+            $acl->setDefaultAction(Acl::DENY);
 
-                $acl->addRole($aclRole);
-                $acl->addResource($aclResource, ['search', 'destroy']);
+            $acl->addRole($aclRole);
+            $acl->addResource($aclResource, ['search', 'destroy']);
 
-                $acl->allow('Administrators', 'Customers', 'search');
-                $acl->deny('Administrators', 'Customers', 'destroy');
+            $acl->allow('Administrators', 'Customers', 'search');
+            $acl->deny('Administrators', 'Customers', 'destroy');
 
-                $expected = Acl::DENY;
-                $actual   = $acl->isAllowed('Administrators', 'Customers', 'destroy');
-                expect($actual)->equals($expected);
-            }
+            $expected = Acl::DENY;
+            $actual   = $acl->isAllowed('Administrators', 'Customers', 'destroy');
+            expect($actual)->equals($expected);
+        }
         );
     }
 
@@ -371,47 +358,60 @@ class MemoryTest extends UnitTest
     public function testAclSerialize()
     {
         $this->specify(
-            'Acl serialization/unserialization does not return a correct object back',
-            function () {
-                $filename    = $this->tester->getNewFileName('acl', 'log');
+            'Acl serialization/unserialization does not return a correct object back', function () {
+            $filename = $this->tester->getNewFileName('acl', 'log');
 
-                $acl         = new Memory();
-                $aclRole     = new Role('Administrators', 'Super User access');
-                $aclResource = new Resource('Customers', 'Customer management');
+            $acl         = new Memory();
+            $aclRole     = new Role('Administrators', 'Super User access');
+            $aclResource = new Resource('Customers', 'Customer management');
 
-                $acl->addRole($aclRole);
-                $acl->addResource($aclResource, ['search', 'destroy']);
+            $acl->addRole($aclRole);
+            $acl->addResource($aclResource, ['search', 'destroy']);
 
-                $acl->allow('Administrators', 'Customers', 'search');
-                $acl->deny('Administrators', 'Customers', 'destroy');
+            $acl->allow('Administrators', 'Customers', 'search');
+            $acl->deny('Administrators', 'Customers', 'destroy');
 
-                $contents = serialize($acl);
-                file_put_contents(PATH_CACHE . $filename, $contents);
+            $actual = $acl->isRole('Administrators');
+            expect($actual)->true();
 
-                $acl = null;
+            $actual = $acl->isResource('Customers');
+            expect($actual)->true();
 
-                $contents = file_get_contents(PATH_CACHE . $filename);
+            $expected = Acl::ALLOW;
+            $actual   = $acl->isAllowed('Administrators', 'Customers', 'search');
+            expect($actual)->equals($expected);
 
-                $this->tester->cleanFile(PATH_CACHE, $filename);
+            $expected = Acl::DENY;
+            $actual   = $acl->isAllowed('Administrators', 'Customers', 'destroy');
+            expect($actual)->equals($expected);
 
-                $acl = unserialize($contents);
-                $actual = ($acl instanceof Memory);
-                expect($actual)->true();
+            $contents = serialize($acl);
+            file_put_contents(PATH_CACHE . $filename, $contents);
 
-                $actual = $acl->isRole('Administrators');
-                expect($actual)->true();
+            $acl = null;
 
-                $actual = $acl->isResource('Customers');
-                expect($actual)->true();
+            $contents = file_get_contents(PATH_CACHE . $filename);
 
-                $expected = Acl::ALLOW;
-                $actual   = $acl->isAllowed('Administrators', 'Customers', 'search');
-                expect($actual)->equals($expected);
+            $this->tester->cleanFile(PATH_CACHE, $filename);
 
-                $expected = Acl::DENY;
-                $actual   = $acl->isAllowed('Administrators', 'Customers', 'destroy');
-                expect($actual)->equals($expected);
-            }
+            $acl    = unserialize($contents);
+            $actual = ($acl instanceof Memory);
+            expect($actual)->true();
+
+            $actual = $acl->isRole('Administrators');
+            expect($actual)->true();
+
+            $actual = $acl->isResource('Customers');
+            expect($actual)->true();
+
+            $expected = Acl::ALLOW;
+            $actual   = $acl->isAllowed('Administrators', 'Customers', 'search');
+            expect($actual)->equals($expected);
+
+            $expected = Acl::DENY;
+            $actual   = $acl->isAllowed('Administrators', 'Customers', 'destroy');
+            expect($actual)->equals($expected);
+        }
         );
     }
 
@@ -426,29 +426,28 @@ class MemoryTest extends UnitTest
     public function testAclNegationOfInheritedRoles()
     {
         $this->specify(
-            'Negation of inherited roles does not return the correct result',
-            function () {
-                $acl = new Memory;
-                $acl->setDefaultAction(Acl::DENY);
+            'Negation of inherited roles does not return the correct result', function () {
+            $acl = new Memory;
+            $acl->setDefaultAction(Acl::DENY);
 
-                $acl->addRole('Guests');
-                $acl->addRole('Members', 'Guests');
+            $acl->addRole('Guests');
+            $acl->addRole('Members', 'Guests');
 
-                $acl->addResource('Login', ['help', 'index']);
+            $acl->addResource('Login', ['help', 'index']);
 
-                $acl->allow('Guests', 'Login', '*');
-                $acl->deny('Guests', 'Login', ['help']);
-                $acl->deny('Members', 'Login', ['index']);
+            $acl->allow('Guests', 'Login', '*');
+            $acl->deny('Guests', 'Login', ['help']);
+            $acl->deny('Members', 'Login', ['index']);
 
-                $actual = (bool)$acl->isAllowed('Members', 'Login', 'index');
-                expect($actual)->false();
+            $actual = (bool) $acl->isAllowed('Members', 'Login', 'index');
+            expect($actual)->false();
 
-                $actual = (bool)$acl->isAllowed('Guests', 'Login', 'index');
-                expect($actual)->true();
+            $actual = (bool) $acl->isAllowed('Guests', 'Login', 'index');
+            expect($actual)->true();
 
-                $actual = (bool)$acl->isAllowed('Guests', 'Login', 'help');
-                expect($actual)->false();
-            }
+            $actual = (bool) $acl->isAllowed('Guests', 'Login', 'help');
+            expect($actual)->false();
+        }
         );
     }
 
@@ -463,17 +462,16 @@ class MemoryTest extends UnitTest
     public function testAclResourcesWithNumericValues()
     {
         $this->specify(
-            'ACL Resources with numeric values are not set properly',
-            function () {
-                $acl = new Memory;
-                $acl->setDefaultAction(Acl::DENY);
+            'ACL Resources with numeric values are not set properly', function () {
+            $acl = new Memory;
+            $acl->setDefaultAction(Acl::DENY);
 
-                $acl->addRole(new Role('11'));
-                $acl->addResource(new Resource('11'), ['index']);
+            $acl->addRole(new Role('11'));
+            $acl->addResource(new Resource('11'), ['index']);
 
-                $actual = $acl->isResource('11');
-                expect($actual)->true();
-            }
+            $actual = $acl->isResource('11');
+            expect($actual)->true();
+        }
         );
     }
 
@@ -488,35 +486,34 @@ class MemoryTest extends UnitTest
     public function testAclAllowFunction()
     {
         $this->specify(
-            'The function in allow should be called and isAllowed should return correct values when using function in allow method',
-            function () {
-                require_once PATH_DATA . 'acl/TestResourceAware.php';
-                require_once PATH_DATA . 'acl/TestRoleAware.php';
+            'The function in allow should be called and isAllowed should return correct values when using function in allow method', function () {
+            require_once PATH_DATA . 'acl/TestResourceAware.php';
+            require_once PATH_DATA . 'acl/TestRoleAware.php';
 
-                $acl = new Memory;
-                $acl->setDefaultAction(Acl::DENY);
-                $acl->addRole('Guests');
-                $acl->addRole('Members', 'Guests');
-                $acl->addRole('Admins', 'Members');
-                $acl->addResource('Post', ['update']);
+            $acl = new Memory;
+            $acl->setDefaultAction(Acl::DENY);
+            $acl->addRole('Guests');
+            $acl->addRole('Members', 'Guests');
+            $acl->addRole('Admins', 'Members');
+            $acl->addResource('Post', ['update']);
 
-                $guest = new \TestRoleAware(1, 'Guests');
-                $member = new \TestRoleAware(2, 'Members');
-                $anotherMember = new \TestRoleAware(3, 'Members');
-                $admin = new \TestRoleAware(4, 'Admins');
-                $model = new \TestResourceAware(2, 'Post');
+            $guest         = new \TestRoleAware(1, 'Guests');
+            $member        = new \TestRoleAware(2, 'Members');
+            $anotherMember = new \TestRoleAware(3, 'Members');
+            $admin         = new \TestRoleAware(4, 'Admins');
+            $model         = new \TestResourceAware(2, 'Post');
 
-                $acl->deny('Guests', 'Post', 'update');
-                $acl->allow('Members', 'Post', 'update', function (\TestRoleAware $user, \TestResourceAware $model) {
-                    return $user->getId() == $model->getUser();
-                });
-                $acl->allow('Admins', 'Post', 'update');
+            $acl->deny('Guests', 'Post', 'update');
+            $acl->allow('Members', 'Post', 'update', function (\TestRoleAware $user, \TestResourceAware $model) {
+                return $user->getId() == $model->getUser();
+            });
+            $acl->allow('Admins', 'Post', 'update');
 
-                expect($acl->isAllowed($guest, $model, 'update'))->false();
-                expect($acl->isAllowed($member, $model, 'update'))->true();
-                expect($acl->isAllowed($anotherMember, $model, 'update'))->false();
-                expect($acl->isAllowed($admin, $model, 'update'))->true();
-            }
+            expect($acl->isAllowed($guest, $model, 'update'))->false();
+            expect($acl->isAllowed($member, $model, 'update'))->true();
+            expect($acl->isAllowed($anotherMember, $model, 'update'))->false();
+            expect($acl->isAllowed($admin, $model, 'update'))->true();
+        }
         );
     }
 
@@ -531,34 +528,33 @@ class MemoryTest extends UnitTest
     public function testIssue12004()
     {
         $this->specify(
-            'Wildcard inheritance should work correctly.',
-            function () {
-                $acl = new Memory();
+            'Wildcard inheritance should work correctly.', function () {
+            $acl = new Memory();
 
-                $acl->setDefaultAction(Acl::DENY);
+            $acl->setDefaultAction(Acl::DENY);
 
-                $roleGuest = new Role("guest");
-                $roleUser = new Role("user");
-                $roleAdmin = new Role("admin");
-                $roleSuperAdmin = new Role("superadmin");
+            $roleGuest      = new Role("guest");
+            $roleUser       = new Role("user");
+            $roleAdmin      = new Role("admin");
+            $roleSuperAdmin = new Role("superadmin");
 
-                $acl->addRole($roleGuest);
-                $acl->addRole($roleUser, $roleGuest);
-                $acl->addRole($roleAdmin, $roleUser);
-                $acl->addRole($roleSuperAdmin, $roleAdmin);
+            $acl->addRole($roleGuest);
+            $acl->addRole($roleUser, $roleGuest);
+            $acl->addRole($roleAdmin, $roleUser);
+            $acl->addRole($roleSuperAdmin, $roleAdmin);
 
-                $acl->addResource("payment", ["paypal", "facebook", ]);
+            $acl->addResource("payment", ["paypal", "facebook",]);
 
-                $acl->allow($roleGuest->getName(), "payment", "paypal");
-                $acl->allow($roleGuest->getName(), "payment", "facebook");
+            $acl->allow($roleGuest->getName(), "payment", "paypal");
+            $acl->allow($roleGuest->getName(), "payment", "facebook");
 
-                $acl->allow($roleUser->getName(), "payment", "*");
+            $acl->allow($roleUser->getName(), "payment", "*");
 
-                expect($acl->isAllowed($roleUser->getName(), "payment", "notSet"))->true();
-                expect($acl->isAllowed($roleUser->getName(), "payment", "*"))->true();
-                expect($acl->isAllowed($roleAdmin->getName(), "payment", "notSet"))->true();
-                expect($acl->isAllowed($roleAdmin->getName(), "payment", "*"))->true();
-            }
+            expect($acl->isAllowed($roleUser->getName(), "payment", "notSet"))->true();
+            expect($acl->isAllowed($roleUser->getName(), "payment", "*"))->true();
+            expect($acl->isAllowed($roleAdmin->getName(), "payment", "notSet"))->true();
+            expect($acl->isAllowed($roleAdmin->getName(), "payment", "*"))->true();
+        }
         );
     }
 
@@ -573,38 +569,37 @@ class MemoryTest extends UnitTest
     public function testAclAllowFunctionNoArguments()
     {
         $this->specify(
-            'The function in allow should be called and isAllowed should return correct values when using function in allow method',
-            function () {
-                require_once PATH_DATA . 'acl/TestResourceAware.php';
-                require_once PATH_DATA . 'acl/TestRoleAware.php';
+            'The function in allow should be called and isAllowed should return correct values when using function in allow method', function () {
+            require_once PATH_DATA . 'acl/TestResourceAware.php';
+            require_once PATH_DATA . 'acl/TestRoleAware.php';
 
-                $acl = new Memory;
-                $acl->setDefaultAction(Acl::ALLOW);
-                $acl->setNoArgumentsDefaultAction(Acl::DENY);
-                $acl->addRole('Guests');
-                $acl->addRole('Members', 'Guests');
-                $acl->addRole('Admins', 'Members');
-                $acl->addResource('Post', ['update']);
+            $acl = new Memory;
+            $acl->setDefaultAction(Acl::ALLOW);
+            $acl->setNoArgumentsDefaultAction(Acl::DENY);
+            $acl->addRole('Guests');
+            $acl->addRole('Members', 'Guests');
+            $acl->addRole('Admins', 'Members');
+            $acl->addResource('Post', ['update']);
 
-                $guest = new \TestRoleAware(1, 'Guests');
-                $member = new \TestRoleAware(2, 'Members');
-                $anotherMember = new \TestRoleAware(3, 'Members');
-                $admin = new \TestRoleAware(4, 'Admins');
-                $model = new \TestResourceAware(2, 'Post');
+            $guest         = new \TestRoleAware(1, 'Guests');
+            $member        = new \TestRoleAware(2, 'Members');
+            $anotherMember = new \TestRoleAware(3, 'Members');
+            $admin         = new \TestRoleAware(4, 'Admins');
+            $model         = new \TestResourceAware(2, 'Post');
 
-                $acl->allow('Guests', 'Post', 'update', function ($parameter) {
-                    return $parameter % 2 == 0;
-                });
-                $acl->allow('Members', 'Post', 'update', function ($parameter) {
-                    return $parameter % 2 == 0;
-                });
-                $acl->allow('Admins', 'Post', 'update');
+            $acl->allow('Guests', 'Post', 'update', function ($parameter) {
+                return $parameter % 2 == 0;
+            });
+            $acl->allow('Members', 'Post', 'update', function ($parameter) {
+                return $parameter % 2 == 0;
+            });
+            $acl->allow('Admins', 'Post', 'update');
 
-                expect(@$acl->isAllowed($guest, $model, 'update'))->false();
-                expect(@$acl->isAllowed($member, $model, 'update'))->false();
-                expect(@$acl->isAllowed($anotherMember, $model, 'update'))->false();
-                expect(@$acl->isAllowed($admin, $model, 'update'))->true();
-            }
+            expect(@$acl->isAllowed($guest, $model, 'update'))->false();
+            expect(@$acl->isAllowed($member, $model, 'update'))->false();
+            expect(@$acl->isAllowed($anotherMember, $model, 'update'))->false();
+            expect(@$acl->isAllowed($admin, $model, 'update'))->true();
+        }
         );
     }
 
@@ -619,43 +614,41 @@ class MemoryTest extends UnitTest
     public function testAclAllowFunctionNoArgumentsWithWarning()
     {
         $this->specify(
-            'The function in allow should be called and isAllowed should return correct values when using function in allow method',
-            function () {
-                require_once PATH_DATA . 'acl/TestResourceAware.php';
-                require_once PATH_DATA . 'acl/TestRoleAware.php';
+            'The function in allow should be called and isAllowed should return correct values when using function in allow method', function () {
+            require_once PATH_DATA . 'acl/TestResourceAware.php';
+            require_once PATH_DATA . 'acl/TestRoleAware.php';
 
-                $acl = new Memory;
-                $acl->setDefaultAction(Acl::ALLOW);
-                $acl->setNoArgumentsDefaultAction(Acl::DENY);
-                $acl->addRole('Guests');
-                $acl->addRole('Members', 'Guests');
-                $acl->addRole('Admins', 'Members');
-                $acl->addResource('Post', ['update']);
+            $acl = new Memory;
+            $acl->setDefaultAction(Acl::ALLOW);
+            $acl->setNoArgumentsDefaultAction(Acl::DENY);
+            $acl->addRole('Guests');
+            $acl->addRole('Members', 'Guests');
+            $acl->addRole('Admins', 'Members');
+            $acl->addResource('Post', ['update']);
 
-                $guest = new \TestRoleAware(1, 'Guests');
-                $member = new \TestRoleAware(2, 'Members');
-                $anotherMember = new \TestRoleAware(3, 'Members');
-                $admin = new \TestRoleAware(4, 'Admins');
-                $model = new \TestResourceAware(2, 'Post');
+            $guest         = new \TestRoleAware(1, 'Guests');
+            $member        = new \TestRoleAware(2, 'Members');
+            $anotherMember = new \TestRoleAware(3, 'Members');
+            $admin         = new \TestRoleAware(4, 'Admins');
+            $model         = new \TestResourceAware(2, 'Post');
 
-                $acl->allow('Guests', 'Post', 'update', function ($parameter) {
-                    return $parameter % 2 == 0;
-                });
-                $acl->allow('Members', 'Post', 'update', function ($parameter) {
-                    return $parameter % 2 == 0;
-                });
-                $acl->allow('Admins', 'Post', 'update');
+            $acl->allow('Guests', 'Post', 'update', function ($parameter) {
+                return $parameter % 2 == 0;
+            });
+            $acl->allow('Members', 'Post', 'update', function ($parameter) {
+                return $parameter % 2 == 0;
+            });
+            $acl->allow('Admins', 'Post', 'update');
 
-                expect($acl->isAllowed($guest, $model, 'update'))->false();
-                expect($acl->isAllowed($member, $model, 'update'))->false();
-                expect($acl->isAllowed($anotherMember, $model, 'update'))->false();
-                expect($acl->isAllowed($admin, $model, 'update'))->true();
-            },
-            [
-                'throws' => [
-                    PHPUnit_Framework_Exception::class,
-                    "You didn't provide any parameters when check Guests can update Post. We will use default action when no arguments."
-                ]
+            expect($acl->isAllowed($guest, $model, 'update'))->false();
+            expect($acl->isAllowed($member, $model, 'update'))->false();
+            expect($acl->isAllowed($anotherMember, $model, 'update'))->false();
+            expect($acl->isAllowed($admin, $model, 'update'))->true();
+        }, [
+            'throws' => [
+                PHPUnit_Framework_Exception::class,
+                "You didn't provide any parameters when check Guests can update Post. We will use default action when no arguments."
+            ]
             ]
         );
     }
@@ -671,20 +664,19 @@ class MemoryTest extends UnitTest
     public function testWildCardLastRole()
     {
         $this->specify(
-            "Cant add acl rule to existing role after adding wildcard rule",
-            function () {
-                $acl = new Memory();
-                $acl->addRole(new Role("Guests"));
-                $acl->addResource(new Resource('Post'), ['index', 'update', 'create']);
+            "Cant add acl rule to existing role after adding wildcard rule", function () {
+            $acl = new Memory();
+            $acl->addRole(new Role("Guests"));
+            $acl->addResource(new Resource('Post'), ['index', 'update', 'create']);
 
-                $acl->allow('Guests', 'Post', 'create');
-                $acl->allow('*', 'Post', 'index');
-                $acl->allow('Guests', 'Post', 'update');
+            $acl->allow('Guests', 'Post', 'create');
+            $acl->allow('*', 'Post', 'index');
+            $acl->allow('Guests', 'Post', 'update');
 
-                expect($acl->isAllowed('Guests', 'Post', 'create'))->true();
-                expect($acl->isAllowed('Guests', 'Post', 'index'))->true();
-                expect($acl->isAllowed('Guests', 'Post', 'update'))->true();
-            }
+            expect($acl->isAllowed('Guests', 'Post', 'create'))->true();
+            expect($acl->isAllowed('Guests', 'Post', 'index'))->true();
+            expect($acl->isAllowed('Guests', 'Post', 'update'))->true();
+        }
         );
     }
 
@@ -699,20 +691,19 @@ class MemoryTest extends UnitTest
     public function testWildCardSecondTime()
     {
         $this->specify(
-            "Can't add acl rule to existing wildcard role",
-            function () {
-                $acl = new Memory();
-                $acl->addRole(new Role("Guests"));
-                $acl->addResource(new Resource('Post'), ['index', 'update', 'create']);
+            "Can't add acl rule to existing wildcard role", function () {
+            $acl = new Memory();
+            $acl->addRole(new Role("Guests"));
+            $acl->addResource(new Resource('Post'), ['index', 'update', 'create']);
 
-                $acl->allow('Guests', 'Post', 'create');
-                $acl->allow('*', 'Post', 'index');
-                $acl->allow('*', 'Post', 'update');
+            $acl->allow('Guests', 'Post', 'create');
+            $acl->allow('*', 'Post', 'index');
+            $acl->allow('*', 'Post', 'update');
 
-                expect($acl->isAllowed('Guests', 'Post', 'create'))->true();
-                expect($acl->isAllowed('Guests', 'Post', 'index'))->true();
-                expect($acl->isAllowed('Guests', 'Post', 'update'))->true();
-            }
+            expect($acl->isAllowed('Guests', 'Post', 'create'))->true();
+            expect($acl->isAllowed('Guests', 'Post', 'index'))->true();
+            expect($acl->isAllowed('Guests', 'Post', 'update'))->true();
+        }
         );
     }
 
@@ -727,17 +718,16 @@ class MemoryTest extends UnitTest
     public function testDefaultAction()
     {
         $this->specify(
-            "Default access doesn't work as expected",
-            function () {
-                $acl = new Memory();
-                $acl->setDefaultAction(Acl::DENY);
-                $acl->addResource(new Acl\Resource('Post'), ['index', 'update', 'create']);
-                $acl->addRole(new Role('Guests'));
+            "Default access doesn't work as expected", function () {
+            $acl = new Memory();
+            $acl->setDefaultAction(Acl::DENY);
+            $acl->addResource(new Acl\Resource('Post'), ['index', 'update', 'create']);
+            $acl->addRole(new Role('Guests'));
 
-                $acl->allow('Guests', 'Post', 'index');
-                expect($acl->isAllowed('Guests', 'Post', 'index'))->true();
-                expect($acl->isAllowed('Guests', 'Post', 'update'))->false();
-            }
+            $acl->allow('Guests', 'Post', 'index');
+            expect($acl->isAllowed('Guests', 'Post', 'index'))->true();
+            expect($acl->isAllowed('Guests', 'Post', 'update'))->false();
+        }
         );
     }
 
@@ -750,20 +740,20 @@ class MemoryTest extends UnitTest
     public function testRoleResourceObjects()
     {
         $this->specify(
-            "Role and Resource objects doesn't work with isAllowed method",
-            function () {
-                $acl = new Memory();
-                $acl->setDefaultAction(Acl::DENY);
-                $role = new Role('Guests');
-                $resource = new Resource('Post');
-                $acl->addRole($role);
-                $acl->addResource($resource, ['index', 'update', 'create']);
+            "Role and Resource objects doesn't work with isAllowed method", function () {
+            $acl      = new Memory();
+            $acl->setDefaultAction(Acl::DENY);
+            $role     = new Role('Guests');
+            $resource = new Resource('Post');
+            $acl->addRole($role);
+            $acl->addResource($resource, ['index', 'update', 'create']);
 
-                $acl->allow('Guests', 'Post', 'index');
+            $acl->allow('Guests', 'Post', 'index');
 
-                expect($acl->isAllowed($role, $resource, 'index'))->true();
-                expect($acl->isAllowed($role, $resource, 'update'))->false();
-            }
+            expect($acl->isAllowed($role, $resource, 'index'))->true();
+            expect($acl->isAllowed($role, $resource, 'update'))->false();
+        }
         );
     }
+
 }
