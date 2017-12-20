@@ -1,7 +1,7 @@
 <?php
 
 // Here you can initialize variables that will be available to your tests
-require_once(PROJECT_PATH . '/vendor/autoload.php');
+require_once(PROJECT_PATH . './vendor/autoload.php');
 require_once(PROJECT_PATH . '/test/phalcon-php/BaseTest.php');
 
 $files = array(
