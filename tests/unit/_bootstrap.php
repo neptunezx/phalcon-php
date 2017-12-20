@@ -66,8 +66,8 @@ $loader->registerNamespaces(
         'Phalcon\Test\Collections'                  => $config->get('application')->collectionsDir,
         'Phalcon\Test\Modules\Frontend\Controllers' => $config->get('application')->modulesDir . 'frontend/controllers/',
         'Phalcon\Test\Modules\Backend\Controllers'  => $config->get('application')->modulesDir . 'backend/controllers/',
-        'Phalcon\Test'                              => '/Users/andy/vagrant/share/phalcon/tests',
-        'Phalcon\Test\Module'                       => '/Users/andy/vagrant/share/phalcon/tests/_support/Module',
+        'Phalcon\Test'                              => TESTS_PATH,
+        'Phalcon\Test\Module'                       => TESTS_PATH . '/_support/Module',
     ]
 );
 
