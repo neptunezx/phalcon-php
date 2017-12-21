@@ -50,4 +50,24 @@ class Kernel
         return self::preComputeHashKey($arrKey);
     }
 
+    /**
+     * Extract the real class name from the namespaced class
+     * @param string $className
+     * @return string
+     */
+    public function getClassNamespace($className)
+    {
+        return substr($$className, strrpos($$className, '\\') + 1);
+    }
+
+    /**
+     * Extract the namespace from the namespaced class
+     * @param string $className
+     * @return string
+     */
+    static function getNamespaceOfclass($className)
+    {
+        return substr($className, 0, strrpos($className, '\\'));
+    }
+
 }
