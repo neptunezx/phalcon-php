@@ -69,6 +69,7 @@ class Application extends BaseApplication
 
 	/**
 	 * Handles a MVC request
+	 * @param string $uri
 	 * @return ResponseInterface|boolean
 	 * @throws \Exception
 	 */
