@@ -3,9 +3,9 @@
 namespace Phalcon\Mvc\Model;
 
 /**
- * Phalcon\Mvc\Model\ResultsetInterface initializer
+ * Phalcon\Mvc\Model\ResultsetInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/resultsetinterface.c
+ * Interface for Phalcon\Mvc\Model\Resultset
  */
 interface ResultsetInterface
 {

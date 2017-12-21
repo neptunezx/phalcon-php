@@ -2,7 +2,6 @@
 
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Mvc\Model\Exception;
 use \Phalcon\Mvc\Model;
 
 /**
@@ -10,10 +9,8 @@ use \Phalcon\Mvc\Model;
  *
  * This exception is generated when a model fails to save a record
  * Phalcon\Mvc\Model must be set up to have this behavior
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validationfailed.c
  */
-class ValidationFailed extends Exception
+class ValidationFailed extends \Phalcon\Mvc\Model\Exception
 {
 
     /**
@@ -39,29 +36,26 @@ class ValidationFailed extends Exception
      * @param \Phalcon\Mvc\Model\Message[] $validationMessages
      * @throws Exception
      */
-    public function __construct($model, $validationMessages)
+    public function __construct(Model $model, array $validationMessages)
     {
-        if (is_object($model) === false ||
-            $model instanceof Model === false ||
-            is_array($validationMessages) === false ||
-            empty($validationMessages) === true) {
-            throw new Exception('Validation failed');
+        if (count($validationMessages) > 0) {
+            /**
+             * Get the first message in the array
+             */
+            $message = $validationMessages[0];
+
+            /**
+             * Get the message to use it in the exception
+             */
+            $messageStr = $message->getMessage();
+        } else {
+            $messageStr = "Validation failed";
         }
 
-        $message_str     = $validationMessages[0]->getMessage();
         $this->_model    = $model;
         $this->_messages = $validationMessages;
-        parent::__construct($validationMessages[0]);
-    }
 
-    /**
-     * Returns the complete group of messages produced in the validation
-     *
-     * @return \Phalcon\Mvc\Model\Message[]|null
-     */
-    public function getMessages()
-    {
-        return $this->_messages;
+        parent::__construct($messageStr);
     }
 
     /**
@@ -72,6 +66,16 @@ class ValidationFailed extends Exception
     public function getModel()
     {
         return $this->_model;
+    }
+
+    /**
+     * Returns the complete group of messages produced in the validation
+     *
+     * @return \Phalcon\Mvc\Model\Message[]|null
+     */
+    public function getMessages()
+    {
+        return $this->_messages;
     }
 
 }

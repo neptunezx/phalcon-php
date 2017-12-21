@@ -1,29 +1,24 @@
 <?php
 
-/**
- * Query
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
- */
-
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\DiInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Mvc\Model\QueryInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\Model\ManagerInterface;
-use \Phalcon\Mvc\Model\RelationInterface;
-use \Phalcon\Mvc\Model\Row;
-use \Phalcon\Mvc\Model\Resultset\Simple;
-use \Phalcon\Mvc\Model\Query\Lang;
-use \Phalcon\Mvc\Model\Query\Status;
-use \Phalcon\Mvc\Model;
-use \Phalcon\Db\RawValue;
+use Phalcon\Db\Column;
+use Phalcon\Db\RawValue;
+use Phalcon\Db\ResultInterface;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\Model\Row;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\ManagerInterface;
+use Phalcon\Mvc\Model\QueryInterface;
+use Phalcon\Cache\BackendInterface;
+use Phalcon\Mvc\Model\Query\Status;
+use Phalcon\Mvc\Model\Resultset\Complex;
+use Phalcon\Mvc\Model\Query\StatusInterface;
+use Phalcon\Mvc\Model\ResultsetInterface;
+use Phalcon\Mvc\Model\Resultset\Simple;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Mvc\Model\RelationInterface;
 
 /**
  * Phalcon\Mvc\Model\Query
@@ -31,23 +26,22 @@ use \Phalcon\Db\RawValue;
  * This class takes a PHQL intermediate representation and executes it.
  *
  * <code>
- *
  * $phql = "SELECT c.price*0.16 AS taxes, c.* FROM Cars AS c JOIN Brands AS b
  *          WHERE b.name = :name: ORDER BY c.name";
  *
- * $result = $manager->executeQuery($phql, array(
- *   'name' => 'Lamborghini'
- * ));
+ * $result = $manager->executeQuery(
+ *     $phql,
+ *     [
+ *         "name" => "Lamborghini",
+ *     ]
+ * );
  *
  * foreach ($result as $row) {
- *   echo "Name: ", $row->cars->name, "\n";
- *   echo "Price: ", $row->cars->price, "\n";
- *   echo "Taxes: ", $row->taxes, "\n";
+ *     echo "Name: ",  $row->cars->name, "\n";
+ *     echo "Price: ", $row->cars->price, "\n";
+ *     echo "Taxes: ", $row->taxes, "\n";
  * }
- *
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/query.c
  */
 class Query implements QueryInterface, InjectionAwareInterface
 {

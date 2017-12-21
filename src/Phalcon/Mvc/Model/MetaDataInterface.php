@@ -2,10 +2,13 @@
 
 namespace Phalcon\Mvc\Model;
 
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\MetaData\StrategyInterface;
+
 /**
- * Phalcon\Mvc\Model\MetaDataInterface initializer
+ * Phalcon\Mvc\Model\MetaDataInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/metadatainterface.c
+ * Interface for Phalcon\Mvc\Model\MetaData
  */
 interface MetaDataInterface
 {
@@ -15,7 +18,7 @@ interface MetaDataInterface
      *
      * @param \Phalcon\Mvc\Model\MetaData\Strategy\Introspection $strategy
      */
-    public function setStrategy($strategy);
+    public function setStrategy(StrategyInterface $strategy);
 
     /**
      * Return the strategy to obtain the meta-data
@@ -30,16 +33,16 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function readMetaData($model);
+    public function readMetaData(ModelInterface $model);
 
     /**
      * Reads meta-data for certain model using a MODEL_* constant
      *
      * @param \Phalcon\Mvc\ModelInterface $model
-     * @param int $index
+     * @param int $index 
      * @return mixed
      */
-    public function readMetaDataIndex($model, $index);
+    public function readMetaDataIndex(ModelInterface $model, $index);
 
     /**
      * Writes meta-data for certain model using a MODEL_* constant
@@ -56,7 +59,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function readColumnMap($model);
+    public function readColumnMap(ModelInterface $model);
 
     /**
      * Reads column-map information for certain model using a MODEL_* constant
@@ -64,7 +67,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @param int $index
      */
-    public function readColumnMapIndex($model, $index);
+    public function readColumnMapIndex(ModelInterface $model, $index);
 
     /**
      * Returns table attributes names (fields)
@@ -72,7 +75,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return  array
      */
-    public function getAttributes($model);
+    public function getAttributes(ModelInterface $model);
 
     /**
      * Returns an array of fields which are part of the primary key
@@ -80,7 +83,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getPrimaryKeyAttributes($model);
+    public function getPrimaryKeyAttributes(ModelInterface $model);
 
     /**
      * Returns an arrau of fields which are not part of the primary key
@@ -88,7 +91,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return  array
      */
-    public function getNonPrimaryKeyAttributes($model);
+    public function getNonPrimaryKeyAttributes(ModelInterface $model);
 
     /**
      * Returns an array of not null attributes
@@ -96,7 +99,7 @@ interface MetaDataInterface
      * @param  \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getNotNullAttributes($model);
+    public function getNotNullAttributes(ModelInterface $model);
 
     /**
      * Returns attributes and their data types
@@ -104,7 +107,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getDataTypes($model);
+    public function getDataTypes(ModelInterface $model);
 
     /**
      * Returns attributes which types are numerical
@@ -112,7 +115,7 @@ interface MetaDataInterface
      * @param  \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getDataTypesNumeric($model);
+    public function getDataTypesNumeric(ModelInterface $model);
 
     /**
      * Returns the name of identity field (if one is present)
@@ -120,7 +123,7 @@ interface MetaDataInterface
      * @param  \Phalcon\Mvc\ModelInterface $model
      * @return string
      */
-    public function getIdentityField($model);
+    public function getIdentityField(ModelInterface $model);
 
     /**
      * Returns attributes and their bind data types
@@ -128,7 +131,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getBindTypes($model);
+    public function getBindTypes(ModelInterface $model);
 
     /**
      * Returns attributes that must be ignored from the INSERT SQL generation
@@ -136,7 +139,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getAutomaticCreateAttributes($model);
+    public function getAutomaticCreateAttributes(ModelInterface $model);
 
     /**
      * Returns attributes that must be ignored from the UPDATE SQL generation
@@ -144,7 +147,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getAutomaticUpdateAttributes($model);
+    public function getAutomaticUpdateAttributes(ModelInterface $model);
 
     /**
      * Set the attributes that must be ignored from the INSERT SQL generation
@@ -152,7 +155,7 @@ interface MetaDataInterface
      * @param  \Phalcon\Mvc\ModelInterface $model
      * @param  array $attributes
      */
-    public function setAutomaticCreateAttributes($model, $attributes, $replace);
+    public function setAutomaticCreateAttributes(ModelInterface $model, array $attributes, $replace);
 
     /**
      * Set the attributes that must be ignored from the UPDATE SQL generation
@@ -160,7 +163,32 @@ interface MetaDataInterface
      * @param  \Phalcon\Mvc\ModelInterface $model
      * @param  array $attributes
      */
-    public function setAutomaticUpdateAttributes($model, $attributes, $replace);
+    public function setAutomaticUpdateAttributes(ModelInterface $model, $attributes, $replace);
+
+    /**
+     * Set the attributes that allow empty string values
+     * 
+     * @param \Phalcon\Mvc\ModelInterface $model
+     * @param array $attributes
+     * @return void
+     */
+    public function setEmptyStringAttributes(ModelInterface $model, array $attributes);
+
+    /**
+     * Returns attributes allow empty strings
+     * 
+     * @param \Phalcon\Mvc\ModelInterface $model
+     * @return array
+     */
+    public function getEmptyStringAttributes(ModelInterface $model);
+
+    /**
+     * Returns attributes (which have default values) and their default values
+     * 
+     * @param \Phalcon\Mvc\ModelInterface $model
+     * @return array
+     */
+    public function getDefaultValues(ModelInterface $model);
 
     /**
      * Returns the column map if any
@@ -168,7 +196,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getColumnMap($model);
+    public function getColumnMap(ModelInterface $model);
 
     /**
      * Returns the reverse column map if any
@@ -176,7 +204,7 @@ interface MetaDataInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getReverseColumnMap($model);
+    public function getReverseColumnMap(ModelInterface $model);
 
     /**
      * Check if a model has certain attribute
@@ -185,7 +213,7 @@ interface MetaDataInterface
      * @param string $attribute
      * @return boolean
      */
-    public function hasAttribute($model, $attribute);
+    public function hasAttribute(ModelInterface $model, array $attribute);
 
     /**
      * Checks if the internal meta-data container is empty

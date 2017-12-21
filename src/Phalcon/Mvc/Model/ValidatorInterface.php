@@ -2,10 +2,15 @@
 
 namespace Phalcon\Mvc\Model;
 
+use Phalcon\Mvc\EntityInterface;
+
 /**
- * Phalcon\Mvc\Model\ValidatorInterface initializer
+ * Phalcon\Mvc\Model\ValidatorInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validatorinterface.c
+ * Interface for Phalcon\Mvc\Model validators
+ *
+ * @deprecated 3.1.0
+ * @see Phalcon\Validation\ValidatorInterface
  */
 interface ValidatorInterface
 {
@@ -23,5 +28,5 @@ interface ValidatorInterface
      * @param \Phalcon\Mvc\ModelInterface $record
      * @return boolean
      */
-    public function validate($record);
+    public function validate(EntityInterface $record);
 }
