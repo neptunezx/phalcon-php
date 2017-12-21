@@ -2,6 +2,8 @@
 
 namespace Phalcon\Mvc\Model;
 
+use Phalcon\DiInterface;
+
 /**
  * Phalcon\Mvc\Model\CriteriaInterface initializer
  *
@@ -191,7 +193,7 @@ interface CriteriaInterface
      *
      * @return string
      */
-    public function getOrder();
+    public function getOrderBy();
 
     /**
      * Returns all the parameters defined in the criteria
@@ -199,16 +201,6 @@ interface CriteriaInterface
      * @return string
      */
     public function getParams();
-
-    /**
-     * Builds a \Phalcon\Mvc\Model\Criteria based on an input array like $_POST
-     *
-     * @param \Phalcon\DiInterface $dependencyInjector
-     * @param string $modelName
-     * @param array $data
-     * @return static
-     */
-    public static function fromInput($dependencyInjector, $modelName, $data);
 
     /**
      * Executes a find using the parameters built with the criteria

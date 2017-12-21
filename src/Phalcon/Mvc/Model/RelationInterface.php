@@ -3,23 +3,12 @@
 namespace Phalcon\Mvc\Model;
 
 /**
- * Phalcon\Mvc\Model\RelationInterface initializer
+ * Phalcon\Mvc\Model\RelationInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/relationinterface.c
+ * Interface for Phalcon\Mvc\Model\Relation
  */
 interface RelationInterface
 {
-
-    /**
-     * \Phalcon\Mvc\Model\Relation constructor
-     *
-     * @param int $type
-     * @param string $referencedModel
-     * @param string|array $fields
-     * @param string|array $referencedFields
-     * @param array|null $options
-     */
-    public function __construct($type, $referencedModel, $fields, $referencedFields, $options = null);
 
     /**
      * Sets the intermediate model dat for has-*-through relations
@@ -29,6 +18,11 @@ interface RelationInterface
      * @param string $intermediateReferencedFields
      */
     public function setIntermediateRelation($intermediateFields, $intermediateModel, $intermediateReferencedFields);
+
+    /**
+     * Check if records returned by getting belongs-to/has-many are implicitly cached during the current request
+     */
+    public function isReusable();
 
     /**
      * Returns the relations type

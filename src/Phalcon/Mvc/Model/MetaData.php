@@ -2,11 +2,12 @@
 
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\DiInterface;
-use \Phalcon\Mvc\Model\MetaData\Strategy\Introspection;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Mvc\Model\MetaData\Strategy\Introspection;
+use Phalcon\Mvc\Model\MetaData\StrategyInterface;
 
 /**
  * Phalcon\Mvc\Model\MetaData
@@ -18,12 +19,14 @@ use \Phalcon\Mvc\ModelInterface;
  * <p>A standard Phalcon\Mvc\Model\MetaData can be used to query model attributes:</p>
  *
  * <code>
- *  $metaData = new Phalcon\Mvc\Model\MetaData\Memory();
- *  $attributes = $metaData->getAttributes(new Robots());
- *  print_r($attributes);
- * </code>
+ * $metaData = new \Phalcon\Mvc\Model\MetaData\Memory();
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/metadata.c
+ * $attributes = $metaData->getAttributes(
+ *     new Robots()
+ * );
+ *
+ * print_r($attributes);
+ * </code>
  */
 abstract class MetaData implements InjectionAwareInterface
 {

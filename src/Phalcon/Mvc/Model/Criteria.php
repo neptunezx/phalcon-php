@@ -1,64 +1,40 @@
 <?php
 
-/**
- * Criteria
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
- */
-
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Mvc\Model\CriteriaInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\DiInterface;
+use Phalcon\Di;
+use Phalcon\Db\Column;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Mvc\Model\CriteriaInterface;
+use Phalcon\Mvc\Model\ResultsetInterface;
+use Phalcon\Mvc\Model\Query\BuilderInterface;
 
 /**
  * Phalcon\Mvc\Model\Criteria
  *
- * This class allows to build the array parameter required by Phalcon\Mvc\Model::find
- * and Phalcon\Mvc\Model::findFirst using an object-oriented interface
+ * This class is used to build the array parameter required by
+ * Phalcon\Mvc\Model::find() and Phalcon\Mvc\Model::findFirst()
+ * using an object-oriented interface.
  *
  * <code>
  * $robots = Robots::query()
- *    ->where("type = :type:")
- *    ->andWhere("year < 2000")
- *    ->bind(array("type" => "mechanical"))
- *    ->order("name")
- *    ->execute();
+ *     ->where("type = :type:")
+ *     ->andWhere("year < 2000")
+ *     ->bind(["type" => "mechanical"])
+ *     ->limit(5, 10)
+ *     ->orderBy("name")
+ *     ->execute();
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/criteria.c
  */
 class Criteria implements CriteriaInterface, InjectionAwareInterface
 {
 
-    /**
-     * Model
-     *
-     * @var null|string
-     * @access protected
-     */
     protected $_model;
-
-    /**
-     * Params
-     *
-     * @var array
-     * @access protected
-     */
-    protected $_params = array();
-
-    /**
-     * Hidden Parameter Number
-     *
-     * @var int
-     * @access protected
-     */
+    protected $_params;
+    protected $_bindParams;
+    protected $_bindTypes;
     protected $_hiddenParamNumber = 0;
 
     /**
@@ -67,7 +43,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI($dependencyInjector)
+    public function setDI(DiInterface $dependencyInjector)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
@@ -120,18 +96,28 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Sets the bound parameters in the criteria
      * This method replaces all previously set bound parameters
-     *
-     * @param arrary $bindParams
-     * @return \Phalcon\Mvc\Model\CriteriaInterface
-     * @throws Exception
+     * 
+     * @param array $bindParams
+     * @param boolean $merge
+     * @return \Phalcon\Mvc\Model\Criteria
      */
-    public function bind($bindParams)
+    public function bind(array $bindParams, $merge = false)
     {
-        if (is_array($bindParams) === false) {
-            throw new Exception('Bound parameters must be an Array');
-        }
 
-        $this->_params['bind'] = $bindParams;
+        if ($merge) {
+            if (isset($this->_params["bind"])) {
+                $bind = $this->_params["bind"];
+            } else {
+                $bind = null;
+            }
+            if (is_array($bind)) {
+                $this->_params["bind"] = $bind + $bindParams;
+            } else {
+                $this->_params["bind"] = $bindParams;
+            }
+        } else {
+            $this->_params["bind"] = $bindParams;
+        }
 
         return $this;
     }
@@ -141,7 +127,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      * This method replaces all previously set bound parameters
      *
      * @param array $bindTypes
-     * @return \Phalcon\Mvc\Model\CriteriaInterface
+     * @return \Phalcon\Mvc\Model\Criteria
      */
     public function bindTypes($bindTypes)
     {
@@ -155,14 +141,31 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     }
 
     /**
+     * Sets SELECT DISTINCT / SELECT ALL flag
+     * 
+     * @param mixed $distinct
+     * @return \Phalcon\Mvc\Model\Criteria
+     */
+    public function distinct($distinct)
+    {
+        $this->_params["distinct"] = $distinct;
+        return $this;
+    }
+
+    /**
      * Sets the columns to be queried
      *
      * <code>
-     *  $criteria->columns(array('id', 'name'));
+     * $criteria->columns(
+     *     [
+     *         "id",
+     *         "name",
+     *     ]
+     * );
      * </code>
      *
-     * @param string|array $columns
-     * @return \Phalcon\Mvc\Model\CriteriaInterface
+     * @param string|array columns
+     * @return \Phalcon\Mvc\Model\Criteria
      */
     public function columns($columns)
     {
@@ -320,6 +323,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Appends a condition to the current conditions using an AND operator (deprecated)
      *
+     * @deprecated
      * @param string $conditions
      * @param array|null $bindParams
      * @param array|null $bindTypes
@@ -327,8 +331,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      */
     public function addWhere($conditions, $bindParams = null, $bindTypes = null)
     {
-        $this->andWhere($conditions, $bindParams, $bindTypes);
-        return $this;
+        return $this->andWhere($conditions, $bindParams, $bindTypes);
     }
 
     /**
@@ -342,35 +345,11 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      */
     public function andWhere($conditions, $bindParams = null, $bindTypes = null)
     {
-        if (is_string($conditions) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (isset($this->_params["conditions"])) {
+            $conditions = "(" . $this->_params["conditions"] . ") AND (" . $conditions . ")";
         }
 
-        if (isset($this->_params['conditions']) === true) {
-            $conditions = '(' . $this->_params['conditions'] . ') AND (' . $conditions . ')';
-        }
-
-        $this->_params['conditions'] = $conditions;
-
-        //Update or merge existing bound parameters
-        if (is_array($bindParams) === true) {
-            if (isset($this->_params['bind']) === true) {
-                $bindParams = array_merge($this->_params['bind'], $bindParams);
-            }
-
-            $this->_params['bind'] = $bindParams;
-        }
-
-        //Update or merge existing bind types
-        if (is_array($bindTypes) === true) {
-            if (isset($this->_params['bindTypes']) === true) {
-                $bindTypes = array_merge($this->_params['bindTypes'], $bindTypes);
-            }
-
-            $this->_params['bindTypes'] = $bindTypes;
-        }
-
-        return $this;
+        return $this->where($conditions, $bindParams, $bindTypes);
     }
 
     /**
@@ -384,35 +363,11 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      */
     public function orWhere($conditions, $bindParams = null, $bindTypes = null)
     {
-        if (is_string($conditions) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (isset($this->_params["conditions"])) {
+            $conditions = "(" . $this->_params["conditions"] . ") OR (" . $conditions . ")";
         }
 
-        if (isset($this->_params['conditions']) === true) {
-            $conditions = '(' . $this->_params['conditions'] . ') OR (' . $conditions . ')';
-        }
-
-        $this->_params['conditions'] = $conditions;
-
-        //Update or merge existing bound parameters
-        if (is_array($bindParams) === true) {
-            if (isset($this->_params['bind']) === true) {
-                $bindParams = array_merge($this->_params['bind'], $bindParams);
-            }
-
-            $this->_params['bind'] = $bindParams;
-        }
-
-        //Update or merge existing bind types
-        if (is_array($bindTypes) === true) {
-            if (isset($this->_params['bindTypes']) === true) {
-                $bindTypes = array_merge($this->_params['bindTypes'], $bindTypes);
-            }
-
-            $this->_params['bindTypes'] = $bindTypes;
-        }
-
-        return $this;
+        return $this->where($conditions, $bindParams, $bindTypes);
     }
 
     /**
@@ -438,16 +393,20 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         $nextHiddenParam = $hiddenParam++;
 
         //Minimum key with auto bind-params
-        $minimumKey = 'phb' . $hiddenParam;
+        $minimumKey = 'ACP' . $hiddenParam;
 
         //Maximum key with auto bind-params
-        $maximumKey = 'phb' . $nextHiddenParam;
+        $maximumKey = 'ACP' . $nextHiddenParam;
 
-        //Create a standard BETWEEN condition with bind params
-        $conditions = $expr . ' BETWEEN :' . $minimumKey . ': AND :' . $maximumKey . ':';
+        /**
+         * Create a standard BETWEEN condition with bind params
+         * Append the BETWEEN to the current conditions using and "and"
+         */
+        $this->andWhere(
+            $expr . " BETWEEN :" . $minimumKey . ": AND :" . $maximumKey . ":", [$minimumKey => $minimum, $maximumKey => $maximum]
+        );
 
-        //Append the BETWEEN to the current conditions using 'AND'
-        $this->addWhere($condition, array($minimumKey, $maximumKey));
+        $nextHiddenParam++;
         $this->_hiddenParamNumber = $nextHiddenParam;
 
         return $this;
@@ -476,16 +435,20 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         $nextHiddenParam = $hiddenParam++;
 
         //Minimum key with auto bind-params
-        $minimumKey = 'phb' . $hiddenParam;
+        $minimumKey = 'ACP' . $hiddenParam;
 
         //Maximum key with auto bind-params
-        $maximumKey = 'phb' . $nextHiddenParam;
+        $maximumKey = 'ACP' . $nextHiddenParam;
+        /**
+         * Create a standard BETWEEN condition with bind params
+         * Append the BETWEEN to the current conditions using and "and"
+         */
+        $this->andWhere(
+            $expr . " NOT BETWEEN :" . $minimumKey . ": AND :" . $maximumKey . ":", [$minimumKey => $minimum, $maximumKey => $maximum]
+        );
 
-        //Create a standard BETWEEN condition with bind params
-        $conditions = $expr . ' NOT BETWEEN :' . $minimumKey . ': AND :' . $maximumKey . ':';
+        $nextHiddenParam++;
 
-        //Append the BETWEEN to the current conditions using 'AND'
-        $this->addWhere($conditions, array($minimumKey, $maximumKey));
         $this->_hiddenParamNumber = $nextHiddenParam;
 
         return $this;
@@ -517,21 +480,30 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         $bindParams  = array();
         $bindKeys    = array();
 
+
+        $bindParams = [];
+        $bindKeys   = [];
         foreach ($values as $value) {
-            //Key with auto bind-params
-            $key              = 'phi' . $hiddenParam;
-            $bindKeys[]       = $key;
-            $bindParams[$key] = ':' . $key . ':';
+
+            /**
+             * Key with auto bind-params
+             */
+            $key = "ACP" . $hiddenParam;
+
+            $queryKey = ":" . $key . ":";
+
+            $bindKeys[]       = $queryKey;
+            $bindParams[$key] = $value;
+
             $hiddenParam++;
         }
 
-        $joinedKeys = implode(', ', $bindKeys);
+        /**
+         * Create a standard IN condition with bind params
+         * Append the IN to the current conditions using and "and"
+         */
+        $this->andWhere($expr . " IN (" . join(", ", $bindKeys) . ")", $bindParams);
 
-        //Create a standard IN condition with bind params
-        $conditions = $expr . ' IN (' . $joinedKeys . ')';
-
-        //Append the IN to the current conditions using 'AND'
-        $this->andWhere($conditions, $bindParams);
         $this->_hiddenParamNumber = $hiddenParam;
 
         return $this;
@@ -556,27 +528,20 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         }
 
         $hiddenParam = $this->_hiddenParamNumber;
-        $bindParams  = array();
-        $bindKeys    = array();
 
+        $bindParams = [];
+        $bindKeys   = [];
         foreach ($values as $value) {
-            //Key with auto bind-params
-            $key              = 'phi' . $hiddenParam;
-            $bindKeys[]       = ':' . $key . ':';
+
+            /**
+             * Key with auto bind-params
+             */
+            $key              = "ACP" . $hiddenParam;
+            $bindKeys[]       = ":" . $key . ":";
             $bindParams[$key] = $value;
+
             $hiddenParam++;
         }
-
-        $joinedKeys = implode(', ', $bindKeys);
-
-        //Create a standard NOT IN condition with bind params
-        $conditions = $expr . ' NOT IN (' . $joinedKeys . ')';
-
-        //Append the IN to the current conditions using 'AND'
-        $this->andWhere($conditions, $bindParams);
-        $this->_hiddenParamNumber = $hiddenParam;
-
-        return $this;
     }
 
     /**
@@ -600,6 +565,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     /**
      * Adds the order-by parameter to the criteria (deprecated)
      *
+     * @deprecated
      * @param string $orderColumns
      * @return \Phalcon\Mvc\Model\CriteriaInterface
      * @throws Exception
@@ -634,23 +600,50 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     }
 
     /**
-     * Adds the limit parameter to the criteria
+     * Adds the group-by clause to the criteria
+     * 
+     * @param mixed $group
+     * @return \Phalcon\Mvc\Model\CriteriaInterface
+     */
+    public function groupBy($group)
+    {
+        $this->_params["group"] = $group;
+        return $this;
+    }
+
+    /**
+     * Adds the having clause to the criteria
+     * 
+     * @param mixed $having
+     * @return \Phalcon\Mvc\Model\CriteriaInterface
+     */
+    public function having($having)
+    {
+        $this->_params["having"] = $having;
+        return $this;
+    }
+
+    /**
+     * Adds the limit parameter to the criteria.
      *
+     * <code>
+     * $criteria->limit(100);
+     * $criteria->limit(100, 200);
+     * $criteria->limit("100", "200");
+     * </code>
+     * 
      * @param int $limit
      * @param int|null $offset
      * @return \Phalcon\Mvc\Model\CriteriaInterface
-     * @throws Exception
      */
     public function limit($limit, $offset = null)
     {
-        if (is_numeric($limit) === false) {
-            throw new Exception('rows limit parameter must be integer');
-        }
-
-        if (is_null($offset) === true) {
-            $this->_params['limit'] = (int) $limit;
-        } else {
+        $limit = abs((int) $limit);
+        if (is_numeric($offset)) {
+            $offset                 = abs((int) $offset);
             $this->_params['limit'] = array('number' => (int) $limit, 'offset' => $offset);
+        } else {
+            $this->_params['limit'] = (int) $limit;
         }
 
         return $this;
@@ -665,13 +658,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      */
     public function forUpdate($forUpdate = null)
     {
-        if (is_null($forUpdate) === true) {
-            $forUpdate = true;
-        } elseif (is_bool($forUpdate) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->_params['for_update'] = $forUpdate;
+        $this->_params['for_update'] = (boolean) $forUpdate;
 
         return $this;
     }
@@ -685,14 +672,18 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      */
     public function sharedLock($sharedLock = null)
     {
-        if (is_null($sharedLock) === true) {
-            $sharedLock = true;
-        } elseif (is_bool($sharedLock) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $this->_params['shared_lock'] = (boolean) $sharedLock;
 
-        $this->_params['shared_lock'] = $sharedLock;
+        return $this;
+    }
 
+    /**
+     * Sets the cache options in the criteria
+     * This method replaces all previously set cache options
+     */
+    public function cache(array $cache)
+    {
+        $this->_params["cache"] = $cache;
         return $this;
     }
 
@@ -706,6 +697,8 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         if (isset($this->_params['conditions']) === true) {
             return $this->_params['conditions'];
         }
+
+        return null;
     }
 
     /**
@@ -718,6 +711,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         if (isset($this->_params['columns']) === true) {
             return $this->_params['columns'];
         }
+        return null;
     }
 
     /**
@@ -730,6 +724,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         if (isset($this->_params['conditions']) === true) {
             return $this->_params['conditions'];
         }
+        return null;
     }
 
     /**
@@ -742,6 +737,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         if (isset($this->_params['limit']) === true) {
             return $this->_params['limit'];
         }
+        return null;
     }
 
     /**
@@ -749,11 +745,38 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      *
      * @return string|null
      */
-    public function getOrder()
+    public function getOrderBy()
     {
         if (isset($this->_params['order']) === true) {
             return $this->_params['order'];
         }
+        return null;
+    }
+
+    /**
+     * Returns the group clause in the criteria
+     *
+     * @return string|null
+     */
+    public function getGroupBy()
+    {
+        if (isset($this->_params['group']) === true) {
+            return $this->_params['group'];
+        }
+        return null;
+    }
+
+    /**
+     * Returns the having clause in the criteria
+     *
+     * @return string|null
+     */
+    public function getHaving()
+    {
+        if (isset($this->_params['having']) === true) {
+            return $this->_params['having'];
+        }
+        return null;
     }
 
     /**
@@ -775,33 +798,35 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\Criteria
      * @throws Exception
      */
-    public static function fromInput($dependencyInjector, $modelName, $data)
+    public static function fromInput(DiInterface $dependencyInjector, $modelName, array $data, $operator = "AND")
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
             throw new Exception('A dependency injector container is required to obtain the ORM services');
         }
 
-        if (is_string($modelName) === false) {
+        if (is_string($modelName) === false || is_string($operator) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_array($data) === false) {
-            throw new Exception('Model data must be an Array');
-        }
-
-        if (empty($data) === false) {
+        if (count($data)) {
             $conditions = array();
             $metaData   = $dependencyInjector->getShared('modelsMetadata');
             $model      = new $modelName();
             $dataTypes  = $metaData->getDataTypes($model);
+            $columnMap  = $metaData->getReverseColumnMap($model);
             $bind       = array();
 
             //We look for attributes in the array passed as data
             foreach ($data as $field => $value) {
+                if (is_array($columnMap) && count($columnMap)) {
+                    $attribute = $columnMap[$field];
+                } else {
+                    $attribute = $field;
+                }
                 if (isset($dataTypes[$field]) === true &&
-                    is_null($value) === false && $value !== '') {
-                    if ($dataTypes[$field] === 2) {
+                    $value !== null && $value !== '') {
+                    if ($dataTypes[$field] === Column::TYPE_VARCHAR) {
                         //For varchar types we use LIKE operator
                         $condition    = $field . ' LIKE :' . $field . ':';
                         $bind[$field] = '%' . $value . '%';
@@ -817,14 +842,48 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
         }
 
         //Create an object instance and pass the parameters to it
-        $criteria = new Criteria();
-        if (isset($conditions) === true && empty($conditions) === false) {
-            $criteria->where(implode(' AND ', $conditions));
+        $criteria = new self();
+        if (count($conditions)) {
+            $criteria->where(join(" " . $operator . " ", $conditions));
             $criteria->bind($bind);
         }
 
         $criteria->setModelName($modelName);
         return $criteria;
+    }
+
+    /**
+     * Creates a query builder from criteria.
+     *
+     * <code>
+     * $builder = Robots::query()
+     *     ->where("type = :type:")
+     *     ->bind(["type" => "mechanical"])
+     *     ->createBuilder();
+     * </code>
+     * 
+     * @return BuilderInterface
+     */
+    public function createBuilder()
+    {
+        $dependencyInjector = $this->getDI();
+        if (is_object($dependencyInjector)) {
+            $dependencyInjector = Di::getDefault();
+            $this->setDI($dependencyInjector);
+        }
+
+        $manager = $dependencyInjector->getShared("modelsManager");
+        if (!$manager instanceof ManagerInterface) {
+            throw new Exception("Service modelsManager invalid");
+        }
+
+        /**
+         * Builds a query with the passed parameters
+         */
+        $builder = $manager->createBuilder($this->_params);
+        $builder->from($this->_model);
+
+        return $builder;
     }
 
     /**
@@ -835,15 +894,12 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      */
     public function execute()
     {
-        if (is_string($this->_model) === false) {
-            throw new Exception('Model name must be string');
+        $model = $this->getModelName();
+        if (!is_string($model)) {
+            throw new Exception("Model name must be string");
         }
 
-        $params = $this->getParams();
-
-        $resultset = forward_static_call_array(array($this->_model, 'find'), $params);
-
-        return $resultset;
+        return $model::find($this->getParams());
     }
 
 }

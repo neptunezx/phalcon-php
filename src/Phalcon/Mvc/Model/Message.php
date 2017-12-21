@@ -2,9 +2,8 @@
 
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Mvc\Model\MessageInterface;
-use \Phalcon\Mvc\ModelInterface;
-use \Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\MessageInterface;
 
 /**
  * Phalcon\Mvc\Model\Message
@@ -12,26 +11,25 @@ use \Phalcon\Mvc\Model\Exception;
  * Encapsulates validation info generated before save/delete records fails
  *
  * <code>
- *  use Phalcon\Mvc\Model\Message as Message;
+ * use Phalcon\Mvc\Model\Message as Message;
  *
- *  class Robots extends Phalcon\Mvc\Model
- *  {
+ * class Robots extends \Phalcon\Mvc\Model
+ * {
+ *     public function beforeSave()
+ *     {
+ *         if ($this->name === "Peter") {
+ *             $text  = "A robot cannot be named Peter";
+ *             $field = "name";
+ *             $type  = "InvalidValue";
  *
- *    public function beforeSave()
- *    {
- *      if ($this->name == 'Peter') {
- *        $text = "A robot cannot be named Peter";
- *        $field = "name";
- *        $type = "InvalidValue";
- *        $message = new Message($text, $field, $type);
- *        $this->appendMessage($message);
+ *             $message = new Message($text, $field, $type);
+ *
+ *             $this->appendMessage($message);
+ *         }
  *     }
- *   }
- *
  * }
  * </code>
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/message.c
  */
 class Message implements MessageInterface
 {
@@ -69,15 +67,23 @@ class Message implements MessageInterface
     protected $_model;
 
     /**
-     * \Phalcon\Mvc\Model\Message constructor
+     * Code
      *
-     * @param string $message
-     * @param string|null $field
-     * @param string|null $type
-     * @param \Phalcon\Mvc\ModelInterface|null $model
-     * @throws Exception
+     * @var null|\Phalcon\Mvc\ModelInterface
+     * @access protected
      */
-    public function __construct($message, $field = null, $type = null, $model = null)
+    protected $_code;
+
+    /**
+     * Phalcon\Mvc\Model\Message constructor
+     *
+     * @param string message
+     * @param string|array field
+     * @param string type
+     * @param \Phalcon\Mvc\ModelInterface model
+     * @param int|null code
+     */
+    public function __construct($message, $field = null, $type = null, ModelInterface $model = null, $code = null)
     {
         if (is_string($message) === false) {
             throw new Exception('Invalid parameter type.');
@@ -93,11 +99,11 @@ class Message implements MessageInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_null($model) === false &&
-            is_object($model) === false) {
+        if (is_null($code) === false &&
+            is_object($code) === false) {
             throw new Exception('Invalid parameter type.');
-        } //@note no interface validation
-
+        }
+        
         $this->_message = $message;
         $this->_field   = $field;
         $this->_type    = $type;
@@ -198,13 +204,8 @@ class Message implements MessageInterface
      * @return \Phalcon\Mvc\Model\Message
      * @throws Exception
      */
-    public function setModel($model)
+    public function setModel(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_model = $model;
 
         return $this;
@@ -218,6 +219,23 @@ class Message implements MessageInterface
     public function getModel()
     {
         return $this->_model;
+    }
+
+    /**
+     * Sets code for the message
+     */
+    public function setCode($code)
+    {
+        $this->_code = (int) $code;
+        return $this;
+    }
+
+    /**
+     * Returns the message code
+     */
+    public function getCode()
+    {
+        return $this->_code;
     }
 
     /**
@@ -235,15 +253,14 @@ class Message implements MessageInterface
      *
      * @param array $message
      * @return \Phalcon\Mvc\Model\Message
-     * @throws Exception
      */
-    public static function __set_state($message)
+    public static function __set_state(array $message)
     {
         if (is_array($message) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        return new Message($message["_message"], $message["_field"], $message["_type"]);
+        return new self($message["_message"], $message["_field"], $message["_type"], $message["_code"]);
     }
 
 }
