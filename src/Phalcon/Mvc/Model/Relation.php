@@ -5,11 +5,10 @@ namespace Phalcon\Mvc\Model;
 use \Phalcon\Mvc\Model\RelationInterface;
 
 /**
+  /**
  * Phalcon\Mvc\Model\Relation
  *
  * This class represents a relationship between two models
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/relation.c
  */
 class Relation implements RelationInterface
 {
@@ -284,19 +283,32 @@ class Relation implements RelationInterface
     }
 
     /**
+     * Returns parameters that must be always used when the related records are obtained
+     *
+     * @return array
+     */
+    public function getParams()
+    {
+        $options = $this->_options;
+        if (is_array($options)) {
+            if (isset($options["params"])) {
+                if (!empty($options["params"])) {
+                    return $options["params"];
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Check whether the relation is a 'many-to-many' relation or not
      *
      * @return boolean
      */
     public function isThrough()
     {
-        if ($this->_type === 3) {
-            return true;
-        } else {
-            return ($this->_type === 4 ? true : false);
-        }
-
-        return false;
+        $type = $this->_type;
+        return $type == self::HAS_ONE_THROUGH || $type == self::HAS_MANY_THROUGH;
     }
 
     /**
