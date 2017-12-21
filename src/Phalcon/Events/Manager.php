@@ -60,7 +60,7 @@ class Manager implements ManagerInterface
      * @param int|null $priority
      * @throws Exception
      */
-    public function attach($eventType, $handler, $priority = null)
+    public function attach($eventType, $handler, $priority = 100)
     {
         if (is_null($priority) === true) {
             $priority = 100;
@@ -204,7 +204,7 @@ class Manager implements ManagerInterface
      * @return mixed
      * @throws Exception
      */
-    public function fireQueue($queue, $event)
+    public function fireQueue($queue, EventInterface $event)
     {
         if (is_array($queue) === false &&
             (is_object($queue) === false ||
