@@ -2,8 +2,7 @@
 
 namespace Phalcon\Annotations;
 
-use \Phalcon\Annotations\ReaderInterface;
-use \Phalcon\Annotations\Exception;
+
 use \ReflectionClass;
 
 /**

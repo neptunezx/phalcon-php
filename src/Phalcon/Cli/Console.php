@@ -2,12 +2,11 @@
 
 namespace Phalcon\Cli;
 
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\DiInterface;
-use \Phalcon\Events\ManagerInterface;
-use \Phalcon\Cli\Console\Exception;
-use \Phalcon\DispatcherInterface;
+use Phalcon\Application as BaseApplication;
+use Phalcon\DiInterface;
+use Phalcon\Cli\Router\Route;
+use Phalcon\Events\ManagerInterface;
+use Phalcon\Cli\Console\Exception;
 
 /**
  * Phalcon\Cli\Console
@@ -16,7 +15,7 @@ use \Phalcon\DispatcherInterface;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cli/console.c
  */
-class Console implements InjectionAwareInterface, EventsAwareInterface
+class Console extends BaseApplication
 {
 
     /**
