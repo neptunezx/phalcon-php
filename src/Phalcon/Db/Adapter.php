@@ -160,7 +160,7 @@ abstract class Adapter implements EventsAwareInterface
      * @param \Phalcon\Events\ManagerInterface $eventsManager
      * @throws Exception
      */
-    public function setEventsManager($eventsManager)
+    public function setEventsManager(ManagerInterface $eventsManager)
     {
         if (is_object($eventsManager) === false ||
             $eventsManager instanceof ManagerInterface === false) {
