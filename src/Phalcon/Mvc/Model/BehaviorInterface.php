@@ -2,20 +2,15 @@
 
 namespace Phalcon\Mvc\Model;
 
+use Phalcon\Mvc\ModelInterface;
+
 /**
- * Phalcon\Mvc\Model\BehaviorInterface initializer
+ * Phalcon\Mvc\Model\BehaviorInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/behaviorinterface.c
+ * Interface for Phalcon\Mvc\Model\Behavior
  */
 interface BehaviorInterface
 {
-
-    /**
-     * \Phalcon\Mvc\Model\Behavior
-     *
-     * @param array|null $options
-     */
-    public function __construct($options = null);
 
     /**
      * This method receives the notifications from the EventsManager
@@ -23,7 +18,7 @@ interface BehaviorInterface
      * @param string $type
      * @param \Phalcon\Mvc\ModelInterface $model
      */
-    public function notify($type, $model);
+    public function notify($type, ModelInterface $model);
 
     /**
      * Calls a method when it's missing in the model
@@ -32,5 +27,5 @@ interface BehaviorInterface
      * @param string $method
      * @param array|null $arguments
      */
-    public function missingMethod($model, $method, $arguments = null);
+    public function missingMethod(ModelInterface $model, $method, $arguments = null);
 }

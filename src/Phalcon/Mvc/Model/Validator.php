@@ -2,15 +2,18 @@
 
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Mvc\Model\Message;
-use \Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\Message;
 
 /**
  * Phalcon\Mvc\Model\Validator
  *
  * This is a base class for Phalcon\Mvc\Model validators
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator.c
+ * This class is only for backward compatibility reasons to use with Phalcon\Mvc\Collection.
+ * Otherwise please use the validators provided by Phalcon\Validation.
+ *
+ * @deprecated 3.1.0
+ * @see Phalcon\Validation\Validator
  */
 abstract class Validator
 {
@@ -34,6 +37,7 @@ abstract class Validator
     /**
      * \Phalcon\Mvc\Model\Validator constructor
      *
+     * @deprecated
      * @param array $options
      * @throws Exception
      */

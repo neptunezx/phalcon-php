@@ -2,29 +2,23 @@
 
 namespace Phalcon\Mvc\Model;
 
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Transaction\ManagerInterface;
+
 /**
- * Phalcon\Mvc\Model\TransactionInterface initializer
+ * Phalcon\Mvc\Model\TransactionInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/transactioninterface.c
+ * Interface for Phalcon\Mvc\Model\Transaction
  */
 interface TransactionInterface
 {
-
-    /**
-     * \Phalcon\Mvc\Model\Transaction constructor
-     *
-     * @param \Phalcon\DiInterface $dependencyInjector
-     * @param boolean|null $autoBegin
-     * @param string|null $service
-     */
-    public function __construct($dependencyInjector, $autoBegin = null, $service = null);
 
     /**
      * Sets transaction manager related to the transaction
      *
      * @param \Phalcon\Mvc\Model\Transaction\ManagerInterface $manager
      */
-    public function setTransactionManager($manager);
+    public function setTransactionManager(ManagerInterface $manager);
 
     /**
      * Starts the transaction
@@ -96,5 +90,5 @@ interface TransactionInterface
      *
      * @param \Phalcon\Mvc\ModelInterface $record
      */
-    public function setRollbackedRecord($record);
+    public function setRollbackedRecord(ModelInterface $record);
 }
