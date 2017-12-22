@@ -299,15 +299,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param \Phalcon\Events\ManagerInterface $eventsManager
      * @throws Exception
      */
-    public function setCustomEventsManager($model, $eventsManager)
+    public function setCustomEventsManager(ModelInterface $model, ManagerInterface $eventsManager)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_object($eventsManager) === false ||
-            $eventsManager instanceof EventsManagerInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_customEventsManager) === false) {
             $this->_customEventsManager = array();
         }
@@ -322,13 +315,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Events\ManagerInterface|null
      * @throws Exception
      */
-    public function getCustomEventsManager($model)
+    public function getCustomEventsManager(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_customEventsManager) === true) {
             $className = strtolower(get_class($model));
             if (isset($this->_customEventsManager[$className]) === true) {
@@ -346,13 +334,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return boolean
      * @throws Exception
      */
-    public function initialize($model)
+    public function initialize(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $className = strtolower(get_class($model));
 
         //Models are just initialized once per request
@@ -452,13 +435,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return string
      * @throws Exception
      */
-    public function setModelSource($model, $source)
+    public function setModelSource(ModelInterface $model, $source)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Model is not an object');
-        }
-
         if (is_string($source) === false) {
             throw new Exception('Source must be a string');
         }
@@ -477,13 +455,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return string
      * @throws Exception
      */
-    public function getModelSource($model)
+    public function getModelSource(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Model is not an object');
-        }
-
         $entity = strtolower(get_class($model));
 
         if (is_array($this->_sources) === true) {
@@ -507,13 +480,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return string
      * @throws Exception
      */
-    public function setModelSchema($model, $schema)
+    public function setModelSchema(ModelInterface $model, $schema)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Model is not an object');
-        }
-
         if (is_string($schema) === false) {
             throw new Exception('Schema must be a string');
         }
@@ -532,13 +500,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return string|null
      * @throws Exception
      */
-    public function getModelSchema($model)
+    public function getModelSchema(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Model is not an object');
-        }
-
         $entityName = strtolower(get_class($model));
 
         if (is_array($this->_schemas) === true) {
@@ -557,13 +520,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param string $connectionService
      * @throws Exception
      */
-    public function setConnectionService($model, $connectionService)
+    public function setConnectionService(ModelInterface $model, $connectionService)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_string($connectionService) === false) {
             throw new Exception('The connection service must be a string');
         }
@@ -589,13 +547,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param string $connectionService
      * @throws Exception
      */
-    public function setWriteConnectionService($model, $connectionService)
+    public function setWriteConnectionService(ModelInterface $model, $connectionService)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_string($connectionService) === false) {
             throw new Exception('The connection service must be a string');
         }
@@ -614,13 +567,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param string $connectionService
      * @throws Exception
      */
-    public function setReadConnectionService($model, $connectionService)
+    public function setReadConnectionService(ModelInterface $model, $connectionService)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_string($connectionService) === false) {
             throw new Exception('The connection service must be a string');
         }
@@ -639,13 +587,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Db\AdapterInterface
      * @throws Exception
      */
-    public function getWriteConnection($model)
+    public function getWriteConnection(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $service = 'db';
 
         if (is_array($this->_writeConnectionServices) === true) {
@@ -677,13 +620,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Db\AdapterInterface
      * @throws Exception
      */
-    public function getReadConnection($model)
+    public function getReadConnection(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $service = 'db';
 
         if (is_array($this->_readConnectionServices) === true) {
@@ -715,13 +653,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param string
      * @throws Exception
      */
-    public function getReadConnectionService($model)
+    public function getReadConnectionService(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_readConnectionServices) === true) {
             $entityName = strtolower(get_class($model));
 
@@ -741,13 +674,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param string
      * @throws Exception
      */
-    public function getWriteConnectionService($model)
+    public function getWriteConnectionService(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_writeConnectionServices) === true) {
             $entityName = strtolower(get_class($model));
 
@@ -769,11 +697,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return null|false
      * @throws Exception
      */
-    public function notifyEvent($eventName, $model)
+    public function notifyEvent($eventName, ModelInterface $model)
     {
-        if (is_string($eventName) === false ||
-            is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
+        if (is_string($eventName) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -818,11 +744,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return mixed
      * @throws Exception
      */
-    public function missingMethod($model, $eventName, $data)
+    public function missingMethod(ModelInterface $model, $eventName, $data)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_string($eventName) === false ||
+        if (is_string($eventName) === false ||
             is_array($data) === false) {
             throw new Exception('Invalid parameter type.');
         }
@@ -855,13 +779,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param \Phalcon\Mvc\Model\BehaviorInterface $behavior
      * @throws Exception
      */
-    public function addBehavior($model, $behavior)
+    public function addBehavior(ModelInterface $model, BehaviorInterface $behavior)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_object($behavior) === false ||
             $behavior instanceof BehaviorInterface === false) {
             throw new Exception('The behavior is invalid');
@@ -890,11 +809,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param boolean $keepSnapshots
      * @throws Exception
      */
-    public function keepSnapshots($model, $keepSnapshots)
+    public function keepSnapshots(ModelInterface $model, $keepSnapshots)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_bool($keepSnapshots) === false) {
+        if (is_bool($keepSnapshots) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -912,13 +829,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return boolean
      * @throws Exception
      */
-    public function isKeepingSnapshots($model)
+    public function isKeepingSnapshots(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_keepSnapshots) === true) {
             $entityName = strtolower(get_class($model));
             if (isset($this->_keepSnapshots[$entityName]) === true) {
@@ -936,11 +848,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param boolean $dynamicUpdate
      * @throws Exception
      */
-    public function useDynamicUpdate($model, $dynamicUpdate)
+    public function useDynamicUpdate(ModelInterface $model, $dynamicUpdate)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_bool($dynamicUpdate) === false) {
+        if (is_bool($dynamicUpdate) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -964,13 +874,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return boolean
      * @throws Exception
      */
-    public function isUsingDynamicUpdate($model)
+    public function isUsingDynamicUpdate(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_dynamicUpdate) === true) {
             $entityName = strtolower(get_class($model));
             if (isset($this->_dynamicUpdate[$entityName]) === true) {
@@ -992,11 +897,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\Relation
      * @throws Exception
      */
-    public function addHasOne($model, $fields, $referencedModel, $referencedFields, $options = null)
+    public function addHasOne(ModelInterface $model, $fields, $referencedModel, $referencedFields, $options = null)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_string($referencedModel) === false ||
+        if (is_string($referencedModel) === false ||
             (is_array($options) === false &&
             is_null($options) === false)) {
             throw new Exception('Invalid parameter type.');
@@ -1055,7 +958,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
     /**
      * Setup a relation reverse many to one between two models
      *
-     * @param \Phalcon\Mvc\Model $model
+     * @param \Phalcon\Mvc\ModelInterface $model
      * @param mixed $fields
      * @param string $referencedModel
      * @param mixed $referencedFields
@@ -1063,11 +966,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\Relation
      * @throws Exception
      */
-    public function addBelongsTo($model, $fields, $referencedModel, $referencedFields, $options = null)
+    public function addBelongsTo(ModelInterface $model, $fields, $referencedModel, $referencedFields, $options = null)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_string($referencedModel) === false ||
+        if (is_string($referencedModel) === false ||
             (is_array($options) === false &&
             is_null($options) === false)) {
             throw new Exception('Invalid parameter type.');
@@ -1134,11 +1035,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\Relation
      * @throws Exception
      */
-    public function addHasMany($model, $fields, $referencedModel, $referencedFields, $options = null)
+    public function addHasMany(ModelInterface $model, $fields, $referencedModel, $referencedFields, $options = null)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_string($referencedModel) === false ||
+        if (is_string($referencedModel) === false ||
             (is_array($options) === false &&
             is_null($options) === false)) {
             throw new Exception('Invalid parameter type.');
@@ -1208,11 +1107,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\Relation
      * @throws Exception
      */
-    public function addHasManyToMany($model, $fields, $intermediateModel, $intermediateFields, $intermediateReferencedFields, $referencedModel, $referencedFields, $options = null)
+    public function addHasManyToMany(ModelInterface $model, $fields, $intermediateModel, $intermediateFields, $intermediateReferencedFields, $referencedModel, $referencedFields, $options = null)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_string($intermediateModel) === false ||
+        if (is_string($intermediateModel) === false ||
             is_string($referencedModel) === false ||
             (is_array($options) === false &&
             is_null($options) === false)) {
@@ -1483,13 +1380,11 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\Resultset\Simple
      * @throws Exception
      */
-    public function getRelationRecords($relation, $method, $record, $parameters = null)
+    public function getRelationRecords($relation, $method, ModelInterface $record, $parameters = null)
     {
         if (is_object($relation) === false ||
             $relation instanceof RelationInterface === false ||
             is_string($method) === false ||
-            is_object($record) === false ||
-            $record instanceof ModelInterface === false ||
             (is_array($parameters) === false &&
             is_null($parameters) === false)) {
             throw new Exception('Invalid parameter type.');
@@ -1711,7 +1606,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\ResultsetInterface|boolean
      * @throws Exception
      */
-    public function getBelongsToRecords($method, $modelName, $modelRelation, $record, $parameters = null)
+    public function getBelongsToRecords($method, $modelName, $modelRelation, ModelInterface $record, $parameters = null)
     {
         if (is_string($modelName) === false ||
             is_string($modelRelation) === false) {
@@ -1743,7 +1638,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\ResultsetInterface
      * @throws Exception
      */
-    public function getHasManyRecords($method, $modelName, $modelRelation, $record, $parameters = null)
+    public function getHasManyRecords($method, $modelName, $modelRelation, ModelInterface $record, $parameters = null)
     {
         if (is_string($modelName) === false ||
             is_string($modelRelation) === false) {
@@ -1775,7 +1670,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\ResultsetInterface
      * @throws Exception
      */
-    public function getHasOneRecords($method, $modelName, $modelRelation, $record, $parameters = null)
+    public function getHasOneRecords($method, $modelName, $modelRelation, ModelInterface $record, $parameters = null)
     {
         if (is_string($modelName) === false ||
             is_string($modelRelation) === false) {
@@ -1807,7 +1702,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\RelationInterface[]
      * @throws Exception
      */
-    public function getBelongsTo($model)
+    public function getBelongsTo(ModelInterface $model)
     {
         if (is_object($model) === false ||
             $model instanceof ModelInterface === false) {
@@ -1831,13 +1726,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\RelationInterface[]
      * @throws Exception
      */
-    public function getHasMany($model)
+    public function getHasMany(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_hasManySingle) === true) {
             $lowerName = strtolower(get_class($model));
             if (isset($this->_hasManySingle[$lowerName]) === true) {
@@ -1855,13 +1745,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return array
      * @throws Exception
      */
-    public function getHasOne($model)
+    public function getHasOne(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_hasOneSingle) === true) {
             $lowerName = strtolower(get_class($model));
             if (isset($this->_hasOneSingle[$lowerName]) === true) {
@@ -1879,13 +1764,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\RelationInterface[]
      * @throws Exception
      */
-    public function getHasManyToMany($model)
+    public function getHasManyToMany(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_hasManyToManySingle) === true) {
             $lowerName = strtolower(get_class($model));
             if (isset($this->_hasManyToManySingle[$lowerName]) === true) {
@@ -1903,7 +1783,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return array
      * @throws Exception
      */
-    public function getHasOneAndHasMany($model)
+    public function getHasOneAndHasMany(ModelInterface $model)
     {
         return array_merge($this->getHasOne($model), $this->getHasMany($model));
     }

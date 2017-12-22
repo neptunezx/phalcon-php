@@ -2,63 +2,22 @@
 
 namespace Phalcon\Mvc\Model\Resultset;
 
-use \Phalcon\Mvc\Model\Resultset;
-use \Phalcon\Mvc\Model\ResultsetInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
-use \Phalcon\Cache\BackendInterface;
-use \Phalcon\Db\Result\Pdo;
-use \Serializable;
-use \ArrayAccess;
-use \Countable;
-use \SeekableIterator;
-use \Iterator;
+namespace Phalcon\Mvc\Model\Resultset;
+
+use Phalcon\Mvc\Model;
+use Phalcon\Mvc\Model\Resultset;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Cache\BackendInterface;
+use Phalcon\Kernel;
 
 /**
  * Phalcon\Mvc\Model\Resultset\Simple
  *
- * Simple resultsets only contains complete objects.
+ * Simple resultsets only contains a complete objects
  * This class builds every complete object as it is required
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/resultset/simple.c
  */
-class Simple extends Resultset implements Serializable, ArrayAccess, Countable, SeekableIterator, Iterator, ResultsetInterface
+class Simple extends Resultset implements ResultsetInterface
 {
-
-    /**
-     * Type: Full Result
-     *
-     * @var int
-     */
-    const TYPE_RESULT_FULL = 0;
-
-    /**
-     * Type: Partial Result
-     *
-     * @var int
-     */
-    const TYPE_RESULT_PARTIAL = 1;
-
-    /**
-     * Hydrate: Records
-     *
-     * @var int
-     */
-    const HYDRATE_RECORDS = 0;
-
-    /**
-     * Hydrate: Objects
-     *
-     * @var int
-     */
-    const HYDRATE_OBJECTS = 2;
-
-    /**
-     * Hydrate: Arrays
-     *
-     * @var int
-     */
-    const HYDRATE_ARRAYS = 1;
 
     /**
      * Model
@@ -94,119 +53,92 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
      * @param boolean|null $keepSnapshots
      * @throws Exception
      */
-    public function __construct($columnMap, $model, $result, $cache = null, $keepSnapshots = null)
+    public function __construct(array $columnMap, $model, $result, BackendInterface $cache = null, $keepSnapshots = null)
     {
-        if (is_array($columnMap) === false ||
-            is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $this->_model     = $model;
+        $this->_columnMap = $columnMap;
 
-        if (is_null($cache) === false &&
-            (is_object($cache) === false ||
-            $cache instanceof BackendInterface === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
+        /**
+         * Set if the returned resultset must keep the record snapshots
+         */
+        $this->_keepSnapshots = boolval($keepSnapshots);
 
-        if (is_bool($keepSnapshots) === false &&
-            is_null($keepSnapshots) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->_model         = $model;
-        $this->_result        = $result;
-        $this->_cache         = $cache;
-        $this->_columnMap     = $columnMap;
-        $this->_keepSnapshots = $keepSnapshots;
-
-        if (is_object($result) === false &&
-            $result instanceof Pdo === false) {
-            return;
-        }
-
-        //Use only fetch assoc
-        $result->setFetchMode(1);
-        $rowCount = $result->numRows();
-
-        //Check if it's a big resultset
-        if ($limit < $rowCount) {
-            $this->_type = 1;
-        } else {
-            $this->_type = 0;
-        }
-
-        //Update the row-count
-        $this->_count = $rowCount;
+        parent::__construct($result, $cache);
     }
 
     /**
-     * Check whether the internal resource has rows to fetch
-     *
-     * @return boolean
+     * Returns current row in the resultset
+     * 
+     * @return Phalcon\Mvc\Model\ModelInterface|boolean
      */
-    public function valid()
+    public final function current()
     {
-        if ($this->_type === 1) {
-            $result = $this->_result;
-            if (is_object($result) === true) {
-                $row = $result->fetch($result); //@note ?!
-            } else {
-                $row = false;
-            }
-        } else {
-            $rows = $this->_rows;
-            if (is_array($rows) === false) {
-                $result = $this->_result;
-                if (is_object($result) === true) {
-                    $rows        = $result->fetchAll();
-                    $this->_rows = $rows;
-                }
-            }
-
-            if (is_array($rows) === true) {
-                $row = current($rows);
-                if ($row !== false) {
-                    next($row);
-                }
-            } else {
-                $row = false;
-            }
+        $activeRow = $this->_activeRow;
+        if ($activeRow !== null) {
+            return $activeRow;
         }
 
-        if (is_array($row) === false) {
+        /**
+         * Current row is set by seek() operations
+         */
+        $row = $this->_row;
+
+        /**
+         * Valid records are arrays
+         */
+        if (!is_array($row)) {
             $this->_activeRow = false;
             return false;
         }
 
-        //Set records as dirty state PERSISTENT by default
-        $dirtyState = 0;
-
-        //Get current hydration mode
+        /**
+         * Get current hydration mode
+         */
         $hydrateMode = $this->_hydrateMode;
 
-        //Tell if the resultset is keeping snapshots
-        $keepSnapshots = $this->_keepSnapshots;
-
-        //Get the resultset column map
+        /**
+         * Get the resultset column map
+         */
         $columnMap = $this->_columnMap;
 
-        //Hydrate based on the current hydration
-        switch ((int) $hydrateMode) {
-            case 0:
-                //$this->model is the base entity
-                $model = $this->_model;
+        /**
+         * Hydrate based on the current hydration
+         */
+        switch ($hydrateMode) {
 
-                //Perform the standard hydration based on objects
-                $activeRow = Model::cloneResultMap($model, $row, $columnMap, $dirtyState, $keepSnapshots);
+            case Resultset::HYDRATE_RECORDS:
+
+                /**
+                 * Set records as dirty state PERSISTENT by default
+                 * Performs the standard hydration based on objects
+                 */
+                if (Kernel::getGlobals("orm.late_state_binding")) {
+
+                    if ($this->_model instanceof Model) {
+                        $modelName = get_class($this->_model);
+                    } else {
+                        $modelName = "Phalcon\\Mvc\\Model";
+                    }
+
+                    $activeRow = $modelName::cloneResultMap($this->_model, $row, $columnMap, Model::DIRTY_STATE_PERSISTENT, $this->_keepSnapshots
+                    );
+                } else {
+                    $activeRow = Model::cloneResultMap(
+                            $this->_model, $row, $columnMap, Model::DIRTY_STATE_PERSISTENT, $this->_keepSnapshots
+                    );
+                }
                 break;
+
             default:
-                //Other kinds of hydrations
+                /**
+                 * Other kinds of hydrations
+                 */
                 $activeRow = Model::cloneResultMapHydrate($row, $columnMap, $hydrateMode);
                 break;
         }
 
         $this->_activeRow = $activeRow;
-        return true;
+        return $activeRow;
     }
 
     /**
@@ -214,80 +146,68 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
      * it could consume more memory than it currently does. Exporting the resultset to an array
      * couldn't be faster with a large number of records
      *
-     * @param boolean|null $renameColumns
+     * @param boolean $renameColumns
      * @return array
      * @throws Exception
      */
-    public function toArray($renameColumns = null)
+    public function toArray($renameColumns = true)
     {
-        if (is_null($renameColumns) === true) {
-            $renameColumns = true;
-        } elseif (is_bool($renameColumns) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $renameColumns = (boolean) $renameColumns;
 
-        if ($this->_type === 1) {
+        /**
+         * If _rows is not present, fetchAll from database
+         * and keep them in memory for further operations
+         */
+        $records = $this->_rows;
+        if (!is_array($records)) {
             $result = $this->_result;
-            if (is_object($result) === true) {
-                $activeRow = $this->_activeRow;
-
-                //Check if we need to re-execute the query
-                if (is_null($activeRow) === false) {
-                    $result->execute();
-                }
-
-                //We fetch all the results in memory
-                $records = $result->fetchAll();
-            } else {
-                $records = array();
+            if ($this->_row !== null) {
+                // re-execute query if required and fetchAll rows
+                $result->execute();
             }
-        } else {
-            $records = $this->_rows;
-            if (is_array($records) === false) {
-                $result = $this->_result;
-                if (is_object($result) === true) {
-                    $activeRow = $this->_activeRow;
-
-                    //Check if we need to re-execute the query
-                    if (is_null($activeRow) === false) {
-                        $result->execute();
-                    }
-
-                    //We fetch all the results in memory again
-                    $records     = $result->fetchAll();
-                    $this->_rows = $records;
-
-                    //Update the row count
-                    $this->_count = count($records);
-                } else {
-                    $records = array();
-                }
-            }
+            $records     = $result->fetchAll();
+            $this->_row  = null;
+            $this->_rows = $records; // keep result-set in memory
         }
 
-        //We need to rename the whole set here, this could be slow
-        if ($renameColumns === true) {
-            //Get the resultset column map
+        /**
+         * We need to rename the whole set here, this could be slow
+         */
+        if ($renameColumns) {
+            /**
+             * Get the resultset column map
+             */
             $columnMap = $this->_columnMap;
-            if (is_array($columnMap) === false) {
+            if (!is_array($columnMap)) {
                 return $records;
             }
 
-            $renamedRecords = array();
-            if (is_array($records) === true) {
+            $renamedRecords = [];
+            if (is_array($records)) {
                 foreach ($records as $record) {
-                    $renamed = array();
+                    $renamed = [];
                     foreach ($record as $key => $value) {
-                        //Check if the key is part of the column map
-                        if (isset($columnMap[$key]) === false) {
+                        /**
+                         * Check if the key is part of the column map
+                         */
+                        if (!isset($columnMap[$key])) {
                             throw new Exception("Column '" . $key . "' is not part of the column map");
                         }
 
-                        //Add the value renamed
-                        $renamed[$columnMap[$key]] = $value;
+                        $renamedKey = $columnMap[$key];
+                        if (is_array($renamedKey)) {
+                            if (!isset($renamedKey[0])) {
+                                throw new Exception("Column '" . $key . "' is not part of the column map");
+                            }
+                            $renamedKey = $renamedKey[0];
+                        }
+
+                        $renamed[$renamedKey] = $value;
                     }
 
-                    //Append the renamed records to the main array
+                    /**
+                     * Append the renamed records to the main array
+                     */
                     $renamedRecords[] = $renamed;
                 }
             }
@@ -305,19 +225,15 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
      */
     public function serialize()
     {
-        $data = array(
-            'model'       => $this->_model,
-            'cache'       => $this->_cache,
-            'rows'        => $this->toArray(false),
-            'columnMap'   => $this->_columnMap,
-            'hydrateMode' => $this->_hydrateMode
-        );
-
-        //Force to re-execute the query
-        $this->_activeRow = false;
-
         //Serialize the cache using the serialize function
-        return serialize($data);
+        return serialize([
+            'model'         => $this->_model,
+            'cache'         => $this->_cache,
+            'rows'          => $this->toArray(false),
+            'columnMap'     => $this->_columnMap,
+            'hydrateMode'   => $this->_hydrateMode,
+            "keepSnapshots" => $this->_keepSnapshots
+        ]);
     }
 
     /**
@@ -332,19 +248,19 @@ class Simple extends Resultset implements Serializable, ArrayAccess, Countable, 
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->_type = 0;
-
         $resultset = unserialize($data);
 
         if (is_array($resultset) === false) {
             throw new Exception('Invalid serialization data');
         }
 
-        $this->_model       = $resultset['model'];
-        $this->_rows        = $resultset['rows'];
-        $this->_cache       = $resultset['cache'];
-        $this->_columnMap   = $resultset['columnMap'];
-        $this->_hydrateMode = $resultset['hydrateMode'];
+        $this->_model         = $resultset['model'];
+        $this->_rows          = $resultset['rows'];
+        $this->_count         = count($resultset["rows"]);
+        $this->_cache         = $resultset['cache'];
+        $this->_columnMap     = $resultset['columnMap'];
+        $this->_hydrateMode   = $resultset['hydrateMode'];
+        $this->_keepSnapshots = isset($resultset["keepSnapshots"]) ? $resultset["keepSnapshots"] : false;
     }
 
 }

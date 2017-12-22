@@ -12,10 +12,8 @@
 
 namespace Phalcon\Mvc\Model\MetaData;
 
-use \Phalcon\Mvc\Model\MetaData;
-use \Phalcon\Mvc\Model\MetaDataInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Mvc\Model\MetaData;
+use Phalcon\Mvc\Model\Exception;
 
 /**
  * Phalcon\Mvc\Model\MetaData\Session
@@ -26,115 +24,15 @@ use \Phalcon\Di\InjectionAwareInterface;
  * You can query the meta-data by printing $_SESSION['$PMM$']
  *
  * <code>
- * $metaData = new Phalcon\Mvc\Model\Metadata\Session(array(
- *    'prefix' => 'my-app-id'
- * ));
+ * $metaData = new \Phalcon\Mvc\Model\Metadata\Session(
+ *     [
+ *        "prefix" => "my-app-id",
+ *     ]
+ * );
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/metadata/session.c
- * @note This class works directly with the $_SESSION variable. It might be useful to use
- * Phalcon abstraction classes, which allow some extended session handeling.
  */
-class Session extends MetaData implements InjectionAwareInterface, MetaDataInterface
+class Session extends MetaData
 {
-
-    /**
-     * Models: Attributes
-     *
-     * @var int
-     */
-    const MODELS_ATTRIBUTES = 0;
-
-    /**
-     * Models: Primary Key
-     *
-     * @var int
-     */
-    const MODELS_PRIMARY_KEY = 1;
-
-    /**
-     * Models: Non Primary Key
-     *
-     * @var int
-     */
-    const MODELS_NON_PRIMARY_KEY = 2;
-
-    /**
-     * Models: Not Null
-     *
-     * @var int
-     */
-    const MODELS_NOT_NULL = 3;
-
-    /**
-     * Models: Data Types
-     *
-     * @var int
-     */
-    const MODELS_DATA_TYPES = 4;
-
-    /**
-     * Models: Data Types Numeric
-     *
-     * @var int
-     */
-    const MODELS_DATA_TYPES_NUMERIC = 5;
-
-    /**
-     * Models: Date At
-     *
-     * @var int
-     */
-    const MODELS_DATE_AT = 6;
-
-    /**
-     * Models: Date In
-     *
-     * @var int
-     */
-    const MODELS_DATE_IN = 7;
-
-    /**
-     * Models: Identity Column
-     *
-     * @var int
-     */
-    const MODELS_IDENTITY_COLUMN = 8;
-
-    /**
-     * Models: Data Types Bind
-     *
-     * @var int
-     */
-    const MODELS_DATA_TYPES_BIND = 9;
-
-    /**
-     * Models: Automatic Default Insert
-     *
-     * @var int
-     */
-    const MODELS_AUTOMATIC_DEFAULT_INSERT = 10;
-
-    /**
-     * Models: Automatic Default Update
-     *
-     * @var int
-     */
-    const MODELS_AUTOMATIC_DEFAULT_UPDATE = 11;
-
-    /**
-     * Models: Column Map
-     *
-     * @var int
-     */
-    const MODELS_COLUMN_MAP = 0;
-
-    /**
-     * Models: Reverse Column Map
-     *
-     * @var int
-     */
-    const MODELS_REVERSE_COLUMN_MAP = 1;
 
     /**
      * Prefix

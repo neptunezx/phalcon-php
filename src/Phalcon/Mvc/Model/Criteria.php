@@ -43,7 +43,7 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
@@ -103,7 +103,6 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      */
     public function bind(array $bindParams, $merge = false)
     {
-
         if ($merge) {
             if (isset($this->_params["bind"])) {
                 $bind = $this->_params["bind"];

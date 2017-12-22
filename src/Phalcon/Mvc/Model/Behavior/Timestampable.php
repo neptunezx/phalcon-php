@@ -2,18 +2,15 @@
 
 namespace Phalcon\Mvc\Model\Behavior;
 
-use \Phalcon\Mvc\Model\Behavior;
-use \Phalcon\Mvc\Model\BehaviorInterface;
-use \Phalcon\Mvc\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Behavior;
+use Phalcon\Mvc\Model\Exception;
 
 /**
  * Phalcon\Mvc\Model\Behavior\Timestampable
  *
  * Allows to automatically update a model’s attribute saving the
  * datetime when a record is created or updated
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/behavior/timestampable.c
  */
 class Timestampable extends Behavior implements BehaviorInterface
 {
@@ -25,11 +22,10 @@ class Timestampable extends Behavior implements BehaviorInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @throws Exception
      */
-    public function notify($type, $model)
+    public function notify($type, ModelInterface $model)
     {
         if (is_string($type) === false ||
-            is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
+            is_object($model) === false) {
             throw new Exception('Invalid parameter type.');
         }
 

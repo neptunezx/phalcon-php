@@ -112,10 +112,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      * @param \Phalcon\DiInterface|null $dependencyInjector
      * @throws Exception
      */
-    public function __construct($dependencyInjector = null)
+    public function __construct(DiInterface $dependencyInjector = null)
     {
-        if (is_object($dependencyInjector) === true &&
-            $dependencyInjector instanceof DiInterface === true) {
+        if ($dependencyInjector) {
             $this->_dependencyInjector = $dependencyInjector;
         } else {
             $this->_dependencyInjector = DI::getDefault();
@@ -188,11 +187,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      */
     public function setRollbackPendent($rollbackPendent)
     {
-        if (is_bool($rollbackPendent) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->_rollbackPendent = $rollbackPendent;
+        $this->_rollbackPendent = (boolean) $rollbackPendent;
+        return $this;
     }
 
     /**
@@ -212,7 +208,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      */
     public function has()
     {
-        return ($this->_number > 0 ? true : false);
+        return $this->_number > 0;
     }
 
     /**
@@ -223,13 +219,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\TransactionInterface
      * @throws Exception
      */
-    public function get($autoBegin = null)
+    public function get($autoBegin = true)
     {
-        if (is_null($autoBegin) === true) {
-            $autoBegin = true;
-        } elseif (is_bool($autoBegin) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $autoBegin = (boolean) $autoBegin;
 
         if ($this->_initialized === true) {
             //@note this might be wrong?
@@ -250,13 +242,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\TransactionInterface
      * @throws Exception
      */
-    public function getOrCreateTransaction($autoBegin = null)
+    public function getOrCreateTransaction($autoBegin = true)
     {
-        if (is_null($autoBegin) === true) {
-            $autoBegin = true;
-        } elseif (is_bool($autoBegin) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $autoBegin = (boolean) $autoBegin;
 
         if (is_object($this->_dependencyInjector) === false) {
             throw new Exception('A dependency injector container is required to obtain the services related to the ORM');
@@ -310,11 +298,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      */
     public function rollback($collect = null)
     {
-        if (is_null($collect) === true) {
-            $collect = true;
-        } elseif (is_bool($collect) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $collect = (boolean) $collect;
 
         if (is_array($this->_transactions) === true) {
             foreach ($this->_transactions as $transaction) {
@@ -337,7 +321,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      *
      * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
      */
-    public function notifyRollback($transaction)
+    public function notifyRollback(TransactionInterface $transaction)
     {
         $this->_collectTransaction($transaction);
     }
@@ -348,7 +332,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
      * @throws Exception
      */
-    public function notifyCommit($transaction)
+    public function notifyCommit(TransactionInterface $transaction)
     {
         $this->_collectTransaction($transaction);
     }
@@ -359,24 +343,18 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
      * @throws Exception
      */
-    protected function _collectTransaction($transaction)
+    protected function _collectTransaction(TransactionInterface $transaction)
     {
-        if (is_object($transaction) === false ||
-            $transaction instanceof TransactionInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (count($this->_transactions) > 0) {
-            $newTransactions = array();
-
-            //@note This replaces _transactions with an array containing $transaction
-            foreach ($this->_transactions as $managedTransaction) {
-                if ($managedTransaction === $transaction) {
+        $transactions = $this->_transactions;
+        if (count($transactions)) {
+            $newTransactions = [];
+            foreach ($transactions as $managedTransaction) {
+                if ($managedTransaction != $transaction) {
                     $newTransactions[] = $transaction;
+                } else {
                     $this->_number--;
                 }
             }
-
             $this->_transactions = $newTransactions;
         }
     }
@@ -386,9 +364,13 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      */
     public function collectTransactions()
     {
-        //@note optimized code
-        $this->_number       -= count($this->_transactions);
-        $this->_transactions = null;
+        $transactions = $this->_transactions;
+        if (count($transactions)) {
+            foreach ($transactions as $_) {
+                $this->_number--;
+            }
+            $this->_transactions = null;
+        }
     }
 
 }

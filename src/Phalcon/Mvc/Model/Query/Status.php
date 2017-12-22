@@ -57,11 +57,9 @@ class Status implements StatusInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @throws Exception
      */
-    public function __construct($success, $model)
+    public function __construct($success, ModelInterface $model)
     {
-        if (is_bool($success) === false ||
-            is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
+        if (is_bool($success) === false) {
             throw new Exception('Invalid parameter type.');
         }
 

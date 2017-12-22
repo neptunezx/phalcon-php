@@ -10,12 +10,8 @@ namespace Phalcon\Mvc\Model\Query;
 interface BuilderInterface
 {
 
-    /**
-     * \Phalcon\Mvc\Model\Query\Builder
-     *
-     * @param array|null $params
-     */
-    public function __construct($params = null);
+    const OPERATOR_OR  = "or";
+    const OPERATOR_AND = "and";
 
     /**
      * Sets the columns to be queried

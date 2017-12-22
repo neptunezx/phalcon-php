@@ -51,7 +51,7 @@ interface MetaDataInterface
      * @param int $index
      * @param mixed $data
      */
-    public function writeMetaDataIndex($model, $index, $data, $replace);
+    public function writeMetaDataIndex(ModelInterface $model, $index, $data, $replace);
 
     /**
      * Reads the ordered/reversed column map for certain model
@@ -155,7 +155,7 @@ interface MetaDataInterface
      * @param  \Phalcon\Mvc\ModelInterface $model
      * @param  array $attributes
      */
-    public function setAutomaticCreateAttributes(ModelInterface $model, array $attributes, $replace);
+    public function setAutomaticCreateAttributes(ModelInterface $model, array $attributes);
 
     /**
      * Set the attributes that must be ignored from the UPDATE SQL generation
@@ -163,7 +163,7 @@ interface MetaDataInterface
      * @param  \Phalcon\Mvc\ModelInterface $model
      * @param  array $attributes
      */
-    public function setAutomaticUpdateAttributes(ModelInterface $model, $attributes, $replace);
+    public function setAutomaticUpdateAttributes(ModelInterface $model, array $attributes);
 
     /**
      * Set the attributes that allow empty string values
@@ -213,7 +213,7 @@ interface MetaDataInterface
      * @param string $attribute
      * @return boolean
      */
-    public function hasAttribute(ModelInterface $model, array $attribute);
+    public function hasAttribute(ModelInterface $model, $attribute);
 
     /**
      * Checks if the internal meta-data container is empty
