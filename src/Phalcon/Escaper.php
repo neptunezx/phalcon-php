@@ -49,6 +49,13 @@ class Escaper implements EscaperInterface
     protected $_htmlQuoteType = 3;
 
     /**
+     * Double Encode
+     *
+     * @var bool
+     * @access protected
+     */
+    protected $_doubleEncode = true;
+    /**
      * Sets the encoding to be used by the escaper
      *
      * <code>
@@ -97,8 +104,27 @@ class Escaper implements EscaperInterface
     }
 
     /**
-     * Check if charset is ASCII or ISO-8859-1
+     * Sets the double_encode to be used by the escaper
      *
+     *<code>
+     * $escaper->setDoubleEncode(false);
+     *</code>
+     *
+     * @param boolean $doubleEncode
+     * @throws EscaperException
+     */
+    public function setDoubleEncode($doubleEncode)
+	{
+	    if(is_bool($doubleEncode) === false){
+            throw new EscaperException('The Double Encode is not boolean');
+        }
+        $this->$doubleEncode = $doubleEncode;
+	}
+
+
+    /**
+     * Check if charset is ASCII or ISO-8859-1
+     * !!!  old  !!!
      * @param string $str
      * @return string|boolean
      */
@@ -190,11 +216,10 @@ class Escaper implements EscaperInterface
      */
     public function escapeHtml($text)
     {
-        if (is_string($text) === true) {
-            return htmlspecialchars($text, $this->_htmlQuoteType, $this->_encoding);
+        if (is_string($text) === false) {
+            throw new EscaperException('Invalid parameter type.');
         }
-
-        return $text;
+        return htmlspecialchars($text, $this->_htmlQuoteType, $this->_encoding);
     }
 
     /**
@@ -205,11 +230,13 @@ class Escaper implements EscaperInterface
      */
     public function escapeHtmlAttr($attribute)
     {
-        if (is_string($attribute) === true && empty($attribute) === false) {
-            return htmlspecialchars($attribute, \ENT_QUOTES, $this->_encoding);
+        if (is_string($attribute) === true) {
+            throw new EscaperException('Invalid parameter type.');
         }
-
-        return $attribute;
+        if(empty($attribute) === false){
+            throw new EscaperException('parameter is null');
+        }
+        return htmlspecialchars($attribute, \ENT_QUOTES, $this->_encoding);
     }
 
     /**

@@ -2,52 +2,59 @@
 
 namespace Phalcon\Mvc\Model\Validator;
 
-use \Phalcon\Mvc\Model\Validator;
-use \Phalcon\Mvc\Model\ValidatorInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\EntityInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\Validator;
+
 
 /**
  * Phalcon\Mvc\Model\Validator\PresenceOf
  *
  * Allows to validate if a filed have a value different of null and empty string ("")
  *
- * <code>
+ * This validator is only for use with Phalcon\Mvc\Collection. If you are using
+ * Phalcon\Mvc\Model, please use the validators provided by Phalcon\Validation.
+ *
+ *<code>
  * use Phalcon\Mvc\Model\Validator\PresenceOf;
  *
- * class Subscriptors extends Phalcon\Mvc\Model
+ * class Subscriptors extends \Phalcon\Mvc\Collection
  * {
+ *     public function validation()
+ *     {
+ *         $this->validate(
+ *             new PresenceOf(
+ *                 [
+ *                     "field"   => "name",
+ *                     "message" => "The name is required",
+ *                 ]
+ *             )
+ *         );
  *
- *  public function validation()
- *  {
- *      $this->validate(new PresenceOf(array(
- *          'field' => 'name',
- *          'message' => 'The name is required'
- *      )));
- *      if ($this->validationHasFailed() == true) {
- *          return false;
- *      }
- *  }
- *
+ *         if ($this->validationHasFailed() === true) {
+ *             return false;
+ *         }
+ *     }
  * }
- * </code>
+ *</code>
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/presenceof.c
+ * @deprecated 3.1.0
+ * @see Phalcon\Validation\Validator\PresenceOf
  */
-class PresenceOf extends Validator implements ValidatorInterface
+class PresenceOf extends Validator
 {
 
     /**
      * Executes the validator
      *
-     * @param \Phalcon\Mvc\ModelInterface $record
+     * @param \Phalcon\Mvc\EntityInterface $record
      * @return boolean
      * @throws Exception
      */
     public function validate($record)
     {
         if (is_object($record) === false ||
-            $record instanceof ModelInterface === false) {
+            $record instanceof EntityInterface === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -56,17 +63,20 @@ class PresenceOf extends Validator implements ValidatorInterface
             throw new Exception('Field name must be a string');
         }
 
-        //A value is numm when it is identical to null or a empty string
+        /**
+         * A value is null when it is identical to null or an empty string
+         */
         $value = $record->readAttribute($fieldName);
 
-        if (empty($value) === true) {
-            //Check if the developer has defined a custom message
-            $message = $this->getOption('message');
-            if (isset($message) === false) {
-                $message = "'" . $fieldName . "' is required";
+        if (is_null($value) || (is_string($value) && !strlen($value))) {
+            /**
+             * Check if the developer has defined a custom message
+             */
+            $message = $this->getOption("message");
+            if (empty($message)) {
+                $message = "':field' is required";
             }
-
-            $this->appendMessage($message, $fieldName, 'PresenceOf');
+            $this->appendMessage(strtr($message, ":field", $field), $field, "PresenceOf");
             return false;
         }
 

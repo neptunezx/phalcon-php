@@ -4,7 +4,7 @@ namespace Phalcon;
 
 /**
  * Phalcon\EscaperInterface initializer
- *
+ * Interface for Phalcon\Escaper
  * @see https://github.com/phalcon/cphalcon/1.2.6/master/ext/escaperinterface.c
  */
 interface EscaperInterface

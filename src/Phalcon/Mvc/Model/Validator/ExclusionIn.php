@@ -2,52 +2,61 @@
 
 namespace Phalcon\Mvc\Model\Validator;
 
-use \Phalcon\Mvc\Model\Validator;
-use \Phalcon\Mvc\Model\ValidatorInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\EntityInterface;
+use Phalcon\Mvc\Model\Validator;
+use Phalcon\Mvc\Model\Exception;
+
 
 /**
  * Phalcon\Mvc\Model\Validator\ExclusionIn
  *
  * Check if a value is not included into a list of values
  *
- * <code>
- *  use Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionInValidator;
+ * This validator is only for use with Phalcon\Mvc\Collection. If you are using
+ * Phalcon\Mvc\Model, please use the validators provided by Phalcon\Validation.
  *
- *  class Subscriptors extends Phalcon\Mvc\Model
- *  {
+ *<code>
+ * use Phalcon\Mvc\Model\Validator\ExclusionIn as ExclusionInValidator;
  *
- *      public function validation()
- *      {
- *          $this->validate(new ExclusionInValidator(array(
- *              'field' => 'status',
- *              'domain' => array('A', 'I')
- *          )));
- *          if ($this->validationHasFailed() == true) {
- *              return false;
- *          }
- *      }
+ * class Subscriptors extends \Phalcon\Mvc\Collection
+ * {
+ *     public function validation()
+ *     {
+ *         $this->validate(
+ *             new ExclusionInValidator(
+ *                 [
+ *                     "field"  => "status",
+ *                     "domain" => ["A", "I"],
+ *                 ]
+ *             )
+ *         );
  *
- *  }
- * </code>
+ *         if ($this->validationHasFailed() === true) {
+ *             return false;
+ *         }
+ *     }
+ * }
+ *</code>
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/exclusionin.c
+ * @deprecated 3.1.0
+ * @see Phalcon\Validation\Validator\EclusionIn
  */
-class ExclusionIn extends Validator implements ValidatorInterface
+
+
+class ExclusionIn extends Validator
 {
 
     /**
      * Executes the validator
      *
-     * @param \Phalcon\Mvc\ModelInterface $record
+     * @param \Phalcon\Mvc\EntityInterface $record
      * @return boolean
      * @throws Exception
      */
     public function validate($record)
     {
         if (is_object($record) === false ||
-            $record instanceof ModelInterface === false) {
+            $record instanceof EntityInterface === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -56,7 +65,9 @@ class ExclusionIn extends Validator implements ValidatorInterface
             throw new Exception('Field name must be a string');
         }
 
-        //The 'domain' option must be a valid array of not allowed values
+        /**
+         * The "domain" option must be a valid array of not allowed values
+         */
         if ($this->isSetOption('domain') === false) {
             throw new Exception("The option 'domain' is required for this validator");
         }
@@ -67,16 +78,22 @@ class ExclusionIn extends Validator implements ValidatorInterface
         }
 
         $value = $record->readAttribute($fieldName);
-
-        //We check if the value is contained in the array using "in_array"
+        if($this->isSetOption('allowEmpty') && empty($value)){
+            return true;
+        }
+        /**
+         * We check if the value contained into the array
+         */
         if (in_array($value, $domain) === true) {
-            //Check if the developer has defined a custom message
+            /**
+             * Check if the developer has defined a custom message
+             */
             $message = $this->getOption('message');
             if (isset($message) === false) {
                 $message = "Value of field '" . $fieldName . "' must not be part of list: " . implode(', ', $domain);
             }
 
-            $this->appendMessage($message, $fieldName, 'Exclusion');
+            $this->appendMessage(strtr($message,array(":field"=>$fieldName,":domain"=>join(', ', $domain))), $fieldName, 'Exclusion');
             return false;
         }
 

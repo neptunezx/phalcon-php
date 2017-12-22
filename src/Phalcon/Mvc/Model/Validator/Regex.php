@@ -2,52 +2,58 @@
 
 namespace Phalcon\Mvc\Model\Validator;
 
-use \Phalcon\Mvc\Model\Validator;
-use \Phalcon\Mvc\Model\ValidatorInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\EntityInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\Validator;
 
 /**
  * Phalcon\Mvc\Model\Validator\Regex
  *
  * Allows validate if the value of a field matches a regular expression
  *
- * <code>
+ * This validator is only for use with Phalcon\Mvc\Collection. If you are using
+ * Phalcon\Mvc\Model, please use the validators provided by Phalcon\Validation.
+ *
+ *<code>
  * use Phalcon\Mvc\Model\Validator\Regex as RegexValidator;
  *
- * class Subscriptors extends Phalcon\Mvc\Model
+ * class Subscriptors extends \Phalcon\Mvc\Collection
  * {
+ *     public function validation()
+ *     {
+ *         $this->validate(
+ *             new RegexValidator(
+ *                 [
+ *                     "field"   => "created_at",
+ *                     "pattern" => "/^[0-9]{4}[-\/](0[1-9]|1[12])[-\/](0[1-9]|[12][0-9]|3[01])/",
+ *                 ]
+ *             )
+ *         );
  *
- *  public function validation()
- *  {
- *      $this->validate(new RegexValidator(array(
- *          'field' => 'created_at',
- *          'pattern' => '/^[0-9]{4}[-\/](0[1-9]|1[12])[-\/](0[1-9]|[12][0-9]|3[01])$/'
- *      )));
- *      if ($this->validationHasFailed() == true) {
- *          return false;
- *      }
- *  }
- *
+ *         if ($this->validationHasFailed() == true) {
+ *             return false;
+ *         }
+ *     }
  * }
- * </code>
+ *</code>
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/regex.c
+ * @deprecated 3.1.0
+ * @see Phalcon\Validation\Validator\Regex
  */
-class Regex extends Validator implements ValidatorInterface
+class Regex extends Validator
 {
 
     /**
      * Executes the validator
      *
-     * @param \Phalcon\Mvc\ModelInterface $record
+     * @param \Phalcon\Mvc\EntityInterface $record
      * @return boolean
      * @throws Exception
      */
     public function validate($record)
     {
         if (is_object($record) === false &&
-            $record instanceof ModelInterface === false) {
+            $record instanceof EntityInterface === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -56,14 +62,18 @@ class Regex extends Validator implements ValidatorInterface
             throw new Exception('Field name must be a string');
         }
 
-        //The 'pattern' option must be a valid regular expression
+        /**
+         * The 'pattern' option must be a valid regular expression
+         */
         if ($this->isSetOption('pattern') === false) {
             throw new Exception('Validator requires a perl-compatible regex pattern');
         }
         $pattern = $this->getOption('pattern');
 
         $value = $this->readAttribute($fieldName);
-
+        if ($this->isSetOption("allowEmpty") && empty($value)) {
+            return true;
+        }
         $failed  = false;
         $matches = null;
 
@@ -75,13 +85,15 @@ class Regex extends Validator implements ValidatorInterface
         }
 
         if ($failed === true) {
-            //Check if the develop has defined a custom message
+            /**
+             * Check if the developer has defined a custom message
+             */
             $message = $this->getOption('message');
             if (isset($message) === false) {
                 $message = "Value of field '" . $fieldName . "' doesn't match regular expression";
             }
 
-            $this->appendMessage($message, $fieldName, 'Regex');
+            $this->appendMessage(strtr($message, ':field', $field), $fieldName, 'Regex');
             return false;
         }
 
