@@ -14,14 +14,25 @@ namespace Phalcon\Paginator\Adapter;
 
 use \Phalcon\Paginator\AdapterInterface;
 use \Phalcon\Paginator\Exception;
-use \stdClass;
 
 /**
  * Phalcon\Paginator\Adapter\Model
  *
- * This adapter allows to paginate data using a Phalcon\Mvc\Model resultset as base
+ * This adapter allows to paginate data using a Phalcon\Mvc\Model resultset as a base.
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/paginator/adapter/model.c
+ * <code>
+ * use Phalcon\Paginator\Adapter\Model;
+ *
+ * $paginator = new Model(
+ *     [
+ *         "data"  => Robots::find(),
+ *         "limit" => 25,
+ *         "page"  => $currentPage,
+ *     ]
+ * );
+ *
+ * $paginate = $paginator->getPaginate();
+ *</code>
  */
 class Model implements AdapterInterface
 {
