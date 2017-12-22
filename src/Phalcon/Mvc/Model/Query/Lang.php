@@ -1,17 +1,6 @@
 <?php
 
-/**
- * PHQL Parser
- *
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
- */
-
 namespace Phalcon\Mvc\Model\Query;
-
-use \Phalcon\Mvc\Model\Query\Scanner;
-use \Phalcon\Mvc\Model\Exception;
 
 /**
  * Phalcon\Mvc\Model\Query\Lang
@@ -29,8 +18,6 @@ use \Phalcon\Mvc\Model\Exception;
  * <code>
  * $intermediate = Phalcon\Mvc\Model\Query\Lang::parsePHQL("SELECT r.* FROM Robots r LIMIT 10");
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/query/lang.c
  */
 abstract class Lang
 {
@@ -38,21 +25,15 @@ abstract class Lang
     /**
      * Parses a PHQL statement returning an intermediate representation (IR)
      *
-     * @param string $phql
-     * @return array|null
+     * @param string phql
+     * @return string
      */
     public static function parsePHQL($phql)
     {
-        if (is_string($phql) === false) {
-            throw new Exception('PHQL statement must be string');
-        }
-
-        try {
-            //$scanner = new Scanner($phql);
-            //@todo implement scanner
-        } catch (\Exception $e) {
+        if (!is_string($phql)) {
             return null;
         }
+        return phql_parse_phql($phql);
     }
 
 }

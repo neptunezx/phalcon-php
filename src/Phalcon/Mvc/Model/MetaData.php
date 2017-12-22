@@ -2,11 +2,12 @@
 
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\DiInterface;
-use \Phalcon\Mvc\Model\MetaData\Strategy\Introspection;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Mvc\Model\MetaData\Strategy\Introspection;
+use Phalcon\Mvc\Model\MetaData\StrategyInterface;
 
 /**
  * Phalcon\Mvc\Model\MetaData
@@ -18,14 +19,16 @@ use \Phalcon\Mvc\ModelInterface;
  * <p>A standard Phalcon\Mvc\Model\MetaData can be used to query model attributes:</p>
  *
  * <code>
- *  $metaData = new Phalcon\Mvc\Model\MetaData\Memory();
- *  $attributes = $metaData->getAttributes(new Robots());
- *  print_r($attributes);
- * </code>
+ * $metaData = new \Phalcon\Mvc\Model\MetaData\Memory();
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/metadata.c
+ * $attributes = $metaData->getAttributes(
+ *     new Robots()
+ * );
+ *
+ * print_r($attributes);
+ * </code>
  */
-abstract class MetaData implements InjectionAwareInterface
+abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
 {
 
     /**
@@ -113,6 +116,20 @@ abstract class MetaData implements InjectionAwareInterface
     const MODELS_AUTOMATIC_DEFAULT_UPDATE = 11;
 
     /**
+     * Models: Default values
+     *
+     * @var int
+     */
+    const MODELS_DEFAULT_VALUES = 12;
+
+    /**
+     * Models: Empty string values
+     *
+     * @var int
+     */
+    const MODELS_EMPTY_STRING_VALUES = 13;
+
+    /**
      * Models: Column Map
      *
      * @var int
@@ -162,19 +179,13 @@ abstract class MetaData implements InjectionAwareInterface
      * Initialize the metadata for certain table
      *
      * @param \Phalcon\Mvc\ModelInterface $model
-     * @param string|null $key
-     * @param string $table
-     * @param string $schema
+     * @param mixed $key
+     * @param mixed $table
+     * @param mixed $schema
      * @throws Exception
      */
-    protected function _initialize(ModelInterface $model, $key = null, $table, $schema)
+    protected function _initialize(ModelInterface $model, $key, $table, $schema)
     {
-        if ((is_string($table) === false && is_null($table) === false) ||
-            (is_string($schema) === false && is_null($schema) === false) ||
-            (is_string($key) === false && is_null($key) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $strategy  = null;
         $className = get_class($model);
 
@@ -221,12 +232,12 @@ abstract class MetaData implements InjectionAwareInterface
         //Check for a column map, store in _columnMap in order and reversed order
         if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === false ||
             $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === false) {
-            return;
+            return null;
         }
 
         $keyName = strtolower($className);
         if (isset($this->_columnMap[$keyName]) === true) {
-            return;
+            return null;
         }
 
         if (is_array($this->_columnMap) === false) {
@@ -240,7 +251,7 @@ abstract class MetaData implements InjectionAwareInterface
         $data = $this->read($prefixKey);
         if (is_null($data) === false) {
             $this->_columnMap[$keyName] = $data;
-            return;
+            return null;
         }
 
         //Get the meta-data extraction strategy
@@ -268,9 +279,8 @@ abstract class MetaData implements InjectionAwareInterface
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
-            throw new Exception('The dependency injector is invalid');
+            throw new Exception('Dependency Injector is invalid');
         }
-
         $this->_dependencyInjector = $dependencyInjector;
     }
 
@@ -290,12 +300,8 @@ abstract class MetaData implements InjectionAwareInterface
      * @param \Phalcon\Mvc\Model\MetaData\Strategy\Introspection $strategy
      * @throws Exception
      */
-    public function setStrategy($strategy)
+    public function setStrategy(StrategyInterface $strategy)
     {
-        if (is_object($strategy) === false) {
-            throw new Exception('The meta-data extraction strategy is not valid');
-        }
-
         $this->_strategy = $strategy;
     }
 
@@ -324,7 +330,7 @@ abstract class MetaData implements InjectionAwareInterface
      * @return array
      * @throws Exception
      */
-    public function readMetaData($model)
+    public function readMetaData(ModelInterface $model)
     {
         if (is_object($model) === false ||
             $model instanceof ModelInterface === false) {
@@ -355,13 +361,8 @@ abstract class MetaData implements InjectionAwareInterface
      * @return array
      * @throws Exception
      */
-    public function readMetaDataIndex($model, $index)
+    public function readMetaDataIndex(ModelInterface $model, $index)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('A model instance is required to retrieve the meta-data');
-        }
-
         if (is_int($index) === false) {
             throw new Exception('Index must be a valid integer constant');
         }
@@ -382,22 +383,25 @@ abstract class MetaData implements InjectionAwareInterface
      * Writes meta-data for certain model using a MODEL_* constant
      *
      * <code>
-     *  print_r($metaData->writeColumnMapIndex(new Robots(), MetaData::MODELS_REVERSE_COLUMN_MAP, array('leName' => 'name')));
+     * print_r(
+     *     $metaData->writeColumnMapIndex(
+     *         new Robots(),
+     *         MetaData::MODELS_REVERSE_COLUMN_MAP,
+     *         [
+     *             "leName" => "name",
+     *         ]
+     *     )
+     * );
      * </code>
-     *
+     * 
      * @param \Phalcon\Mvc\ModelInterface $model
      * @param int $index
      * @param array|string|boolean $data
      * @param boolean $replace
      * @throws Exception
      */
-    public function writeMetaDataIndex($model, $index, $data, $replace)
+    public function writeMetaDataIndex(ModelInterface $model, $index, $data, $replace)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('A model instance is required to retrieve the meta-data');
-        }
-
         if (is_int($index) === false) {
             throw new Exception('Index must be a valid integer constant');
         }
@@ -419,13 +423,6 @@ abstract class MetaData implements InjectionAwareInterface
 
         if (isset($this->_metaData[$key]) === false) {
             $this->_initialize($model, $key, $table, $schema);
-        } elseif ($replace == false) {
-            $value = $this->_metaData[$key][$index];
-            foreach ($data as $key => $value) {
-                if (isset($data[$key]) === false) {
-                    $data[$key] = $value;
-                }
-            }
         }
 
         $this->_metaData[$key][$index] = $data;
@@ -435,18 +432,28 @@ abstract class MetaData implements InjectionAwareInterface
      * Reads the ordered/reversed column map for certain model
      *
      * <code>
-     *  print_r($metaData->readColumnMap(new Robots()));
+     * print_r(
+     *     $metaData->readColumnMap(
+     *         new Robots()
+     *     )
+     * );
      * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      * @throws Exception
      */
-    public function readColumnMap($model)
+    public function readColumnMap(ModelInterface $model)
     {
         if (is_object($model) === false ||
             $model instanceof ModelInterface === false) {
             throw new Exception('A model instance is required to retrieve the meta-data');
+        }
+
+        //Check for a column map, store in _columnMap in order and reversed order
+        if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === false ||
+            $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === false) {
+            return null;
         }
 
         $keyName = strtolower(get_class($model));
@@ -469,24 +476,27 @@ abstract class MetaData implements InjectionAwareInterface
      * @param int $index
      * @throws Exception
      */
-    public function readColumnMapIndex($model, $index)
+    public function readColumnMapIndex(ModelInterface $model, $index)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('A model instance is required to retrieve the meta-data');
-        }
-
         if (is_int($index) === false) {
             throw new Exception('Index must be a valid integer constant');
         }
 
-        $keyName = strtolower(get_class($model));
-
-        if (isset($this->_columnMap[$keyName]) === false) {
-            $this->_initialize($model, null, null, null);
+        //Check for a column map, store in _columnMap in order and reversed order
+        if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === false ||
+            $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === false) {
+            return null;
         }
 
-        return $this->_columnMap[$keyName][$index];
+        $keyName = strtolower(get_class($model));
+
+        $map = null;
+        if (isset($this->_columnMap[$keyName]) === false) {
+            $this->_initialize($model, null, null, null);
+            $map = isset($this->_columnMap[$keyName][$index]) ? $this->_columnMap[$keyName][$index] : null;
+        }
+
+        return $map;
     }
 
     /**
@@ -500,13 +510,8 @@ abstract class MetaData implements InjectionAwareInterface
      * @return array
      * @throws Exception
      */
-    public function getAttributes($model)
+    public function getAttributes(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $data = $this->readMetaDataIndex($model, 0);
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
@@ -519,20 +524,19 @@ abstract class MetaData implements InjectionAwareInterface
      * Returns an array of fields which are part of the primary key
      *
      * <code>
-     *  print_r($metaData->getPrimaryKeyAttributes(new Robots()));
+     * print_r(
+     *     $metaData->getPrimaryKeyAttributes(
+     *         new Robots()
+     *     )
+     * );
      * </code>
-     *
+     * 
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      * @throws Exception
      */
-    public function getPrimaryKeyAttributes($model)
+    public function getPrimaryKeyAttributes(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $data = $this->readMetaDataIndex($model, 1);
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
@@ -542,24 +546,23 @@ abstract class MetaData implements InjectionAwareInterface
     }
 
     /**
-     * Returns an arrau of fields which are not part of the primary key
+     * Returns an array of fields which are not part of the primary key
      *
      * <code>
-     *  print_r($metaData->getNonPrimaryKeyAttributes(new Robots()));
+     * print_r(
+     *     $metaData->getNonPrimaryKeyAttributes(
+     *         new Robots()
+     *     )
+     * );
      * </code>
-     *
+     * 
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      * @throws Exception
      */
-    public function getNonPrimaryKeyAttributes($model)
+    public function getNonPrimaryKeyAttributes(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $data = $this->readMetaDataIndex($model, 2);
+        $data = $this->readMetaDataIndex($model, self::MODELS_NON_PRIMARY_KEY);
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -571,21 +574,20 @@ abstract class MetaData implements InjectionAwareInterface
      * Returns an array of not null attributes
      *
      * <code>
-     *  print_r($metaData->getNotNullAttributes(new Robots()));
+     * print_r(
+     *     $metaData->getNotNullAttributes(
+     *         new Robots()
+     *     )
+     * );
      * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      * @throws Exception
      */
-    public function getNotNullAttributes($model)
+    public function getNotNullAttributes(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $data = $this->readMetaDataIndex($model, 3);
+        $data = $this->readMetaDataIndex($model, self::MODELS_NOT_NULL);
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -604,14 +606,9 @@ abstract class MetaData implements InjectionAwareInterface
      * @return array
      * @throws Exception
      */
-    public function getDataTypes($model)
+    public function getDataTypes(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $data = $this->readMetaDataIndex($model, 4);
+        $data = $this->readMetaDataIndex($model, self::MODELS_DATA_TYPES);
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -630,14 +627,9 @@ abstract class MetaData implements InjectionAwareInterface
      * @return array
      * @throws Exception
      */
-    public function getDataTypesNumeric($model)
+    public function getDataTypesNumeric(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $data = $this->readMetaDataIndex($model, 5);
+        $data = $this->readMetaDataIndex($model, self::MODELS_DATA_TYPES_NUMERIC);
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -656,14 +648,9 @@ abstract class MetaData implements InjectionAwareInterface
      * @return string
      * @throws Exception
      */
-    public function getIdentityField($model)
+    public function getIdentityField(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        return $this->readMetaDataIndex($model, 8);
+        return $this->readMetaDataIndex($model, self::MODELS_IDENTITY_COLUMN);
     }
 
     /**
@@ -677,14 +664,9 @@ abstract class MetaData implements InjectionAwareInterface
      * @return array
      * @throws Exception
      */
-    public function getBindTypes($model)
+    public function getBindTypes(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $data = $this->readMetaDataIndex($model, 9);
+        $data = $this->readMetaDataIndex($model, self::MODELS_DATA_TYPES_BIND);
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -703,14 +685,9 @@ abstract class MetaData implements InjectionAwareInterface
      * @return array
      * @throws Exception
      */
-    public function getAutomaticCreateAttributes($model)
+    public function getAutomaticCreateAttributes(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $data = $this->readMetaDataIndex($model, 10);
+        $data = $this->readMetaDataIndex($model, self::MODELS_AUTOMATIC_DEFAULT_INSERT);
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -729,14 +706,9 @@ abstract class MetaData implements InjectionAwareInterface
      * @return array
      * @throws Exception
      */
-    public function getAutomaticUpdateAttributes($model)
+    public function getAutomaticUpdateAttributes(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $data = $this->readMetaDataIndex($model, 11);
+        $data = $this->readMetaDataIndex($model, self::MODELS_AUTOMATIC_DEFAULT_UPDATE);
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -755,9 +727,9 @@ abstract class MetaData implements InjectionAwareInterface
      * @param array $attributes
      * @param boolean $replace
      */
-    public function setAutomaticCreateAttributes($model, $attributes, $replace)
+    public function setAutomaticCreateAttributes(ModelInterface $model, array $attributes)
     {
-        $this->writeMetaDataIndex($model, 10, $attributes, $replace);
+        $this->writeMetaDataIndex($model, self::MODELS_AUTOMATIC_DEFAULT_INSERT, $attributes);
     }
 
     /**
@@ -771,9 +743,46 @@ abstract class MetaData implements InjectionAwareInterface
      * @param array $attributes
      * @param boolean $replace
      */
-    public function setAutomaticUpdateAttributes($model, $attributes, $replace)
+    public function setAutomaticUpdateAttributes(ModelInterface $model, array $attributes)
     {
-        $this->writeMetaDataIndex($model, 11, $attributes, $replace);
+        $this->writeMetaDataIndex($model, self::MODELS_AUTOMATIC_DEFAULT_UPDATE, $attributes);
+    }
+
+    /**
+     * Set the attributes that allow empty string values
+     *
+     * <code>
+     * $metaData->setEmptyStringAttributes(
+     *     new Robots(),
+     *     [
+     *         "name" => true,
+     *     ]
+     * );
+     * </code>
+     */
+    public function setEmptyStringAttributes(ModelInterface $model, array $attributes)
+    {
+        $this->writeMetaDataIndex($model, self::MODELS_EMPTY_STRING_VALUES, $attributes);
+    }
+
+    /**
+     * Returns attributes allow empty strings
+     *
+     * <code>
+     * print_r(
+     *     $metaData->getEmptyStringAttributes(
+     *         new Robots()
+     *     )
+     * );
+     * </code>
+     */
+    public function getEmptyStringAttributes(ModelInterface $model)
+    {
+        $data = $this->readMetaDataIndex($model, self::MODELS_EMPTY_STRING_VALUES);
+        if (is_array($data) === false) {
+            throw new Exception("The meta-data is invalid or is corrupt");
+        }
+        return $data;
     }
 
     /**
@@ -786,9 +795,9 @@ abstract class MetaData implements InjectionAwareInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getColumnMap($model)
+    public function getColumnMap(ModelInterface $model)
     {
-        $data = $this->readColumnMapIndex($model, 0);
+        $data = $this->readColumnMapIndex($model, self::MODELS_COLUMN_MAP);
         if (is_null($data) === false && is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -797,18 +806,42 @@ abstract class MetaData implements InjectionAwareInterface
     }
 
     /**
+     * Returns attributes (which have default values) and their default values
+     *
+     * <code>
+     * print_r(
+     *     $metaData->getDefaultValues(
+     *         new Robots()
+     *     )
+     * );
+     * </code>
+     */
+    public function getDefaultValues(ModelInterface $model)
+    {
+        $data = $this->readMetaDataIndex(model, self::MODELS_DEFAULT_VALUES);
+        if (is_array($data) === false) {
+            throw new Exception("The meta-data is invalid or is corrupt");
+        }
+        return $data;
+    }
+
+    /**
      * Returns the reverse column map if any
      *
      * <code>
-     *  print_r($metaData->getReverseColumnMap(new Robots()));
+     * print_r(
+     *     $metaData->getReverseColumnMap(
+     *         new Robots()
+     *     )
+     * );
      * </code>
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @return array
      */
-    public function getReverseColumnMap($model)
+    public function getReverseColumnMap(ModelInterface $model)
     {
-        $data = $this->readColumnMapIndex($model, 1);
+        $data = $this->readColumnMapIndex($model, self::MODELS_REVERSE_COLUMN_MAP);
         if (is_null($data) === false && is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -828,7 +861,7 @@ abstract class MetaData implements InjectionAwareInterface
      * @return boolean
      * @throws Exception
      */
-    public function hasAttribute($model, $attribute)
+    public function hasAttribute(ModelInterface $model, $attribute)
     {
         if (is_string($attribute) === false) {
             throw new Exception('Attribute must be a string');
@@ -838,8 +871,7 @@ abstract class MetaData implements InjectionAwareInterface
         if (is_array($columnMap) === true) {
             return isset($columnMap[$attribute]);
         } else {
-            $metaData = $this->readMetaData($model);
-            return isset($metaData[4][$attribute]);
+            return isset($this->readMetaData($model)[self::MODELS_DATA_TYPES][$attribute]);
         }
     }
 
@@ -854,7 +886,7 @@ abstract class MetaData implements InjectionAwareInterface
      */
     public function isEmpty()
     {
-        return (count($this->_metaData) === 0 ? true : false);
+        return count($this->_metaData) == 0;
     }
 
     /**

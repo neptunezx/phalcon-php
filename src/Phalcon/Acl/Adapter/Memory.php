@@ -55,7 +55,7 @@ use Phalcon\Acl\ResourceInterface;
  *     "session" => ["index", "register", "start", "end"],
  *     "contact" => ["index", "send"],
  * ];
- * z
+ * 
  * foreach ($publicResources as $resourceName => $actions) {
  *     $acl->addResource(
  *         new \zPhalcon\Acl\Resource($resourceName),z
