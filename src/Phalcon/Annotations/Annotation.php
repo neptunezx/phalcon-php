@@ -2,8 +2,6 @@
 
 namespace Phalcon\Annotations;
 
-use \Phalcon\Annotations\Exception;
-
 /**
  * Phalcon\Annotations\Annotation
  *
@@ -113,24 +111,23 @@ class Annotation
             throw new Exception('Reflection data must be an array');
         }
 
-        $this->_name = (string) $reflectionData['name'];
+        $this->_name = $reflectionData['name'];
 
-        if (isset($reflectionData['arguments']) === true) {
+        if (isset($reflectionData['arguments'])) {
             $exprArguments = $reflectionData['arguments'];
 
             $arguments = array();
 
             foreach ($exprArguments as $argument) {
-                $expr             = $argument['expr'];
-                $resolvedArgument = $this->getExpression($expr);
-                if (isset($argument['name']) === true) {
+                $resolvedArgument = $this->getExpression($argument['expr']);
+                if (isset($argument['name'])) {
                     $arguments[$argument['name']] = $resolvedArgument;
                 } else {
                     $arguments[] = $resolvedArgument;
                 }
             }
 
-            $this->_arguments     = $arguments;
+            $this->_arguments = $arguments;
             $this->_exprArguments = $exprArguments;
         }
     }
@@ -142,7 +139,7 @@ class Annotation
      */
     public function getName()
     {
-        return (string) $this->_name;
+        return $this->_name;
     }
 
     /**
@@ -152,46 +149,46 @@ class Annotation
      * @return mixed
      * @throws Exception
      */
-    public function getExpression($expr)
+    public function getExpression(array $expr)
     {
         if (is_array($expr) === false) {
             throw new Exception('The expression is not valid.');
         }
-
-        switch ((int) $expr['type']) {
+        $type = $expr['type'];
+        switch ($type) {
             case self::PHANNOT_T_INTEGER:
             case self::PHANNOT_T_DOUBLE:
             case self::PHANNOT_T_STRING:
             case self::PHANNOT_T_IDENTIFIER:
-                return (string) $expr['value'];
+                $value = $expr['value'];
                 break;
             case self::PHANNOT_T_NULL:
-                return null;
+                $value = null;
                 break;
             case self::PHANNOT_T_FALSE:
-                return false;
+                $value = false;
                 break;
             case self::PHANNOT_T_TRUE:
-                return true;
+                $value = true;
                 break;
-            case PHANNOT_T_ARRAY:
+            case self::PHANNOT_T_ARRAY:
+                $arrayValue = [];
                 foreach ($expr['items'] as $item) {
-                    $resolvedItem = $this->getExpression((string) $item);
-
-                    if (isset($item['name']) === true) {
-                        return array($item['name'] => $resolvedItem);
+                    $resolvedItem = $this->getExpression($item['expr']);
+                    if (isset($item['name'])) {
+                        $arrayValue[$item['name']] = $resolvedItem;
                     } else {
-                        return array($resolvedItem);
+                        $arrayValue[] = $resolvedItem;
                     }
                 }
-                break;
-            case PHANNOT_T_ANNOTATION:
+                return $arrayValue;
+            case self::PHANNOT_T_ANNOTATION:
                 return new Annotation($expr);
-                break;
             default:
-                throw new Exception('The expression ' . (int) $expr['type'] . 'is unknown.');
-                break;
+                throw new Exception('The expression ' . (int)$expr['type'] . 'is unknown.');
+
         }
+        return $value;
     }
 
     /**
@@ -221,7 +218,7 @@ class Annotation
      */
     public function numberArguments()
     {
-        return (int) count($this->_arguments);
+        return (int)count($this->_arguments);
     }
 
     /**
@@ -233,29 +230,20 @@ class Annotation
      */
     public function getArgument($position)
     {
-        if (is_string($position) === false &&
-            is_int($position) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
 
-        if (isset($this->_arguments[$position]) === true) {
+        if (isset($this->_arguments[$position])) {
             return $this->_arguments[$position];
         }
     }
 
     /**
      * Checks if the annotation has a specific argument
-     *
-     * @return bool
+     * @param $position
+     * @return boolean
      * @throws Exception
      */
     public function hasArgument($position)
     {
-        if (is_string($position) === false &&
-            is_int($position) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         return isset($this->_arguments[$position]);
     }
 
@@ -264,10 +252,16 @@ class Annotation
      *
      * @param string $name
      * @return mixed
+     * @throws Exception
      */
-    public function getNamedArgument($position)
+    public function getNamedArgument($name)
     {
-        return $this->getArgument($position);
+        if (is_string($name) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (isset($this->_arguments[$name])) {
+            return $this->getArgument($name);
+        }
     }
 
     /**
@@ -276,12 +270,14 @@ class Annotation
      * @deprecated
      * @param string $name
      * @return mixed
+     * @throws Exception
      */
-    public function getNamedParameter($position)
+    public function getNamedParameter($name)
     {
-        trigger_error('The usage of getNamedParameter is deprecated.
-         Please use getArgument instead.', \E_USER_NOTICE);
-        return $this->getArgument($position);
+        if (is_string($name) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        return $this->getArgument($name);
     }
 
     /**

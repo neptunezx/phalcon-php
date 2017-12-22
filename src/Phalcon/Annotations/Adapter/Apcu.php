@@ -1,4 +1,10 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: hanxinyu
+ * Date: 2017/12/21
+ * Time: 上午11:01
+ */
 
 namespace Phalcon\Annotations\Adapter;
 
@@ -7,46 +13,45 @@ use Phalcon\Annotations\Exception;
 use Phalcon\Annotations\Reflection;
 
 /**
- * Phalcon\Annotations\Adapter\Apc
+ * Phalcon\Annotations\Adapter\Apcu
  *
- * Stores the parsed annotations in APC. This adapter is suitable for production
+ * Stores the parsed annotations in APCu. This adapter is suitable for production
  *
- * <code>
- * use Phalcon\Annotations\Adapter\Apc;
+ *<code>
+ * use Phalcon\Annotations\Adapter\Apcu;
  *
- * $annotations = new Apc();
- * </code>
- *
- * @see \Phalcon\Annotations\Adapter\Apcu
- * @deprecated
+ * $annotations = new Apcu();
+ *</code>
  */
-class Apc extends Adapter
+class Apcu extends Adapter
 {
+
     protected $_prefix = "";
 
     protected $_ttl = 172800;
-
     /**
      * Phalcon\Annotations\Adapter\Apc constructor
      *
-     * @param  $options |null
+     * @param array $options
      */
     public function __construct($options = null)
     {
+
         if (is_array($options)) {
             if (isset($options['prefix'])) {
-                $this->_prefix = $options['prefix'];
+                $prefix = $options['prefix'];
+                $this->_prefix = $prefix;
             }
             if (isset($options['lifetime'])) {
-                $this->_ttl = $options['lifetime'];
+                $ttl = $options['lifetime'];
+                $this->_ttl = $ttl;
             }
         }
     }
 
     /**
      * Reads parsed annotations from APC
-     *
-     * @param string $key
+     * @param String $key
      * @return Reflection| boolean
      * @throws Exception
      */
@@ -55,29 +60,23 @@ class Apc extends Adapter
         if (is_string($key) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        return apc_fetch(strtolower('_PHAN' . $this->_prefix . $key));
-
+        return apcu_fetch(strtolower("_PHAN" . $this->_prefix . $key));
     }
 
     /**
      * Writes parsed annotations to APC
-     *
      * @param string $key
      * @param Reflection $data
+     * @return bool|array Returns TRUE on success or FALSE on failure | array with error keys
      * @throws Exception
-     * @return  bool|array Returns TRUE on success or FALSE on failure | array with error keys.
      */
-
-    public function write($key, $data)
+    public function write($key, $data)//(string!key, <Reflection > data)
     {
         if (is_string($key) === false ||
             is_object($data) === false ||
             $data instanceof Reflection === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        return apc_store(strtolower('_PHAN' . $this->_prefix . $key), $data, $this->_ttl);
+        return apcu_store(strtolower("_PHAN" . $this->_prefix . $key), $data, $this->_ttl);
     }
-
 }

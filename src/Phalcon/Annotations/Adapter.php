@@ -2,11 +2,12 @@
 
 namespace Phalcon\Annotations;
 
-use \Phalcon\Annotations\Exception;
-use \Phalcon\Annotations\ReaderInterface;
-use \Phalcon\Annotations\Reader;
-use \Phalcon\Annotations\Reflection;
-use \Phalcon\Annotations\Collection;
+use Phalcon\Annotations\AdapterInterface;
+use Phalcon\Annotations\Reader;
+use Phalcon\Annotations\Exception;
+use Phalcon\Annotations\Collection;
+use Phalcon\Annotations\Reflection;
+use Phalcon\Annotations\ReaderInterface;
 
 /**
  * Phalcon\Annotations\Adapter
@@ -15,7 +16,7 @@ use \Phalcon\Annotations\Collection;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/annotations/adapter.c
  */
-abstract class Adapter
+abstract class Adapter implements AdapterInterface
 {
 
     /**
@@ -72,31 +73,29 @@ abstract class Adapter
      */
     public function get($className)
     {
-        if (is_object($className) === true) {
+        if (is_object($className)) {
             $realClassName = get_class($className);
-        } elseif (is_string($className) === true) {
-            $realClassName = $className;
         } else {
-            throw new Exception('Invalid parameter type.');
+            $realClassName = $className;
         }
-
-        if (isset($this->_annotations[$realClassName]) === true) {
-            return $this->_annotations[$realClassName];
-        }
-
-        //Try to read the annotations from the adapter
-        $classAnnotations = $this->read($realClassName);
-        if (is_null($classAnnotations) === true) {
-            $reader            = $this->getReader();
-            $parsedAnnotations = $reader->parse($realClassName);
-
-            if (is_array($parsedAnnotations) === true) {
-                $classAnnotations                   = new Reflection($parsedAnnotations);
-                $this->_annotations[$realClassName] = $classAnnotations;
-                $this->write($realClassName, $classAnnotations);
+        $annotations = $this->_annotations;
+        if (is_array($annotations)) {
+            if (isset($annotations[$realClassName])) {
+                return $annotations[$realClassName];
             }
         }
 
+        $classAnnotations = $this->{'read'}($realClassName);
+        if ($classAnnotations === null || $classAnnotations === false) {
+            $reader = $this->getReader();
+            $parseAnnotations = $reader->parse($realClassName);
+
+            if (is_array($parseAnnotations)) {
+                $classAnnotations = new Reflection($parseAnnotations);
+                $this->_annotations[$realClassName] = $classAnnotations;
+                $this->{'write'}($realClassName, $classAnnotations);
+            }
+        }
         return $classAnnotations;
     }
 
@@ -105,16 +104,18 @@ abstract class Adapter
      *
      * @param string $className
      * @return array
+     * @throws Exception
      */
     public function getMethods($className)
     {
-        $annotations = $this->get($className);
-        if (is_object($annotations) === true) {
-            $annotations->getMethodsAnnotations();
-            return $annotations;
+        if (is_string($className) === false) {
+            throw new Exception('Invalid parameter type.');
         }
-
-        return array();
+        $classAnnotations = $this->get($className);
+        if (is_object($classAnnotations)) {
+            return $classAnnotations->getPropertiesAnnotations();
+        }
+        return [];
     }
 
     /**
@@ -127,17 +128,18 @@ abstract class Adapter
      */
     public function getMethod($className, $methodName)
     {
-        if (is_string($methodName) === false) {
+        if (is_string($methodName) === false ||
+            is_string($className)) {
             throw new Exception('Invalid parameter type.');
         }
 
         $classAnnotations = $this->get($className);
 
-        if (is_object($classAnnotations) === true) {
+        if (is_object($classAnnotations)) {
             $methods = $classAnnotations->getMethodsAnnotations();
             if (is_array($methods) === true) {
                 foreach ($methods as $name => $method) {
-                    if ($name == $methodName) {
+                    if (!strcasecmp($name,$methodName)) {
                         return $method;
                     }
                 }
@@ -152,16 +154,20 @@ abstract class Adapter
      *
      * @param string $className
      * @return array
+     * @throws Exception
      */
     public function getProperties($className)
     {
+        if (is_string($className)===false){
+            throw new Exception('Invalid parameter type.');
+        }
         $classAnnotations = $this->get($className);
 
         if (is_object($classAnnotations) === true) {
             return $classAnnotations->getPropertiesAnnotations();
         }
 
-        return array();
+        return [];
     }
 
     /**
@@ -174,20 +180,19 @@ abstract class Adapter
      */
     public function getProperty($className, $propertyName)
     {
-        if (is_string($propertyName) === false) {
+        if (is_string($propertyName) === false||
+        is_string($className)===false) {
             throw new Exception('Invalid parameter type.');
         }
 
         $classAnnotations = $this->get($className);
 
-        if (is_object($classAnnotations) === true) {
+        if (is_object($classAnnotations)){
             $properties = $classAnnotations->getPropertiesAnnotations();
             if (is_array($properties) === true) {
-                foreach ($properties as $name => $property) {
-                    if ($name == $propertyName) {
-                        return $property;
-                    }
-                }
+               if (isset($properties[$propertyName])){
+                   return $properties[$propertyName];
+               }
             }
         }
 

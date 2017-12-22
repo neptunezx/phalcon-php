@@ -84,6 +84,7 @@ class Reader implements ReaderInterface
      *
      * @param string $className
      * @return array
+     * @throws Exception
      */
     public function parse($className)
     {
@@ -135,7 +136,7 @@ class Reader implements ReaderInterface
      * @param string $docBlock
      * @param string|null $file
      * @param int|null $line
-     * @return array
+     * @return array | false
      * @throws Exception
      */
     public static function parseDocBlock($docBlock, $file = null, $line = null)
