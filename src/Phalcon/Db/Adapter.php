@@ -30,6 +30,7 @@ abstract class Adapter implements EventsAwareInterface , AdapterInterface
     protected $_eventsManager;
 
     /**
+     * 
      * Descriptor
      *
      * @var null|array
