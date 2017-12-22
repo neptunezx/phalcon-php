@@ -14,7 +14,7 @@ use \Phalcon\Di\InjectionAwareInterface;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/user/plugin.c
  */
-class Plugin extends Injectable implements EventsAwareInterface, InjectionAwareInterface
+class Plugin extends \Phalcon\Di\Injectable
 {
     
 }

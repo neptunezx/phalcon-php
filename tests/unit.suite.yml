@@ -23,9 +23,9 @@ modules:
             # Create it before running tests. For example:
             # export TEST_DB_MYSQL_DSN="mysql:host=10.1.0.3.;dbname=phalcon_test"
             # ...
-            dsn: mysql:host=192.168.33.11;dbname=phalcon_test
-            user: andy
-            password: 123456
+            dsn: mysql:host=127.0.0.1;dbname=phalcon_test
+            user: woai662
+            password: weiwei66291
             populate: true
             cleanup: false
             dump: tests/_data/schemas/mysql/phalcon_test.sql

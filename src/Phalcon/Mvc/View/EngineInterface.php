@@ -11,14 +11,6 @@ interface EngineInterface
 {
 
     /**
-     * \Phalcon\Mvc\View\Engine constructor
-     *
-     * @param \Phalcon\Mvc\ViewInterface $view
-     * @param \Phalcon\DiInterface|null $dependencyInjector
-     */
-    public function __construct($view, $dependencyInjector = null);
-
-    /**
      * Returns cached ouput on another view stage
      *
      * @return array
@@ -31,14 +23,14 @@ interface EngineInterface
      * @param string $partialPath
      * @return string
      */
-    public function partial($partialPath);
+    public function partial($partialPath, $params = null);
 
     /**
      * Renders a view using the template engine
      *
      * @param string $path
      * @param array $params
-     * @param boolean|null $mustClean
+     * @param boolean $mustClean
      */
-    public function render($path, $params, $mustClean = null);
+    public function render($path, $params, $mustClean = false);
 }
