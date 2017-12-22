@@ -3,9 +3,9 @@
 namespace Phalcon\Logger;
 
 /**
- * Phalcon\Logger\FormatterInterface initializer
+ * Phalcon\Logger\FormatterInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/formatterinterface.c
+ * This interface must be implemented by formatters in Phalcon\Logger
  */
 interface FormatterInterface
 {
@@ -13,9 +13,10 @@ interface FormatterInterface
     /**
      * Applies a format to a message before sent it to the internal log
      *
-     * @param string $message
-     * @param int $type
-     * @param int $timestamp
+     * @param string message
+     * @param int type
+     * @param int timestamp
+     * @param array $context
      */
-    public function format($message, $type, $timestamp);
+    public function format($message, $type, $timestamp, $context = null);
 }

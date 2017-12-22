@@ -2,14 +2,14 @@
 
 namespace Phalcon\Logger;
 
+use Phalcon\Logger;
+
 /**
  * Phalcon\Logger\Formatter
  *
  * This is a base class for logger formatters
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/formatter.c
  */
-abstract class Formatter
+abstract class Formatter implements FormatterInterface
 {
 
     /**
@@ -20,15 +20,64 @@ abstract class Formatter
      */
     public function getTypeString($type)
     {
-        $lut = array('EMERGENCY', 'CRITICAL', 'ALERT', 'ERROR',
-            'WARNING', 'NOTICE', 'INFO', 'DEBUG', 'CUSTOM', 'SPECIAL');
+        switch ($type) {
 
-        $type = (int) $type;
-        if ($type >= 0 && $type < 10) {
-            return $lut[$type];
+            case Logger::DEBUG:
+                return "DEBUG";
+
+            case Logger::ERROR:
+                return "ERROR";
+
+            case Logger::WARNING:
+                return "WARNING";
+
+            case Logger::CRITICAL:
+                return "CRITICAL";
+
+            case Logger::CUSTOM:
+                return "CUSTOM";
+
+            case Logger::ALERT:
+                return "ALERT";
+
+            case Logger::NOTICE:
+                return "NOTICE";
+
+            case Logger::INFO:
+                return "INFO";
+
+            case Logger::EMERGENCY:
+                return "EMERGENCY";
+
+            case Logger::SPECIAL:
+                return "SPECIAL";
         }
 
-        return 'CUSTOM';
+        return "CUSTOM";
+    }
+
+    /**
+     * Interpolates context values into the message placeholders
+     *
+     * @see http://www.php-fig.org/psr/psr-3/ Section 1.2 Message
+     * @param string $message
+     * @param array $context
+     * @return string
+     */
+    public function interpolate($message, $context = null)
+    {
+        if (!is_string($message)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (is_array($context) && count($context) > 0) {
+            $replace = [];
+            foreach ($context as $key => $value) {
+                $replace['{' . $key . '}'] = $value;
+            }
+            return strtr($message, $replace);
+        }
+
+        return $message;
     }
 
 }

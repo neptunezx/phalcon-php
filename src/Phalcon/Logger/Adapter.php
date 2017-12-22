@@ -2,23 +2,22 @@
 
 namespace Phalcon\Logger;
 
-use \Phalcon\Logger\Exception;
-use \Phalcon\Logger\FormatterInterface;
-use \Phalcon\Logger\Item;
-use \Phalcon\Logger;
+use Phalcon\Logger;
+use Phalcon\Logger\Item;
+use Phalcon\Logger\Exception;
+use Phalcon\Logger\AdapterInterface;
+use Phalcon\Logger\FormatterInterface;
 
 /**
  * Phalcon\Logger\Adapter
  *
  * Base class for Phalcon\Logger adapters
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter.c
  */
-abstract class Adapter
+abstract class Adapter implements AdapterInterface
 {
 
     /**
-     * Transaction
+     * Tells if there is an active transaction or not
      *
      * @var boolean
      * @access protected
@@ -26,17 +25,17 @@ abstract class Adapter
     protected $_transaction = false;
 
     /**
-     * Queue
+     * Array with messages queued in the transaction
      *
-     * @var null|array
+     * @var array
      * @access protected
      */
-    protected $_queue;
+    protected $_queue = array();
 
     /**
      * Formatter
      *
-     * @var null|\Phalcon\Logger\FormatterInterface
+     * @var object
      * @access protected
      */
     protected $_formatter;
@@ -53,7 +52,7 @@ abstract class Adapter
      * Filters the logs sent to the handlers that are less or equal than a specific level
      *
      * @param int $level
-     * @return \Phalcon\Logger\Adapter
+     * @return \Phalcon\Logger\AdapterInterface
      * @throws Exception
      */
     public function setLogLevel($level)
@@ -81,11 +80,12 @@ abstract class Adapter
      * Sets the message formatter
      *
      * @param \Phalcon\Logger\FormatterInterface $formatter
-     * @return \Phalcon\Logger\Adapter
+     * @return \Phalcon\Logger\AdapterInterface
      * @throws Exception
      */
     public function setFormatter($formatter)
     {
+
         if (is_object($formatter) === false ||
             $formatter instanceof FormatterInterface === false) {
             throw new Exception('Invalid parameter type.');
@@ -99,7 +99,7 @@ abstract class Adapter
     /**
      * Starts a transaction
      *
-     * @return \Phalcon\Logger\Adapter
+     * @return \Phalcon\Logger\AdapterInterface
      */
     public function begin()
     {
@@ -111,7 +111,7 @@ abstract class Adapter
     /**
      * Commits the internal transaction
      *
-     * @return \Phalcon\Logger\Adapter
+     * @return \Phalcon\Logger\AdapterInterface
      * @throws Exception
      */
     public function commit()
@@ -128,9 +128,10 @@ abstract class Adapter
             foreach ($this->_queue as $message) {
                 //@note no interface validation
                 $messageStr = $message->getMessage();
-                $type       = $message->getType();
-                $time       = $message->getTime();
-                $this->logInternal($messageStr, $type, $time);
+                $type = $message->getType();
+                $time = $message->getTime();
+                $context = $message->getContext();
+                $this->logInternal($messageStr, $type, $time, $context);
             }
         }
 
@@ -143,7 +144,7 @@ abstract class Adapter
     /**
      * Rollbacks the internal transaction
      *
-     * @return \Phalcon\Logger\Adapter
+     * @return \Phalcon\Logger\AdapterInterface
      * @throws Exception
      */
     public function rollback()
@@ -153,19 +154,52 @@ abstract class Adapter
         }
 
         $this->_transaction = false;
-        $this->_queue       = array();
+        $this->_queue = array();
 
         return $this;
     }
 
     /**
-     * Sends/Writes an emergence message to the log
-     *
-     * @param string $message
-     * @return \Phalcon\Logger\Adapter
+     * Returns the whether the logger is currently in an active transaction or not
+     * @return boollean
      */
-    public function emergence($message)
+    public function isTransaction()
     {
+        return $this->_transaction;
+    }
+
+    /**
+     * Sends/Writes a critical message to the log
+     * @param $message string
+     * @param $context array|null
+     * @throws Exception
+     * @return \Phalcon\Logger\AdapterInterface
+     */
+    public function critical($message, $context = null)
+    {
+        if (!is_string($message)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!isEmpty($context) && !is_array($context)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        return $this->log(Logger::CRITICAL, $message, $context);
+    }
+
+    /**
+     * Sends/Writes an emergence message to the log
+     * @param $message string
+     * @throws Exception
+     * @return \Phalcon\Logger\AdapterInterface
+     */
+    public function emergence($message, $context = null)
+    {
+        if (!is_string($message)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!isEmpty($context) && !is_array($context)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->log($message, Logger::EMERGENCE);
 
         return $this;
@@ -173,12 +207,19 @@ abstract class Adapter
 
     /**
      * Sends/Writes a debug message to the log
-     *
-     * @param string $message
-     * @return \Phalcon\Logger\Adapter
+     * @param $message string
+     * @param $context array|null
+     * @throws Exception
+     * @return \Phalcon\Logger\AdapterInterface
      */
-    public function debug($message)
+    public function debug($message, array $context = null)
     {
+        if (!is_string($message)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!isEmpty($context) && !is_array($context)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->log($message, Logger::DEBUG);
 
         return $this;
@@ -186,12 +227,19 @@ abstract class Adapter
 
     /**
      * Sends/Writes an error message to the log
-     *
-     * @param string $message
-     * @return \Phalcon\Logger\Adapter
+     * @param $message string
+     * @param $context array|null
+     * @throws Exception
+     * @return \Phalcon\Logger\AdapterInterface
      */
-    public function error($message)
+    public function error($message, array $context = null)
     {
+        if (!is_string($message)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!isEmpty($context) && !is_array($context)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->log($message, Logger::ERROR);
 
         return $this;
@@ -199,12 +247,19 @@ abstract class Adapter
 
     /**
      * Sends/Writes an info message to the log
-     *
-     * @param string $message
-     * @return \Phalcon\Logger\Adapter
+     * @param $message string
+     * @param $context array|null
+     * @throws Exception
+     * @return \Phalcon\Logger\AdapterInterface
      */
-    public function info($message)
+    public function info($message, array $context = null)
     {
+        if (!is_string($message)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!isEmpty($context) && !is_array($context)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->log($message, Logger::INFO);
 
         return $this;
@@ -212,12 +267,19 @@ abstract class Adapter
 
     /**
      * Sends/Writes a notice message to the log
-     *
-     * @param string $message
-     * @return \Phalcon\Logger\Adapter
+     * @param $message string
+     * @param $context array|null
+     * @throws Exception
+     * @return \Phalcon\Logger\AdapterInterface
      */
-    public function notice($message)
+    public function notice($message, array $context = null)
     {
+        if (!is_string($message)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!isEmpty($context) && !is_array($context)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->log($message, Logger::NOTICE);
 
         return $this;
@@ -225,12 +287,19 @@ abstract class Adapter
 
     /**
      * Sends/Writes a warning message to the log
-     *
-     * @param string $message
-     * @return \Phalcon\Logger\Adapter
+     * @param $message string
+     * @param $context array|null
+     * @throws Exception
+     * @return \Phalcon\Logger\AdapterInterface
      */
-    public function warning($message)
+    public function warning($message, array $context = null)
     {
+        if (!is_string($message)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!isEmpty($context) && !is_array($context)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->log($message, Logger::WARNING);
 
         return $this;
@@ -238,12 +307,19 @@ abstract class Adapter
 
     /**
      * Sends/Writes an alert message to the log
-     *
-     * @param string $message
-     * @return \Phalcon\Logger\Adapter
+     * @param $message string
+     * @param $context array|null
+     * @throws Exception
+     * @return \Phalcon\Logger\AdapterInterface
      */
-    public function alert($message)
+    public function alert($message, array $context = null)
     {
+        if (!is_string($message)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!isEmpty($context) && !is_array($context)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->log($message, Logger::ALERT);
 
         return $this;
@@ -251,31 +327,38 @@ abstract class Adapter
 
     /**
      * Logs messages to the internal logger. Appends messages to the log
-     *
-     * @param string $message
-     * @param int|null $type
-     * @return \Phalcon\Logger\Adapter
+     * @param $type
+     * @param $message string|null
+     * @param $context array|null
      * @throws Exception
+     * @return \Phalcon\Logger\AdapterInterface
      */
-    public function log($message, $type = null)
+    public function log($type, $message = null, array $context = null)
     {
-        if (is_string($message) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (is_string($type) && is_integer($message)) {
+            $toggledMessage = type;
+            $toggledType = message;
+        } else if (is_string($type) && isEmpty($message)) {
+            $toggledMessage = type;
+            $toggledType = message;
+        } else {
+            $toggledMessage = message;
+            $toggledType = type;
+        }
+        if (isEmpty(toggledType)) {
+            $toggledType = Logger::DEBUG;
         }
 
-        if (is_null($type) === true) {
-            $type = 7;
-        } elseif (is_int($type) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        /**
+         * Checks if the log is valid respecting the current log level
+         */
 
-        $timestamp = time();
-
-        if ($this->_logLevel >= $type) {
-            if ($this->_transaction === true) {
-                $this->_queue[] = new Item($message, $type, $timestamp);
+        if ($this->_logLevel >= $toggledType) {
+            $timestamp = time();
+            if ($this->_transaction) {
+                $this->_queue[] = new Item(toggledMessage, toggledType, timestamp, context);
             } else {
-                $this->logInternal($message, $type, $timestamp);
+                $this->logInternal($toggledMessage, $toggledType, $timestamp, $context);
             }
         }
 
