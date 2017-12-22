@@ -2,7 +2,6 @@
 
 namespace Phalcon\Events;
 
-use Phalcon\Events\ManagerInterface;
 
 /**
  * Phalcon\Events\EventsAwareInterface initializer
@@ -15,14 +14,14 @@ interface EventsAwareInterface
     /**
      * Sets the events manager
      *
-     * @param \Phalcon\Events\ManagerInterface $eventsManager
+     * @param ManagerInterface $eventsManager
      */
     public function setEventsManager($eventsManager);
 
     /**
      * Returns the internal event manager
      *
-     * @return \Phalcon\Events\ManagerInterface
+     * @return ManagerInterface
      */
     public function getEventsManager();
 }
