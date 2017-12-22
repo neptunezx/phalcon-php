@@ -12,167 +12,149 @@
 
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Mvc\Model\ResultsetInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Iterator;
-use \SeekableIterator;
-use \Countable;
-use \ArrayAccess;
-use \Serializable;
-use \Closure;
+use Phalcon\Db;
+use Phalcon\Cache\BackendInterface;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\ResultsetInterface;
 
 /**
  * Phalcon\Mvc\Model\Resultset
  *
- * This component allows to Phalcon\Mvc\Model returns large resulsets with the minimum memory consumption
- * Resulsets can be traversed using a standard foreach or a while statement. If a resultset is serialized
+ * This component allows to Phalcon\Mvc\Model returns large resultsets with the minimum memory consumption
+ * Resultsets can be traversed using a standard foreach or a while statement. If a resultset is serialized
  * it will dump all the rows into a big array. Then unserialize will retrieve the rows as they were before
  * serializing.
  *
  * <code>
  *
- * //Using a standard foreach
- * $robots = Robots::find(array("type='virtual'", "order" => "name"));
- * foreach ($robots as $robot) {
- *  echo $robot->name, "\n";
+ * // Using a standard foreach
+ * $robots = Robots::find(
+ *     [
+ *         "type = 'virtual'",
+ *         "order" => "name",
+ *     ]
+ * );
+ *
+ * foreach ($robots as robot) {
+ *     echo robot->name, "\n";
  * }
  *
- * //Using a while
- * $robots = Robots::find(array("type='virtual'", "order" => "name"));
+ * // Using a while
+ * $robots = Robots::find(
+ *     [
+ *         "type = 'virtual'",
+ *         "order" => "name",
+ *     ]
+ * );
+ *
  * $robots->rewind();
+ *
  * while ($robots->valid()) {
- *  $robot = $robots->current();
- *  echo $robot->name, "\n";
- *  $robots->next();
+ *     $robot = $robots->current();
+ *
+ *     echo $robot->name, "\n";
+ *
+ *     $robots->next();
  * }
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/resultset.c
  */
-abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterator, Countable, ArrayAccess, Serializable
+abstract class Resultset implements ResultsetInterface, \Iterator, \SeekableIterator, \Countable, \ArrayAccess, \Serializable, \JsonSerializable
 {
 
     /**
-     * Type: Full Result
-     *
-     * @var int
+     * Phalcon\Db\ResultInterface or false for empty resultset
      */
-    const TYPE_RESULT_FULL = 0;
-
-    /**
-     * Type: Partial Result
-     *
-     * @var int
-     */
-    const TYPE_RESULT_PARTIAL = 1;
-
-    /**
-     * Hydrate: Records
-     *
-     * @var int
-     */
-    const HYDRATE_RECORDS = 0;
-
-    /**
-     * Hydrate: Objects
-     *
-     * @var int
-     */
-    const HYDRATE_OBJECTS = 2;
-
-    /**
-     * Hydrate: Arrays
-     *
-     * @var int
-     */
-    const HYDRATE_ARRAYS = 1;
-
-    /**
-     * Type
-     *
-     * @var int
-     * @access protected
-     */
-    protected $_type = 0;
-
-    /**
-     * Result
-     *
-     * @var null|\Phalcon\Db\ResultInterface
-     * @access protected
-     */
-    protected $_result;
-
-    /**
-     * Cache
-     *
-     * @var null|\Phalcon\Cache\BackendInterface
-     * @access protected
-     */
+    protected $_result      = false;
     protected $_cache;
-
-    /**
-     * Is Fresh
-     *
-     * @var boolean
-     * @access protected
-     */
-    protected $_isFresh = true;
-
-    /**
-     * Pointer
-     *
-     * @var int
-     * @access protected
-     */
-    protected $_pointer = -1;
-
-    /**
-     * Count
-     *
-     * @var null|int
-     * @access protected
-     */
+    protected $_isFresh     = true;
+    protected $_pointer     = 0;
     protected $_count;
-
-    /**
-     * Active Row
-     *
-     * @var null|\Phalcon\Mvc\ModelInterface
-     * @access protected
-     */
-    protected $_activeRow;
-
-    /**
-     * Rows
-     *
-     * @var null|array
-     * @access protected
-     */
-    protected $_rows;
-
-    /**
-     * Error Messages
-     *
-     * @var null|array
-     * @access protected
-     */
+    protected $_activeRow   = null;
+    protected $_rows        = null;
+    protected $_row         = null;
     protected $_errorMessages;
+    protected $_hydrateMode = 0;
+
+    const TYPE_RESULT_FULL    = 0;
+    const TYPE_RESULT_PARTIAL = 1;
+    const HYDRATE_RECORDS     = 0;
+    const HYDRATE_OBJECTS     = 2;
+    const HYDRATE_ARRAYS      = 1;
 
     /**
-     * Hydrate Mode
+     * Phalcon\Mvc\Model\Resultset constructor
      *
-     * @var int|null
-     * @access protected
+     * @param \Phalcon\Db\ResultInterface|false result
+     * @param \Phalcon\Cache\BackendInterface cache
      */
-    protected $_hydrateMode;
+    public function __construct(ResultInterface $result, BackendInterface $cache = null)
+    {
+        /**
+         * 'false' is given as result for empty result-sets
+         */
+        if ($result) {
+            $this->_count = 0;
+            $this->_rows  = [];
+            return;
+        }
+
+        /**
+         * Valid resultsets are Phalcon\Db\ResultInterface instances
+         */
+        $this->_result = $result;
+
+        /**
+         * Update the related cache if any
+         */
+        if ($cache !== null) {
+            $this->_cache = $cache;
+        }
+
+        /**
+         * Do the fetch using only associative indexes
+         */
+        $result->setFetchMode(Db::FETCH_ASSOC);
+
+        /**
+         * Update the row-count
+         */
+        $rowCount     = $result->numRows();
+        $this->_count = $rowCount;
+
+        /**
+         * Empty result-set
+         */
+        if ($rowCount == 0) {
+            $this->_rows = [];
+            return;
+        }
+
+        /**
+         * Small result-sets with less equals 32 rows are fetched at once
+         */
+        if ($rowCount <= 32) {
+            /**
+             * Fetch ALL rows from database
+             */
+            $rows = $result->fetchAll();
+            if (is_array($rows)) {
+                $this->_rows = $rows;
+            } else {
+                $this->_rows = [];
+            }
+        }
+    }
 
     /**
      * Moves cursor to next row in the resultset
+     * 
+     * return void
      */
     public function next()
     {
-        $this->_pointer++;
+        // Seek to the next position
+        $this->seek($this->_pointer + 1);
     }
 
     /**
@@ -186,27 +168,23 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
     }
 
     /**
+     * Check whether internal resource has rows to fetch
+     * 
+     * @return boolean
+     */
+    public function valid()
+    {
+        return $this->_pointer < $this->_count;
+    }
+
+    /**
      * Rewinds resultset to its beginning
+     * 
+     * @return void
      */
     public function rewind()
     {
-        if ($this->_type === 1) {
-            //Here the resultset act as a result that is fetched one by one
-            if ($this->_result != false && is_null($this->_activeRow) === false) {
-                $this->_result->dataSeek(0);
-            }
-        } else {
-            //Here the resultset acts as an array
-            if (is_null($this->_rows) === true && is_object($this->_result) === true) {
-                $this->_rows = $this->_result->fetchAll();
-            }
-
-            if (is_array($this->_rows) === true) {
-                reset($this->_rows);
-            }
-        }
-
-        $this->_pointer = 0;
+        $this->seek(0);
     }
 
     /**
@@ -216,32 +194,55 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      */
     public function seek($position)
     {
-        if (is_int($position) === false) {
-            return;
-        }
+        $position = (int) $position;
+        if ($this->_pointer != $position || $this->_row === null) {
+            if (is_array($this->_rows)) {
+                /**
+                 * All rows are in memory
+                 */
+                if (isset($this->_rows[$position])) {
+                    $this->_row = $this->_rows[$position];
+                }
 
-        //We only seek the records if the current position is different than the passed one
-        if ($this->_pointer !== $position) {
-            if ($this->_type === 1) {
-                //Here the resultset is fetched one by one because it is large
-                $result = $this->_result;
+                $this->_pointer   = $position;
+                $this->_activeRow = null;
+                return;
+            }
+
+            /**
+             * Fetch from PDO one-by-one.
+             */
+            $result = $this->_result;
+            if ($this->_row === null && $this->_pointer === 0) {
+                /**
+                 * Fresh result-set: Query was already executed in model\query::_executeSelect()
+                 * The first row is available with fetch
+                 */
+                $this->_row = $result->fetch();
+            }
+
+            if ($this->_pointer > $position) {
+                /**
+                 * Current pointer is ahead requested position: e.g. request a previous row
+                 * It is not possible to rewind. Re-execute query with dataSeek
+                 */
                 $result->dataSeek($position);
-            } else {
-                //Here the resultset is a small array
-                //We need to fetch the records because rows is null
-                if (is_null($this->_rows) === true &&
-                    $this->_result != false) {
-                    $this->_rows = $this->_result->fetchAll();
-                }
-
-                if (is_array($this->_rows) === true) {
-                    for ($i = 0; $i < $position; ++$i) {
-                        next($this->_rows);
-                    }
-                }
-
+                $this->_row     = $result->fetch();
                 $this->_pointer = $position;
             }
+
+            while ($this->_pointer < $position) {
+                /**
+                 * Requested position is greater than current pointer,
+                 * seek forward until the requested position is reached.
+                 * We do not need to re-execute the query!
+                 */
+                $this->_row = $result->fetch();
+                $this->_pointer++;
+            }
+
+            $this->_pointer   = $position;
+            $this->_activeRow = null;
         }
     }
 
@@ -252,25 +253,6 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      */
     public function count()
     {
-        //We only calculate the row number if it wasn't calculated before
-        if (is_null($this->_count) === true) {
-            $this->_count = 0;
-
-            if ($this->_type === 1) {
-                //Here the resultset acts as a result that is fetched one by one
-                if ($this->_result != false) {
-                    $this->_count = (int) $this->_result->numRows();
-                }
-            } else {
-                //Here the resultset acts as an array
-                if (is_null($this->_rows) === true && is_object($this->_result) === true) {
-                    $this->_rows = $this->_result->fetchAll();
-                }
-
-                $this->_count = count($this->_rows);
-            }
-        }
-
         return $this->_count;
     }
 
@@ -287,7 +269,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
             throw new Exception('Invalid parameter type.');
         }
 
-        return ($index < $this->count() ? true : false);
+        return $index < $this->_count;
     }
 
     /**
@@ -303,25 +285,15 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
             throw new Exception('Invalid parameter type.');
         }
 
-        $count = $this->count();
-        if ($index < $count) {
-            //Check if the last record returned is the current requested
-            if ($this->_pointer === $index) {
-                return $this->current();
-            }
-
-            //Move to the specific position
+        if ($index < $this->_count) {
+            /**
+             * Move the cursor to the specific position
+             */
             $this->seek($index);
 
-            //Check if the last record returned is the requested
-            if ($this->valid() !== false) {
-                return $this->current();
-            }
-
-            return false;
+            return $this->{"current"}();
         }
-
-        throw new Exception('The index does not exist in the cursor');
+        throw new Exception("The index does not exist in the cursor");
     }
 
     /**
@@ -354,7 +326,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      */
     public function getType()
     {
-        return $this->_type;
+        return is_array($this->_rows) ? self::TYPE_RESULT_FULL : self::TYPE_RESULT_PARTIAL;
     }
 
     /**
@@ -364,18 +336,12 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      */
     public function getFirst()
     {
-        //Check if the last record returned is the current requested
-        if ($this->_pointer === 0) {
-            return $this->current();
+        if ($this->_count == 0) {
+            return false;
         }
 
-        //Otherwise re-execute the statement
-        $this->rewind();
-        if ($this->valid() !== false) {
-            return $this->current();
-        }
-
-        return false;
+        $this->seek(0);
+        return $this->{"current"}();
     }
 
     /**
@@ -385,12 +351,13 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      */
     public function getLast()
     {
-        $this->seek($this->count() - 1);
-        if ($this->valid() !== false) {
-            return $this->current();
+        $count = $this->_count;
+        if ($count == 0) {
+            return false;
         }
 
-        return false;
+        $this->seek($count - 1);
+        return $this->{"current"}();
     }
 
     /**
@@ -430,11 +397,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
      */
     public function setHydrateMode($hydrateMode)
     {
-        if (is_int($hydrateMode) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->_hydrateMode = $hydrateMode;
+        $this->_hydrateMode = (int) $hydrateMode;
 
         return $this;
     }
@@ -480,26 +443,95 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
     }
 
     /**
+     * Updates every record in the resultset
+     *
+     * @param array data
+     * @param \Closure conditionCallback
+     * @return boolean
+     */
+    public function update($data, \Closure $conditionCallback = null)
+    {
+        $connection = null;
+
+        $transaction = false;
+
+        $this->rewind();
+
+        while ($this->valid()) {
+
+            $record = $this->current();
+
+            if ($transaction === false) {
+
+                /**
+                 * We only can update resultsets if every element is a complete object
+                 */
+                if (!method_exists($record, "getWriteConnection")) {
+                    throw new Exception("The returned record is not valid");
+                }
+
+                $connection  = $record->getWriteConnection();
+                $transaction = true;
+
+                $connection->begin();
+            }
+
+            /**
+             * Perform additional validations
+             */
+            if (is_object($conditionCallback)) {
+                if (call_user_func_array($conditionCallback, [$record]) === false) {
+                    $this->next();
+                    continue;
+                }
+            }
+
+            /**
+             * Try to update the record
+             */
+            if (!$record->save($data)) {
+                /**
+                 * Get the messages from the record that produce the error
+                 */
+                $this->_errorMessages = $record->getMessages();
+
+                /**
+                 * Rollback the transaction
+                 */
+                $connection->rollback();
+                $transaction = false;
+                break;
+            }
+
+            $this->next();
+        }
+
+        /**
+         * Commit the transaction
+         */
+        if ($transaction === true) {
+            $connection->commit();
+        }
+
+        return true;
+    }
+
+    /**
      * Deletes every record in the resultset
      *
      * @param Closure|null $conditionCallback
      * @return boolean
      * @throws Exception
      */
-    public function delete($conditionCallback = null)
+    public function delete(\Closure $conditionCallback = null)
     {
-        if ((is_object($conditionCallback) === false ||
-            $conditionCallback instanceof Closure === false) &&
-            is_null($conditionCallback) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
+        $transaction = false;
+        $result      = true;
         $transaction = false;
         $this->rewind();
 
         while ($this->valid()) {
             $record = $this->current();
-
             //Start transaction
             if ($transaction === false) {
                 //We can only delete resultsets whose every element is a complete object
@@ -507,7 +539,8 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
                     throw new Exception('The returned record is not valid');
                 }
 
-                $connection = $record->getWriteConnection();
+                $connection  = $record->getWriteConnection();
+                $transaction = true;
                 $connection->begin();
             }
 
@@ -525,6 +558,7 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
 
                 //Rollback the transaction
                 $connection->rollback();
+                $result      = false;
                 $transaction = false;
                 break;
             }
@@ -538,23 +572,24 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
             $connection->commit();
         }
 
-        return true;
+        return $result;
     }
 
     /**
      * Filters a resultset returning only those the developer requires
      *
      * <code>
-     * $filtered = $robots->filter(function($robot){
-     *      if ($robot->id < 3) {
-     *          return $robot;
-     *      }
-     *  });
+     * $filtered = $robots->filter(
+     *     function ($robot) {
+     *         if ($robot->id < 3) {
+     *             return $robot;
+     *         }
+     *     }
+     * );
      * </code>
      *
-     * @param callable $filter
+     * @param callback filter
      * @return \Phalcon\Mvc\Model[]
-     * @throws Exception
      */
     public function filter($filter)
     {
@@ -569,10 +604,42 @@ abstract class Resultset implements ResultsetInterface, Iterator, SeekableIterat
 
             //Only add processed records to 'records' if the returned value is an array/object
             if (is_object($processedRecord) === false && is_array($processedRecord) === false) {
+                $this->next();
                 continue;
             }
 
             $records[] = $processedRecord;
+            $this->next();
+        }
+
+        return $records;
+    }
+
+    /**
+     * Returns serialised model objects as array for json_encode.
+     * Calls jsonSerialize on each object if present
+     *
+     * <code>
+     * $robots = Robots::find();
+     * echo json_encode($robots);
+     * </code>
+     *
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        $records = [];
+        $this->rewind();
+
+        while ($this->valid()) {
+            $current = $this->current();
+
+            if (is_object($current) && method_exists($current, "jsonSerialize")) {
+                $records[] = $current->{"jsonSerialize"}();
+            } else {
+                $records[] = $current;
+            }
+
             $this->next();
         }
 

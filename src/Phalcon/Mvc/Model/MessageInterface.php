@@ -3,21 +3,12 @@
 namespace Phalcon\Mvc\Model;
 
 /**
- * Phalcon\Mvc\Model\MessageInterface initializer
+ * Phalcon\Mvc\Model\Message
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/messageinterface.c
+ * Interface for Phalcon\Mvc\Model\Message
  */
 interface MessageInterface
 {
-
-    /**
-     * \Phalcon\Mvc\Model\Message constructor
-     *
-     * @param string $message
-     * @param string|null $field
-     * @param string|null $type
-     */
-    public function __construct($message, $field = null, $type = null);
 
     /**
      * Sets message type

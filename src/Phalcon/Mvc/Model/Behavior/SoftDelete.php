@@ -2,20 +2,17 @@
 
 namespace Phalcon\Mvc\Model\Behavior;
 
-use \Phalcon\Mvc\Model\Behavior;
-use \Phalcon\Mvc\Model\BehaviorInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Behavior;
+use Phalcon\Mvc\Model\Exception;
 
 /**
  * Phalcon\Mvc\Model\Behavior\SoftDelete
  *
  * Instead of permanently delete a record it marks the record as
  * deleted changing the value of a flag column
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/behavior/softdelete.c
  */
-class SoftDelete extends Behavior implements BehaviorInterface
+class SoftDelete extends Behavior
 {
 
     /**
@@ -25,11 +22,10 @@ class SoftDelete extends Behavior implements BehaviorInterface
      * @param \Phalcon\Mvc\ModelInterface $model
      * @throws Exception
      */
-    public function notify($type, $model)
+    public function notify($type, ModelInterface $model)
     {
         if (is_string($type) === false ||
-            is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
+            is_object($model) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -47,7 +43,7 @@ class SoftDelete extends Behavior implements BehaviorInterface
             $model->skipOperation(true);
 
             //'value' is the value to be updated instead of delete the record
-            $value = $options['field'];
+            $value = $options['value'];
 
             //'field' is the attribute to be updated instead of delete the record
             $field       = $options['field'];

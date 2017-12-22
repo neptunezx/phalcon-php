@@ -50,4 +50,83 @@ class Kernel
         return self::preComputeHashKey($arrKey);
     }
 
+    /**
+     * Extract the real class name from the namespaced class
+     * @param string $className
+     * @return string
+     */
+    public static function getClassNameFromClass($className)
+    {
+        return substr($$className, strrpos($$className, '\\') + 1);
+    }
+
+    /**
+     * Extract the namespace from the namespaced class
+     * @param string $className
+     * @return string
+     */
+    public static function getNamespaceFromClass($className)
+    {
+        return substr($className, 0, strrpos($className, '\\'));
+    }
+
+    /**
+     * Replaces directory seperators by the virtual seperator
+     *
+     * @param string $path
+     * @param string $virtualSeperator
+     * @throws Exception
+     */
+    public static function prepareVirtualPath($path, $virtualSeperator)
+    {
+        if (is_string($path) === false ||
+            is_string($virtualSeperator) === false) {
+            if (is_string($path) === true) {
+                return $path;
+            } else {
+                return '';
+            }
+        }
+
+        $virtualStr = '';
+        $l          = strlen($path);
+        for ($i = 0; $i < $l; ++$i) {
+            $ch = $path[$i];
+
+            if ($ch === "\0") {
+                break;
+            }
+
+            if ($ch === '/' || $ch === '\\' || $ch === ':' || ctype_print($ch) === false) {
+                $virtualStr .= $virtualSeperator;
+            } else {
+                $virtualStr .= strtolower($ch);
+            }
+        }
+
+        return $virtualStr;
+    }
+
+    /**
+     * Build-in function for get globals config
+     * @param type $name
+     * @return boolean
+     */
+    public static function getGlobals($name)
+    {
+        $key = '_PHALCON_' . strtoupper(str_replace('.', '_', $name));
+        return isset($GLOBALS[$key]) ? $GLOBALS[$key] : false;
+    }
+
+    /**
+     * Build-in function for set globals config
+     * @param type $name
+     * @param type $value
+     */
+    public static function setGlobals($name, $value)
+    {
+        $key           = '_PHALCON_' . strtoupper(str_replace('.', '_', $name));
+        $GLOBALS[$key] = $value;
+    }
+
 }

@@ -12,19 +12,17 @@
 
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Mvc\Model\ResultInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \ArrayAccess;
+use Phalcon\Mvc\EntityInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\ResultInterface;
 
 /**
  * Phalcon\Mvc\Model\Row
  *
  * This component allows Phalcon\Mvc\Model to return rows without an associated entity.
  * This objects implements the ArrayAccess interface to allow access the object as object->x or array[x].
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/row.c
  */
-class Row implements ArrayAccess, ResultInterface
+class Row implements EntityInterface, ResultInterface, \ArrayAccess, \JsonSerializable
 {
 
     /**
@@ -89,12 +87,49 @@ class Row implements ArrayAccess, ResultInterface
     /**
      * Rows cannot be changed. It has only been implemented to meet the definition of the ArrayAccess interface
      *
-     * @param scalar $offset
-     * @throws Exception
+     * @param string|int offset
+     * @return 
      */
     public function offsetUnset($offset)
     {
         throw new Exception('Row is an immutable ArrayAccess object');
+    }
+
+    /**
+     * Reads an attribute value by its name
+     *
+     * <code>
+     * echo $robot->readAttribute("name");
+     * </code>
+     *
+     * @param string attribute
+     * @return mixed
+     */
+    public function readAttribute($attribute)
+    {
+        if (is_string($attribute)) {
+            if (isset($this->$attribute)) {
+                return $this->$attribute;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Writes an attribute value by its name
+     *
+     * <code>
+     * $robot->writeAttribute("name", "Rosey");
+     * </code>
+     *
+     * @param string attribute
+     * @param mixed value
+     * @return void
+     */
+    public function writeAttribute($attribute, $value)
+    {
+        $this->$attribute = $value;
     }
 
     /**
@@ -104,8 +139,17 @@ class Row implements ArrayAccess, ResultInterface
      */
     public function toArray()
     {
-        $vars = get_object_vars($this);
-        return (empty($vars) === true ? false : $vars);
+        return get_object_vars($this);
+    }
+
+    /**
+     * Serializes the object for json_encode
+     *
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
     }
 
 }
