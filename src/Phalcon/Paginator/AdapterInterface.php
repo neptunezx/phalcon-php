@@ -3,24 +3,16 @@
 namespace Phalcon\Paginator;
 
 /**
- * Phalcon\Paginator\AdapterInterface initializer
+ * Phalcon\Paginator\AdapterInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/paginator/adapterinterface.c
+ * Interface for Phalcon\Paginator adapters
  */
 interface AdapterInterface
 {
-
-    /**
-     * \Phalcon\Paginator\AdapterInterface constructor
-     *
-     * @param array $config
-     */
-    public function __construct($config);
-
     /**
      * Set the current page number
      *
-     * @param int $page
+     * @param $page int
      */
     public function setCurrentPage($page);
 
@@ -30,4 +22,18 @@ interface AdapterInterface
      * @return stdClass
      */
     public function getPaginate();
+
+	/**
+     * Set current rows limit
+     *
+     * @param $limit int
+     */
+	public function setLimit($limit);
+
+	/**
+     * Get current rows limit
+     *
+     * @return int
+     */
+	public function getLimit();
 }
