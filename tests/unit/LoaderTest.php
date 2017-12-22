@@ -23,6 +23,25 @@ use Phalcon\Test\Module\UnitTest;
  * through the world-wide-web, please send an email to license@phalconphp.com
  * so that we can send you a copy immediately.
  */
+//class LoaderTestForProtected extends Loader{
+//    public function prepareNamespace($namespace){
+//        if ( ! is_array($namespace ) ){
+//            throw new LoaderException('namespace must be array!');
+//        }
+//        $localPaths = [];
+//        $prepared = [];
+//        foreach($namespace as $name=>$paths){
+//            if( !is_array($paths) ){
+//                $localPaths[] = $paths;
+//            }else{
+//                $localPaths = $paths;
+//            }
+//            $prepared[$name] = $localPaths;
+//        }
+//        return $prepared;
+//    }
+//}
+
 class LoaderTest extends UnitTest
 {
     protected $loaders;
@@ -91,6 +110,11 @@ class LoaderTest extends UnitTest
             }
         );
     }
+
+//    public function testPrepareNamespace(){
+//        $loader = new LoaderTestForProtected();
+//        $this->assertTrue(is_array($loader->prepareNamespace()));
+//    }
 
     public function testNamespacesExtensions()
     {

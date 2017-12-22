@@ -38,10 +38,10 @@ class Loader implements EventsAwareInterface
     /**
      * Events Manager
      *
-     * @var Phalcon\Events\ManagerInterface|null
+     * @var \Phalcon\Events\ManagerInterface|null
      * @access protected
      */
-    protected $_eventsManager;
+    protected $_eventsManager = null;
 
     /**
      * Found Path
@@ -49,7 +49,7 @@ class Loader implements EventsAwareInterface
      * @var string|null
      * @access protected
      */
-    protected $_foundPath;
+    protected $_foundPath = null;
 
     /**
      * Checked Path
@@ -57,7 +57,7 @@ class Loader implements EventsAwareInterface
      * @var string|null
      * @access protected
      */
-    protected $_checkedPath;
+    protected $_checkedPath = null;
 
     /**
      * Prefixes
@@ -65,15 +65,15 @@ class Loader implements EventsAwareInterface
      * @var array|null
      * @access protected
      */
-    protected $_prefixes;
+    protected $_prefixes = null;
 
     /**
      * Classes
      *
-     * @var array|null
+     * @var array
      * @access protected
      */
-    protected $_classes;
+    protected $_classes = [];
 
     /**
      * Extensions
@@ -81,15 +81,15 @@ class Loader implements EventsAwareInterface
      * @var array
      * @access protected
      */
-    protected $_extensions;
+    protected $_extensions = ["php"];
 
     /**
      * Namespaces
      *
-     * @var array|null
+     * @var array
      * @access protected
      */
-    protected $_namespaces;
+    protected $_namespaces = [];
 
     /**
      * Directories
@@ -97,7 +97,7 @@ class Loader implements EventsAwareInterface
      * @var array|null
      * @access protected
      */
-    protected $_directories;
+    protected $_directories = [];
 
     /**
      * Registered
@@ -196,6 +196,28 @@ class Loader implements EventsAwareInterface
 
         return $this;
     }
+
+    /**
+     * @param $namespace array
+     * @return array
+     * @throws LoaderException
+     */
+    protected function prepareNamespace($namespace){
+        if ( ! is_array($namespace ) ){
+            throw new LoaderException('namespace must be array!');
+        }
+        $localPaths = [];
+        $prepared = [];
+        foreach($namespace as $name=>$paths){
+            if( !is_array($paths) ){
+                $localPaths[] = $paths;
+            }else{
+                $localPaths = $paths;
+            }
+            $prepared[$name] = $localPaths;
+        }
+        return $prepared;
+	}
 
     /**
      * Return current namespaces registered in the autoloader
