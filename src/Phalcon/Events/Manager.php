@@ -5,6 +5,7 @@ namespace Phalcon\Events;
 use Phalcon\Events\Event;
 use SplPriorityQueue;
 use Phalcon\Text;
+use Phalcon\Events\Exception;
 
 
 /**
