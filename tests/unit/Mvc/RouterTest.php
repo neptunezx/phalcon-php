@@ -655,6 +655,7 @@ class RouterTest extends UnitTest
                 '/route3',
                 'MyApp\Controllers\::show',
                 [
+                    'namespace' => 'MyApp\Controllers',
                     'controller' => '',
                     'action' => 'show',
                 ]
