@@ -31,9 +31,10 @@ interface CriteriaInterface
      * Adds the bind parameter to the criteria
      *
      * @param string $bindParams
+     * @param boolean $merge
      * @return \Phalcon\Mvc\Model\CriteriaInterface
      */
-    public function bind($bindParams);
+    public function bind(array $bindParams, $merge = false);
 
     /**
      * Sets the bind types in the criteria

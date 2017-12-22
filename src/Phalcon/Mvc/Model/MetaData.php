@@ -275,8 +275,12 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
+        if (is_object($dependencyInjector) === false ||
+            $dependencyInjector instanceof DiInterface === false) {
+            throw new Exception('Dependency Injector is invalid');
+        }
         $this->_dependencyInjector = $dependencyInjector;
     }
 
@@ -326,7 +330,7 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
      * @return array
      * @throws Exception
      */
-    public function readMetaData($model)
+    public function readMetaData(ModelInterface $model)
     {
         if (is_object($model) === false ||
             $model instanceof ModelInterface === false) {
@@ -439,7 +443,7 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
      * @return array
      * @throws Exception
      */
-    public function readColumnMap($model)
+    public function readColumnMap(ModelInterface $model)
     {
         if (is_object($model) === false ||
             $model instanceof ModelInterface === false) {
@@ -472,7 +476,7 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
      * @param int $index
      * @throws Exception
      */
-    public function readColumnMapIndex($model, $index)
+    public function readColumnMapIndex(ModelInterface $model, $index)
     {
         if (is_int($index) === false) {
             throw new Exception('Index must be a valid integer constant');
@@ -723,7 +727,7 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
      * @param array $attributes
      * @param boolean $replace
      */
-    public function setAutomaticCreateAttributes(ModelInterface $model, $attributes)
+    public function setAutomaticCreateAttributes(ModelInterface $model, array $attributes)
     {
         $this->writeMetaDataIndex($model, self::MODELS_AUTOMATIC_DEFAULT_INSERT, $attributes);
     }
@@ -739,7 +743,7 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
      * @param array $attributes
      * @param boolean $replace
      */
-    public function setAutomaticUpdateAttributes(ModelInterface $model, $attributes)
+    public function setAutomaticUpdateAttributes(ModelInterface $model, array $attributes)
     {
         $this->writeMetaDataIndex($model, self::MODELS_AUTOMATIC_DEFAULT_UPDATE, $attributes);
     }

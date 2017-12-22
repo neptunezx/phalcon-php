@@ -19,6 +19,7 @@ use Phalcon\Mvc\Model\ResultsetInterface;
 use Phalcon\Mvc\Model\Resultset\Simple;
 use Phalcon\Di\InjectionAwareInterface;
 use Phalcon\Mvc\Model\RelationInterface;
+use Phalcon\Mvc\Model\Query\Lang;
 
 /**
  * Phalcon\Mvc\Model\Query
