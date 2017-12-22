@@ -45,33 +45,39 @@ use \Phalcon\Db\Exception as DbException;
 abstract class Db
 {
 
-    /**
-     * Fetch associative array
-     *
-     * @var int
-     */
-    const FETCH_ASSOC = 1;
+    const FETCH_LAZY       = \Pdo::FETCH_LAZY;
 
-    /**
-     * Fetch associative and numeric array
-     *
-     * @var int
-     */
-    const FETCH_BOTH = 2;
+    const FETCH_ASSOC      = \Pdo::FETCH_ASSOC;
 
-    /**
-     * Fetch numeric array
-     *
-     * @var int
-     */
-    const FETCH_NUM = 3;
+    const FETCH_NAMED      = \Pdo::FETCH_NAMED;
 
-    /**
-     * Fetch object
-     *
-     * @var int
-     */
-    const FETCH_OBJ = 4;
+    const FETCH_NUM        = \Pdo::FETCH_NUM;
+
+    const FETCH_BOTH       = \Pdo::FETCH_BOTH;
+
+    const FETCH_OBJ        = \Pdo::FETCH_OBJ;
+
+    const FETCH_BOUND      = \Pdo::FETCH_BOUND;
+
+    const FETCH_COLUMN     = \Pdo::FETCH_COLUMN;
+
+    const FETCH_CLASS      = \Pdo::FETCH_CLASS;
+
+    const FETCH_INTO       = \Pdo::FETCH_INTO;
+
+    const FETCH_FUNC       = \Pdo::FETCH_FUNC;
+
+    const FETCH_GROUP      = \Pdo::FETCH_GROUP;
+
+    const FETCH_UNIQUE     = \Pdo::FETCH_UNIQUE;
+
+    const FETCH_KEY_PAIR   = \Pdo::FETCH_KEY_PAIR;
+
+    const FETCH_CLASSTYPE  = \Pdo::FETCH_CLASSTYPE;
+
+    const FETCH_SERIALIZE  = \Pdo::FETCH_SERIALIZE;
+
+    const FETCH_PROPS_LATE = \Pdo::FETCH_PROPS_LATE;
 
     /**
      * Enables/disables options in the Database component
@@ -87,6 +93,10 @@ abstract class Db
 
         if (isset($options['escapeSqlIdentifiers']) === true) {
             $GLOBALS['__phalcon_db__escape_identifiers'] = (bool) $options['escapeSqlIdentifiers'];
+        }
+
+        if (isset($options['forceCasting']) === true) {
+            $GLOBALS['__phalcon_db__force_casting'] = (bool) $options['forceCasting'];
         }
     }
 

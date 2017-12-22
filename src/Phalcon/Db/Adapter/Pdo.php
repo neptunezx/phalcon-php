@@ -3,11 +3,12 @@
 namespace Phalcon\Db\Adapter;
 
 use \Phalcon\Db\Adapter;
+use Phalcon\Db\Column;
 use \Phalcon\Db\Exception;
 use \Phalcon\Db\Result\Pdo as PdoResult;
-use \Phalcon\Events\EventsAwareInterface;
 use \PDO as Service;
 use \PDOStatement;
+use Phalcon\Kernel;
 
 /**
  * Phalcon\Db\Adapter\Pdo
@@ -26,7 +27,7 @@ use \PDOStatement;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/adapter/pdo.c
  */
-abstract class Pdo extends Adapter implements EventsAwareInterface
+abstract class Pdo extends Adapter
 {
 
     /**
@@ -87,7 +88,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      * </code>
      *
      * @param array|null $descriptor
-     * @return  boolean
+     * @return  bool|void
      * @throws Exception
      */
     public function connect($descriptor = null)
@@ -112,6 +113,13 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
             unset($descriptor['password']);
         } else {
             $password = null;
+        }
+
+        /**
+         * Remove the dialectClass from the descriptor if any
+         */
+        if(isset($descriptor["dialectClass"])){
+            unset($descriptor["dialectClass"]);
         }
 
         //Check if the developer has defined custom options or create one from scratch
@@ -144,6 +152,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
         if (isset($descriptor['persistent']) === true &&
             $descriptor['persistent'] === true) {
             $options[\PDO::ATTR_PERSISTENT] = true;
+            unset($descriptor["persistent"]);
         }
 
         //Create the connection using PDO
@@ -170,10 +179,23 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     /**
      * Executes a prepared statement binding. This function uses integer indexes starting from zero
      *
-     * <code>
-     * $statement = $db->prepare('SELECT * FROM robots WHERE name = :name');
-     * $result = $connection->executePrepared($statement, array('name' => 'Voltron'));
-     * </code>
+     *<code>
+     * use Phalcon\Db\Column;
+     *
+     * $statement = $db->prepare(
+     *     "SELECT * FROM robots WHERE name = :name"
+     * );
+     *
+     * $result = $connection->executePrepared(
+     *     $statement,
+     *     [
+     *         "name" => "Voltron",
+     *     ],
+     *     [
+     *         "name" => Column::BIND_PARAM_INT,
+     *     ]
+     * );
+     *</code>
      *
      * @param \PDOStatement $statement
      * @param array $placeholders
@@ -202,24 +224,74 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
                 if (isset($dataTypes[$wildcard]) === true) {
                     //The bind type is double so we try to get the double value
                     $type = $dataTypes[$wildcard];
-                    if ($type === 32) {
-                        $castValue = (int) $value;
-                        $type      = 1024;
-                    } else {
-                        $castValue = $value;
+                    if ($type == Column::BIND_PARAM_DECIMAL) {
+                        $castValue = doubleval($value);
+                        $type = Column::BIND_SKIP;
+                    }else{
+                        if (Kernel::getGlobals("db.force_casting")) {
+                            if (!is_array($value)) {
+                                switch ($type) {
+                                    case Column::BIND_PARAM_INT:
+                                        $castValue = intval($value, 10);
+									break;
+                                    case Column::BIND_PARAM_STR:
+                                        $castValue = (string) $value;
+									break;
+
+                                    case Column::BIND_PARAM_NULL:
+                                        $castValue = null;
+									break;
+
+                                    case Column::BIND_PARAM_BOOL:
+                                        $castValue = (boolean) $value;
+									break;
+
+                                    default:
+                                        $castValue = $value;
+									break;
+                                }
+                            }else{
+                                $castValue = $value;
+                            }
+                        }else{
+                            $castValue = $value;
+                        }
                     }
 
-                    //1024 is "ignore the bind type"
-                    if ($type === 1024) {
-                        $statement->bindParam($parameter, $castValue);
-                    } else {
-                        $statement->bindParam($parameter, $castValue, $type);
+                    if (!is_array($castValue)) {
+                        if ($type == Column::BIND_SKIP) {
+                            $statement->bindValue($parameter, $castValue);
+                        }else{
+                            $statement->bindValue($parameter,$castValue,$type);
+                        }
+                    }else{
+                        foreach ($castValue as $position => $itemValue) {
+                            if ($type == Column::BIND_SKIP) {
+                                $statement->bindValue($parameter, $castValue);
+                            }else{
+                                $statement->bindValue($parameter,$castValue,$type);
+                            }
+                        }
+
                     }
+
+
+
+
                 } else {
                     throw new Exception('Invalid bind type parameter');
                 }
             } else {
-                $statement->bindParam($parameter, $value);
+                if (!is_array($value)) {
+                    $statement->bindValue($parameter, $value);
+                }else{
+                    foreach ($value as $position => $itemValue) {
+                        $statement->bindValue(
+                            $parameter . $position, $itemValue
+                        );
+                    }
+                }
+
             }
         }
 
@@ -240,7 +312,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      * @param string $sqlStatement
      * @param array|null $bindParams
      * @param array|null $bindTypes
-     * @return \Phalcon\Db\ResultInterface|boolean
+     * @return bool|\PDOStatement|\Phalcon\Db\Result\Pdo|\Phalcon\Db\ResultInterface
      * @throws Exception
      */
     public function query($sqlStatement, $bindParams = null, $bindTypes = null)
@@ -261,7 +333,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
             $this->_sqlVariables = $bindParams;
             $this->_sqlBindTypes = $bindTypes;
 
-            if ($eventsManager->fire('db:beforeQuery', $this, $bindParams) === false) {
+            if ($eventsManager->fire('db:beforeQuery', $this) === false) {
                 return false;
             }
         }
@@ -271,7 +343,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
         if (is_array($bindParams) === true) {
             $statement = $pdo->prepare($sqlStatement);
             if (is_object($statement) === true) {
-                $statement = $this->executePrepared($statement, $bindTypes);
+                $statement = $this->executePrepared($statement,$bindParams, $bindTypes);
             }
         } else {
             $statement = $pdo->query($sqlStatement);
@@ -280,7 +352,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
         //Execute the afterQuery event if an EventsManager is available
         if (is_object($statement) === true) {
             if (is_object($eventsManager) === true) {
-                $eventsManager->fire('db:afterQuery', $this, $bindParams);
+                $eventsManager->fire('db:afterQuery', $this);
             }
 
             return new PdoResult($this, $statement, $sqlStatement, $bindParams, $bindTypes);
@@ -322,7 +394,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
             $this->_sqlVariables = $bindParams;
             $this->_sqlBindTypes = $bindTypes;
 
-            if ($eventsManager->fire('db:beforeQuery', $this, $bindParams) === false) {
+            if ($eventsManager->fire('db:beforeQuery', $this) === false) {
                 return false;
             }
         }
@@ -344,7 +416,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
         if (is_int($affectedRows) === true) {
             $this->_affectedRows = $affectedRows;
             if (is_object($eventsManager) === true) {
-                $eventsManager->fire('db:afterQuery', $this, $bindParams);
+                $eventsManager->fire('db:afterQuery', $this);
             }
         }
 
@@ -376,34 +448,33 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     {
         if (is_object($this->_pdo) === true) {
             $this->_pdo = null;
-            return true;
         }
 
         return true;
     }
 
-    /**
-     * Escapes a column/table/schema name
-     *
-     * <code>
-     *  $escapedTable = $connection->escapeIdentifier('robots');
-     *  $escapedTable = $connection->escapeIdentifier(array('store', 'robots'));
-     * </code>
-     *
-     * @param string|array $identifier
-     * @return string
-     * @throws Exception
-     */
-    public function escapeIdentifier($identifier)
-    {
-        if (is_array($identifier) === true) {
-            return '"' . $identifier[0] . '"."' . $identifier[1] . '"';
-        } elseif (is_string($identifier) === true) {
-            return '"' . $identifier . '"';
-        } else {
-            throw new Exception('Invalid parameter type.');
-        }
-    }
+    ///**
+    // * Escapes a column/table/schema name
+    // *
+    // * <code>
+    // *  $escapedTable = $connection->escapeIdentifier('robots');
+    // *  $escapedTable = $connection->escapeIdentifier(array('store', 'robots'));
+    // * </code>
+    // *
+    // * @param string|array $identifier
+    // * @return string
+    // * @throws Exception
+    // */
+    //public function escapeIdentifier($identifier)
+    //{
+    //    if (is_array($identifier) === true) {
+    //        return '"' . $identifier[0] . '"."' . $identifier[1] . '"';
+    //    } elseif (is_string($identifier) === true) {
+    //        return '"' . $identifier . '"';
+    //    } else {
+    //        throw new Exception('Invalid parameter type.');
+    //    }
+    //}
 
     /**
      * Escapes a value to avoid SQL injections according to the active charset in the connection
@@ -433,7 +504,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      * @return array
      * @throws Exception
      */
-    public function convertBoundParams($sql, $params)
+    public function convertBoundParams($sql, $params = [])
     {
         if (is_string($sql) === false ||
             is_array($params) === false) {
@@ -509,7 +580,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      * @return boolean
      * @throws Exception
      */
-    public function begin($nesting = null)
+    public function begin($nesting = true)
     {
         if (is_null($nesting) === true) {
             $nesting = true;
@@ -566,7 +637,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      * @return boolean
      * @throws Exception
      */
-    public function rollback($nesting = null)
+    public function rollback($nesting = true)
     {
         if (is_null($nesting) === true) {
             $nesting = true;
@@ -630,7 +701,7 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
      * @return boolean
      * @throws Exception
      */
-    public function commit($nesting = null)
+    public function commit($nesting = true)
     {
         if (is_null($nesting) === true) {
             $nesting = true;
@@ -726,5 +797,15 @@ abstract class Pdo extends Adapter implements EventsAwareInterface
     {
         return $this->_pdo;
     }
+
+    /**
+     * Return the error info, if any
+     *
+     * @return array
+     */
+    public function getErrorInfo()
+    {
+        return $this->_pdo->errorInfo();
+	}
 
 }
