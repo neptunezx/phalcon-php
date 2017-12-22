@@ -26,9 +26,10 @@ class Factory extends BaseFactory
 {
 
     /**
-     * @param \Phalcon\Config|array config
-     * 
+     * @param \Phalcon\Config|array  $config
+     *
      * @return AdapterInterface
+     * @throws \Phalcon\Factory\Exception
      */
     public static function load($config)
     {

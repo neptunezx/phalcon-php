@@ -71,6 +71,8 @@ interface ResultInterface
      * Changes the fetching mode affecting \Phalcon\Db\Result\Pdo::fetch()
      *
      * @param int $fetchMode
+     *
+     * @return boolean
      */
     public function setFetchMode($fetchMode);
 

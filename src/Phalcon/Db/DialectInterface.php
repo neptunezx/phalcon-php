@@ -2,6 +2,8 @@
 
 namespace Phalcon\Db;
 
+
+use Phalcon\Db\IndexInterface;
 /**
  * Phalcon\Db\DialectInterface initializer
  *
@@ -56,7 +58,7 @@ interface DialectInterface
      *
      * @param \Phalcon\Db\ColumnInterface $column
      */
-    public function getColumnDefinition($column);
+    public function getColumnDefinition(ColumnInterface $column);
 
     /**
      * Generates SQL to add a column to a table
@@ -66,17 +68,19 @@ interface DialectInterface
      * @param \Phalcon\Db\ColumnInterface $column
      * @return string
      */
-    public function addColumn($tableName, $schemaName, $column);
+    public function addColumn($tableName, $schemaName, ColumnInterface $column);
+
 
     /**
      * Generates SQL to modify a column in a table
+     * @param  string                            $tableName
+     * @param  string                           $schemaName
+     * @param \Phalcon\Db\ColumnInterface       $column
+     * @param \Phalcon\Db\ColumnInterface|null  $currentColumn
      *
-     * @param string $tableName
-     * @param string $schemaName
-     * @param \Phalcon\Db\ColumnInterface $column
-     * @return string
+     * @return mixed
      */
-    public function modifyColumn($tableName, $schemaName, $column);
+    public function modifyColumn($tableName, $schemaName,  $column , $currentColumn = null );
 
     /**
      * Generates SQL to delete a column from a table
@@ -167,6 +171,17 @@ interface DialectInterface
     public function dropTable($tableName, $schemaName);
 
     /**
+     * Generates SQL to drop a view
+     * @param string     $tableName
+     * @param string     $schemaName
+     * @param bool       $ifExists
+     *
+     * @return string
+     */
+    public function dropView($tableName, $schemaName, $ifExists = true);
+
+
+    /**
      * Generates SQL checking for the existence of a schema.table
      *
      * @param string $tableName
@@ -174,6 +189,15 @@ interface DialectInterface
      * @return string
      */
     public function tableExists($tableName, $schemaName = null);
+
+
+    /**
+     * Generates SQL checking for the existence of a schema.view
+     * @param string      $viewName
+     * @param string|null $schemaName
+     * @return string
+     */
+    public function viewExists($viewName, $schemaName = null);
 
     /**
      * Generates SQL to describe a table
