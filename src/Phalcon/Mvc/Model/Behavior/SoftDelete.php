@@ -22,11 +22,10 @@ class SoftDelete extends Behavior
      * @param \Phalcon\Mvc\ModelInterface $model
      * @throws Exception
      */
-    public function notify($type, $model)
+    public function notify($type, ModelInterface $model)
     {
         if (is_string($type) === false ||
-            is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
+            is_object($model) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
