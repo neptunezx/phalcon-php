@@ -3470,7 +3470,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     protected function keepSnapshots($keepSnapshots)
     {
-        $this->_modelsManager->keepSnapshots($keepSnapshots);
+        $this->_modelsManager->keepSnapshots($this, $keepSnapshots);
     }
 
     /**
