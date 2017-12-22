@@ -164,15 +164,14 @@ class Beanstalk
     /**
      * Puts a job on the queue using specified tube.
      *
-     * @param $data
-     * @param $options array|null
+     * @param
      * @return int|boolean
      */
     public function put($data, array $options = null)
     {
 
-        if (!is_array($options)) {
-            throw new Exception('Invalid parameter type.');
+        if(!is_array($options)){
+            throw new Exception("Param is ");
         }
         /**
          * Priority is 100 by default
@@ -238,397 +237,403 @@ class Beanstalk
 
     /**
      * Change the active tube. By default the tube is "default".
-     *
-     * @param $tube mixed
-     * @return bool|string
      */
-    public function choose($tube)
-    {
-        $this->write("use " . $tube);
+    public function choose(tube) -> boolean | string
+	{
+        var
+        response;
 
-        $response = $this->readStatus();
-        if ($response[0] != "USING") {
+        this->write("use " . tube);
+
+		let response = this->readStatus();
+		if response[0] != "USING" {
             return false;
         }
 
-        return $response[1];
-    }
+return response[1];
+}
 
-    /**
-     * The watch command adds the named tube to the watch list
-     * for the current connection.
-     *
-     * @param $tube string
-     * @return boolean | int
-     */
-    public function watch($tube)
-    {
-        if (!is_string($tube)) {
-            throw new Exception('Invalid parameter type.');
+/**
+ * The watch command adds the named tube to the watch list for the current connection.
+ */
+public
+function watch(string!tube) -> boolean | int
+	{
+        var
+        response;
 
-        }
-        $this->write("watch " . $tube);
-        $response = $this->readStatus();
-        if ($response[0] != "WATCHING") {
+        this->write("watch " . tube);
+
+		let response = this->readStatus();
+		if response[0] != "WATCHING" {
             return false;
         }
 
-        return (int)$response[1];
-    }
+		return (int)response[1];
+	}
 
-    /**
+	/**
      * It removes the named tube from the watch list for the current connection.
-     * @param $tube string
-     * @return boolean | int
      */
-    public function ignore($tube)
-    {
-        $this->write("ignore " . $tube);
-        $response = $this->readStatus();
-        if (($response[0] != "WATCHING")) {
+	public function ignore(string!tube) -> boolean | int
+	{
+        var
+        response;
+
+        this->write("ignore " . tube);
+
+		let response = this->readStatus();
+		if response[0] != "WATCHING" {
             return false;
         }
 
-        return (int)$response[1];
-    }
+		return (int)response[1];
+	}
 
-    /**
+	/**
      * Can delay any new job being reserved for a given time.
-     *
-     * @param $tube string
-     * @param $delay int
-     * @return bool
      */
-    public function pauseTube($tube, $delay)
-    {
-        if (!is_string($tube) && !is_int($delay)) {
-            throw new Exception('Invalid parameter type.');
+	public function pauseTube(string!tube, int delay) -> boolean
+	{
+        var
+        response;
 
-        }
-        $this->write("pause-tube " . $tube . " " . $delay);
+        this->write("pause-tube " . tube . " " . delay);
 
-        $response = $this->readStatus();
-        if ($response[0] != "PAUSED") {
+		let response = this->readStatus();
+		if response[0] != "PAUSED" {
             return false;
         }
 
-        return true;
-    }
+		return true;
+	}
 
-    /**
+	/**
      * The kick command applies only to the currently used tube.
-     *
-     * @param $bound int
-     * @return bool|int
      */
-    public function kick($bound)
-    {
-        if (!is_int($bound)) {
-            throw new Exception('Invalid parameter type.');
+	public function kick(int bound) -> boolean | int
+	{
+        var
+        response;
 
-        }
-        $this->write("kick " . $bound);
+        this->write("kick " . bound);
 
-        $response = $this->readStatus();
-        if ($response[0] != "KICKED") {
+		let response = this->readStatus();
+		if response[0] != "KICKED" {
             return false;
         }
 
-        return (int)$response[1];
-    }
+		return (int)response[1];
+	}
 
-    /**
+	/**
      * Gives statistical information about the system as a whole.
-     *
-     * @return bool
      */
-    public function stats()
-    {
-        $this->write("stats");
+	public function stats() -> boolean | array
+	{
+        var
+        response;
 
-        $response = $this->readYaml();
-        if ($response[0] != "OK") {
+        this->write("stats");
+
+		let response = this->readYaml();
+		if response[0] != "OK" {
             return false;
         }
 
-        return $response[2];
-    }
+		return response[2];
+	}
 
-    /**
+	/**
      * Gives statistical information about the specified tube if it exists.
-     *
-     * @param $tube string
-     * @return bool|array
      */
-    public function statsTube($tube)
-    {
-        $this->write("stats-tube " . $tube);
+	public function statsTube(string!tube) -> boolean | array
+	{
+        var
+        response;
 
-        $response = $this->readYaml();
-        if ($response[0] != "OK") {
+        this->write("stats-tube " . tube);
+
+		let response = this->readYaml();
+		if response[0] != "OK" {
             return false;
         }
 
-        return $response[2];
-    }
+		return response[2];
+	}
 
-    /**
+	/**
      * Returns a list of all existing tubes.
-     *
-     * @return bool|array
      */
+	public function listTubes() -> boolean | array
+	{
+        var
+        response;
 
-    public function listTubes()
-    {
-        $this->write("list-tubes");
+        this->write("list-tubes");
 
-        $response = $this->readYaml();
-        if ($response[0] != "OK") {
+		let response = this->readYaml();
+		if response[0] != "OK" {
             return false;
         }
 
-        return $response[2];
-    }
+		return response[2];
+	}
 
-    /**
+	/**
      * Returns the tube currently being used by the client.
-     *
-     * @return  boolean | string
      */
-    public function listTubeUsed()
-    {
-        $this->write("list-tube-used");
+	public function listTubeUsed() -> boolean | string
+	{
+        var
+        response;
 
-        $response = $this->readStatus();
-        if ($response[0] != "USING") {
+        this->write("list-tube-used");
+
+		let response = this->readStatus();
+		if response[0] != "USING" {
             return false;
         }
 
-        return $response[1];
-    }
+		return response[1];
+	}
 
-    /**
+	/**
      * Returns a list tubes currently being watched by the client.
-     * @return  boolean | array
      */
-    public function listTubesWatched()
-    {
-        $this->write("list-tubes-watched");
+	public function listTubesWatched() -> boolean | array
+	{
+        var
+        response;
 
-        $response = $this->readYaml();
-        if ($response[0] != "OK") {
+        this->write("list-tubes-watched");
+
+		let response = this->readYaml();
+		if response[0] != "OK" {
             return false;
         }
 
-        return $response[2];
-    }
+		return response[2];
+	}
 
-    /**
+	/**
      * Inspect the next ready job.
-     *
-     * @return bool|Job
      */
-    public function peekReady()
-    {
-        $this->write("peek-ready");
-        $response = $this->readStatus();
-        if ($response[0] != "FOUND") {
+	public function peekReady() -> boolean |<Job >
+	{
+        var
+        response;
+
+        this->write("peek-ready");
+
+		let response = this->readStatus();
+		if response[0] != "FOUND" {
             return false;
         }
-        return new Job($this, $response[1], unserialize($this->read($response[2])));
-    }
 
-    /**
+		return new Job(this, response[1], unserialize(this->read(response[2])));
+	}
+
+	/**
      * Return the next job in the list of buried jobs.
-     *
-     * @return bool|Job
      */
-    public function peekBuried()
-    {
-        $this->write("peek-buried");
+	public function peekBuried() -> boolean |<Job >
+	{
+        var
+        response;
 
-        $response = $this->readStatus();
-        if ($response[0] != "FOUND") {
+        this->write("peek-buried");
+
+		let response = this->readStatus();
+		if response[0] != "FOUND" {
             return false;
         }
-        return new Job($this, $response[1], unserialize($this->read($response[2])));
-    }
 
-    /**
+		return new Job(this, response[1], unserialize(this->read(response[2])));
+	}
+
+	/**
      * Return the next job in the list of buried jobs.
-     *
-     * @return bool|Job
      */
-    public function peekDelayed()
-    {
-        if (!$this->write("peek-delayed")) {
-            return false;
-        }
-        $response = $this->readStatus();
-        if ($response[0] != "FOUND") {
-            return false;
-        }
-        return new Job($this, $response[1], unserialize($this->read($response[2])));
-    }
+	public function peekDelayed() -> boolean |<Job >
+	{
+        var
+        response;
 
-    /**
+        if !this->write("peek-delayed"){
+			return false;
+		}
+
+		let response = this->readStatus();
+		if response[0] != "FOUND" {
+            return false;
+        }
+
+		return new Job(this, response[1], unserialize(this->read(response[2])));
+	}
+
+	/**
      * The peek commands let the client inspect a job in the system.
-     *
-     * @param $id int
-     * @return bool|Job
      */
-    public function jobPeek($id)
-    {
-        if (!is_int($id)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->write("peek " . $id);
-        $response = $this->readStatus();
-        if ($response[0] != "FOUND") {
+	public function jobPeek(int id) -> boolean |<Job >
+	{
+        var
+        response;
+
+        this->write("peek " . id);
+
+		let response = this->readStatus();
+
+		if response[0] != "FOUND" {
             return false;
         }
-        return new Job($this, $response[1], unserialize($this->read($response[2])));
-    }
 
-    /**
+		return new Job(this, response[1], unserialize(this->read(response[2])));
+	}
+
+	/**
      * Reads the latest status from the Beanstalkd server
-     *
-     * @return array
      */
-    final public function readStatus()
-    {
-        $status = $this->read();
-        if ($status === false) {
-            return array();
+	final public function readStatus() -> array
+	{
+        var
+        status;
+        let status = this->read();
+		if status === false {
+            return [];
         }
-        return explode(" ", $status);
-    }
+		return explode(" ", status);
+	}
 
-    /**
+	/**
      * Fetch a YAML payload from the Beanstalkd server
-     *
-     * @return  array
      */
-    final public function readYaml()
-    {
-        $response = $this->readStatus();
-        $status = $response[0];
-        if (count($response) > 1) {
-            $umberOfBytes = $response[1];
-            $response = $this->read();
-            $data = yaml_parse($response);
-        } else {
-            $numberOfBytes = 0;
+	final public function readYaml() -> array
+	{
+        var
+        response, status, numberOfBytes, data;
 
-            $data = array();
-        }
-        return array(
+		let response = this->readStatus();
+
+		let status = response[0];
+
+		if count(response) > 1 {
+            let numberOfBytes = response[1];
+
+			let response = this->read();
+
+			let data = yaml_parse(response);
+		} else {
+            let numberOfBytes = 0;
+
+			let data = [];
+		}
+
+		return [
             status,
             numberOfBytes,
             data
-        );
-    }
+        ];
+	}
 
-    /**
+	/**
      * Reads a packet from the socket. Prior to reading from the socket will
      * check for availability of the connection.
-     *
-     * @param $length int
-     * @return boolean | string
      */
-    public function read($length = 0)
-    {
-        if (!is_int($length)) {
-            throw new Exception('Invalid parameter type.');
+	public function read(int length = 0) -> boolean | string
+	{
+        var
+        connection, data;
+
+		let connection = this->_connection;
+		if typeof connection != "resource" {
+        let connection = this->connect();
+			if typeof connection != "resource" {
+            return false;
         }
-        $connection = $this->_connection;
-        if (!is_resource($connection)) {
-            $connection = $this->connect();
-            if (!is_resource($connection)) {
-                return false;
-            }
-        }
-        if ($length) {
-            if (feof($connection)) {
-                return false;
-            }
-            $data = rtrim(stream_get_line($connection, $length + 2), "\r\n");
-            if ((stream_get_meta_data($connection))["timed_out"]) {
-                throw new Exception("Connection timed out");
-            }
-        } else {
-            $data = stream_get_line($connection, 16384, "\r\n");
+		}
+
+		if length {
+
+            if feof(connection){
+				return false;
         }
 
+            let data = rtrim(stream_get_line(connection, length + 2), "\r\n");
+			if stream_get_meta_data(connection)["timed_out"]{
+				throw new Exception("Connection timed out");
+			}
+		} else {
+            let data = stream_get_line(connection, 16384, "\r\n");
+		}
 
-        if ($data === "UNKNOWN_COMMAND") {
+
+		if data === "UNKNOWN_COMMAND" {
             throw new Exception("UNKNOWN_COMMAND");
         }
 
-        if ($data === "JOB_TOO_BIG") {
+		if data === "JOB_TOO_BIG" {
             throw new Exception("JOB_TOO_BIG");
         }
 
-        if ($data === "BAD_FORMAT") {
+		if data === "BAD_FORMAT" {
             throw new Exception("BAD_FORMAT");
         }
 
-        if ($data === "OUT_OF_MEMORY") {
+		if data === "OUT_OF_MEMORY" {
             throw new Exception("OUT_OF_MEMORY");
         }
 
-        return $data;
-    }
+		return data;
+	}
 
-    /**
+	/**
      * Writes data to the socket. Performs a connection if none is available
-     *
-     * @param $data string
-     * @return  boolean | int
      */
-    public function write($data)
-    {
-        if (!is_string($data)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $connection = $this->_connection;
-        if (!is_resource($connection)) {
-            $connection = $this->connect();
-            if (!is_resource($connection)) {
-                return false;
-            }
-        }
-        $packet = $data . "\r\n";
-        return fwrite($connection, $packet, strlen($packet));
-    }
+	public function write(string data) -> boolean | int
+	{
+        var
+        connection, packet;
 
-    /**
-     * Closes the connection to the beanstalk server.
-     *
-     * @return bool
-     */
-    public function disconnect()
-    {
-        $connection = $this->_connection;
-        if (!is_resource($connection)) {
+		let connection = this->_connection;
+		if typeof connection != "resource" {
+        let connection = this->connect();
+			if typeof connection != "resource" {
             return false;
         }
-        fclose($connection);
-        $this->_connection = null;
+		}
 
-        return true;
+		let packet = data . "\r\n";
+		return fwrite(connection, packet, strlen(packet));
+	}
+
+	/**
+     * Closes the connection to the beanstalk server.
+     */
+	public function disconnect() -> boolean
+	{
+        var
+        connection;
+
+        let connection = this->_connection;
+		if typeof connection != "resource" {
+        return false;
     }
 
-    /**
-     * Simply closes the connection.
-     *
-     * @return bool
-     */
-    public function quit()
-	{
-        $this->write("quit");
-		$this->disconnect();
+		fclose(connection);
+		let this->_connection = null;
 
-		return !is_resource($this->_connection);
+		return true;
+	}
+
+	/**
+     * Simply closes the connection.
+     */
+	public function quit() -> boolean
+	{
+        this->write("quit");
+		this->disconnect();
+
+		return typeof this->_connection != "resource";
 	}
 }
