@@ -12,11 +12,11 @@
 
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Mvc\Model\Transaction\Failed;
-use \Phalcon\Mvc\Model\TransactionInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
-use \Phalcon\DiInterface;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Transaction\Failed as TxFailed;
+use Phalcon\Mvc\Model\Transaction\ManagerInterface;
+use Phalcon\Mvc\Model\TransactionInterface;
 
 /**
  * Phalcon\Mvc\Model\Transaction
@@ -27,35 +27,36 @@ use \Phalcon\DiInterface;
  *
  * <code>
  * try {
+ *     $manager = new \Phalcon\Mvc\Model\Transaction\Manager();
  *
- *  $manager = new Phalcon\Mvc\Model\Transaction\Manager();
+ *     $transaction = $manager->get();
  *
- *  $transaction = $manager->get();
+ *     $robot = new Robots();
  *
- *  $robot = new Robots();
- *  $robot->setTransaction($transaction);
- *  $robot->name = 'WALL·E';
- *  $robot->created_at = date('Y-m-d');
- *  if ($robot->save() == false) {
- *    $transaction->rollback("Can't save robot");
- *  }
+ *     $robot->setTransaction($transaction);
  *
- *  $robotPart = new RobotParts();
- *  $robotPart->setTransaction($transaction);
- *  $robotPart->type = 'head';
- *  if ($robotPart->save() == false) {
- *    $transaction->rollback("Can't save robot part");
- *  }
+ *     $robot->name       = "WALL·E";
+ *     $robot->created_at = date("Y-m-d");
  *
- *  $transaction->commit();
+ *     if ($robot->save() === false) {
+ *         $transaction->rollback("Can't save robot");
+ *     }
  *
+ *     $robotPart = new RobotParts();
+ *
+ *     $robotPart->setTransaction($transaction);
+ *
+ *     $robotPart->type = "head";
+ *
+ *     if ($robotPart->save() === false) {
+ *         $transaction->rollback("Can't save robot part");
+ *     }
+ *
+ *     $transaction->commit();
  * } catch(Phalcon\Mvc\Model\Transaction\Failed $e) {
- *  echo 'Failed, reason: ', $e->getMessage();
+ *     echo "Failed, reason: ", $e->getMessage();
  * }
- *
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/transaction.c
  */
 class Transaction implements TransactionInterface
 {
@@ -86,7 +87,6 @@ class Transaction implements TransactionInterface
 
     /**
      * Rollback on Abort?
-     *
      * @var boolean
      * @access protected
      */
@@ -124,7 +124,7 @@ class Transaction implements TransactionInterface
      * @param string|null $service
      * @throws Exception
      */
-    public function __construct($dependencyInjector, $autoBegin = null, $service = null)
+    public function __construct(DiInterface $dependencyInjector, $autoBegin = null, $service = null)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
@@ -137,16 +137,15 @@ class Transaction implements TransactionInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_null($service) === true) {
-            $service = 'db';
-        } elseif (is_string($service) === false) {
-            throw new Exception('Invalid parameter type.');
+        if ($service) {
+            $connection = $dependencyInjector->get($service);
+        } else {
+            $connection = $dependencyInjector->get("db");
         }
 
-        $this->_connection = $dependencyInjector->get($service);
-
-        if ($autoBegin === true) {
-            $this->_connection->begin();
+        $this->_connection = $connection;
+        if ($autoBegin) {
+            $connection->begin();
         }
     }
 
@@ -156,7 +155,7 @@ class Transaction implements TransactionInterface
      * @param \Phalcon\Mvc\Model\Transaction\ManagerInterface $manager
      * @throws Exception
      */
-    public function setTransactionManager($manager)
+    public function setTransactionManager(ManagerInterface $manager)
     {
         if (is_object($manager) === false ||
             $manager instanceof ManagerInterface === false) {
@@ -224,8 +223,10 @@ class Transaction implements TransactionInterface
                 $this->_rollbackRecord = $rollbackRecord;
             }
 
-            throw new Failed($rollbackMessage, $rollbackRecord);
+            throw new TxFailed($rollbackMessage, $this->_rollbackRecord);
         }
+
+        return true;
     }
 
     /**
@@ -309,13 +310,8 @@ class Transaction implements TransactionInterface
      * @param \Phalcon\Mvc\ModelInterface $record
      * @throws Exception
      */
-    public function setRollbackedRecord($record)
+    public function setRollbackedRecord(ModelInterface $record)
     {
-        if (is_object($record) === false ||
-            $record instanceof ModelInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_rollbackRecord = $record;
     }
 

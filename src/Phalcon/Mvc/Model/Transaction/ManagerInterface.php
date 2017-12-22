@@ -20,13 +20,6 @@ interface ManagerInterface
 {
 
     /**
-     * \Phalcon\Mvc\Model\Transaction\Manager
-     *
-     * @param \Phalcon\DiInterface|null $dependencyInjector
-     */
-    public function __construct($dependencyInjector = null);
-
-    /**
      * Checks whether manager has an active transaction
      *
      * @return boolean
@@ -39,7 +32,7 @@ interface ManagerInterface
      * @param boolean|null $autoBegin
      * @return \Phalcon\Mvc\Model\TransactionInterface
      */
-    public function get($autoBegin = null);
+    public function get($autoBegin = true);
 
     /**
      * Rollbacks active transactions within the manager
@@ -55,23 +48,23 @@ interface ManagerInterface
      * Rollbacks active transactions within the manager
      * Collect will remove transaction from the manager
      *
-     * @param boolean|null $collect
+     * @param boolean $collect
      */
-    public function rollback($collect = null);
+    public function rollback($collect = false);
 
     /**
      * Notifies the manager about a rollbacked transaction
      *
      * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
      */
-    public function notifyRollback($transaction);
+    public function notifyRollback(\Phalcon\Mvc\Model\TransactionInterface $transaction);
 
     /**
      * Notifies the manager about a commited transaction
      *
      * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
      */
-    public function notifyCommit($transaction);
+    public function notifyCommit(\Phalcon\Mvc\Model\TransactionInterface $transaction);
 
     /**
      * Remove all the transactions from the manager

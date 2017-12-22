@@ -2,16 +2,15 @@
 
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\BehaviorInterface;
 
 /**
  * Phalcon\Mvc\Model\Behavior
  *
  * This is an optional base class for ORM behaviors
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/behavior.c
  */
-abstract class Behavior
+abstract class Behavior implements BehaviorInterface
 {
 
     /**
@@ -30,11 +29,6 @@ abstract class Behavior
      */
     public function __construct($options = null)
     {
-        if (is_null($options) === false &&
-            is_array($options) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_options = $options;
     }
 
@@ -49,10 +43,6 @@ abstract class Behavior
     {
         if (is_string($eventName) === false) {
             throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_array($this->_options) === false) {
-            return false;
         }
 
         return isset($this->_options[$eventName]);
@@ -89,9 +79,9 @@ abstract class Behavior
      * @param string $type
      * @param \Phalcon\Mvc\ModelInterface $model
      */
-    public function notify($type, $model)
+    public function notify($type, ModelInterface $model)
     {
-        
+        return null;
     }
 
     /**
@@ -101,9 +91,9 @@ abstract class Behavior
      * @param string $method
      * @param array|null $arguments
      */
-    public function missingMethod($model, $method, $arguments = null)
+    public function missingMethod(ModelInterface $model, $method, $arguments = null)
     {
-        
+        return null;
     }
 
 }

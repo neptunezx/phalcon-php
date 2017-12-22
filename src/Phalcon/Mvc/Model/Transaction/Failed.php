@@ -2,15 +2,13 @@
 
 namespace Phalcon\Mvc\Model\Transaction;
 
-use \Phalcon\Mvc\Model\Transaction\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Transaction\Exception;
 
 /**
  * Phalcon\Mvc\Model\Transaction\Failed
  *
  * This class will be thrown to exit a try/catch block for isolated transactions
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/transaction/failed.c
  */
 class Failed extends Exception
 {
@@ -30,11 +28,9 @@ class Failed extends Exception
      * @param \Phalcon\Mvc\ModelInterface $record
      * @throws Exception
      */
-    public function __construct($message, $record)
+    public function __construct($message, ModelInterface $record)
     {
-        if (is_string($message) === false ||
-            is_object($record) === false ||
-            $record instanceof ModelInterface === false) {
+        if (is_string($message) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
