@@ -57,7 +57,7 @@ class Kernel
      */
     public static function getClassNameFromClass($className)
     {
-        return substr($$className, strrpos($$className, '\\') + 1);
+        return substr($className, strrpos($className, '\\') + 1);
     }
 
     /**
