@@ -18,6 +18,9 @@ class LazyLoader
 
     /**
      * Phalcon\Mvc\Micro\LazyLoader constructor
+     *
+     * @param string $definition
+     * @throws Exception
      */
     public function __construct($definition)
     {
@@ -30,13 +33,13 @@ class LazyLoader
     /**
      * Initializes the internal handler, calling functions on it
      *
-     * @param  string method
-     * @param  array arguments
+     * @param  string $method
+     * @param  array $arguments
      * @return mixed
      */
     public function __call($method, $arguments)
     {
-        if (!is_string($method)) {
+        if (!is_string($method) || !is_array($arguments)) {
             throw new Exception('Parameter \'method\' should be a string type');
         }
 
@@ -65,17 +68,24 @@ class LazyLoader
     /**
      * Calling __call method
      *
-     * @param  string method
-     * @param  array arguments
+     * @param  string $method
+     * @param  $arguments
+     * @param  BinderInterface $modelBinder
      * @return mixed
      */
     public function callMethod($method, $arguments, BinderInterface $modelBinder = null)
     {
+        if(!is_string($method)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_modelBinder = $modelBinder;
 
         return $this->__call($method, $arguments);
     }
 
+    /**
+     * @return string
+     */
     public function getDifinition()
     {
         return $this->_definition;

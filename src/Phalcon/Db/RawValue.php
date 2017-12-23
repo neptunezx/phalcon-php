@@ -2,7 +2,6 @@
 
 namespace Phalcon\Db;
 
-use \Phalcon\Db\Exception;
 
 /**
  * Phalcon\Db\RawValue
@@ -32,17 +31,28 @@ class RawValue
     protected $_value;
 
     /**
-     * \Phalcon\Db\RawValue constructor
+     * RawValue constructor.
      *
-     * @param string $value
+     * @param $value
+     *
+     * @throws \Phalcon\Db\Exception
      */
+
     public function __construct($value)
     {
         if (is_string($value) === false) {
             throw new Exception('Invalid parameter type.');
         }
+        if ($value == "") {
+            $this->_value = "''";
+            return;
+        }
+        if ($value === null) {
+            $this->_value = "NULL";
+            return;
+        }
 
-        $this->_value = $value;
+        $this->_value = (string) $value;
     }
 
     /**

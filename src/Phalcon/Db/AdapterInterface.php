@@ -21,21 +21,21 @@ interface AdapterInterface
      * Returns the first row in a SQL query result
      *
      * @param string $sqlQuery
-     * @param int|null $fetchMode
+     * @param int $fetchMode
      * @param int|null $placeholders //@note strange data type
      * @return array
      */
-    public function fetchOne($sqlQuery, $fetchMode = null, $placeholders = null);
+    public function fetchOne($sqlQuery, $fetchMode = 2, $placeholders = null);
 
     /**
      * Dumps the complete result of a query into an array
      *
      * @param string $sqlQuery
-     * @param int|null $fetchMode
+     * @param int    $fetchMode
      * @param int|null $placeholders //@note strange data type
      * @return array
      */
-    public function fetchAll($sqlQuery, $fetchMode = null, $placeholders = null);
+    public function fetchAll($sqlQuery, $fetchMode = 2, $placeholders = null);
 
     /**
      * Inserts data into a table using custom RBDM SQL syntax
@@ -91,9 +91,9 @@ interface AdapterInterface
     /**
      * Generates SQL checking for the existence of a schema.table
      *
-     * @param string $tableName
-     * @param string $schemaName
-     * @return string
+     * @param string      $tableName
+     * @param string|null $schemaName
+     * @return boolean
      */
     public function tableExists($tableName, $schemaName = null);
 
@@ -102,7 +102,7 @@ interface AdapterInterface
      *
      * @param string $viewName
      * @param string|null $schemaName
-     * @return string
+     * @return boolean
      */
     public function viewExists($viewName, $schemaName = null);
 
@@ -140,12 +140,12 @@ interface AdapterInterface
      * @param boolean|null $ifExists
      * @return boolean
      */
-    public function dropTable($tableName, $schemaName = null, $ifExists = null);
+    public function dropTable($tableName, $schemaName = null, $ifExists = true);
 
     /**
      * Creates a view
      *
-     * @param string $tableName
+     * @param string $viewName
      * @param array $definition
      * @param string|null $schemaName
      * @return boolean
@@ -160,7 +160,7 @@ interface AdapterInterface
      * @param boolean|null $ifExists
      * @return boolean
      */
-    public function dropView($viewName, $schemaName = null, $ifExists = null);
+    public function dropView($viewName, $schemaName = null, $ifExists = true);
 
     /**
      * Adds a column to a table
@@ -172,15 +172,18 @@ interface AdapterInterface
      */
     public function addColumn($tableName, $schemaName, $column);
 
+
     /**
      * Modifies a table column based on a definition
      *
      * @param string $tableName
      * @param string $schemaName
-     * @param \Phalcon\Db\ColumnInterface $column
-     * @return  boolean
+     * @param \Phalcon\Db\ColumnInterface      $column
+     * @param \Phalcon\Db\ColumnInterface|null $currentColumn
+     *
+     * @return boolean
      */
-    public function modifyColumn($tableName, $schemaName, $column);
+    public function modifyColumn($tableName, $schemaName, $column ,$currentColumn =null);
 
     /**
      * Drops a column from a table
@@ -399,14 +402,14 @@ interface AdapterInterface
      */
     public function escapeString($str);
 
-    /**
-     * Converts bound params like :name: or ?1 into ? bind params
-     *
-     * @param string $sqlStatement
-     * @param array $params
-     * @return array
-     */
-    public function convertBoundParams($sqlStatement, $params);
+    ///**
+    // * Converts bound params like :name: or ?1 into ? bind params
+    // *
+    // * @param string $sqlStatement
+    // * @param array $params
+    // * @return array
+    // */
+    //public function convertBoundParams($sqlStatement, $params);
 
     /**
      * Returns insert id for the auto_increment column inserted in the last SQL statement
@@ -418,24 +421,26 @@ interface AdapterInterface
 
     /**
      * Starts a transaction in the connection
+     * @param bool $nesting
      *
-     * @return boolean
+     * @return mixed
      */
-    public function begin();
+    public function begin($nesting = true);
 
     /**
      * Rollbacks the active transaction in the connection
+     * @param bool $nesting
      *
-     * @return boolean
+     * @return mixed
      */
-    public function rollback();
+    public function rollback($nesting = true);
 
     /**
      * Commits the active transaction in the connection
-     *
+     * @param bool $nesting
      * @return boolean
      */
-    public function commit();
+    public function commit($nesting = true);
 
     /**
      * Checks whether connection is under database transaction

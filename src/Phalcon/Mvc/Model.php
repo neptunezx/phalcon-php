@@ -2,25 +2,34 @@
 
 namespace Phalcon\Mvc;
 
-use \Phalcon\Mvc\ModelInterface;
-use \Phalcon\Mvc\Model\ResultInterface;
-use \Phalcon\Mvc\Model\ManagerInterface;
-use \Phalcon\Mvc\Model\MetaDataInterface;
-use \Phalcon\Mvc\Model\TransactionInterface;
-use \Phalcon\Mvc\Model\Query\Builder;
-use \Phalcon\Mvc\Model\MessageInterface;
-use \Phalcon\Mvc\Model\Criteria;
-use \Phalcon\Mvc\Model\Message;
-use \Phalcon\Mvc\Model\ValidationFailed;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Db\AdapterInterface as DbAdapterInterface;
-use \Phalcon\Events\ManagerInterface as EventsManagerInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\DiInterface;
-use \Phalcon\Di;
-use \Phalcon\Text;
-use \Serializable;
-use \stdClass;
+use Serializable;
+use Phalcon\Di;
+use Phalcon\Db\Column;
+use Phalcon\Db\RawValue;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\Model\Message;
+use Phalcon\Mvc\Model\ResultInterface;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Mvc\Model\ManagerInterface;
+use Phalcon\Mvc\Model\MetaDataInterface;
+use Phalcon\Mvc\Model\Criteria;
+use Phalcon\Db\AdapterInterface;
+use Phalcon\Db\DialectInterface;
+use Phalcon\Mvc\Model\CriteriaInterface;
+use Phalcon\Mvc\Model\TransactionInterface;
+use Phalcon\Mvc\Model\Resultset;
+use Phalcon\Mvc\Model\ResultsetInterface;
+use Phalcon\Mvc\Model\Query;
+use Phalcon\Mvc\Model\Query\Builder;
+use Phalcon\Mvc\Model\Relation;
+use Phalcon\Mvc\Model\RelationInterface;
+use Phalcon\Mvc\Model\BehaviorInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\MessageInterface;
+//use Phalcon\Mvc\Model\Message;
+//use Phalcon\ValidationInterface;
+use Phalcon\Mvc\Model\ValidationFailed;
+use Phalcon\Events\ManagerInterface as EventsManagerInterface;
 
 /**
  * Phalcon\Mvc\Model
@@ -210,49 +219,60 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @access protected
      */
     protected $_snapshot;
+    protected $_oldSnapshot = [];
 
     /**
      * \Phalcon\Mvc\Model constructor
      *
+     * @param $data
      * @param \Phalcon\DiInterface|null $dependencyInjector
      * @param \Phalcon\Mvc\Model\ManagerInterface|null $modelsManager
      * @throws Exception
      */
-    final public function __construct($dependencyInjector = null, $modelsManager = null)
+    final public function __construct($data = null, DiInterface $dependencyInjector = null, ManagerInterface $modelsManager = null)
     {
-        /* Dependency Injector */
-        if (is_null($dependencyInjector) === true) {
-            $dependencyInjector = DI::getDefault();
+        /**
+         * We use a default DI if the user doesn't define one
+         */
+        if (!is_object($dependencyInjector)) {
+            $dependencyInjector = Di::getDefault();
+        }
 
-            if (is_object($dependencyInjector) === false) {
-                throw new Exception('A dependency injector container is required to obtain the services related to the ORM');
-            }
-        } elseif (is_object($dependencyInjector) === false ||
-            $dependencyInjector instanceof DiInterface === false) {
-            throw new Exception('Invalid parameter type.');
+        if (!is_object($dependencyInjector)) {
+            throw new Exception("A dependency injector container is required to obtain the services related to the ORM");
         }
 
         $this->_dependencyInjector = $dependencyInjector;
 
-        /* Models Manager */
-        if (is_null($modelsManager) === true) {
-            //Inject the manager service from the DI
-            $modelsManager = $dependencyInjector->getShared('modelsManager');
-            if (is_object($modelsManager) === false) {
-                //@note no interface validation
+        /**
+         * Inject the manager service from the DI
+         */
+        if (!is_object($modelsManager)) {
+            $modelsManager = $dependencyInjector->getShared("modelsManager");
+            if (!is_object($modelsManager)) {
                 throw new Exception("The injected service 'modelsManager' is not valid");
             }
-        } elseif (is_object($modelsManager) === false ||
-            $modelsManager instanceof ManagerInterface === false) {
-            throw new Exception('Invalid parameter type.');
         }
 
+        /**
+         * Update the models-manager
+         */
         $this->_modelsManager = $modelsManager;
 
-        /* Initialization */
-        $this->_modelsManager->initialize($this);
-        if (method_exists($this, 'onConstruct') === true) {
-            $this->onConstruct();
+        /**
+         * The manager always initializes the object
+         */
+        $modelsManager->initialize($this);
+
+        /**
+         * This allows the developer to execute initialization stuff every time an instance is created
+         */
+        if (method_exists($this, "onConstruct")) {
+            $this->{"onConstruct"}($data);
+        }
+
+        if (is_array($data)) {
+            $this->assign($data);
         }
     }
 
@@ -264,18 +284,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function setDI($dependencyInjector)
     {
-        if (is_object($dependencyInjector) === false ||
-            $dependencyInjector instanceof DiInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_dependencyInjector = $dependencyInjector;
     }
 
     /**
      * Returns the dependency injection container
      *
-     * @return \Phalcon\DiInterface|null
+     * @return \Phalcon\DiInterface
      */
     public function getDI()
     {
@@ -286,15 +301,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * Sets a custom events manager
      *
      * @param \Phalcon\Events\ManagerInterface $eventsManager
-     * @throws Exception
      */
-    protected function setEventsManager($eventsManager)
+    protected function setEventsManager(EventsManagerInterface $eventsManager)
     {
-        if (is_object($eventsManager) === false ||
-            $eventsManager instanceof EventsManagerInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_modelsManager->setCustomEventsManager($this, $eventsManager);
     }
 
@@ -384,17 +393,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *
      * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
      * @return \Phalcon\Mvc\Model
-     * @throws Exception
      */
-    public function setTransaction($transaction)
+    public function setTransaction(TransactionInterface $transaction)
     {
-        if (is_object($transaction) === false ||
-            $transaction instanceof TransactionInterface === false) {
-            throw new Exception('Transaction should be an object');
-        }
-
         $this->_transaction = $transaction;
-
         return $this;
     }
 
@@ -562,6 +564,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function getReadConnection()
     {
+        $transaction = $this->_transaction;
+        if (is_object($transaction)) {
+            return $transaction->getConnection();
+        }
+
         return $this->_modelsManager->getReadConnection($this);
     }
 
@@ -595,31 +602,70 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return \Phalcon\Mvc\Model
      * @throws Exception
      */
-    public function assign($data, $columnMap = null)
+    public function assign($data, $dataColumnMap = null, $whiteList = null)
     {
-        if (is_array($data) === false) {
-            throw new Exception('Data to dump in the object must be an Array');
+        $disableAssignSetters = Kernel::getGlobals("orm.disable_assign_setters");
+
+        // apply column map for data, if exist
+        if (is_array($dataColumnMap)) {
+            $dataMapped = [];
+            foreach ($data as $key => $value) {
+                if (isset($dataColumnMap[$key])) {
+                    $keyMapped              = $dataColumnMap[$key];
+                    $dataMapped[$keyMapped] = $value;
+                }
+            }
+        } else {
+            $dataMapped = $data;
         }
 
-        if (is_array($columnMap) === false &&
-            is_null($columnMap) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (count($dataMapped) == 0) {
+            return $this;
         }
 
-        //@note this is not perfectly optimized, since the amount of is_array-calls is reducable
-        foreach ($data as $key => $value) {
-            //@note irritating annotation: Only string keys in the array are valid ?!
-            if (is_array($columnMap) === true) {
-                //Every field must be part of the column map
-                if (isset($columnMap[$key]) === true) {
-                    $this->$columnMap[$key] = $value;
-                } else {
-                    throw new Exception("Column \"" . $key . "\" doesn't make part of the column map");
+        $metaData = $this->getModelsMetaData();
+
+        if (Kernel::getGlobals("orm.column_renaming")) {
+            $columnMap = $metaData->getColumnMap($this);
+        } else {
+            $columnMap = null;
+        }
+
+        foreach ($metaData->getAttributes($this) as $attribute) {
+            // Check if we need to rename the field
+            if (is_array($columnMap)) {
+                if (!isset($columnMap[$attribute])) {
+                    $attributeField = $columnMap[$attribute];
+                    if (Kernel::getGlobals('orm.ignore_unknown_columns')) {
+                        throw new Exception("Column '" . $attribute . "' doesn\'t make part of the column map");
+                    } else {
+                        continue;
+                    }
                 }
             } else {
-                $this->$key = $value;
+                $attributeField = $attribute;
+            }
+
+            // The value in the array passed
+            // Check if we there is data for the field
+
+            if (isset($dataMapped[$attributeField])) {
+                $value = $dataMapped[$attributeField];
+                // If white-list exists check if the attribute is on that list
+                if (is_array($whiteList)) {
+                    if (!in_array($attributeField, $whiteList)) {
+                        continue;
+                    }
+                }
+
+                // Try to find a possible getter
+                if ($disableAssignSetters || !$this->_possibleSetter($attributeField, $value)) {
+                    $this->{$attributeField} = $value;
+                }
             }
         }
+
+        return $this;
     }
 
     /**
@@ -641,62 +687,100 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return \Phalcon\Mvc\Model
      * @throws Exception
      */
-    public static function cloneResultMap($base, $data, $columnMap, $dirtyState = null, $keepSnapshots = null)
+    public static function cloneResultMap($base, $data, $columnMap, $dirtyState = 0, $keepSnapshots = null)
     {
-        /* Type verification */
-        if (is_object($base) === false ||
-            $base instanceof ModelInterface === false ||
-            is_array($columnMap) === false) {
+
+        if (!is_array($data)) {
             throw new Exception('Invalid parameter type.');
         }
+        $instance = clone $base;
 
-        if (is_array($data) === false) {
-            throw new Exception('Data to dump in the object must be an Array');
-        }
+        // Change the dirty state to persistent
+        $instance->setDirtyState($dirtyState);
 
-        if (is_null($dirtyState) === true) {
-            $dirtyState = 0;
-        } elseif (is_int($dirtyState) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_null($keepSnapshots) === false &&
-            is_bool($keepSnapshots) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        /* Processing */
-        $object = clone $base;
-        $object->setDirtyState($dirtyState);
-
-        //@note this is not perfectly optimized, since the amount of is_array-calls is reducable
         foreach ($data as $key => $value) {
-            if (is_string($key) === true) {
-                //Only string keys in the data are valid
-                if (is_array($columnMap) === true) {
-                    //Every field must be part of the column map
-                    if (isset($columnMap[$key]) === true) {
-                        $object->$attribute = $value;
+            if (is_string($key)) {
+                // Only string keys in the data are valid
+                if (!is_array($columnMap)) {
+                    $instance->{$key} = $value;
+                    continue;
+                }
+
+                // Every field must be part of the column map
+                if (!isset($columnMap[$key])) {
+                    if (!Kernel::getGlobals('orm.ignore_unknown_columns')) {
+                        throw new Exception("Column '" . $key . "' doesn't make part of the column map");
                     } else {
-                        throw new Exception('Column "' . $key . '" doesn\'t make part of the column map');
+                        continue;
                     }
                 } else {
-                    $object->$key = $value;
+                    $attribute = $columnMap[$key];
                 }
+
+                if (!is_array($attribute)) {
+                    $instance->{$attribute} = $value;
+                    continue;
+                }
+
+
+
+                if ($value != "" && $value !== null) {
+                    switch ($attribute[1]) {
+
+                        case Column::TYPE_INTEGER:
+                            $castValue = intval($value, 10);
+                            break;
+
+                        case Column::TYPE_DOUBLE:
+                        case Column::TYPE_DECIMAL:
+                        case Column::TYPE_FLOAT:
+                            $castValue = doubleval($value);
+                            break;
+
+                        case Column::TYPE_BOOLEAN:
+                            $castValue = (boolean) $value;
+                            break;
+
+                        default:
+                            $castValue = $value;
+                            break;
+                    }
+                } else {
+                    switch ($attribute[1]) {
+
+                        case Column::TYPE_INTEGER:
+                        case Column::TYPE_DOUBLE:
+                        case Column::TYPE_DECIMAL:
+                        case Column::TYPE_FLOAT:
+                        case Column::TYPE_BOOLEAN:
+                            $castValue = null;
+                            break;
+
+                        default:
+                            $castValue = value;
+                            break;
+                    }
+                }
+                $attributeName              = $attribute[0];
+                $instance->{$attributeName} = $castValue;
             }
         }
 
-        if ($keepSnapshots === true) {
-            $object->setSnapshotData($data, $columnMap);
+        /**
+         * Models that keep snapshots store the original data in t
+         */
+        if ($keepSnapshots) {
+            $instance->setSnapshotData($data, $columnMap);
         }
 
-        //Call afterFetch, this allows the developer to execute actions after a record is fetched
-        //from the database
-        if (method_exists($object, 'afterFetch') === true) {
-            $object->afterfetch();
+        /**
+         * Call afterFetch, this allows the developer to execute actions after a record is fetched from the database
+         */
+        if (method_exists($instance, "fireEvent")) {
+            $instance->{"fireEvent"}("afterFetch");
         }
 
-        return $object;
+        return $instance;
     }
 
     /**
@@ -714,49 +798,79 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Data to hydrate must be an Array'); //@note fixed typo
         }
 
-        if (is_array($columnMap) === false &&
-            is_int($hydrationMode) === false) {
+        if (is_int($hydrationMode) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        //If there is no column map and the hydration mode is arrays return the data as it is
-        if ($hydrationMode === 1) {
-            if (is_array($columnMap) === false) {
+        /**
+         * If there is no column map and the hydration mode is arrays return the data as it is
+         */
+        if (!is_array($columnMap)) {
+            if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
                 return $data;
             }
-
-            //Create the destimation object according to the hydration mode
-            $hydrate = array();
-        } else {
-            $hydrate = new stdClass();
         }
 
-        //@note this is not perfectly optimized, since the amount of is_array-calls and $hydrationMode comparisons is reducable
-        foreach ($data as $key => $value) {
-            if (is_string($key) === true) {
-                if (is_array($columnMap) === true) {
-                    //Every field must be part of the column map
-                    if (isset($columnMap[$key]) === false) {
-                        throw new Exception('Column "' . $key . '" doesn\'t make part of the column map');
-                    }
 
-                    $attribute = $columnMap[$key];
-                    if ($hydrationMode === 1) {
-                        $hydrate[$attribute] = $value;
+
+
+
+        /**
+         * Create the destination object according to the hydration mode
+         */
+        if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
+            $hydrateArray = [];
+        } else {
+            $hydrateObject = new \stdclass();
+        }
+
+        foreach ($data as $key => $value) {
+            if (!is_string($key)) {
+                continue;
+            }
+
+            if (is_array($columnMap)) {
+
+                /**
+                 * Every field must be part of the column map
+                 */
+                if (!isset($columnMap[$key])) {
+                    if (!Kernel::getGlobals("orm.ignore_unknown_columns")) {
+                        throw new Exception("Column '" . $key . "' doesn't make part of the column map");
                     } else {
-                        $hydrate->$attribute = $value;
+                        continue;
                     }
+                }
+                $attribute = $columnMap[$key];
+
+                /**
+                 * Attribute can store info about his type
+                 */
+                if (is_array($attribute)) {
+                    $attributeName = $attribute[0];
                 } else {
-                    if ($hydrationMode === 1) {
-                        $hydrate[$key] = $value;
-                    } else {
-                        $hydrate->$key = $value;
-                    }
+                    $attributeName = $attribute;
+                }
+
+                if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
+                    $hydrateArray[$attributeName] = $value;
+                } else {
+                    $hydrateArray->{$attributeName} = $value;
+                }
+            } else {
+                if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
+                    $hydrateArray[$key] = $value;
+                } else {
+                    $hydrateArray->{$key} = $value;
                 }
             }
         }
 
-        return $hydrate;
+        if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
+            return $hydrateArray;
+        }
+
+        return $hydrateObject;
     }
 
     /**
@@ -776,7 +890,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return \Phalcon\Mvc\Model
      * @throws Exception
      */
-    public static function cloneResult($base, $data, $dirtyState = null)
+    public static function cloneResult(ModelInterface $base, $data, $dirtyState = 0)
     {
         if (is_object($base) === false ||
             $base instanceof ModelInterface === false ||
@@ -849,42 +963,67 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public static function find($parameters = null)
     {
-        if (is_array($parameters) === false) {
-            $params = array();
-            if (is_null($parameters) === false) {
+        $dependencyInjector = Di::getDefault();
+        $manager            = $dependencyInjector->getShared("modelsManager");
+
+        if (!is_array($parameters)) {
+            $params = [];
+            if ($parameters !== null) {
                 $params[] = $parameters;
             }
         } else {
             $params = $parameters;
         }
 
-        //Builds a query with the passed parameters
-        $builder = new Builder($params);
+        /**
+         * Builds a query with the passed parameters
+         */
+        $builder = $manager->createBuilder($params);
         $builder->from(get_called_class());
-        $query   = $builder->getQuery();
 
-        $bindParams = null;
-        $bindTypes  = null;
+        $query = $builder->getQuery();
 
-        //Check for bind parameters
-        if (isset($params['bind']) === true) {
-            $bindParams = $params['bind'];
-            if (isset($params['bindTypes']) === true) {
-                $bindTypes = $params['bindTypes'];
+        /**
+         * Check for bind parameters
+         */
+        if (isset($params["bind"])) {
+            $bindParams = $params["bind"];
+
+            if (is_array($bindParams)) {
+                $query->setBindParams($bindParams, true);
+            }
+
+            if (isset($params["bindTypes"])) {
+                $bindTypes = $params["bindTypes"];
+                if (is_array($bindTypes)) {
+                    $query->setBindTypes($bindTypes, true);
+                }
             }
         }
 
-        //Pass the cache options to the query
-        if (isset($params['cache']) === true) {
-            $query->cache($params['cache']);
+
+
+        /**
+         * Pass the cache options to the query
+         */
+        if (isset($params["cache"])) {
+            $cache = $params["cache"];
+            $query->cache($cache);
         }
 
-        //Execute the query passing the bind-params and casting types
-        $resultset = $query->execute($bindParams, $bindTypes);
+        /**
+         * Execute the query passing the bind-params and casting-types
+         */
+        $resultset = $query->execute();
 
-        //Define a hydration mode
-        if (is_object($resultset) === true && isset($params['hydration']) === true) {
-            $resultset->setHydrateMode($params['hydration']);
+        /**
+         * Define an hydration mode
+         */
+        if (is_object($resultset)) {
+            if (isset($params["hydration"])) {
+                $hydration = $params["hydration"];
+                $resultset->setHydrateMode($hydration);
+            }
         }
 
         return $resultset;
@@ -915,44 +1054,67 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public static function findFirst($parameters = null)
     {
-        if (is_array($parameters) === false) {
-            $params = array();
-            if (is_null($parameters) === false) {
+
+        $dependencyInjector = Di::getDefault();
+        $manager            = $dependencyInjector->getShared("modelsManager");
+
+        if (!is_array($parameters)) {
+            $params = [];
+            if ($parameters !== null) {
                 $params[] = $parameters;
             }
         } else {
             $params = $parameters;
         }
 
-        //Builds a query with the passed parameters
-        $builder = new Builder($params);
+        /**
+         * Builds a query with the passed parameters
+         */
+        $builder = $manager->createBuilder($params);
         $builder->from(get_called_class());
 
-        //We only want the first record
+        /**
+         * We only want the first record
+         */
         $builder->limit(1);
+
         $query = $builder->getQuery();
 
-        $bindParams = null;
-        $bindTypes  = null;
+        /**
+         * Check for bind parameters
+         */
+        if (isset($params["bind"])) {
+            $bindParams = $params["bind"];
 
-        //Check for bind parameters
-        if (isset($params['bind']) === true) {
-            $bindParams = $params['bind'];
-            if (isset($params['bindTypes']) === true) {
-                $bindTypes = $params['bindTypes'];
+            if (is_array($bindParams)) {
+                $query->setBindParams($bindParams, true);
+            }
+
+            if (isset($params["bindTypes"])) {
+                $bindTypes = $params["bindTypes"];
+                if (is_array($bindTypes)) {
+                    $query->setBindTypes($bindTypes, true);
+                }
             }
         }
 
-        //Pass the cache options to the query
-        if (isset($params['cache']) === true) {
-            $query->cache($params['cache']);
+        /**
+         * Pass the cache options to the query
+         */
+        if (isset($params["cache"])) {
+            $cache = $params["cache"];
+            $query->cache($cache);
         }
 
-        //Return only the first row
+        /**
+         * Return only the first row
+         */
         $query->setUniqueRow(true);
 
-        //Execute the query passing the bind-params and casting-types
-        return $query->execute($bindParams, $bindTypes);
+        /**
+         * Execute the query passing the bind-params and casting-types
+         */
+        return $query->execute();
     }
 
     /**
@@ -961,15 +1123,22 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param \Phalcon\DiInterface|null $dependencyInjector
      * @return \Phalcon\Mvc\Model\Criteria
      */
-    public static function query($dependencyInjector = null)
+    public static function query(DiInterface $dependencyInjector = null)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
             $dependencyInjector = DI::getDefault();
         }
 
-        $criteria = new Criteria();
-        $criteria->setDi($dependencyInjector);
+        /**
+         * Gets Criteria instance from DI container
+         */
+        if ($dependencyInjector instanceof DiInterface) {
+            $criteria = $dependencyInjector->get("Phalcon\\Mvc\\Model\\Criteria");
+        } else {
+            $criteria = new Criteria();
+            $criteria->setDI($dependencyInjector);
+        }
         $criteria->setModelName(get_called_class());
 
         return $criteria;
@@ -984,132 +1153,140 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return boolean
      * @throws Exception
      */
-    protected function _exists($metaData, $connection, $table = null)
+    protected function _exists(MetaDataInterface $metaData, AdapterInterface $connection, $table = null)
     {
-        if (is_object($metaData) === false ||
-            $metaData instanceof MetaDataInterface === false ||
-            is_object($connection) === false ||
-            $connection instanceof DbAdapterInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
 
-        $uniqueParams  = null;
-        $uniqueTypes   = null;
-        $numberPrimary = null;
+        $uniqueParams = null;
+        $uniqueTypes  = null;
+        $uniqueKey    = $this->_uniqueKey;
 
         //Builds an unique primary key condition
-        if (is_null($this->_uniqueKey) === true) {
+
+        if ($uniqueKey === null) {
+
             $primaryKeys   = $metaData->getPrimaryKeyAttributes($this);
             $bindDataTypes = $metaData->getBindTypes($this);
-            $numberPrimary = count($primaryKeys);
 
-            if ($numberPrimary == false) {
+            $numberPrimary = count($primaryKeys);
+            if (!$numberPrimary) {
                 return false;
             }
 
-            //Check if column renaming is globally activated
-            if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
-                $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === true) {
+            /**
+             * Check if column renaming is globally activated
+             */
+            if (Kernel::getGlobals("orm.column_renaming")) {
                 $columnMap = $metaData->getColumnMap($this);
             } else {
                 $columnMap = null;
             }
 
-            $wherePk     = array();
-            $uniqueKeys  = array();
-            $uniqueTypes = array();
-            $numberEmpty = 0;
+            $numberEmpty  = 0;
+            $wherePk      = [];
+            $uniqueParams = [];
+            $uniqueTypes  = [];
 
-            //We need to create a primary key based on the current data
+            /**
+             * We need to create a primary key based on the current data
+             */
             foreach ($primaryKeys as $field) {
-                if (is_array($columnMap) === true) {
-                    if (isset($columnMap[$field]) === true) {
-                        $attributeField = $columnMap[$field];
-                    } else {
-                        throw new Exception("Column '" . $field . "' isn't part of the column map");
+                if (is_array($columnMap)) {
+                    if (!isset($columnMap[$field])) {
+                        throw new Exception("Column '" . field . "' isn't part of the column map");
                     }
+                    $attributeField = $columnMap[$field];
                 } else {
                     $attributeField = $field;
                 }
 
-                //If the primary key attribute is set, append it to the conditions
-                if (isset($this->$attributeField) === true) {
-                    $value = $this->$attributeField;
-
-                    //We count how many fields are empty, if all fields are empty we don't perform an
-                    //'exist' check
-                    if (empty($value) === true) {
+                /**
+                 * If the primary key attribute is set append it to the conditions
+                 */
+                $value = null;
+                if (isset($this->{$attributeField})) {
+                    $value = $this->{$attributeField};
+                    if ($value === null || $value === "") {
                         $numberEmpty++;
                     }
-
                     $uniqueParams[] = $value;
                 } else {
                     $uniqueParams[] = null;
                     $numberEmpty++;
                 }
 
-                if (isset($bindDataTypes[$field]) === false) {
+                if (!isset($bindDataTypes[$field])) {
                     throw new Exception("Column '" . $field . "' isn't part of the table columns");
+                } else {
+                    $type = $bindDataTypes[$field];
                 }
 
-                $type          = $bindDataTypes[$field];
                 $uniqueTypes[] = $type;
-                $wherePk[]     = $connection->escapeIdentifier($field) . ' = ?';
+                $wherePk[]     = $connection->escapeIdentifier($field) . " = ?";
             }
 
-            //There are no primary key fields defined, assume the record does not eist
-            if ($numberPrimary === $numberEmpty) {
+            /**
+             * There are no primary key fields defined, assume the record does not exist
+             */
+            if ($numberPrimary == $numberEmpty) {
                 return false;
             }
 
-            $joinWhere = implode(' AND ', $wherePk);
+            $joinWhere = join(" AND ", $wherePk);
 
-            //The unique key is composed of 3 parts _uniqueKey, _uniqueParams, _uniqueTypes
+            /**
+             * The unique key is composed of 3 parts _uniqueKey, uniqueParams, uniqueTypes
+             */
             $this->_uniqueKey    = $joinWhere;
             $this->_uniqueParams = $uniqueParams;
             $this->_uniqueTypes  = $uniqueTypes;
             $uniqueKey           = $joinWhere;
         }
 
-        //If we already know if the record exists we don't check it
-        if ($this->_dirtyState != true) {
+
+        /**
+         * If we already know if the record exists we don't check it
+         */
+        if (!$this->_dirtyState) {
             return true;
         }
 
-        if (is_null($uniqueKeys) === true) {
+        if ($uniqueKey === null) {
             $uniqueKey = $this->_uniqueKey;
         }
 
-        if (is_null($uniqueParams) === true) {
+        if ($uniqueParams === null) {
             $uniqueParams = $this->_uniqueParams;
         }
 
-        if (is_null($uniqueTypes) === true) {
+        if ($uniqueTypes === null) {
             $uniqueTypes = $this->_uniqueTypes;
         }
 
         $schema = $this->getSchema();
         $source = $this->getSource();
-
-        if (isset($schema) === true) {
-            $table = array($schema, $source);
+        if ($schema) {
+            $table = [$schema, $source];
         } else {
             $table = $source;
         }
 
-        //Here we use a single COUNT(*) without PHQL to make the execution faster
-        $select = 'SELECT COUNT(*) "rowcount" FROM ' . $connection->escapeIdentifier($table) . ' WHERE ' . $uniqueKey;
-        $num    = $connection->fetchOne($select, null, $uniqueParams, $uniqueTypes);
-
-        if ($num['rowcount'] != 0) {
-            $this->_dirtyState = 0;
+        /**
+         * Here we use a single COUNT(*) without PHQL to make the execution faster
+         */
+        $num = $connection->fetchOne(
+            "SELECT COUNT(*) \"rowcount\" FROM " . $connection->escapeIdentifier($table) . " WHERE " . $uniqueKey, null, $uniqueParams, $uniqueTypes
+        );
+        if ($num["rowcount"]) {
+            $this->_dirtyState = self::DIRTY_STATE_PERSISTENT;
             return true;
         } else {
-            $this->_dirtyState = 1;
+            $this->_dirtyState = self::DIRTY_STATE_TRANSIENT;
         }
 
         return false;
     }
+
+    // ====== 伟大的分割线 ======
 
     /**
      * Generate a PHQL SELECT statement for an aggregate
@@ -1609,7 +1786,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
             //Call 'onValidationFails' if the validation fails
             if ($error === true) {
-                if (isset($GLOBALS['_PHALCON_ORM_EVENTS']) === true && $GLOBALS['_PHALCON_ORM_EVENTS'] === true) {
+                $itGlobal = Kernel::getGlobals('_PHALCON_ORM_EVENTS');
+                if (isset($itGlobal) && Kernel::getGlobals('_PHALCON_ORM_EVENTS') === true) {
                     $this->fireEvent('onValidationFails');
                     $this->_cancelOperation();
                 }
@@ -4186,6 +4364,15 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         if (isset($options['phqlLiterals']) === true) {
             $GLOBALS['_PHALCON_ORM_ENABLE_LITERALS'] = ($options['phqlLiterals'] == true ? true : false);
         }
+    }
+
+    /**
+     * Reset a model instance data
+     */
+    public function reset()
+    {
+        $this->_uniqueParams = null;
+        $this->_snapshot = null;
     }
 
 }

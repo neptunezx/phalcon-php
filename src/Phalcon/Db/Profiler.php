@@ -9,34 +9,53 @@ use \Phalcon\Db\Profiler\Item;
  *
  * Instances of Phalcon\Db can generate execution profiles
  * on SQL statements sent to the relational database. Profiled
- * information includes execution time in miliseconds.
+ * information includes execution time in milliseconds.
  * This helps you to identify bottlenecks in your applications.
  *
  * <code>
+ * use Phalcon\Db\Profiler;
+ * use Phalcon\Events\Event;
+ * use Phalcon\Events\Manager;
  *
- *  $profiler = new Phalcon\Db\Profiler();
+ * $profiler = new Profiler();
+ * $eventsManager = new Manager();
  *
- *  //Set the connection profiler
- *  $connection->setProfiler($profiler);
+ * $eventsManager->attach(
+ *     "db",
+ *     function (Event $event, $connection) use ($profiler) {
+ *         if ($event->getType() === "beforeQuery") {
+ *             $sql = $connection->getSQLStatement();
  *
- *  $sql = "SELECT buyer_name, quantity, product_name
- *  FROM buyers LEFT JOIN products ON
- *  buyers.pid=products.id";
+ *             // Start a profile with the active connection
+ *             $profiler->startProfile($sql);
+ *         }
  *
- *  //Execute a SQL statement
- *  $connection->query($sql);
+ *         if ($event->getType() === "afterQuery") {
+ *             // Stop the active profile
+ *             $profiler->stopProfile();
+ *         }
+ *     }
+ * );
  *
- *  //Get the last profile in the profiler
- *  $profile = $profiler->getLastProfile();
+ * // Set the event manager on the connection
+ * $connection->setEventsManager($eventsManager);
  *
- *  echo "SQL Statement: ", $profile->getSQLStatement(), "\n";
- *  echo "Start Time: ", $profile->getInitialTime(), "\n";
- *  echo "Final Time: ", $profile->getFinalTime(), "\n";
- *  echo "Total Elapsed Time: ", $profile->getTotalElapsedSeconds(), "\n";
  *
+ * $sql = "SELECT buyer_name, quantity, product_name
+ * FROM buyers LEFT JOIN products ON
+ * buyers.pid=products.id";
+ *
+ * // Execute a SQL statement
+ * $connection->query($sql);
+ *
+ * // Get the last profile in the profiler
+ * $profile = $profiler->getLastProfile();
+ *
+ * echo "SQL Statement: ", $profile->getSQLStatement(), "\n";
+ * echo "Start Time: ", $profile->getInitialTime(), "\n";
+ * echo "Final Time: ", $profile->getFinalTime(), "\n";
+ * echo "Total Elapsed Time: ", $profile->getTotalElapsedSeconds(), "\n";
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/profiler.c
  */
 class Profiler
 {
@@ -67,14 +86,28 @@ class Profiler
 
     /**
      * Starts the profile of a SQL sentence
+     * @param      $sqlStatement
+     * @param null $sqlVariables
+     * @param null $sqlBindTypes
      *
-     * @param string $sqlStatement
-     * @return \Phalcon\Db\Profiler
+     * @return $this
+     * @throws \Phalcon\Db\Exception
      */
-    public function startProfile($sqlStatement)
+    public function startProfile($sqlStatement, $sqlVariables = null, $sqlBindTypes = null)
     {
         $activeProfile = new Item();
         $activeProfile->setSqlStatement($sqlStatement);
+
+
+        if (is_array($sqlVariables)) {
+            $activeProfile->setSqlVariables($sqlVariables);
+        }
+
+        if (is_array($sqlBindTypes)) {
+            $activeProfile->setSqlBindTypes($sqlBindTypes);
+        }
+
+
         $activeProfile->setInitialTime(microtime(true));
         if (method_exists($this, 'beforeStartProfile') === true) {
             $this->beforeStartProfile($activeProfile);
@@ -85,10 +118,11 @@ class Profiler
         return $this;
     }
 
+
     /**
-     * Stops the active profile
-     *
-     * @return \Phalcon\Db\Profiler
+     *  Stops the active profile
+     * @return $this
+     * @throws \Phalcon\Db\Exception
      */
     public function stopProfile()
     {

@@ -2,11 +2,12 @@
 
 namespace Phalcon\Mvc\View;
 
-use \Phalcon\Di\Injectable;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Mvc\View\Exception;
-use \Phalcon\Mvc\View\Engine\Php;
+use Phalcon\Di\Injectable;
+use Phalcon\Mvc\View\Exception;
+use Phalcon\Mvc\ViewBaseInterface;
+use Phalcon\Cache\BackendInterface;
+use Phalcon\Mvc\View\EngineInterface;
+use Phalcon\Mvc\View\Engine\Php as PhpEngine;
 
 /**
  * Phalcon\Mvc\View\Simple
@@ -20,7 +21,7 @@ use \Phalcon\Mvc\View\Engine\Php;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/view/simple.c
  */
-class Simple extends Injectable implements EventsAwareInterface, InjectionAwareInterface
+class Simple extends Injectable implements ViewBaseInterface
 {
 
     /**
@@ -106,9 +107,9 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * \Phalcon\Mvc\View constructor
      *
-     * @param array|null $options
+     * @param array $options
      */
-    public function __construct($options = null)
+    public function __construct($options = [])
     {
         if (is_array($options) === true) {
             $this->_options = $options;
@@ -133,7 +134,7 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     /**
      * Gets views directory
      *
-     * @return string|null
+     * @return string
      */
     public function getViewsDir()
     {
@@ -172,16 +173,19 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
     protected function _loadTemplateEngines()
     {
         //If engines aren't initialized 'engines' is false
+        $engines = $this->_engines;
         if ($this->_engines === false) {
+            $dependencyInjector = $this->_dependencyInjector;
             $engines = array();
+            $registeredEngines = $this->_registeredEngines;
 
-            if (is_array($this->_registeredEngines) === false) {
-                //We use Phalcon\Mvc\View\Engine\Php as default
-                //@note $this->_dependencyInjector might be null
-                $php_engine = new Php($this, $this->_dependencyInjector);
+            if (is_array($registeredEngines) === false) {
 
-                //Use .phtml as extension for the PHP engine
-                $engines['.phtml'] = $php_engine;
+                /**
+                 * We use Phalcon\Mvc\View\Engine\Php as default
+                 * Use .phtml as extension for the PHP engine
+                 */
+                $engines[".phtml"] = new PhpEngine($this, $dependencyInjector);
             } else {
                 if (is_object($this->_dependencyInjector) === false) {
                     throw new Exception('A dependency injector container is required to obtain the application services');
@@ -189,32 +193,36 @@ class Simple extends Injectable implements EventsAwareInterface, InjectionAwareI
 
                 //Arguments for instantiated engines
                 $arguments = array($this, $this->_dependencyInjector);
-                foreach ($this->_registeredEngines as $extension => $engine_service) {
-                    if (is_object($engine_service) === true) {
-                        //Engine can be a closure
-                        if ($engine_service instanceof Closure === true) {
-                            $engine_object = call_user_func_array($engine_service, $arguments);
-                        } else {
-                            $engine_object = $engine_service;
-                        }
+                foreach ($registeredEngines as $extension => $engineService) {
+                    if (is_object($engineService)) {
+                        /**
+                         * Engine can be a closure
+                         */
+                        if ($engineService instanceof \Closure) {
+                            $engineObject = call_user_func_array($engineService, $arguments);
+						} else {
+                            $engineObject = $engineService;
+						}
                     } else {
-                        //Engine can be a string representing a service in the DI
-                        if (is_string($engine_service) === true) {
-                            $engine_object = $this->_dependencyInjector->getShared($engine_service, $arguments);
-                        } else {
-                            throw new Exception('Invalid template engine registration for extension: ' . $extension);
+                        /**
+                         * Engine can be a string representing a service in the DI
+                         */
+                        if (is_string($engineService)) {
+                            $engineObject = $dependencyInjector->getShared($engineService, $arguments);
+						} else {
+                            throw new Exception("Invalid template engine registration for extension: " . $extension);
                         }
-                    }
-
-                    $engines[$extension] = $engine_object;
+					}
+                    $engines[$extension] = $engineObject;
                 }
             }
-            $this->_engines           = true;
-            $this->_registeredEngines = $engines;
+            $this->_engines = $engines;
+        }
+        else {
+            $engines = $this->_engines;
         }
 
-        //@note fixed wrong code
-        return $this->_registeredEngines;
+        return $engines;
     }
 
     /**
