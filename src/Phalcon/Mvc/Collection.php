@@ -6,6 +6,7 @@ use MongoCollection;
 use MongoDb;
 use MongoId;
 use Phalcon\Di;
+use Phalcon\Events\ManagerInterface;
 use Phalcon\Di\InjectionAwareInterface;
 use Phalcon\DiInterface;
 use Phalcon\Mvc\Collection\Document;
@@ -237,7 +238,7 @@ class Collection implements CollectionInterface, InjectionAwareInterface, Serial
 	 *
 	 * @param \Phalcon\Events\ManagerInterface $eventsManager
 	 */
-	protected function setEventsManager($eventsManager)
+	protected function setEventsManager(ManagerInterface $eventsManager)
 	{
 		/*
 		//changlong not sure this is useful
