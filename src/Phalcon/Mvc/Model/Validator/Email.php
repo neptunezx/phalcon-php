@@ -75,7 +75,7 @@ class Email extends Validator
                 $message = "Value of field ':field' must have a valid e-mail format";
             }
 
-            $this->appendMessage(strtr($message, ":field", $field), $field, "Email");
+            $this->appendMessage(strtr($message, ':field', $field), $field, "Email");
             return false;
         }
 

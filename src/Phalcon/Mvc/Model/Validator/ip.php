@@ -129,7 +129,7 @@ class Ip extends Validator
         if (!filter_var($value, FILTER_VALIDATE_IP, $options)) {
 
             $message = $this->getOption("message", "IP address is incorrect");
-            $this->appendMessage(strtr($message, ":field", $field), $field, "IP");
+            $this->appendMessage(strtr($message, ':field', $field), $field, "IP");
 
             return false;
         }

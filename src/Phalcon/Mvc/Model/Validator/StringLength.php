@@ -103,7 +103,7 @@ class StringLength extends Validator
                     $message = "Value of field '" . $field . "' exceeds the maximum " . $maximum . ' characters';
                 }
 
-                $this->appendMessage(strtr($message, array(":field" => $field, ":max" =>  $maximum)), $field, 'TooLong');
+                $this->appendMessage(strtr($message, array(':field' => $field, ":max" =>  $maximum)), $field, 'TooLong');
                 return false;
             }
         }
@@ -122,7 +122,7 @@ class StringLength extends Validator
                     $message = "Value of field '" . $field . "' is less than the minimum " . $minimum . ' characters';
                 }
 
-                $this->appendMessage(strtr($message, array(":field" => $field, ":min" => $minimum)), $field, 'TooShort');
+                $this->appendMessage(strtr($message, array(':field' => $field, ":min" => $minimum)), $field, 'TooShort');
                 return false;
             }
         }

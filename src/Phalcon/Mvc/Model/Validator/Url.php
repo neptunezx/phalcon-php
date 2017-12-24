@@ -76,7 +76,7 @@ class Url extends Validator
                 $message = ":field does not have a valid url format";
             }
 
-            $this->appendMessage(strtr($message, ":field", $field), $field, 'Url');
+            $this->appendMessage(strtr($message, ':field', $field), $field, 'Url');
             return false;
         }
 

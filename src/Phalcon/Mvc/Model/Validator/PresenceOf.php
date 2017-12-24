@@ -76,7 +76,7 @@ class PresenceOf extends Validator
             if (empty($message)) {
                 $message = "':field' is required";
             }
-            $this->appendMessage(strtr($message, ":field", $field), $field, "PresenceOf");
+            $this->appendMessage(strtr($message, ':field', $field), $field, "PresenceOf");
             return false;
         }
 

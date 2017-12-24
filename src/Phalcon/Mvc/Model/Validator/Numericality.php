@@ -80,7 +80,7 @@ class Numericality extends Validator
                 $message = "Value of field '" . $field . "' must be numeric";
             }
 
-            $this->appendMessage(strtr($message, ":field", $field), $field, 'Numericality');
+            $this->appendMessage(strtr($message, ':field', $field), $field, 'Numericality');
 
             return false;
         }

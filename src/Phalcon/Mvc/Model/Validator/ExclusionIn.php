@@ -93,7 +93,7 @@ class ExclusionIn extends Validator
                 $message = "Value of field '" . $fieldName . "' must not be part of list: " . implode(', ', $domain);
             }
 
-            $this->appendMessage(strtr($message,array(":field"=>$fieldName,":domain"=>join(', ', $domain))), $fieldName, 'Exclusion');
+            $this->appendMessage(strtr($message,array(':field'=>$fieldName,":domain"=>join(', ', $domain))), $fieldName, 'Exclusion');
             return false;
         }
 

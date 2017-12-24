@@ -100,7 +100,7 @@ class InclusionIn extends Validator
                 $message = "Value of field '" . $fieldName . "' must not be part of list: " . implode(', ', $domain);
             }
 
-            $this->appendMessage(strtr($message, array(":field"=> $field, ":domain"=> join(", ", $domain))), $fieldName, 'Inclusion');
+            $this->appendMessage(strtr($message, array(':field'=> $field, ":domain"=> join(", ", $domain))), $fieldName, 'Inclusion');
             return false;
         }
 

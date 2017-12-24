@@ -211,7 +211,7 @@ class Uniqueness extends Validator
                     $message = "Value of fields: :fields are already present in another record";
                 }
             } else {
-                $replacePairs = array(":field" => $field);
+                $replacePairs = array(':field' => $field);
                 if (empty($message)) {
                     $message = "Value of field: ':field' is already present in another record";
                 }
