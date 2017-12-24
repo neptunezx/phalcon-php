@@ -7,42 +7,42 @@ use Phalcon\Validation\Validator;
 use Phalcon\Validation\Message;
 
 /**
- * Phalcon\Validation\Validator\PresenceOf
+ * Phalcon\Validation\Validator\Url
  *
- * Validates that a value is not null or empty string
+ * Checks if a value has a url format
  *
  * <code>
  * use Phalcon\Validation;
- * use Phalcon\Validation\Validator\PresenceOf;
+ * use Phalcon\Validation\Validator\Url as UrlValidator;
  *
  * $validator = new Validation();
  *
  * $validator->add(
- *     "name",
- *     new PresenceOf(
+ *     "url",
+ *     new UrlValidator(
  *         [
- *             "message" => "The name is required",
+ *             "message" => ":field must be a url",
  *         ]
  *     )
  * );
  *
  * $validator->add(
  *     [
- *         "name",
- *         "email",
+ *         "url",
+ *         "homepage",
  *     ],
- *     new PresenceOf(
+ *     new UrlValidator(
  *         [
  *             "message" => [
- *                 "name"  => "The name is required",
- *                 "email" => "The email is required",
- *             ],
+ *                 "url"      => "url must be a url",
+ *                 "homepage" => "homepage must be a url",
+ *             ]
  *         ]
  *     )
  * );
  * </code>
  */
-class PresenceOf extends Validator
+class Url extends Validator
 {
     /**
      * Executes the validation
@@ -62,25 +62,24 @@ class PresenceOf extends Validator
             throw new Exception('Invalid parameter type.');
         }
         $value = $validation->getValue($field);
-        if ($value === null || $value === "") {
+
+        if (!filter_var($value, FILTER_VALIDATE_URL)) {
             $label = $this->prepareLabel($validation, $field);
-            $message = $this->prepareMessage($validation, $field, "PresenceOf");
+            $message = $this->prepareMessage($validation, $field, "Url");
             $code = $this->prepareCode($field);
 
-            $replacePairs = array(':field' => $label);
+            $replacePairs = array(":field" => $label);
 
             $validation->appendMessage(
                 new Message(
                     strtr($message, $replacePairs),
                     $field,
-                    "PresenceOf",
+                    "Url",
                     $code
                 )
             );
-
             return false;
         }
-
         return true;
     }
 }

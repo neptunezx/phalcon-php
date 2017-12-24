@@ -3,36 +3,35 @@
 namespace Phalcon\Validation;
 
 /**
- * Phalcon\Validation\ValidatorInterface initializer
+ * Phalcon\Validation\ValidatorInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validatorinterface.c
+ * Interface for Phalcon\Validation\Validator
  */
+
 interface ValidatorInterface
 {
-
     /**
      * Checks if an option is defined
-     *
      * @param string $key
-     * @return mixed
+     * @return boolean
      */
-    public function isSetOption($key);
+    public function hasOption($key);
 
-    /**
+	/**
      * Returns an option in the validator's options
-     * Returns null if the option hasn't been set
-     *
+     * Returns null if the option hasn't set
      * @param string $key
+     * @param mixed|null defaultValue
      * @return mixed
      */
-    public function getOption($key);
+	public function getOption($key, $defaultValue = null);
 
-    /**
+	/**
      * Executes the validation
-     *
-     * @param \Phalcon\Validator $validator
+     * @param \Phalcon\Validation $validation
      * @param string $attribute
-     * @return \Phalcon\Validation\Message\Group
+     * @return boolean
      */
-    public function validate($validator, $attribute);
+	public function validate($validation, $attribute);
+
 }

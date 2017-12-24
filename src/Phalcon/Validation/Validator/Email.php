@@ -3,7 +3,6 @@
 namespace Phalcon\Validation\Validator;
 
 use \Phalcon\Validation\Validator;
-use \Phalcon\Validation\ValidatorInterface;
 use \Phalcon\Validation\Message;
 use \Phalcon\Validation\Exception;
 use \Phalcon\Validation;
@@ -14,45 +13,73 @@ use \Phalcon\Validation;
  * Checks if a value has a correct e-mail format
  *
  * <code>
+ * use Phalcon\Validation;
  * use Phalcon\Validation\Validator\Email as EmailValidator;
  *
- * $validator->add('email', new EmailValidator(array(
- *   'message' => 'The e-mail is not valid'
- * )));
- * </code>
+ * $validator = new Validation();
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/email.c
+ * $validator->add(
+ *     "email",
+ *     new EmailValidator(
+ *         [
+ *             "message" => "The e-mail is not valid",
+ *         ]
+ *     )
+ * );
+ *
+ * $validator->add(
+ *     [
+ *         "email",
+ *         "anotherEmail",
+ *     ],
+ *     new EmailValidator(
+ *         [
+ *             "message" => [
+ *                 "email"        => "The e-mail is not valid",
+ *                 "anotherEmail" => "The another e-mail is not valid",
+ *             ],
+ *         ]
+ *     )
+ * );
+ * </code>
  */
-class Email extends Validator implements ValidatorInterface
+class Email extends Validator
 {
 
     /**
      * Executes the validation
      *
-     * @param \Phalcon\Validation $validator
-     * @param string $attribute
+     * @param \Phalcon\Validation $validation
+     * @param string $field
      * @return boolean
      * @throws Exception
      */
-    public function validate($validator, $attribute)
+    public function validate($validation = null, $field = null)
     {
-        if (is_object($validator) === false ||
-            $validator instanceof Validation === false) {
+        if (is_object($validation) === false ||
+            $validation instanceof Validation === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($attribute) === false) {
+        if (is_string($field) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $value = $validator->getValue($attribute);
-        if (filter_var($value, \FILTER_VALIDATE_EMAIL) === false) {
-            $message = $this->getOption('message');
-            if (empty($message) === true) {
-                $message = "Value of field '" . $attribute . "' must have a valid e-mail format";
-            }
+        $value = $validation->getValue($field);
 
-            $validator->appendMessage(new Message($message, $attribute, 'Email'));
+        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            $label = $this->prepareLabel($validation, $field);
+            $message = $this->prepareMessage($validation, $field, "Email");
+            $code = $this->prepareCode($field);
+            $replacePairs[':field'] = $label;
+            $validation->appendMessage(
+                new Message(
+                    strtr($message, $replacePairs),
+                    $field,
+                    "Email",
+                    $code
+                )
+            );
 
             return false;
         }

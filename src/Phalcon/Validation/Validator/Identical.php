@@ -3,7 +3,6 @@
 namespace Phalcon\Validation\Validator;
 
 use \Phalcon\Validation\Validator;
-use \Phalcon\Validation\ValidatorInterface;
 use \Phalcon\Validation\Message;
 use \Phalcon\Validation\Exception;
 use \Phalcon\Validation;
@@ -14,45 +13,96 @@ use \Phalcon\Validation;
  * Checks if a value is identical to other
  *
  * <code>
+ * use Phalcon\Validation;
  * use Phalcon\Validation\Validator\Identical;
  *
- * $validator->add('terms', new Identical(array(
- *   'value'   => 'yes',
- *   'message' => 'Terms and conditions must be accepted'
- * )));
- * </code>
+ * $validator = new Validation();
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/identical.c
+ * $validator->add(
+ *     "terms",
+ *     new Identical(
+ *         [
+ *             "accepted" => "yes",
+ *             "message" => "Terms and conditions must be accepted",
+ *         ]
+ *     )
+ * );
+ *
+ * $validator->add(
+ *     [
+ *         "terms",
+ *         "anotherTerms",
+ *     ],
+ *     new Identical(
+ *         [
+ *             "accepted" => [
+ *                 "terms"        => "yes",
+ *                 "anotherTerms" => "yes",
+ *             ],
+ *             "message" => [
+ *                 "terms"        => "Terms and conditions must be accepted",
+ *                 "anotherTerms" => "Another terms  must be accepted",
+ *             ],
+ *         ]
+ *     )
+ * );
+ * </code>
  */
-class Identical extends Validator implements ValidatorInterface
+class Identical extends Validator
 {
 
     /**
      * Executes the validation
      *
-     * @param \Phalcon\Validation $validator
-     * @param string $attribute
+     * @param \Phalcon\Validation $validation
+     * @param string $field
      * @return boolean
      * @throws Exception
      */
-    public function validate($validator, $attribute)
+    public function validate($validation = null, $field = null)
     {
-        if (is_object($validator) === false ||
-            $validator instanceof Validation === false) {
+        if (is_object($validation) === false ||
+            $validation instanceof Validation === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($attribute) === false) {
+        if (is_string($field) === false) {
             throw new Exception('Invalid parameter type.');
         }
+        $valid = null;
+        $value = $validation->getValue($field);
 
-        if ($validator->getValue($attribute) !== $this->getOption('value')) {
-            $message = $this->getOption('message');
-            if (empty($message) === true) {
-                $message = $attribute . ' does not have the expected value';
+        if ($this->hasOption("accepted")) {
+            $accepted = $this->getOption("accepted");
+            if (is_array($accepted)) {
+                $accepted = $accepted[$field];
             }
+            $valid = ($value == $accepted);
+        } else {
+            if ($this->hasOption("value")) {
+                $valueOption = $this->getOption("value");
+                if (is_array($valueOption)) {
+                    $valueOption = $valueOption[$field];
+                }
+                $valid = ($value == $valueOption);
+            }
+        }
 
-            $validator->appendMessage(new Message($message, $attribute, 'Identical'));
+        if (!$valid) {
+            $label = $this->prepareLabel($validation, $field);
+            $message = $this->prepareMessage($validation, $field, "Identical");
+            $code = $this->prepareCode($field);
+
+            $replacePairs = array(':field' => $label);
+
+            $validation->appendMessage(
+                new Message(
+                    strtr($message, $replacePairs),
+                    $field,
+                    "Identical",
+                    $code
+                )
+            );
 
             return false;
         }

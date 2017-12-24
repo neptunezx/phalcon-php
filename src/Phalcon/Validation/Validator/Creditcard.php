@@ -8,53 +8,42 @@ use Phalcon\Validation\Validator;
 use Phalcon\Validation\Exception;
 
 /**
- * Phalcon\Validation\Validator\Between
+ * Phalcon\Validation\Validator\CreditCard
  *
- * Validates that a value is between an inclusive range of two values.
- * For a value x, the test is passed if minimum<=x<=maximum.
+ * Checks if a value has a valid credit card number
  *
  * <code>
  * use Phalcon\Validation;
- * use Phalcon\Validation\Validator\Between;
+ * use Phalcon\Validation\Validator\CreditCard as CreditCardValidator;
  *
  * $validator = new Validation();
  *
  * $validator->add(
- *     "price",
- *     new Between(
+ *     "creditCard",
+ *     new CreditCardValidator(
  *         [
- *             "minimum" => 0,
- *             "maximum" => 100,
- *             "message" => "The price must be between 0 and 100",
+ *             "message" => "The credit card number is not valid",
  *         ]
  *     )
  * );
  *
  * $validator->add(
  *     [
- *         "price",
- *         "amount",
+ *         "creditCard",
+ *         "secondCreditCard",
  *     ],
- *     new Between(
+ *     new CreditCardValidator(
  *         [
- *             "minimum" => [
- *                 "price"  => 0,
- *                 "amount" => 0,
- *             ],
- *             "maximum" => [
- *                 "price"  => 100,
- *                 "amount" => 50,
- *             ],
  *             "message" => [
- *                 "price"  => "The price must be between 0 and 100",
- *                 "amount" => "The amount must be between 0 and 50",
+ *                 "creditCard"       => "The credit card number is not valid",
+ *                 "secondCreditCard" => "The second credit card number is not valid",
  *             ],
  *         ]
  *     )
  * );
  * </code>
  */
-class Between extends Validator
+class CreditCard extends Validator
 {
 
     /**
@@ -76,28 +65,21 @@ class Between extends Validator
         }
 
         $value = $validation->getValue($field);
-        $minimum = $this->getOption('minimum');
-        $maximum = $this->getOption('maximum');
-        if (is_array($minimum)) {
-            $minimum = $minimum[$field];
-        }
 
-        if (is_array($maximum)) {
-            $maximum = $maximum[$field];
-        }
+        $valid = $this->verifyByLuhnAlgorithm($value);
 
-        if ($value <= $minimum || $value >= $maximum) {
+        if (!$valid) {
             $label = $this->prepareLabel($validation, $field);
-            $message = $this->prepareMessage($validation, $field, "Between");
+            $message = $this->prepareMessage($validation, $field, "CreditCard");
             $code = $this->prepareCode($field);
+
             $replacePairs[':field'] = $label;
-            $replacePairs[":min"] = $minimum;
-            $replacePairs[":max"] = $maximum;
+
             $validation->appendMessage(
                 new Message(
                     strtr($message, $replacePairs),
                     $field,
-                    "Between",
+                    "CreditCard",
                     $code
                 )
             );
@@ -107,5 +89,30 @@ class Between extends Validator
 
         return true;
     }
+
+    /**
+     * is a simple checksum formula used to validate a variety of identification numbers
+     * @param  string number
+     * @return boolean
+     * @throws Exception
+     */
+    private function verifyByLuhnAlgorithm($number)
+    {
+        if (!is_string($number)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        $digits = (array)str_split($number);
+
+        $hash = "";
+
+        foreach (array_reverse($digits) as $position => $digit) {
+            $hash .= ($position % 2 ? $digit * 2 : $digit);
+        }
+
+        $result = array_sum(str_split($hash));
+
+        return ($result % 10 == 0);
+    }
+
 
 }

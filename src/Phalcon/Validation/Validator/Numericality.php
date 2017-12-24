@@ -7,42 +7,42 @@ use Phalcon\Validation\Validator;
 use Phalcon\Validation\Message;
 
 /**
- * Phalcon\Validation\Validator\PresenceOf
+ * Phalcon\Validation\Validator\Numericality
  *
- * Validates that a value is not null or empty string
+ * Check for a valid numeric value
  *
  * <code>
  * use Phalcon\Validation;
- * use Phalcon\Validation\Validator\PresenceOf;
+ * use Phalcon\Validation\Validator\Numericality;
  *
  * $validator = new Validation();
  *
  * $validator->add(
- *     "name",
- *     new PresenceOf(
+ *     "price",
+ *     new Numericality(
  *         [
- *             "message" => "The name is required",
+ *             "message" => ":field is not numeric",
  *         ]
  *     )
  * );
  *
  * $validator->add(
  *     [
- *         "name",
- *         "email",
+ *         "price",
+ *         "amount",
  *     ],
- *     new PresenceOf(
+ *     new Numericality(
  *         [
  *             "message" => [
- *                 "name"  => "The name is required",
- *                 "email" => "The email is required",
- *             ],
+ *                 "price"  => "price is not numeric",
+ *                 "amount" => "amount is not numeric",
+ *             ]
  *         ]
  *     )
  * );
  * </code>
  */
-class PresenceOf extends Validator
+class Numericality extends Validator
 {
     /**
      * Executes the validation
@@ -62,9 +62,10 @@ class PresenceOf extends Validator
             throw new Exception('Invalid parameter type.');
         }
         $value = $validation->getValue($field);
-        if ($value === null || $value === "") {
+
+        if (!preg_match("/^-?\d+\.?\d*$/", $value)) {
             $label = $this->prepareLabel($validation, $field);
-            $message = $this->prepareMessage($validation, $field, "PresenceOf");
+            $message = $this->prepareMessage($validation, $field, "Numericality");
             $code = $this->prepareCode($field);
 
             $replacePairs = array(':field' => $label);
@@ -73,7 +74,7 @@ class PresenceOf extends Validator
                 new Message(
                     strtr($message, $replacePairs),
                     $field,
-                    "PresenceOf",
+                    "Numericality",
                     $code
                 )
             );

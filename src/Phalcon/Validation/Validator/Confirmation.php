@@ -2,11 +2,10 @@
 
 namespace Phalcon\Validation\Validator;
 
-use \Phalcon\Validation\Validator;
-use \Phalcon\Validation\ValidatorInterface;
-use \Phalcon\Validation\Exception;
-use \Phalcon\Validation\Message;
-use \Phalcon\Validation;
+use Phalcon\Validation;
+use Phalcon\Validation\Message;
+use Phalcon\Validation\Validator;
+use Phalcon\Validation\Exception;
 
 /**
  * Phalcon\Validation\Validator\Confirmation
@@ -14,51 +13,123 @@ use \Phalcon\Validation;
  * Checks that two values have the same value
  *
  * <code>
+ * use Phalcon\Validation;
  * use Phalcon\Validation\Validator\Confirmation;
  *
- * $validator->add('password', new Confirmation(array(
- *   'message' => 'Password doesn\'t match confirmation',
- *   'with' => 'confirmPassword'
- * )));
- * </code>
+ * $validator = new Validation();
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/confirmation.c
+ * $validator->add(
+ *     "password",
+ *     new Confirmation(
+ *         [
+ *             "message" => "Password doesn't match confirmation",
+ *             "with"    => "confirmPassword",
+ *         ]
+ *     )
+ * );
+ *
+ * $validator->add(
+ *     [
+ *         "password",
+ *         "email",
+ *     ],
+ *     new Confirmation(
+ *         [
+ *             "message" => [
+ *                 "password" => "Password doesn't match confirmation",
+ *                 "email"    => "Email doesn't match confirmation",
+ *             ],
+ *             "with" => [
+ *                 "password" => "confirmPassword",
+ *                 "email"    => "confirmEmail",
+ *             ],
+ *         ]
+ *     )
+ * );
+ * </code>
  */
-class Confirmation extends Validator implements ValidatorInterface
+class Confirmation extends Validator
 {
 
     /**
      * Executes the validation
      *
-     * @param \Phalcon\Validation $validator
-     * @param string $attribute
+     * @param \Phalcon\Validation $validation
+     * @param string $field
      * @return boolean
      * @throws Exception
      */
-    public function validate($validator, $attribute)
+    public function validate($validation = null, $field = null)
     {
-        if (is_object($validator) === false ||
-            $validator instanceof Validation === false) {
+        if (is_object($validation) === false ||
+            $validation instanceof Validation === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!is_string($field) && !is_null($field)) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($attribute) === false) {
-            throw new Exception('Invalid parameter type.');
+        $fieldWith = $this->getOption("with");
+
+        if (is_array($fieldWith)) {
+            $fieldWith = $fieldWith[$field];
         }
 
-        $withAttribute = $this->getOption('with');
-        $value         = $validator->getValue($attribute);
-        if ($value !== $withAttribute) {
-            $message = $this->getOption('message');
-            if (empty($message) === true) {
-                $message = 'Value of \'' . $attribute . '\' and \'' . $withAttribute . '\' don\'t match';
+        $value = $validation->getValue($field);
+        $valueWith = $validation->getValue($fieldWith);
+
+        if (!$this->compare($value, $valueWith)) {
+            $label = $this->prepareLabel($validation, $field);
+            $message = $this->prepareMessage($validation, $field, "Confirmation");
+            $code = $this->prepareCode($field);
+
+            $labelWith = $this->getOption("labelWith");
+            if (is_array($labelWith)) {
+                $labelWith = $labelWith[$fieldWith];
+            }
+            if (empty ($labelWith)) {
+                $labelWith = $validation->getLabel($fieldWith);
             }
 
-            $validator->appendMessage(new Message($message, $attribute, 'Confirmation'));
+            $replacePairs[':field'] = $label;
+            $replacePairs[":with"] = $labelWith;
+
+            $validation->appendMessage(
+                new Message(
+                    strtr($message, $replacePairs),
+                    $field,
+                    "Confirmation",
+                    $code
+                )
+            );
+
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Compare strings
+     * @param string $a
+     * @param string $b
+     * @return boolean
+     * @throws Exception
+     */
+    protected final function compare($a, $b)
+    {
+        if ($this->getOption("ignoreCase", false)) {
+            /**
+             * mbstring is required here
+             */
+            if (!function_exists("mb_strtolower")) {
+                throw new Exception("Extension 'mbstring' is required");
+            }
+
+            $a = mb_strtolower($a, "utf-8");
+            $b = mb_strtolower($b, "utf-8");
+        }
+        return $a == $b;
     }
 
 }

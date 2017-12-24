@@ -2,106 +2,150 @@
 
 namespace Phalcon\Validation\Validator;
 
-use \Phalcon\Validation\Validator;
-use \Phalcon\Validation\ValidatorInterface;
-use \Phalcon\Validation\Message;
-use \Phalcon\Validation\Exception;
-use \Mvc\Model\Exception as StrangeException; //Look into the original code
-use \Phalcon\Validation;
+use Phalcon\Validation;
+use Phalcon\Validation\Validator;
+use Phalcon\Validation\Message;
 
 /**
  * Phalcon\Validation\Validator\StringLength
  *
  * Validates that a string has the specified maximum and minimum constraints
+ * The test is passed if for a string's length L, min<=L<=max, i.e. L must
+ * be at least min, and at most max.
  *
  * <code>
+ * use Phalcon\Validation;
  * use Phalcon\Validation\Validator\StringLength as StringLength;
  *
- * $validation->add('name_last', new StringLength(array(
- *      'max' => 50,
- *      'min' => 2,
- *      'messageMaximum' => 'We don\'t like really long names',
- *      'messageMinimum' => 'We want more than just their initials'
- * )));
- * </code>
+ * $validator = new Validation();
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/validator/stringlength.c
+ * $validation->add(
+ *     "name_last",
+ *     new StringLength(
+ *         [
+ *             "max"            => 50,
+ *             "min"            => 2,
+ *             "messageMaximum" => "We don't like really long names",
+ *             "messageMinimum" => "We want more than just their initials",
+ *         ]
+ *     )
+ * );
+ *
+ * $validation->add(
+ *     [
+ *         "name_last",
+ *         "name_first",
+ *     ],
+ *     new StringLength(
+ *         [
+ *             "max" => [
+ *                 "name_last"  => 50,
+ *                 "name_first" => 40,
+ *             ],
+ *             "min" => [
+ *                 "name_last"  => 2,
+ *                 "name_first" => 4,
+ *             ],
+ *             "messageMaximum" => [
+ *                 "name_last"  => "We don't like really long last names",
+ *                 "name_first" => "We don't like really long first names",
+ *             ],
+ *             "messageMinimum" => [
+ *                 "name_last"  => "We don't like too short last names",
+ *                 "name_first" => "We don't like too short first names",
+ *             ]
+ *         ]
+ *     )
+ * );
+ * </code>
  */
-class StringLength extends Validator implements ValidatorInterface
+class StringLength extends Validator
 {
-
     /**
      * Executes the validation
-     *
-     * @param \Phalcon\Validation $validator
-     * @param string $attribute
+     * @param \Phalcon\Validation $validation
+     * @param string $field
      * @return boolean
      * @throws Exception
      */
-    public function validate($validator, $attribute)
+    public function validate($validation = null, $field = null)
     {
-        if (is_object($validator) === false ||
-            $validator instanceof Validation === false) {
+        if (is_object($validation) === false ||
+            $validation instanceof Validation === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($attribute) === false) {
+        if (is_string($field) === false) {
             throw new Exception('Invalid parameter type.');
         }
+        // At least one of 'min' or 'max' must be set
+        $isSetMin = $this->hasOption("min");
+        $isSetMax = $this->hasOption("max");
 
-        //At least one of 'min' or 'max' must be set
-        $isSetMin = $this->issetOption('min');
-        $isSetMax = $this->issetOption('max');
-
-        if ($isSetMax === false && $isSetMin === false) {
-            //@note exception type
-            throw new StrangeException('A minimum or maximum must be set');
+        if (!$isSetMin && !$isSetMax) {
+            throw new Exception("A minimum or maximum must be set");
         }
 
-        $value = $validator->getValue($attribute);
+        $value = $validation->getValue($field);
+        $label = $this->prepareLabel($validation, $field);
+        $code = $this->prepareCode($field);
 
-        //Check if mbstring is available to calculate the correct length
-        if (function_exists('mb_strlen') === true) {
+        // Check if mbstring is available to calculate the correct length
+        if (function_exists("mb_strlen")) {
             $length = mb_strlen($value);
         } else {
             $length = strlen($value);
         }
 
-        //Maximum length
-        if ($isSetMax === true) {
-            $maximum = $this->getOption('max');
+        /**
+         * Maximum length
+         */
+        if ($isSetMax) {
 
-            if ($length >= $maximum) {
-                //Check if the developer has defined a custom message
-                $message = $this->getOption('messageMaximum');
-                if (empty($message) === true) {
-                    $message = "Value of field '" . $attribute . "' exceeds the maximum " . $maximum . " characters";
-
-                    $validator->appendMessage(new Message($message, $attribute, 'TooLong'));
-
-                    return false;
-                }
+            $maximum = $this->getOption("max");
+            if (is_array($maximum)) {
+                $maximum = $maximum[$field];
             }
-        }
+            if ($length > $maximum) {
+                $message = $this->prepareMessage($validation, $field, "TooLong", "messageMaximum");
+                $replacePairs = array(":field" => $label, ":max" => $maximum);
 
-        //Minimum length
-        if ($isSetMin === true) {
-            $minimum = $this->getOption('min');
-
-            if ($length <= $minimum) {
-                //Check if the developer has defined a custom message
-                $message = $this->getOption('messageMinimum');
-                if (empty($message) === true) {
-                    $message = "Value of field '" . $attribute . "' is less than the minimum " . $minimum . " characters";
-                }
-
-                $validator->appendMessage(new Message($message, $attribute, 'TooShort'));
+                $validation->appendMessage(
+                    new Message(
+                        strtr($message, $replacePairs),
+                        $field,
+                        "TooLong",
+                        $code
+                    )
+                );
 
                 return false;
             }
         }
 
+        /**
+         * Minimum length
+         */
+        if ($isSetMin) {
+            $minimum = $this->getOption("min");
+            if (is_array($minimum)) {
+                $minimum = $minimum[$field];
+            }
+            if ($length < $minimum) {
+                $message = $this->prepareMessage($validation, $field, "TooShort", "messageMinimum");
+                $replacePairs = array(":field" => $label, ":min" => $minimum);
+
+                $validation->appendMessage(
+                    new Message(
+                        strtr($message, $replacePairs),
+                        $field,
+                        "TooShort",
+                        $code
+                    )
+                );
+                return false;
+            }
+        }
         return true;
     }
-
 }

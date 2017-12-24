@@ -2,47 +2,48 @@
 
 namespace Phalcon\Validation\Validator;
 
+use Phalcon\Validation\Exception;
 use Phalcon\Validation;
-use Phalcon\Validation\Validator;
 use Phalcon\Validation\Message;
+use Phalcon\Validation\Validator;
 
 /**
- * Phalcon\Validation\Validator\PresenceOf
+ * Phalcon\Validation\Validator\Alpha
  *
- * Validates that a value is not null or empty string
+ * Check for alphabetic character(s)
  *
  * <code>
  * use Phalcon\Validation;
- * use Phalcon\Validation\Validator\PresenceOf;
+ * use Phalcon\Validation\Validator\Alpha as AlphaValidator;
  *
  * $validator = new Validation();
  *
  * $validator->add(
- *     "name",
- *     new PresenceOf(
+ *     "username",
+ *     new AlphaValidator(
  *         [
- *             "message" => "The name is required",
+ *             "message" => ":field must contain only letters",
  *         ]
  *     )
  * );
  *
  * $validator->add(
  *     [
+ *         "username",
  *         "name",
- *         "email",
  *     ],
- *     new PresenceOf(
+ *     new AlphaValidator(
  *         [
  *             "message" => [
- *                 "name"  => "The name is required",
- *                 "email" => "The email is required",
+ *                 "username" => "username must contain only letters",
+ *                 "name"     => "name must contain only letters",
  *             ],
  *         ]
  *     )
  * );
  * </code>
  */
-class PresenceOf extends Validator
+class Alpha extends Validator
 {
     /**
      * Executes the validation
@@ -61,19 +62,18 @@ class PresenceOf extends Validator
         if (is_string($field) === false) {
             throw new Exception('Invalid parameter type.');
         }
+
         $value = $validation->getValue($field);
-        if ($value === null || $value === "") {
+        if (preg_match("/[^[:alpha:]]/imu", $value)) {
             $label = $this->prepareLabel($validation, $field);
-            $message = $this->prepareMessage($validation, $field, "PresenceOf");
+            $message = $this->prepareMessage($validation, $field, "Alpha");
             $code = $this->prepareCode($field);
-
-            $replacePairs = array(':field' => $label);
-
+            $replacePairs[':field'] = $label;
             $validation->appendMessage(
                 new Message(
                     strtr($message, $replacePairs),
                     $field,
-                    "PresenceOf",
+                    "Alpha",
                     $code
                 )
             );
@@ -83,4 +83,6 @@ class PresenceOf extends Validator
 
         return true;
     }
+
+
 }
