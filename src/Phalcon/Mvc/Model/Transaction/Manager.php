@@ -2,58 +2,15 @@
 
 namespace Phalcon\Mvc\Model\Transaction;
 
-use \Phalcon\Mvc\Model\Transaction\ManagerInterface;
-use \Phalcon\Mvc\Model\Transaction\Exception;
-use \Phalcon\Mvc\Model\Transaction;
-use \Phalcon\Mvc\Model\TransactionInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\DiInterface;
-use \Phalcon\Di;
+use Phalcon\DiInterface;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Mvc\Model\Transaction\ManagerInterface;
+use Phalcon\Mvc\Model\Transaction\Exception;
+use Phalcon\Mvc\Model\Transaction;
+use Phalcon\Mvc\Model\TransactionInterface;
 
 /**
  * Phalcon\Mvc\Model\Transaction\Manager
- *
- * A transaction acts on a single database connection. If you have multiple class-specific
- * databases, the transaction will not protect interaction among them.
- *
- * This class manages the objects that compose a transaction.
- * A trasaction produces a unique connection that is passed to every
- * object part of the transaction.
- *
- * <code>
- * try {
- *
- *  use Phalcon\Mvc\Model\Transaction\Manager as TransactionManager;
- *
- *  $transactionManager = new TransactionManager();
- *
- *  $transaction = $transactionManager->get();
- *
- *  $robot = new Robots();
- *  $robot->setTransaction($transaction);
- *  $robot->name = 'WALL·E';
- *  $robot->created_at = date('Y-m-d');
- *  if($robot->save()==false){
- *    $transaction->rollback("Can't save robot");
- *  }
- *
- *  $robotPart = new RobotParts();
- *  $robotPart->setTransaction($transaction);
- *  $robotPart->type = 'head';
- *  if($robotPart->save()==false){
- *    $transaction->rollback("Can't save robot part");
- *  }
- *
- *  $transaction->commit();
- *
- * }
- * catch(Phalcon\Mvc\Model\Transaction\Failed $e){
- *  echo 'Failed, reason: ', $e->getMessage();
- * }
- *
- * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/transaction/manager.c
  */
 class Manager implements ManagerInterface, InjectionAwareInterface
 {
@@ -317,9 +274,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface
     }
 
     /**
-     * Notifies the manager about a rollbacked transaction
-     *
-     * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
+     * @param TransactionInterface $transaction
+     * @throws \Phalcon\Mvc\Model\Transaction\Exception
      */
     public function notifyRollback(TransactionInterface $transaction)
     {
