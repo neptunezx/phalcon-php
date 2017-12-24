@@ -17,7 +17,7 @@ interface InjectionAwareInterface
      *
      * @param \Phalcon\DiInterface $dependencyInjector
      */
-    public function setDI(DiInterface $dependencyInjector);
+    public function setDI($dependencyInjector);
 
     /**
      * Returns the internal dependency injector

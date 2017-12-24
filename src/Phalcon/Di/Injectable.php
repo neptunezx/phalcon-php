@@ -62,7 +62,7 @@ abstract class Injectable implements InjectionAwareInterface, EventsAwareInterfa
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
 
         if ($dependencyInjector instanceof DiInterface === false) {

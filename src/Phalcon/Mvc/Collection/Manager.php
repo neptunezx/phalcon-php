@@ -98,7 +98,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
