@@ -738,7 +738,7 @@ class Route implements RouteInterface
      * @param GroupInterface $group
      * @return Route
      */
-    public function setGroup(GroupInterface $group)
+    public function setGroup($group)
 	{
 		$this->_group = $group;
 		return $this;

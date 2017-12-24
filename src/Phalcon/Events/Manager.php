@@ -459,4 +459,14 @@ class Manager implements ManagerInterface
         return array();
     }
 
+    /**
+     * Detach the listener from the events manager
+     *
+     * @param string $eventType
+     * @param object $handler
+     */
+    public function detach($eventType, $handler)
+    {
+        // TODO: Implement detach() method.
+    }
 }

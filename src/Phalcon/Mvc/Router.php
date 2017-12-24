@@ -1053,7 +1053,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * @return RouterInterface
      * @throws Exception
      */
-    public function mount(GroupInterface $group)
+    public function mount($group)
     {
         if (is_object($group) === false ||
             $group instanceof Group === false) {
