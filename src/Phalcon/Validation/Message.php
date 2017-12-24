@@ -2,8 +2,6 @@
 
 namespace Phalcon\Validation;
 
-use \Phalcon\Validation\Exception;
-
 /**
  * Phalcon\Validation\Message
  *
@@ -11,7 +9,7 @@ use \Phalcon\Validation\Exception;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/validation/message.c
  */
-class Message
+class Message implements MessageInterface
 {
 
     /**
@@ -39,37 +37,45 @@ class Message
     protected $_field;
 
     /**
+     * Code
+     *
+     * @var null|string
+     */
+
+
+    protected $_code;
+    /**
      * \Phalcon\Validation\Message constructor
      *
      * @param string $message
-     * @param string|null $field
+     * @param $field
      * @param string|null $type
+     * @param int $code
      * @throws Exception
      */
-    public function __construct($message, $field = null, $type = null)
+    public function __construct($message, $field = null, $type = null,$code = null)
     {
         if (is_string($message) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_string($field) === false && is_null($field) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
         if (is_string($type) === false && is_null($type) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
+        if(!is_int($code) && ! is_null($code)){
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_message = $message;
         $this->_field   = $field;
         $this->_type    = $type;
+        $this->_code    = $code;
     }
 
     /**
      * Sets message type
      *
      * @param string $type
-     * @return \Phalcon\Mvc\Model\Message
+     * @return \Phalcon\Validation\Message
      * @throws Exception
      */
     public function setType($type)
@@ -77,8 +83,8 @@ class Message
         if (is_string($type) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
         $this->_type = $type;
+        return $this;
     }
 
     /**
@@ -95,7 +101,7 @@ class Message
      * Sets verbose message
      *
      * @param string $message
-     * @return \Phalcon\Mvc\Model\Message
+     * @return \Phalcon\Validation\Message
      * @throws Exception
      */
     public function setMessage($message)
@@ -105,6 +111,7 @@ class Message
         }
 
         $this->_message = $message;
+        return $this;
     }
 
     /**
@@ -121,7 +128,7 @@ class Message
      * Sets field name related to message
      *
      * @param string $field
-     * @return \Phalcon\Mvc\Model\Message
+     * @return \Phalcon\Validation\Message
      * @throws Exception
      */
     public function setField($field)
@@ -131,6 +138,7 @@ class Message
         }
 
         $this->_field = $field;
+        return $this;
     }
 
     /**
@@ -142,6 +150,26 @@ class Message
     {
         return $this->_field;
     }
+
+    /**
+     * Sets code for the message
+     * @param int $code
+     * @return \Phalcon\Validation\Message
+     */
+    public function setCode($code)
+	{
+        $this->_code = $code;
+		return $this;
+	}
+
+    /**
+     * Returns the message code
+     * @return int
+     */
+    public function getCode()
+	{
+		return $this->_code;
+	}
 
     /**
      * Magic __toString method returns verbose message
@@ -157,10 +185,10 @@ class Message
      * Magic __set_state helps to recover messsages from serialization
      *
      * @param array $message
-     * @return \Phalcon\Mvc\Model\Message
+     * @return \Phalcon\Validation\Message
      * @throws Exception
      */
-    public static function __set_state($message)
+    public static function __set_state(array $message)
     {
         if (is_array($message) === false) {
             throw new Exception('Invalid parameter type.');

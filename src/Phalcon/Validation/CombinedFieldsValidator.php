@@ -1,7 +1,12 @@
 <?php
+namespace Phalcon\Validation;
+
 /**
- * Created by PhpStorm.
- * User: flyfish
- * Date: 2017/12/23
- * Time: 17:20
+ * Phalcon\Validation\CombinedFieldsValidator
+ *
+ * This is a base class for combined fields validators
  */
+abstract class CombinedFieldsValidator extends Validator
+{
+    
+}

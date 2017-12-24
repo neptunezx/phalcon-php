@@ -128,8 +128,8 @@ class Validation extends Injectable implements ValidationInterface
      *
      * @param array|object|null $data
      * @param object|null $entity
-     * @return \Phalcon\Validation\Message\Group
-     * @throws ValidationException
+     * @return \Phalcon\Validation\Message\Group|bool
+     * @throws \Phalcon\Validation\Exception
      */
 
     public function validate($data = null, $entity = null)
