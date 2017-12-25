@@ -2,11 +2,11 @@
 
 namespace Phalcon\Events;
 
-use \Phalcon\Events\ManagerInterface;
-use \Phalcon\Events\Exception;
-use \Phalcon\Events\Event;
-use \SplPriorityQueue;
-use \Closure;
+use Phalcon\Events\Event;
+use SplPriorityQueue;
+use Phalcon\Text;
+use Phalcon\Events\Exception;
+
 
 /**
  * Phalcon\Events\Manager
@@ -62,48 +62,68 @@ class Manager implements ManagerInterface
      */
     public function attach($eventType, $handler, $priority = 100)
     {
-        if (is_null($priority) === true) {
-            $priority = 100;
-        } elseif (is_int($priority) === false) {
+        $priorityQueue = '';
+        if (is_string($eventType) === false ||
+            is_int($priority)) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_string($eventType) === false) {
-            throw new Exception('Event type must be a string');
-        }
-
-        if (is_object($handler) === false &&
-            is_callable($handler) === false) {
+        if (!is_object($handler)) {
             throw new Exception('Event handler must be an Object');
         }
-
-        if (is_array($this->_events) === false) {
-            $this->_events = array();
-        }
-
-        if (isset($this->_events[$eventType]) === false) {
-            if ($this->_enablePriorities === true) {
-                //Create a SplPriorityQueue to store the events with priorities
-                $priorityQueue             = new SplPriorityQueue();
-                $priorityQueue->setExtractFlags(1);
+        if (!isset($this->_events[$eventType])) {
+            if ($this->_enablePriorities) {
+                $priorityQueue = new SplPriorityQueue();
+                $priorityQueue->setExtractFlags(SplPriorityQueue::EXTR_DATA);
                 $this->_events[$eventType] = $priorityQueue;
             } else {
-                $this->_events[$eventType] = array();
+                $priorityQueue = [];
             }
         }
-
-        //Get the current queue
-        $priorityQueue = $this->_events[$eventType];
-
-        //Insert the handler in the queue
-        if (is_object($priorityQueue) === true) {
-            //Pointer usage
+        if (is_object($priorityQueue)) {
             $priorityQueue->insert($handler, $priority);
         } else {
             $priorityQueue[] = $handler;
-
-            //Append the events to the queue
             $this->_events[$eventType] = $priorityQueue;
+        }
+    }
+
+    /**
+     * Detach the listener from the events manager
+     *
+     * @param string $eventType
+     * @param object $handler
+     * @throws Exception
+     */
+    public function detach($eventType, $handler)
+    {
+        if (is_string($eventType) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!is_object($handler)) {
+            throw new Exception('Event handler must be an Object');
+        }
+        if (isset($this->_events[$eventType])) {
+            $priorityQueue = $this->_events[$eventType];
+            if (is_object($priorityQueue)) {
+                $newPriorityQueue = new SplPriorityQueue();
+                $newPriorityQueue->setExtractFlags(SplPriorityQueue::EXTR_DATA);
+                $priorityQueue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
+                $priorityQueue->top();
+                while ($priorityQueue->valid()) {
+                    $data = $priorityQueue->current();
+                    $priorityQueue->next();
+                    if ($data['data'] !== $handler) {
+                        $newPriorityQueue->insert($data['data'], $data['priority']);
+                    }
+                }
+                $this->_events[$eventType] = $newPriorityQueue;
+            } else {
+                $key = array_search($handler, $priorityQueue, true);
+                if ($key !== false) {
+                    unset($priorityQueue[$key]);
+                }
+                $this->_events[$eventType] = $priorityQueue;
+            }
         }
     }
 
@@ -176,16 +196,20 @@ class Manager implements ManagerInterface
      */
     public function detachAll($type = null)
     {
-        if (is_null($type) === true) {
-            $this->_events = null;
-        } elseif (is_string($type) === true) {
-            unset($this->_events[$type]);
-        } else {
+        if (is_string($type) === false) {
             throw new Exception('Invalid parameter type.');
+        }
+        if ($type === null) {
+            $this->_events = null;
+        } else {
+            if (isset($this->_events[$type])) {
+                unset($this->_events[$type]);
+            }
         }
     }
 
     /**
+     * (没用)
      * Removes all events from the EventsManager; alias of detachAll
      *
      * @deprecated
@@ -200,131 +224,102 @@ class Manager implements ManagerInterface
      * Internal handler to call a queue of events
      *
      * @param \SplPriorityQueue|array $queue
-     * @param \Phalcon\Events\Event $event
+     * @param EventInterface $event
      * @return mixed
      * @throws Exception
      */
     public function fireQueue($queue, EventInterface $event)
     {
-        if (is_array($queue) === false &&
-            (is_object($queue) === false ||
-            $queue instanceof SplPriorityQueue === false)) {
-            throw new Exception('The SplPriorityQueue is not valid');
+        if (!is_array($queue)) {
+            if (is_object($queue)) {
+                if (!($queue instanceof SplPriorityQueue)) {
+                    throw new Exception(
+                        sprintf(
+                            "Unexpected value type: expected object of type SplPriorityQueue, %s given",
+                            get_class($queue)
+                        )
+                    );
+                }
+            } else {
+                throw new Exception('The queue is not valid');
+            }
         }
-
-        if (is_object($event) === false ||
-            $event instanceof Event === false) {
-            throw new Exception('The event is not valid');
-        }
-
-        $status    = null;
+        $status = null;
         $arguments = null;
-
-        //Get the event type
         $eventName = $event->getType();
-        if (is_string($eventName) === false) {
-            //@note missing "is"
-            throw new Exception('The event type not vaid');
+        if (is_string($eventName)) {
+            throw new Exception('The event type not valid');
         }
+        // Get the object who triggered the event
+        $source = $event->getSource();
 
-        $source     = $event->getSource();
-        $data       = $event->getData();
-        $cancelable = $event->getCancelable();
+        // Get extra data passed to the event
+        $data = $event->getData();
 
-        if (is_object($queue) === true) {
-            //We need to clone the queue before iterate over it
+        // Tell if the event is cancelable
+        $cancelable = (boolean)$event->isCancelable();
+
+        // Responses need to be traced?
+        $collect = (boolean)$this->_collect;
+        if (is_object($queue)) {
             $iterator = clone $queue;
-
-            //Move the queue to the top
             $iterator->top();
-
-            while ($iterator->valid() === true) {
+            while ($iterator->valid()) {
                 $handler = $iterator->current();
-
-                if (is_object($handler) === true) {
-                    //Only handler objects are valid
-                    if ($handler instanceof Closure === true) {
-                        //Create the closure arguments
-                        if (is_null($arguments) === true) {
-                            $arguments = array($event, $source, $data);
+                $iterator->next();
+                if (is_object($handler)) {
+                    if ($handler instanceof \Closure) {
+                        if ($arguments === null) {
+                            $arguments = [$event, $source, $data];
                         }
-
-                        //Call the function in the PHP userland
                         $status = call_user_func_array($handler, $arguments);
-
-                        //Trace the responses
-                        if ($this->_collect === true) {
+                        if ($collect) {
                             $this->_responses[] = $status;
                         }
-
-                        if ($cancelable === true) {
-                            //Check if the event was stopped by the user
-                            if ($event->isStopped() === true) {
+                        if ($cancelable) {
+                            if ($event->isStopped()) {
                                 break;
                             }
                         }
                     } else {
-                        //Check if the listener has implemented an event with the same name
-                        if (method_exists($handler, $eventName) === true) {
-                            //Call the function in the PHP userland
-                            $status = $handler->$eventName($event, $source, $data);
-
-                            //Collect the responses
-                            if ($this->_collect === true) {
+                        if (method_exists($handler, $eventName)) {
+                            $status = $handler->{$eventName}($event, $source, $data);
+                            if ($collect) {
                                 $this->_responses[] = $status;
                             }
-
-                            if ($cancelable === true) {
-                                //Check if the event was stopped by the user
-                                if ($event->isStopped() === true) {
+                            if ($cancelable) {
+                                if ($event->isStopped()) {
                                     break;
                                 }
                             }
                         }
                     }
                 }
-
-                $iterator->next();
             }
         } else {
             foreach ($queue as $handler) {
-                //Only handler objects are valid
-                if (is_object($handler) === true) {
-                    //Check if the event is a closure
-                    if ($handler instanceof Closure === true) {
-                        //Create the closure arguments
-                        if (is_null($arguments) === true) {
-                            $arguments = array($event, $source, $data);
+                if (is_object($handler)) {
+                    if ($handler instanceof \Closure) {
+                        if ($arguments === null) {
+                            $arguments = [$event, $source, $data];
                         }
-
-                        //Call the function in the PHP userland
                         $status = call_user_func_array($handler, $arguments);
-
-                        //Trace the response
-                        if ($this->_collect === true) {
+                        if ($collect) {
                             $this->_responses[] = $status;
                         }
-
-                        if ($cancelable === true) {
-                            //Check if the event was stopped by the user
-                            if ($event->isStopped() === true) {
+                        if ($cancelable) {
+                            if ($event->isStopped()) {
                                 break;
                             }
                         }
                     } else {
-                        //Ćheck if the listener has implemented an event with the same name
-                        if (method_exists($handler, $eventName) === true) {
-                            //Call the function in the PHP userland
-                            $status = $handler->$eventName($event, $source, $data);
-
-                            //Collect the responses
-                            if ($this->_collect === true) {
+                        if (method_exists($handler, $eventName)) {
+                            $status = $handler->{$eventName}($event, $source, $data);
+                            if ($collect) {
                                 $this->_responses[] = $status;
                             }
-
-                            if ($cancelable === true) {
-                                //Check if the event was stopped by the user
-                                if ($event->isStopped() === true) {
+                            if ($cancelable) {
+                                if ($event->isStopped()) {
                                     break;
                                 }
                             }
@@ -333,7 +328,6 @@ class Manager implements ManagerInterface
                 }
             }
         }
-
         return $status;
     }
 
@@ -353,68 +347,41 @@ class Manager implements ManagerInterface
      */
     public function fire($eventType, $source, $data = null, $cancelable = null)
     {
-        if (is_null($cancelable) === true) {
-            $cancelable = true;
-        } elseif (is_bool($cancelable) === false) {
+        if (is_string($eventType) === false ||
+            is_bool($cancelable) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_string($eventType) === false) {
-            throw new Exception('Event type must be a string');
-        }
-
-        if (is_object($source) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_array($this->_events) === false) {
+        $events = $this->_events;
+        if (!is_array($events)) {
             return null;
         }
-
-        //All valid events must be a colon seperator
-        if (strpos($eventType, ':') === false) {
-            throw new Exception('Invalid event type ' . $eventType);
+        if (!Text::memstr($eventType, ':')) {
+            throw new Exception("Invalid event type " . $eventType);
         }
-
         $eventParts = explode(':', $eventType);
-        //@note no isset check for $eventParts[0], $eventParts[1]
-        //type: 0
-        //name: 1
-        //Responses must be traces?
-        if ($this->_collect === true) {
+        $type = $eventParts[0];
+        $eventName = $eventParts[1];
+        $status = null;
+        if ($this->_collect) {
             $this->_responses = null;
         }
-
-        $status = null;
-        $event  = null;
-        //Check if events are grouped by type
-        if (isset($this->_events[$eventParts[0]]) === true) {
-            $fireEvents = $this->_events[$eventParts[0]];
-
-            if (is_array($fireEvents) === true ||
-                is_object($fireEvents) === true) {
-                //Create the event context
-                $event  = new Event($eventParts[1], $source, $data, $cancelable);
+        $event = null;
+        if (isset($events[$type])) {
+            $fireEvents = $events[$type];
+            if (is_object($fireEvents) || is_array($fireEvents)) {
+                $event = new Event($eventName, $source, $data, $cancelable);
                 $status = $this->fireQueue($fireEvents, $event);
             }
         }
-
-        //Check if there are listeners for the event type itself
-        if (isset($this->_events[$eventType]) === true) {
-            $fireEvents = $this->_events[$eventType];
-
-            if (is_array($fireEvents) === true ||
-                is_object($fireEvents) === true) {
-                //Create the event if it wasn't created before
-                if (is_null($event) === true) {
-                    $event = new Event($eventParts[1], $source, $data, $cancelable);
+        if (isset($events[$eventType])) {
+            $fireEvents = $events[$eventType];
+            if (is_object($fireEvents) || is_array($fireEvents)) {
+                if ($event === null) {
+                    $event = new Event($eventName, $source, $data, $cancelable);
                 }
-
-                //Call the events queue
                 $status = $this->fireQueue($fireEvents, $event);
             }
         }
-
         return $status;
     }
 
@@ -430,12 +397,7 @@ class Manager implements ManagerInterface
         if (is_string($type) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($this->_events) === true) {
-            return isset($this->_events[$type]);
-        }
-
-        return false;
+        return isset($this->_events[$type]);
     }
 
     /**
@@ -450,13 +412,13 @@ class Manager implements ManagerInterface
         if (is_string($type) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($this->_events) === true &&
-            isset($this->_events[$type]) === true) {
-            return $this->_events[$type];
+        $events = $this->_events;
+        if (is_array($events)) {
+            if (isset($events[$type])) {
+                return $events[$type];
+            }
         }
-
-        return array();
+        return [];
     }
 
 }
