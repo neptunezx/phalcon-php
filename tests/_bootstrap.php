@@ -56,7 +56,7 @@ $defaults = [
     "TEST_DB_MYSQL_HOST"        => '127.0.0.1',
     "TEST_DB_MYSQL_PORT"        => 3306,
     "TEST_DB_MYSQL_USER"        => 'root',
-    "TEST_DB_MYSQL_PASSWD"      => '12345678',
+    "TEST_DB_MYSQL_PASSWD"      => '',
     "TEST_DB_MYSQL_NAME"        => 'phalcon_test',
     "TEST_DB_MYSQL_CHARSET"     => 'utf8',
     // Postgresql
