@@ -1,14 +1,11 @@
 <?php
-
 namespace Phalcon\Mvc\Router;
 
-use \Phalcon\Text;
-use \Phalcon\Mvc\Router;
-use \Phalcon\Mvc\RouterInterface;
-use \Phalcon\Mvc\Router\Exception;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Annotations\AdapterInterface;
-use \Phalcon\Annotations\Annotation;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\Router;
+use Phalcon\Text;
+use Phalcon\Annotations\Annotation;
+use Phalcon\Mvc\Router\Exception;
 
 /**
  * Phalcon\Mvc\Router\Annotations
@@ -16,106 +13,49 @@ use \Phalcon\Annotations\Annotation;
  * A router that reads routes annotations from classes/resources
  *
  * <code>
- * $di['router'] = function() {
+ * use Phalcon\Mvc\Router\Annotations;
  *
- *      //Use the annotations router
- *      $router = new \Phalcon\Mvc\Router\Annotations(false);
+ * $di->setShared(
+ *     "router",
+ *     function() {
+ *         // Use the annotations router
+ *         $router = new Annotations(false);
  *
- *      //This will do the same as above but only if the handled uri starts with /robots
- *      $router->addResource('Robots', '/robots');
+ *         // This will do the same as above but only if the handled uri starts with /robots
+ *         $router->addResource("Robots", "/robots");
  *
- *      return $router;
- *  };
+ *         return $router;
+ *     }
+ * );
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/router/annotations.c
  */
-class Annotations extends Router implements InjectionAwareInterface, RouterInterface
+class Annotations extends Router
 {
+    protected $_handlers = [];
 
-    /**
-     * URI source: _url
-     *
-     * @var int
-     */
-    const URI_SOURCE_GET_URL = 0;
+    protected $_controllerSuffix = "Controller";
 
-    /**
-     * URI source: REQUEST_URI
-     *
-     * @var int
-     */
-    const URI_SOURCE_SERVER_REQUEST_URI = 1;
+    protected $_actionSuffix = "Action";
 
-    /**
-     * Handlers
-     *
-     * @var null|array
-     * @access protected
-     */
-    protected $_handlers;
-
-    /**
-     * Processed
-     *
-     * @var boolean
-     * @access protected
-     */
-    protected $_processed = false;
-
-    /**
-     * Controller Suffix
-     *
-     * @var string
-     * @access protected
-     */
-    protected $_controllerSuffix = 'Controller';
-
-    /**
-     * Action Suffix
-     *
-     * @var string
-     * @access protected
-     */
-    protected $_actionSuffix = 'Action';
-
-    /**
-     * Route Prefix
-     *
-     * @var null|string
-     * @access protected
-     */
     protected $_routePrefix;
 
     /**
      * Adds a resource to the annotations handler
      * A resource is a class that contains routing annotations
      *
-     * @param string $handler
-     * @param string|null $prefix
-     * @return \Phalcon\Mvc\Router\Annotations
-     * @throws Exception
+     * @string string $handler
+     * @string string $prefix
+     * @return Annotations
      */
     public function addResource($handler, $prefix = null)
-    {
-        if (is_string($handler) === false) {
-            throw new Exception('The handler must be a class name');
-        }
-
-        if (is_string($prefix) === false &&
-            is_null($prefix) === false) {
+	{
+	    if(!is_string($handler) || (!is_string($prefix) && !is_null($prefix))) {
             throw new Exception('Invalid parameter type.');
         }
+		$this->_handlers[] = [$prefix, $handler];
 
-        if (is_array($this->_handlers) === false) {
-            $this->_handlers = array();
-        }
-
-        $this->_handlers[] = array($prefix, $handler);
-        $this->_processed  = false;
-
-        return $this;
-    }
+		return $this;
+	}
 
     /**
      * Adds a resource to the annotations handler
@@ -125,314 +65,362 @@ class Annotations extends Router implements InjectionAwareInterface, RouterInter
      * @param string $module
      * @param string $handler
      * @param string|null $prefix
-     * @return \Phalcon\Mvc\Router\Annotations
-     * @throws Exception
+     * @return Annotations
      */
     public function addModuleResource($module, $handler, $prefix = null)
-    {
-        if (is_string($module) === false) {
-            throw new Exception('The module is not a valid string');
-        }
-
-        if (is_string($handler) === false) {
-            throw new Exception('The handler must be a class name');
-        }
-
-        if (is_string($prefix) === false &&
-            is_null($prefix) === false) {
+	{
+        if(!is_string($module) || !is_string($handler) || (!is_string($prefix) && !is_null($prefix))) {
             throw new Exception('Invalid parameter type.');
         }
+        $this->_handlers[] = [$prefix, $handler, $module];
 
-        if (is_array($this->_handlers) === false) {
-            $this->_handlers = array();
-        }
+		return $this;
+	}
 
-        $this->_handlers[] = array($prefix, $handler, $module);
-        $this->_processed  = false;
-
-        return $this;
-    }
-
-    /**
+	/**
      * Produce the routing parameters from the rewrite information
      *
      * @param string|null $uri
-     * @throws Exception
      */
-    public function handle($uri = null)
-    {
-        if (is_null($uri) === true) {
-            $uri = $this->getRewriteUri();
-        } elseif (is_string($uri) === false) {
+	public function handle($uri = null)
+	{
+        if(!is_string($uri) && !is_null($uri)) {
             throw new Exception('Invalid parameter type.');
         }
+		if (!$uri) {
+            /**
+             * If 'uri' isn't passed as parameter it reads $_GET["_url"]
+             */
+            $realUri = $this->getRewriteUri();
+		} else {
+            $realUri = $uri;
+		}
 
-        $annotationsService = null;
+		$dependencyInjector = $this->_dependencyInjector;
+        if(! is_object($dependencyInjector)) {
+            throw new Exception("A dependency injection container is required to access the 'annotations' service");
+        }
 
-        if ($this->_processed === false) {
-            if (is_array($this->_handlers) === true) {
-                foreach ($this->_handlers as $scope) {
-                    if (is_array($scope) === true) {
-                        //A prefix (if any) must be in position 0
-                        if (is_string($scope[0]) === true) {
-                            if (Text::startsWith($uri, $scope[0]) === false) {
-                                continue;
-                            }
-                        }
+		$annotationsService = $dependencyInjector->getShared("annotations");
 
-                        if (is_object($annotationsService) === false) {
-                            if (is_object($this->_dependencyInjector) === false) {
-                                throw new Exception("A dependency injection container is required to access the 'annotations' service");
-                            }
+		$handlers = $this->_handlers;
 
-                            $annotationsService = $this->_dependencyInjector->getShared('annotations');
-                            //@note no interface validation
-                        }
+		$controllerSuffix = $this->_controllerSuffix;
 
-                        //The controller must be in position 1
-                        if (strpos($scope[1], '\\') !== false) {
-                            //Extract the real class name from the namespaced class
-                            $classWithNamespace = get_class($handler);
+		foreach ($handlers as $scope) {
+            if (!is_array($scope)) {
+                continue;
+            }
 
-                            //Extract the real class name from the namespaced class
-                            //Extract the namespace from the namespaced class
-                            $pos = strrpos($classWithNamespace, '\\');
-                            if ($pos !== false) {
-                                $namespaceName  = substr($classWithNamespace, 0, $pos);
-                                $controllerName = substr($classWithNamespace, $pos);
-                            } else {
-                                $controllerName = $classWithNamespace;
-                                $namespaceName  = null;
-                            }
+            /**
+             * A prefix (if any) must be in position 0
+             */
+            $prefix = $scope[0];
 
-                            $this->_routePrefix = null;
+            if(!empty($prefix) && !Text::startsWith($realUri, $prefix)) {
+                continue;
+            }
 
-                            //Check if the scope has a module associated
-                            if (isset($scope[2]) === true) {
-                                $moduleName = $scope[2];
-                            } else {
-                                $moduleName = null;
-                            }
+            /**
+             * The controller must be in position 1
+             */
+            $handler = $scope[1];
 
-                            //Get the annotations from the class
-                            $handlerAnnotations = $annotationsService->get($handler . $this->_controllerSuffix);
+            if (strpos($handler, "\\")) {
 
-                            //Process class annotations
-                            $classAnnotations = $handlerAnnotations->getClassAnnotations();
-                            if (is_object($classAnnotations) === true) {
-                                //Process class annotaitons
-                                $annotations = $classAnnotations->getAnnotations();
-                                if (is_array($annotations) === true) {
-                                    foreach ($annotations as $annotation) {
-                                        $this->processControllerAnnotation($annotation);
-                                    }
-                                }
-                            }
+               /**
+                * TODO
+                * Extract the real class name from the namespaced class
+                * The lowercased class name is used as controller
+                * Extract the namespace from the namespaced class
+                */
+                $controllerName = \Phalcon\Kernel::getClassNamespace($handler);
+                $namespaceName = \Phalcon\Kernel::getNamespaceOfclass($handler);
+			} else {
+                $controllerName = $handler;
+                if(isset($this->_defaultNamespace)) {
+                    $namespaceName = $this->_defaultNamespace;
+                }
+			}
 
-                            //Process method annotations
-                            $methodAnnotations = $handlerAnnotations->getMethodsAnnotations();
-                            if (is_array($methodAnnotations) === true) {
-                                foreach ($methodAnnotations as $method => $collection) {
-                                    if (is_object($collection) === true) {
-                                        $annotations = $collection->getAnnotations();
-                                        foreach ($annotations as $annotation) {
-                                            $this->processActionAnnotation($moduleName, $namespaceName, $controllerName, $method, $annotation);
-                                        }
-                                    }
-                                }
-                            }
+            $this->_routePrefix = null;
+
+            /**
+             * Check if the scope has a module associated
+             */
+            if(isset($scope[2])) {
+                $moduleName = $scope[2];
+            }
+            $sufixed = $controllerName . $controllerSuffix;
+
+            /**
+             * Add namespace to class if one is set
+             */
+            if ($namespaceName !== null) {
+                $sufixed = $namespaceName . "\\" . $sufixed;
+			}
+
+            /**
+             * Get the annotations from the class
+             */
+            $handlerAnnotations = $annotationsService->get($sufixed);
+
+			if (!is_object($handlerAnnotations)) {
+                continue;
+            }
+
+			/**
+             * Process class annotations
+             */
+			$classAnnotations = $handlerAnnotations->getClassAnnotations();
+			if (is_object($classAnnotations)) {
+                $annotations = $classAnnotations->getAnnotations();
+				if (is_array($annotations)) {
+				    foreach ($annotations as $annotation) {
+                        $this->processControllerAnnotation($controllerName, $annotation);
+                    }
+                }
+			}
+
+			/**
+             * Process method annotations
+             */
+			$methodAnnotations = $handlerAnnotations->getMethodsAnnotations();
+			if (is_array($methodAnnotations)) {
+                $lowerControllerName = uncamelize($controllerName);
+
+                foreach ($methodAnnotations as $method => $collection) {
+                    if(is_object($collection)) {
+                        foreach ($collection->getAnnotations() as $annotation) {
+                            $this->processActionAnnotation($moduleName, $namespaceName, $lowerControllerName, $method, $annotation);
                         }
                     }
                 }
-            }
-
-            $this->_processed = true;
+			}
         }
+		/**
+         * Call the parent handle method()
+         */
+		parent::handle($realUri);
+	}
 
-        parent::handle($uri);
-    }
-
-    /**
+	/**
      * Checks for annotations in the controller docblock
      *
      * @param string $handler
-     * @param \Phalcon\Annotations\AdapterInterface
-     * @throws Exception
+     * @param Annotation $annotation
      */
-    public function processControllerAnnotation($handler, $annotation)
-    {
-        if (is_string($handler) === false) {
+	public function processControllerAnnotation($handler,Annotation $annotation)
+	{
+        /**
+         * @RoutePrefix add a prefix for all the routes defined in the model
+         */
+        if(!is_string($handler)) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_object($annotation) === false ||
-            $annotation instanceof AdapterInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $name = $annotation->getName();
-
-        //@RoutePrefix add a prefix for all the routes defined in the model
-        if ($name === 'RoutePrefix') {
+        if ($annotation->getName() == "RoutePrefix") {
             $this->_routePrefix = $annotation->getArgument(0);
-        }
-    }
+		}
+	}
 
-    /**
+	/**
      * Checks for annotations in the public methods of the controller
-     *
      * @param string $module
-     * @param string $namespace
+     * @param string $namespaceName
      * @param string $controller
      * @param string $action
-     * @param \Phalcon\Annotations\Annotation $annotation
-     * @return null|boolean
+     * @param Annotation $annotation
+     * @return boolean
      * @throws Exception
      */
-    public function processActionAnnotation($module, $namespace, $controller, $action, $annotation)
-    {
-        if (is_string($module) === false ||
-            is_string($namespace) === false ||
-            is_string($controller) === false ||
-            is_string($action) === false ||
-            is_object($annotation) === false ||
-            $annotation instanceof Annotation === false) {
+	public function processActionAnnotation($module, $namespaceName, $controller, $action, Annotation $annotation)
+	{
+        if(!is_string($module) || !is_string($namespaceName) || !is_string($controller) || !is_string($action)) {
             throw new Exception('Invalid parameter type.');
         }
-
-        $name    = $annotation->getName();
+		$isRoute = false;
         $methods = null;
+        $name = $annotation->getName();
 
-        //Find if the route is for adding routes
-        if ($name === 'Route') {
-            $isRoute = true;
-        } elseif ($name === 'Get') {
-            $isRoute = true;
-            $methods = 'GET';
-        } elseif ($name === 'Post') {
-            $isRoute = true;
-            $methods = 'POST';
-        } elseif ($name === 'Put') {
-            $isRoute = true;
-            $methods = 'PUT';
-        } elseif ($name === 'Options') {
-            $isRoute = true;
-            $methods = 'OPTIONS';
+		/**
+         * Find if the route is for adding routes
+         */
+		switch ($name) {
+
+            case "Route":
+                $isRoute = true;
+				break;
+
+            case "Get":
+                $isRoute = true;
+                $methods = "GET";
+				break;
+
+            case "Post":
+                $isRoute = true;
+                $methods = "POST";
+				break;
+
+            case "Put":
+                $isRoute = true;
+                $methods = "PUT";
+				break;
+
+            case "Patch":
+                $isRoute = true;
+                $methods = "PATCH";
+				break;
+
+            case "Delete":
+                $isRoute = true;
+                $methods = "DELETE";
+				break;
+
+            case "Options":
+                $isRoute = true;
+                $methods = "OPTIONS";
+				break;
         }
-        //@note no DELETE or HEAD routes?!
 
-        if ($isRoute === true) {
-            $actionName = strtolower(str_replace($this->_actionSuffix, '', $action));
+		if ($isRoute === true) {
 
-            //Check for existing paths in the annotation
-            $paths = $annotation->getNamedParameter('paths');
-            if (is_array($paths) === false) {
-                $paths = array();
-            }
+            $actionName = strtolower(str_replace($this->_actionSuffix, "", $action));
+            $routePrefix = $this->_routePrefix;
 
-            //Update the module if any
-            if (is_string($module) === true) {
-                $paths['module'] = $module;
-            }
+			/**
+             * Check for existing paths in the annotation
+             */
+			$paths = $annotation->getNamedArgument("paths");
+			if (!is_array($paths)) {
+                $paths = [];
+			}
 
-            //Update the namespace if any
-            if (is_string($namespace) === true) {
-                $paths['namespace'] = $namespace;
-            }
+			/**
+             * Update the module if any
+             */
+			if (!empty($module)) {
+                $paths["module"] = $module;
+			}
 
-            $paths['controller'] = $controller;
-            $paths['action']     = $actionName;
-            $paths["\0exact"]    = true;
+			/**
+             * Update the namespace if any
+             */
+			if (!empty($namespaceName)) {
+                $paths["namespace"] = $namespaceName;
+			}
 
-            $value = $annotation->getArgument(0);
+			$paths["controller"] = $controller;
+            $paths["action"] = $actionName;
 
-            //Create the route using the prefix
-            if (is_null($value) === false) {
-                if ($value !== '/') {
-                    $uri = $this->_routePrefix . $value;
-                } else {
-                    $uri = $this->_routePrefix;
-                }
+			$value = $annotation->getArgument(0);
+
+			/**
+             * Create the route using the prefix
+             */
+			if (!is_null($value)) {
+                if ($value != "/") {
+                    $uri = $routePrefix . $value;
+				} else {
+                    if (!is_null($routePrefix)) {
+                        $uri = $routePrefix;
+					} else {
+                        $uri = $value;
+					}
+				}
             } else {
-                $uri = $this->_routePrefix . $actionName;
-            }
+                $uri = $routePrefix . $actionName;
+			}
 
-            //Add the route to the router
-            $route = $this->add($uri, $paths);
-            if (is_null($methods) === true) {
-                $methods = $annotation->getNamedParameter('methods');
-                if (is_array($methods) === true) {
-                    $route->via($methods);
-                } else {
-                    if (is_string($methods) === true) {
-                        $route->via($methods);
-                    }
-                }
-            } else {
+			/**
+             * Add the route to the router
+             */
+			$route = $this->add($uri, $paths);
+
+			/**
+             * Add HTTP constraint methods
+             */
+			if ($methods !== null) {
                 $route->via($methods);
-            }
+			} else {
+                $methods = $annotation->getNamedArgument("methods");
+                if(is_array($methods) || is_string($methods)) {
+                    $route->via($methods);
 
-            $converts = $annotation->getNamedParameter('converts');
-            if (is_array($converts) === true) {
-                foreach ($converts as $param => $convert) {
+                }
+			}
+
+			/**
+             * Add the converters
+             */
+			$converts = $annotation->getNamedArgument("converts");
+			if (is_array($converts)) {
+			    foreach ($converts as $param => $convert) {
                     $route->convert($param, $convert);
                 }
             }
 
-            $converts = $annotation->getNamedParameter('conversors');
-            if (is_array($converts) === true) {
-                foreach ($converts as $conversorParam => $covert) {
+			/**
+             * Add the conversors
+             */
+			$converts = $annotation->getNamedArgument("conversors");
+			if (is_array($converts)) {
+			    foreach ($converts as $conversorParam => $convert) {
                     $route->convert($conversorParam, $convert);
                 }
             }
 
-            $routeName = $annotation->getNamedParameter('name');
-            if (is_string($routeName) === true) {
+			/**
+             * Add the conversors
+             */
+			$beforeMatch = $annotation->getNamedArgument("beforeMatch");
+			if (is_array($beforeMatch) || is_string($beforeMatch)) {
+                $route->beforeMatch($beforeMatch);
+			}
+
+			$routeName = $annotation->getNamedArgument("name");
+			if (is_string($routeName)) {
                 $route->setName($routeName);
-            }
+			}
+			return true;
+		}
+	}
 
-            return true;
-        }
-    }
-
-    /**
+	/**
      * Changes the controller class suffix
      *
      * @param string $controllerSuffix
      * @throws Exception
      */
-    public function setControllerSuffix($controllerSuffix)
-    {
-        if (is_string($controllerSuffix) === false) {
+	public function setControllerSuffix($controllerSuffix)
+	{
+        if(!is_string($controllerSuffix)) {
             throw new Exception('Invalid parameter type.');
         }
-
         $this->_controllerSuffix = $controllerSuffix;
-    }
+	}
 
-    /**
+	/**
      * Changes the action method suffix
      *
-     * @param string $actionSuffix
+     * @param string  $actionSuffix
      * @throws Exception
      */
-    public function setActionSuffix($actionSuffix)
-    {
-        if (is_string($actionSuffix) === false) {
+	public function setActionSuffix($actionSuffix)
+	{
+        if(!is_string($actionSuffix)) {
             throw new Exception('Invalid parameter type.');
         }
-
         $this->_actionSuffix = $actionSuffix;
-    }
+	}
 
-    /**
+	/**
      * Return the registered resources
      *
-     * @return array|null
+     * @return array
      */
-    public function getResources()
-    {
+	public function getResources()
+	{
         return $this->_handlers;
-    }
-
+	}
 }

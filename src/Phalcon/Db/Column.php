@@ -2,6 +2,7 @@
 
 namespace Phalcon\Db;
 
+use function GuzzleHttp\Promise\promise_for;
 use \Phalcon\Db\ColumnInterface;
 use \Phalcon\Db\Exception;
 
@@ -103,6 +104,46 @@ class Column implements ColumnInterface
     const TYPE_DOUBLE = 9;
 
     /**
+     * Tinyblob abstract data type
+     */
+    const TYPE_TINYBLOB = 10;
+
+    /**
+     * Blob abstract data type
+     */
+    const TYPE_BLOB = 11;
+
+    /**
+     * Mediumblob abstract data type
+     */
+    const TYPE_MEDIUMBLOB = 12;
+
+    /**
+     * Longblob abstract data type
+     */
+    const TYPE_LONGBLOB = 13;
+
+    /**
+     * Big integer abstract data type
+     */
+    const TYPE_BIGINTEGER = 14;
+
+    /**
+     * Json abstract type
+     */
+    const TYPE_JSON = 15;
+
+    /**
+     * Jsonb abstract type
+     */
+    const TYPE_JSONB = 16;
+
+    /**
+     * Datetime abstract type
+     */
+    const TYPE_TIMESTAMP = 17;
+
+    /**
      * Bind Param: Null
      *
      * @var int
@@ -169,6 +210,20 @@ class Column implements ColumnInterface
     protected $_type;
 
     /**
+     * Column data type reference
+     *
+     * @var int
+     */
+    protected $_typeReference = -1;
+
+    /**
+     * Column data type values
+     *
+     * @var array|string
+     */
+    protected $_typeValues;
+
+    /**
      * Is Numeric
      *
      * @var boolean
@@ -191,6 +246,11 @@ class Column implements ColumnInterface
      * @access protected
      */
     protected $_scale = 0;
+
+    /**
+     * Default column value
+     */
+    protected $_default = null;
 
     /**
      * Unsigned
@@ -273,6 +333,17 @@ class Column implements ColumnInterface
 
         $type = (int) $definition['type'];
 
+        //Check if the field is typeReference
+        if (isset($definition['typeReference']) === true) {
+            $this->_typeReference = $definition['typeReference'];
+        }
+
+        //Check if the field is typeValues
+        if (isset($definition['typeValues']) === true) {
+            $this->_typeValues = $definition['typeValues'];
+        }
+
+
         //Check if the field is nullable
         if (isset($definition['notNull']) === true) {
             $this->_notNull = $definition['notNull'];
@@ -288,9 +359,25 @@ class Column implements ColumnInterface
         }
 
         //Check if the column has a decimal scale
-        if (isset($definition['scale']) === true &&
-            ($type === 3 || $type === 7 || $type === 9)) {
-            $this->_scale = $definition['scale'];
+        if (isset($definition['scale'])) {
+            switch ($type) {
+                case  self::TYPE_INTEGER:
+                case  self::TYPE_FLOAT:
+                case  self::TYPE_DECIMAL:
+                case  self::TYPE_DOUBLE:
+                case  self::TYPE_BIGINTEGER:
+                    $this->_scale = $definition['scale'];
+                    break;
+                default:
+                    throw new Exception(
+                        "Column type does not support scale parameter"
+                    );
+            }
+        }
+
+        //Check if the field is default
+        if (isset($definition['default']) === true) {
+            $this->_default = $definition['default'];
         }
 
         //Check if the field is unsigned (only MySQL)
@@ -298,12 +385,25 @@ class Column implements ColumnInterface
             $this->_unsigned = $definition['unsigned'];
         }
 
+        if (isset($definition['isNumeric']) === true) {
+            $this->_isNumeric = $definition['isNumeric'];
+        }
+
         //Check if the field is numeric
         if (isset($definition['autoIncrement']) === true) {
-            if ($type === 0) {
-                $this->_autoIncrement = $definition['autoIncrement'];
-            } else {
-                throw new Exception('Column type cannot be auto-increment');
+
+            if (!$definition['autoIncrement']) {
+                $this->_autoIncrement = false;
+            }else{
+                if (in_array(
+                    $type, [
+                    self::TYPE_INTEGER,
+                    self::TYPE_BIGINTEGER,
+                ])) {
+                    $this->_autoIncrement = true;
+                }else{
+                    throw new Exception("Column type cannot be auto-increment");
+                }
             }
         }
 
@@ -414,6 +514,33 @@ class Column implements ColumnInterface
     }
 
     /**
+     * @return int|mixed|null
+     */
+    public function getDefault()
+    {
+        // TODO: Implement getDefault() method.
+        return $this->_default;
+    }
+
+    /**
+     * @return int|mixed
+     */
+    public function getTypeReference()
+    {
+        // TODO: Implement getTypeReference() method.
+        return $this->_typeReference;
+    }
+
+    /**
+     * @return array|int|mixed|string
+     */
+    public function getTypeValues()
+    {
+        // TODO: Implement getTypeValues() method.
+        return $this->_typeValues;
+    }
+
+    /**
      * Check whether column have an numeric type
      *
      * @return boolean
@@ -466,11 +593,26 @@ class Column implements ColumnInterface
             throw new Exception('Column state must be an array');
         }
 
-        $columnName = $data['_columnName'];
+        $columnName = isset($data['_columnName']) ? $data['_columnName'] :
+            (isset($data['_name']) ? $data['_name'] : null);
+        if ($columnName) {
+            throw new Exception("Column name is required");
+        }
+
         $definition = array();
 
         if (isset($data['_type']) === true) {
             $definition['type'] = $data['_type'];
+        }
+
+        if (isset($data["_typeReference"])) {
+            $definition["typeReference"] = $data["_typeReference"];
+		} else {
+            $definition["typeReference"] = -1;
+		}
+
+        if (isset($data["typeValues"])) {
+            $definition["typeValues"] = $data["_typeValues"];
         }
 
         if (isset($data['_notNull']) === true) {
@@ -485,8 +627,24 @@ class Column implements ColumnInterface
             $definition['size'] = $data['_size'];
         }
 
+        if (isset($data['_default']) === true) {
+            $definition['default'] = $data['_default'];
+        }
+
         if (isset($data['_scale']) === true) {
-            $definition['scale'] = $data['_scale'];
+            if (
+            in_array($definition['type'],
+                [
+                    self::TYPE_INTEGER,
+                    self::TYPE_FLOAT,
+                    self::TYPE_DECIMAL,
+                    self::TYPE_DOUBLE,
+                    self::TYPE_BIGINTEGER,
+
+                ])
+            ) {
+                $definition['scale'] = $data['_scale'];
+            }
         }
 
         if (isset($data['_unsigned']) === true) {
@@ -501,6 +659,10 @@ class Column implements ColumnInterface
             $definition['isNumeric'] = $data['_isNumeric'];
         }
 
+        if (isset($data['_autoIncrement']) === true) {
+            $definition['autoIncrement'] = $data['_autoIncrement'];
+        }
+
         if (isset($data['_first']) === true) {
             $definition['first'] = $data['_first'];
         }
@@ -510,6 +672,21 @@ class Column implements ColumnInterface
         }
 
         return new Column($columnName, $definition);
+    }
+
+
+    /**
+     * Check whether column has default value
+     * @return bool
+     */
+    public function hasDefault()
+    {
+        // TODO: Implement hasDefault() method.
+        if($this->isAutoIncrement()){
+			return false;
+		}
+
+		return $this->_default !== null;
     }
 
 }

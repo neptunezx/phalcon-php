@@ -88,12 +88,12 @@ abstract class Resultset implements ResultsetInterface, \Iterator, \SeekableIter
      * @param \Phalcon\Db\ResultInterface|false result
      * @param \Phalcon\Cache\BackendInterface cache
      */
-    public function __construct($result, BackendInterface $cache = null)
+    public function __construct(ResultInterface $result, BackendInterface $cache = null)
     {
         /**
          * 'false' is given as result for empty result-sets
          */
-        if (is_object($result)) {
+        if ($result) {
             $this->_count = 0;
             $this->_rows  = [];
             return;

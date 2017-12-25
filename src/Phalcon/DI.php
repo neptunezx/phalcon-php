@@ -5,7 +5,7 @@ namespace Phalcon;
 use Phalcon\Config;
 use Phalcon\Di\Service;
 use Phalcon\DiInterface;
-use Phalcon\Di\Exception;
+use Phalcon\Di\Exception as DiException;
 use Phalcon\Config\Adapter\Php;
 use Phalcon\Config\Adapter\Yaml;
 use Phalcon\Di\ServiceInterface;

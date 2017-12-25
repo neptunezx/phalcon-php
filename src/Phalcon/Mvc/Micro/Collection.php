@@ -63,19 +63,14 @@ class Collection implements CollectionInterface
      * Internal function to add a handler to the group
      *
      * @param string|array method
-     * @param string routePattern
-     * @param mixed handler
+     * @param string $routePattern
+     * @param mixed $handler
      * @param string $name
-     * @param string name
      */
     private function _addMap($method, $routePattern, $handler, $name)
     {
-        if (is_string($routePattern) === false) {
+        if (!is_string($routePattern)) {
             throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_array($this->_handlers) === false) {
-            $this->_handlers = array();
         }
 
         $this->_handlers[] = array($method, $routePattern, $handler, $name);
@@ -90,7 +85,7 @@ class Collection implements CollectionInterface
      */
     public function setPrefix($prefix)
     {
-        if (is_string($prefix) === false) {
+        if (!is_string($prefix)) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -123,23 +118,20 @@ class Collection implements CollectionInterface
      * Sets the main handler
      *
      * @param mixed $handler
-     * @param boolean|null $lazy
+     * @param boolean $lazy
      * @return \Phalcon\Mvc\Micro\CollectionInterface
      * @throws Exception
      */
-    public function setHandler($handler, $lazy = null)
-    {
-        if (is_null($lazy) === true) {
-            $lazy = false;
-        } elseif (is_bool($lazy) === false) {
+    public function setHandler($handler, $lazy = false)
+	{
+	    if(!is_bool($lazy)) {
             throw new Exception('Invalid parameter type.');
         }
+		$this->_handler = $handler;
+	    $this->_lazy = $lazy;
 
-        $this->_handler = $handler;
-        $this->_lazy    = $lazy;
-
-        return $this;
-    }
+		return $this;
+	}
 
     /**
      * Sets if the main handler must be lazy loaded
@@ -150,10 +142,9 @@ class Collection implements CollectionInterface
      */
     public function setLazy($lazy)
     {
-        if (is_bool($lazy) === false) {
+        if (!is_bool($lazy)) {
             throw new Exception('Invalid parameter type.');
         }
-
         $this->_lazy = $lazy;
 
         return $this;
@@ -190,6 +181,9 @@ class Collection implements CollectionInterface
      */
     public function map($routePattern, $handler, $name = null)
     {
+        if(!is_string($routePattern) && !is_null($name)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_addMap(null, $routePattern, $handler, $name);
 
         return $this;
@@ -206,6 +200,9 @@ class Collection implements CollectionInterface
      */
     public function get($routePattern, $handler, $name = null)
     {
+        if(!is_string($routePattern) && !is_null($name)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_addMap('GET', $routePattern, $handler, $name);
 
         return $this;
@@ -222,7 +219,9 @@ class Collection implements CollectionInterface
      */
     public function post($routePattern, $handler, $name = null)
     {
-
+        if(!is_string($routePattern) && !is_null($name)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_addMap('POST', $routePattern, $handler, $name);
 
         return $this;
@@ -239,6 +238,9 @@ class Collection implements CollectionInterface
      */
     public function put($routePattern, $handler, $name = null)
     {
+        if(!is_string($routePattern) && !is_null($name)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_addMap('PUT', $routePattern, $handler, $name);
 
         return $this;
@@ -255,6 +257,9 @@ class Collection implements CollectionInterface
      */
     public function patch($routePattern, $handler, $name = null)
     {
+        if(!is_string($routePattern) && !is_null($name)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_addMap('PATCH', $routePattern, $handler, $name);
 
         return $this;
@@ -271,6 +276,9 @@ class Collection implements CollectionInterface
      */
     public function head($routePattern, $handler, $name = null)
     {
+        if(!is_string($routePattern) && !is_null($name)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_addMap('HEAD', $routePattern, $handler, $name);
 
         return $this;
@@ -287,6 +295,9 @@ class Collection implements CollectionInterface
      */
     public function delete($routePattern, $handler, $name = null)
     {
+        if(!is_string($routePattern) && !is_null($name)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_addMap('DELETE', $routePattern, $handler, $name);
 
         return $this;
@@ -303,6 +314,9 @@ class Collection implements CollectionInterface
      */
     public function options($routePattern, $handler, $name = null)
     {
+        if(!is_string($routePattern) && !is_null($name)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_addMap('OPTIONS', $routePattern, $handler, $name);
 
         return $this;
