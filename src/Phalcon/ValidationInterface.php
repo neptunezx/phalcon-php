@@ -8,11 +8,7 @@
 
 namespace Phalcon;
 
-use Phalcon\Di\Injectable;
-use Phalcon\Validation\Exception;
 use Phalcon\Validation\MessageInterface;
-use Phalcon\Validation\Message\Group;
-use Phalcon\Validation\ValidatorInterface;
 
 /**
  * Phalcon\ValidationInterface
@@ -28,7 +24,7 @@ interface ValidationInterface
      * @param array|object|null $data
      * @param object|null $entity
      * @return \Phalcon\Validation\Message\Group|boolean|null
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
 
     public function validate($data = null, $entity = null);
@@ -36,10 +32,10 @@ interface ValidationInterface
     /**
      * Adds a validator to a field
      *
-     * @param string field
+     * @param string $field
      * @param \Phalcon\Validation\ValidatorInterface
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
 	public function add($field, $validator);
 
@@ -48,26 +44,26 @@ interface ValidationInterface
      * @param string $field
      * @param \Phalcon\Validation\ValidatorInterface
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
     public function rule($field, $validator);
 
 	/**
      * Adds the validators to a field
      * @param string $field
-     * @param array validators
+     * @param array $validators
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
 	public function rules($field, $validators);
 
     /**
      * Adds filters to the field
      *
-     * @param string field
+     * @param string $field
      * @param array|string $filters
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
 	public function setFilters($field, $filters);
 
@@ -100,7 +96,7 @@ interface ValidationInterface
 	/**
      * Get default message for validator type
      *
-     * @param string type
+     * @param string $type
      */
 	public function getDefaultMessage($type);
 
@@ -119,7 +115,7 @@ interface ValidationInterface
 	/**
      * Get label for field
      *
-     * @param string field
+     * @param string $field
      *
      */
 	public function getLabel($field);
@@ -143,7 +139,7 @@ interface ValidationInterface
 	/**
      * Gets the a value to validate in the array/object data source
      *
-     * @param string field
+     * @param string $field
      * @return mixed
      */
 	public function getValue($field);

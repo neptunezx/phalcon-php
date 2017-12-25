@@ -7,9 +7,8 @@
  */
 
 namespace Phalcon;
-
+use Phalcon\Test;
 use Phalcon\Di\Injectable;
-use Phalcon\ValidationInterface;
 use Phalcon\Validation\Exception;
 use Phalcon\Validation\Message\Group;
 use Phalcon\Validation\MessageInterface;
@@ -134,6 +133,12 @@ class Validation extends Injectable implements ValidationInterface
 
     public function validate($data = null, $entity = null)
     {
+        if(!is_object($data) && !is_array($data) && !is_null($data)){
+            throw new Exception('Invalid parameter type.');
+        }
+        if(!is_object($entity) && !is_array($entity)){
+            throw new Exception('Invalid parameter type.');
+        }
 
         $validators = $this->_validators;
         $combinedFieldsValidators = $this->_combinedFieldsValidators;
@@ -248,13 +253,19 @@ class Validation extends Injectable implements ValidationInterface
     /**
      * Adds a validator to a field
      *
-     * @param string field
+     * @param string $field
      * @param \Phalcon\Validation\ValidatorInterface
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
     public function add($field, $validator)
     {
+        if (!is_object($validator) || !($validator instanceof ValidatorInterface)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!is_string($field)) {
+            throw new Exception('Invalid parameter type.');
+        }
         if (is_array($field)) {
             // Uniqueness validator for combination of fields is handled differently
             if ($validator instanceof CombinedFieldsValidator) {
@@ -281,22 +292,32 @@ class Validation extends Injectable implements ValidationInterface
      * @param string $field
      * @param \Phalcon\Validation\ValidatorInterface
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
     public function rule($field, $validator)
     {
+        if (!is_object($validator) || !($validator instanceof ValidatorInterface)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (!is_string($field)) {
+            throw new Exception('Invalid parameter type.');
+        }
+
         return $this->add($field, $validator);
     }
 
     /**
      * Adds the validators to a field
      * @param string $field
-     * @param array validators
+     * @param array $validators
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
     public function rules($field, $validators)
     {
+        if(!is_string($field) || is_array($validators)){
+            throw new Exception('Invalid parameter type.');
+        }
         foreach ($validators as $validator) {
             if ($validator instanceof ValidatorInterface) {
                 $this->add($field, $validator);
@@ -308,13 +329,19 @@ class Validation extends Injectable implements ValidationInterface
     /**
      * Adds filters to the field
      *
-     * @param string field
+     * @param string $field
      * @param array|string $filters
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
     public function setFilters($field, $filters)
     {
+        if(!is_string($field)){
+            throw new Exception('Invalid parameter type.');
+        }
+        if(!is_string($filters) || !is_array($filters)){
+            throw new Exception('Invalid parameter type.');
+        }
         if (is_array($field)) {
             foreach ($field as $singleField) {
                 $this->_filters[$singleField] = $filters;
@@ -333,9 +360,13 @@ class Validation extends Injectable implements ValidationInterface
      *
      * @param string $field
      * @return mixed
+     * @throws \Phalcon\Exception
      */
     public function getFilters($field = null)
     {
+        if(!is_null($field) || !is_string($field)){
+            throw new Exception('Invalid parameter type.');
+        }
         $filters = $this->_filters;
         if (is_null($field) || isset($field)) {
             return $filters;
@@ -350,9 +381,13 @@ class Validation extends Injectable implements ValidationInterface
     /**
      * Sets the validators added to the validation
      * @param \Phalcon\Validation
+     * @throws \Phalcon\Exception
      */
     public function setValidators($validators)
     {
+        if(!is_object($validators) || !($validators instanceof Validation)){
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_validators = $validators;
     }
 
@@ -367,12 +402,12 @@ class Validation extends Injectable implements ValidationInterface
     /**
      * Sets the bound entity
      *
-     * @param object entity
-     * @throws ValidationException
+     * @param object $entity
+     * @throws \Phalcon\Exception
      */
     public function setEntity($entity)
     {
-        if (is_object($entity)) {
+        if (!is_object($entity)) {
             throw new Exception("Entity must be an object");
         }
         $this->_entity = $entity;
@@ -404,9 +439,14 @@ class Validation extends Injectable implements ValidationInterface
     /**
      * Adds default messages to validators
      * @param array $messages
+     * @return array
+     * @throws \Phalcon\Exception
      */
     public function setDefaultMessages($messages = null)
     {
+        if(!is_array($messages)){
+            throw new Exception('Invalid parameter type.');
+        }
         $defaultMessages = array(
             "Alnum" => "Field :field must contain only letters and numbers",
             "Alpha" => "Field :field must contain only letters",
@@ -442,10 +482,15 @@ class Validation extends Injectable implements ValidationInterface
     /**
      * Get default message for validator type
      *
-     * @param string type
+     * @param string $type
+     * @return string
+     * @throws \Phalcon\Exception
      */
     public function getDefaultMessage($type)
     {
+        if(is_string($type) === false){
+            throw new Exception('Invalid parameter type.');
+        }
         $defaultMessage = isset($this->_defaultMessages[$type]) ? $this->_defaultMessages[$type] : null;
         if (!is_null($defaultMessage)) {
             return $defaultMessage;
@@ -465,20 +510,28 @@ class Validation extends Injectable implements ValidationInterface
     /**
      * Adds labels for fields
      * @param array $labels
+     * @throws \Phalcon\Exception
      */
     public function setLabels($labels)
     {
+        if(!is_array($labels)){
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_labels = $labels;
     }
 
     /**
      * Get label for field
      *
-     * @param string field
-     *
+     * @param string $field
+     * @return string
+     * @throws \Phalcon\Exception
      */
     public function getLabel($field)
     {
+        if(is_string($field) === false){
+            throw new Exception('Invalid parameter type.');
+        }
         $labels = $this->_labels;
 
         if (is_array($field)) {
@@ -494,9 +547,14 @@ class Validation extends Injectable implements ValidationInterface
     /**
      * Appends a message to the messages list
      * @param MessageInterface $message
+     * @return Validation
+     * @throws \Phalcon\Exception
      */
     public function appendMessage($message)
     {
+        if(!is_object($message) || !($message instanceof MessageInterface)){
+            throw new Exception('Invalid parameter type.');
+        }
         $messages = $this->_messages;
         if (is_object($messages)) {
             $messages = new Group();
@@ -513,32 +571,39 @@ class Validation extends Injectable implements ValidationInterface
      * @param object $entity
      * @param array|object $data
      * @return \Phalcon\Validation
+     * @throws \Phalcon\Exception
      */
     public function bind($entity, $data)
     {
-        if (is_object($entity)) {
-            throw new Exception("Entity must be an object");
+        if (!is_object($entity)) {
+            throw new Exception('Invalid parameter type.');
         }
-        if (is_array($data) && is_object($data)) {
-            throw new Exception("Data to validate must be an array or object");
+        if (!is_array($data) && !!is_object($data)) {
+            throw new Exception('Invalid parameter type.');
         }
         $this->_entity = $entity;
         $this->_data = $data;
+        return $this;
     }
 
     /**
      * Gets the a value to validate in the array/object data source
      *
-     * @param string field
+     * @param string $field
      * @return mixed
+     * @throws \Phalcon\Exception
      */
     public function getValue($field)
     {
+        if(!is_string($field)){
+            throw new Exception('Invalid parameter type.');
+        }
+        $camelizedField = null;
         $entity = $this->_entity;
 
         //  If the entity is an object use it to retrieve the values
         if (is_object($entity)) {
-            $camelizedField = camelize($field);
+            $camelizedField = Text::camelize($field);
             $method = "get" . $camelizedField;
             if (method_exists($entity, $method)) {
                 $value = $entity->{$method}();
@@ -639,9 +704,17 @@ class Validation extends Injectable implements ValidationInterface
 
     /**
      * Internal validations, if it returns true, then skip the current validator
+     * @param \Phalcon\Validation\ValidatorInterface $validator
+     * @param mixed $field
+     * @return boolean
+     * @throws \Phalcon\Exception
      */
     protected function preChecking($field, $validator)
     {
+        if(!is_object($validator) || !($validator instanceof ValidatorInterface)){
+            throw new Exception('Invalid parameter type.');
+        }
+        $camelizedField = null;
         if (is_array($field)) {
             foreach ($field as $singleField) {
                 $result = $this->preChecking($singleField, $validator);

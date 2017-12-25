@@ -198,7 +198,7 @@ class Debug
      */
     public function listenLowSeverity()
     {
-        set_error_handler(array($this,'onUncaughtLowSeverity'));
+        set_error_handler(array($this, 'onUncaughtLowSeverity'));
         set_exception_handler(array($this, 'onUncaughtException'));
         return $this;
     }
@@ -259,7 +259,7 @@ class Debug
             return htmlentities(str_replace('\n', '\\n', $value), 2, 'utf-8');
         }
 
-        return (string) $value;
+        return (string)$value;
     }
 
     /**
@@ -286,10 +286,8 @@ class Debug
         }
 
         $dump = array();
-        foreach($argument as $k => $v )
-        {
-            if ($v == "")
-            {
+        foreach ($argument as $k => $v) {
+            if ($v == "") {
                 $varDump = "(empty string)";
             } elseif (is_scalar($v)) {
                 $varDump = $this->_escapeString(v);
@@ -365,7 +363,7 @@ class Debug
             }
         }
 
-		/**
+        /**
          * Recursively process the array and enclose it in []
          */
         if (is_array($variable)) {
@@ -394,7 +392,7 @@ class Debug
     public function getMajorVersion()
     {
         $parts = explode(' ', Version::get());
-        return (string) $parts[0];
+        return (string)$parts[0];
     }
 
     /**
@@ -407,8 +405,8 @@ class Debug
     {
         $link = [
             "action" => "https://docs.phalconphp.com/en/" . Version::getPart(Version::VERSION_MAJOR) . ".0.0/",
-            "text"   => Version::get(),
-            "local"  => false,
+            "text" => Version::get(),
+            "local" => false,
             "target" => "_new"
         ];
 
@@ -423,10 +421,10 @@ class Debug
     public function getCssSources()
     {
         $uri = $this->_uri;
-		$sources  = "<link href=\"" . $uri . "bower_components/jquery-ui/themes/ui-lightness/jquery-ui.min.css\" type=\"text/css\" rel=\"stylesheet\" />";
-		$sources .= "<link href=\"" . $uri . "bower_components/jquery-ui/themes/ui-lightness/theme.css\" type=\"text/css\" rel=\"stylesheet\" />";
-		$sources .= "<link href=\"" . $uri . "themes/default/style.css\" type=\"text/css\" rel=\"stylesheet\" />";
-		return $sources;
+        $sources = "<link href=\"" . $uri . "bower_components/jquery-ui/themes/ui-lightness/jquery-ui.min.css\" type=\"text/css\" rel=\"stylesheet\" />";
+        $sources .= "<link href=\"" . $uri . "bower_components/jquery-ui/themes/ui-lightness/theme.css\" type=\"text/css\" rel=\"stylesheet\" />";
+        $sources .= "<link href=\"" . $uri . "themes/default/style.css\" type=\"text/css\" rel=\"stylesheet\" />";
+        return $sources;
     }
 
     /**
@@ -437,7 +435,7 @@ class Debug
     public function getJsSources()
     {
         $uri = $this->_uri;
-        $sources  = "<script type=\"text/javascript\" src=\"" . $uri . "bower_components/jquery/dist/jquery.min.js\"></script>";
+        $sources = "<script type=\"text/javascript\" src=\"" . $uri . "bower_components/jquery/dist/jquery.min.js\"></script>";
         $sources .= "<script type=\"text/javascript\" src=\"" . $uri . "bower_components/jquery-ui/jquery-ui.min.js\"></script>";
         $sources .= "<script type=\"text/javascript\" src=\"" . $uri . "bower_components/jquery.scrollTo/jquery.scrollTo.min.js\"></script>";
         $sources .= "<script type=\"text/javascript\" src=\"" . $uri . "prettify/prettify.js\"></script>";
@@ -457,7 +455,7 @@ class Debug
         /**
          * Every trace in the backtrace have a unique number
          */
-        if(!is_int($n) || is_array($trace)) {
+        if (!is_int($n) || is_array($trace)) {
             throw new Exception('Invalid parameter type.');
         }
         $html = "<tr><td align=\"right\" valign=\"top\" class=\"error-number\">#" . $n . "</td><td>";
@@ -514,24 +512,24 @@ class Debug
              */
             if (function_exists($functionName)) {
 
-            $functionReflection = new \ReflectionFunction($functionName);
+                $functionReflection = new \ReflectionFunction($functionName);
 
-            /**
-             * Internal functions links to the PHP documentation
-             */
-            if ($functionReflection->isInternal()) {
                 /**
-                 * Prepare function's name according to the conventions in the docs
+                 * Internal functions links to the PHP documentation
                  */
-            $preparedFunctionName = str_replace("_", "-", $functionName);
-					$functionNameWithLink = "<a target=\"_new\" href=\"http://php.net/manual/en/function." . $preparedFunctionName . ".php\">" . $functionName . "</a>";
-				} else {
+                if ($functionReflection->isInternal()) {
+                    /**
+                     * Prepare function's name according to the conventions in the docs
+                     */
+                    $preparedFunctionName = str_replace("_", "-", $functionName);
+                    $functionNameWithLink = "<a target=\"_new\" href=\"http://php.net/manual/en/function." . $preparedFunctionName . ".php\">" . $functionName . "</a>";
+                } else {
+                    $functionNameWithLink = $functionName;
+                }
+            } else {
                 $functionNameWithLink = $functionName;
             }
-			} else {
-                $functionNameWithLink = $functionName;
-            }
-		}
+        }
 
         $html .= "<span class=\"error-function\">" . $functionNameWithLink . "</span>";
 
@@ -540,41 +538,41 @@ class Debug
          */
         $traceArgs = (isset($trace["args"])) ? $trace["args"] : null;
         if (!is_null($traceArgs)) {
-        $arguments = [];
-        foreach ($traceArgs as $argument) {
+            $arguments = [];
+            foreach ($traceArgs as $argument) {
+
+                /**
+                 * Every argument is generated using _getVarDump
+                 * Append the HTML generated to the argument's list
+                 */
+                $arguments[] = "<span class=\"error-parameter\">" . $this->_getVarDump($argument) . "</span>";
+            }
 
             /**
-             * Every argument is generated using _getVarDump
-             * Append the HTML generated to the argument's list
+             * Join all the arguments
              */
-            $arguments[] = "<span class=\"error-parameter\">" . $this->_getVarDump($argument) . "</span>";
-			}
+            $html .= "(" . join(", ", $arguments) . ")";
+        }
 
         /**
-         * Join all the arguments
-         */
-        $html .= "(" . join(", ", $arguments)  . ")";
-    }
-
-		/**
          * When "file" is present, it usually means the function is provided by the user
          */
-		$filez = isset($trace["file"]) ? $trace["file"] : null;
-		if (!is_null($filez)){
+        $filez = isset($trace["file"]) ? $trace["file"] : null;
+        if (!is_null($filez)) {
 
-        $line = (string) $trace["line"];
+            $line = (string)$trace["line"];
 
-        /**
-         * Realpath to the file and its line using a special header
-         */
-        $html .= "<br/><div class=\"error-file\">" . $filez . " (" . $line . ")</div>";
+            /**
+             * Realpath to the file and its line using a special header
+             */
+            $html .= "<br/><div class=\"error-file\">" . $filez . " (" . $line . ")</div>";
 
-        $showFiles = $this->_showFiles;
+            $showFiles = $this->_showFiles;
 
-			/**
+            /**
              * The developer can change if the files must be opened or not
              */
-			if ($showFiles) {
+            if ($showFiles) {
 
                 /**
                  * Open the file to an array using "file", this respects the openbase-dir directive
@@ -584,10 +582,10 @@ class Debug
                 $numberLines = count($lines);
                 $showFileFragment = $this->_showFileFragment;
 
-				/**
+                /**
                  * File fragments just show a piece of the file where the exception is located
                  */
-				if ($showFileFragment) {
+                if ($showFileFragment) {
 
                     /**
                      * Take seven lines back to the current exception's line, @TODO add an option for this
@@ -597,7 +595,7 @@ class Debug
                     /**
                      * Check for overflows
                      */
-                    if ($beforeLine < 1){
+                    if ($beforeLine < 1) {
                         $firstLine = 1;
                     } else {
                         $firstLine = $beforeLine;
@@ -624,8 +622,8 @@ class Debug
                     $html .= "<pre class=\"prettyprint highlight:" . $firstLine . ":" . $line . " linenums error-scroll\">";
                 }
 
-				$i = $firstLine;
-				while ($i <= $lastLine) {
+                $i = $firstLine;
+                while ($i <= $lastLine) {
 
                     /**
                      * Current line in the file
@@ -643,8 +641,8 @@ class Debug
                     if ($showFileFragment) {
                         if ($i == $firstLine) {
                             if (preg_match("#\\*\\/#", rtrim($currentLine))) {
-                            $currentLine = str_replace("* /", " ", $currentLine);
-                        }
+                                $currentLine = str_replace("* /", " ", $currentLine);
+                            }
                         }
                     }
 
@@ -663,14 +661,14 @@ class Debug
 
                     $i++;
                 }
-				$html .= "</pre>";
-			}
-		}
+                $html .= "</pre>";
+            }
+        }
 
-		$html .= "</td></tr>";
+        $html .= "</td></tr>";
 
-		return $html;
-	}
+        return $html;
+    }
 
 
     /**
@@ -678,14 +676,11 @@ class Debug
      * @throws Exception
      */
     public function onUncaughtLowSeverity($severity, $message, $file, $line, $context)
-	{
+    {
         if (error_reporting() & $severity) {
             throw new \ErrorException($message, 0, $severity, $file, $line);
         }
     }
-
-
-
 
 
     /**
@@ -695,8 +690,10 @@ class Debug
      */
     public function onUncaughtException(\Exception $exception)
     {
+        if (!is_object($exception) || !($exception instanceof Exception)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $obLevel = ob_get_level();
-
         /**
          * Cancel the output buffer if active
          */
@@ -709,8 +706,8 @@ class Debug
          */
         if ($self::_isActive) {
             echo $exception->getMessage();
-			return;
-		}
+            return;
+        }
 
         /**
          * Globally block the debug component to avoid other exceptions to be shown
@@ -724,133 +721,133 @@ class Debug
          */
         $escapedMessage = $this->_escapeString($exception->getMessage());
 
-		/**
+        /**
          * CSS static sources to style the error presentation
          * Use the exception info as document's title
          */
-		$html = "<html><head><title>" . $className . ": " . $escapedMessage . "</title>";
-		$html .= $this->getCssSources() . "</head><body>";
+        $html = "<html><head><title>" . $className . ": " . $escapedMessage . "</title>";
+        $html .= $this->getCssSources() . "</head><body>";
 
-		/**
+        /**
          * Get the version link
          */
-		$html .= $this->getVersion();
+        $html .= $this->getVersion();
 
-		/**
+        /**
          * Main exception info
          */
-		$html .= "<div align=\"center\"><div class=\"error-main\">";
-		$html .= "<h1>" . $className . ": " . $escapedMessage . "</h1>";
-		$html .= "<span class=\"error-file\">" . $exception->getFile() . " (" . $exception->getLine() . ")</span>";
-		$html .= "</div>";
+        $html .= "<div align=\"center\"><div class=\"error-main\">";
+        $html .= "<h1>" . $className . ": " . $escapedMessage . "</h1>";
+        $html .= "<span class=\"error-file\">" . $exception->getFile() . " (" . $exception->getLine() . ")</span>";
+        $html .= "</div>";
 
-		$showBackTrace = $this->_showBackTrace;
+        $showBackTrace = $this->_showBackTrace;
 
-		/**
+        /**
          * Check if the developer wants to show the backtrace or not
          */
-		if ($showBackTrace) {
+        if ($showBackTrace) {
 
             $dataVars = $this->_data;
 
-			/**
+            /**
              * Create the tabs in the page
              */
-			$html .= "<div class=\"error-info\"><div id=\"tabs\"><ul>";
-			$html .= "<li><a href=\"#error-tabs-1\">Backtrace</a></li>";
-			$html .= "<li><a href=\"#error-tabs-2\">Request</a></li>";
-			$html .= "<li><a href=\"#error-tabs-3\">Server</a></li>";
-			$html .= "<li><a href=\"#error-tabs-4\">Included Files</a></li>";
-			$html .= "<li><a href=\"#error-tabs-5\">Memory</a></li>";
-			if (is_array($dataVars)) {
+            $html .= "<div class=\"error-info\"><div id=\"tabs\"><ul>";
+            $html .= "<li><a href=\"#error-tabs-1\">Backtrace</a></li>";
+            $html .= "<li><a href=\"#error-tabs-2\">Request</a></li>";
+            $html .= "<li><a href=\"#error-tabs-3\">Server</a></li>";
+            $html .= "<li><a href=\"#error-tabs-4\">Included Files</a></li>";
+            $html .= "<li><a href=\"#error-tabs-5\">Memory</a></li>";
+            if (is_array($dataVars)) {
                 $html .= "<li><a href=\"#error-tabs-6\">Variables</a></li>";
             }
-			$html .= "</ul>";
+            $html .= "</ul>";
 
-			/**
+            /**
              * Print backtrace
              */
-			$html .= "<div id=\"error-tabs-1\"><table cellspacing=\"0\" align=\"center\" width=\"100%\">";
-			foreach($exception->getTrace() as $n => $traceItem)  {
+            $html .= "<div id=\"error-tabs-1\"><table cellspacing=\"0\" align=\"center\" width=\"100%\">";
+            foreach ($exception->getTrace() as $n => $traceItem) {
                 /**
                  * Every line in the trace is rendered using "showTraceItem"
                  */
-            $html .= $this->showTraceItem($n, $traceItem);
-			}
-			$html .= "</table></div>";
+                $html .= $this->showTraceItem($n, $traceItem);
+            }
+            $html .= "</table></div>";
 
-			/**
+            /**
              * Print _REQUEST superglobal
              */
-			$html .= "<div id=\"error-tabs-2\"><table cellspacing=\"0\" align=\"center\" class=\"superglobal-detail\">";
-			$html .= "<tr><th>Key</th><th>Value</th></tr>";
-			foreach ($_REQUEST as $keyRequest => $value) {
+            $html .= "<div id=\"error-tabs-2\"><table cellspacing=\"0\" align=\"center\" class=\"superglobal-detail\">";
+            $html .= "<tr><th>Key</th><th>Value</th></tr>";
+            foreach ($_REQUEST as $keyRequest => $value) {
                 if (is_array($value)) {
                     $html .= "<tr><td class=\"key\">" . $keyRequest . "</td><td>" . $value . "</td></tr>";
                 } else {
                     $html .= "<tr><td class=\"key\">" . $keyRequest . "</td><td>" . print_r($value, true) . "</td></tr>";
                 }
-			}
-			$html .= "</table></div>";
+            }
+            $html .= "</table></div>";
 
-			/**
+            /**
              * Print _SERVER superglobal
              */
-			$html .= "<div id=\"error-tabs-3\"><table cellspacing=\"0\" align=\"center\" class=\"superglobal-detail\">";
-			$html .= "<tr><th>Key</th><th>Value</th></tr>";
-			foreach ($_SERVER as $keyServer => $value){
+            $html .= "<div id=\"error-tabs-3\"><table cellspacing=\"0\" align=\"center\" class=\"superglobal-detail\">";
+            $html .= "<tr><th>Key</th><th>Value</th></tr>";
+            foreach ($_SERVER as $keyServer => $value) {
                 $html .= "<tr><td class=\"key\">" . $keyServer . "</td><td>" . $this->_getVarDump($value) . "</td></tr>";
-			}
-			$html .= "</table></div>";
+            }
+            $html .= "</table></div>";
 
-			/**
+            /**
              * Show included files
              */
-			$html .= "<div id=\"error-tabs-4\"><table cellspacing=\"0\" align=\"center\" class=\"superglobal-detail\">";
-			$html .= "<tr><th>#</th><th>Path</th></tr>";
-			foreach (get_included_files() as $keyFile => $value){
-            $html .= "<tr><td>" . $keyFile . "</th><td>" . $value . "</td></tr>";
-			}
-			$html .= "</table></div>";
+            $html .= "<div id=\"error-tabs-4\"><table cellspacing=\"0\" align=\"center\" class=\"superglobal-detail\">";
+            $html .= "<tr><th>#</th><th>Path</th></tr>";
+            foreach (get_included_files() as $keyFile => $value) {
+                $html .= "<tr><td>" . $keyFile . "</th><td>" . $value . "</td></tr>";
+            }
+            $html .= "</table></div>";
 
-			/**
+            /**
              * Memory usage
              */
-			$html .= "<div id=\"error-tabs-5\"><table cellspacing=\"0\" align=\"center\" class=\"superglobal-detail\">";
-			$html .= "<tr><th colspan=\"2\">Memory</th></tr><tr><td>Usage</td><td>" . memory_get_usage(true) . "</td></tr>";
-			$html .= "</table></div>";
+            $html .= "<div id=\"error-tabs-5\"><table cellspacing=\"0\" align=\"center\" class=\"superglobal-detail\">";
+            $html .= "<tr><th colspan=\"2\">Memory</th></tr><tr><td>Usage</td><td>" . memory_get_usage(true) . "</td></tr>";
+            $html .= "</table></div>";
 
-			/**
+            /**
              * Print extra variables passed to the component
              */
-			if (is_array($dataVars)) {
+            if (is_array($dataVars)) {
                 $html .= "<div id=\"error-tabs-6\"><table cellspacing=\"0\" align=\"center\" class=\"superglobal-detail\">";
                 $html .= "<tr><th>Key</th><th>Value</th></tr>";
                 foreach ($dataVars as $keyVar => $dataVar) {
                     $html .= "<tr><td class=\"key\">" . $keyVar . "</td><td>" . $this->_getVarDump($dataVar[0]) . "</td></tr>";
-				}
+                }
                 $html .= "</table></div>";
             }
 
-			$html .= "</div>";
-		}
+            $html .= "</div>";
+        }
 
-		/**
+        /**
          * Get Javascript sources
          */
-		$html .= $this->getJsSources() . "</div></body></html>";
+        $html .= $this->getJsSources() . "</div></body></html>";
 
-		/**
+        /**
          * Print the HTML, @TODO, add an option to store the html
          */
-		echo $html;
+        echo $html;
 
-		/**
+        /**
          * Unlock the exception renderer
          */
-		$self::_isActive = false;
+        $self::_isActive = false;
 
-		return true;
-	}
+        return true;
+    }
 
 }

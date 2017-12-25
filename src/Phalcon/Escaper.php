@@ -2,7 +2,6 @@
 
 namespace Phalcon;
 
-use \Phalcon\EscaperInterface;
 use \Phalcon\Escaper\Exception as EscaperException;
 
 /**
@@ -55,6 +54,7 @@ class Escaper implements EscaperInterface
      * @access protected
      */
     protected $_doubleEncode = true;
+
     /**
      * Sets the encoding to be used by the escaper
      *
@@ -63,12 +63,12 @@ class Escaper implements EscaperInterface
      * </code>
      *
      * @param string $encoding
-     * @throws EscaperException
+     * @throws Exception
      */
     public function setEncoding($encoding)
     {
         if (is_string($encoding) === false) {
-            throw new EscaperException('The character set must be string');
+            throw new Exception('The character set must be string');
         }
 
         $this->_encoding = $encoding;
@@ -92,12 +92,12 @@ class Escaper implements EscaperInterface
      * </code>
      *
      * @param int $quoteType
-     * @throws EscaperException
+     * @throws Exception
      */
     public function setHtmlQuoteType($quoteType)
     {
         if (is_int($quoteType) === false) {
-            throw new EscaperException('The quoting type is not valid');
+            throw new Exception('The quoting type is not valid');
         }
 
         $this->_htmlQuoteType = $quoteType;
@@ -111,15 +111,15 @@ class Escaper implements EscaperInterface
      *</code>
      *
      * @param boolean $doubleEncode
-     * @throws EscaperException
+     * @throws Exception
      */
     public function setDoubleEncode($doubleEncode)
-	{
-	    if(is_bool($doubleEncode) === false){
-            throw new EscaperException('The Double Encode is not boolean');
+    {
+        if (is_bool($doubleEncode) === false) {
+            throw new Exception('The Double Encode is not boolean');
         }
         $this->$doubleEncode = $doubleEncode;
-	}
+    }
 
 
     /**
@@ -127,12 +127,16 @@ class Escaper implements EscaperInterface
      * !!!  old  !!!
      * @param string $str
      * @return string|boolean
+     * @throws Exception
      */
     private static function basicCharset($str)
     {
-        $l   = strlen($str);
+        if(!is_string($str)){
+            throw new Exception('Invalid parameter type.');
+        }
+        $l = strlen($str);
         $iso = false;
-        $n   = chr(0);
+        $n = chr(0);
 
 
         for ($i = 0; $i < $l; ++$i) {
@@ -141,11 +145,7 @@ class Escaper implements EscaperInterface
                 if ($ch === 172 || ($ch >= 128 && $ch <= 159)) {
                     continue;
                 }
-                if ($ch >= 160) {
-                    $iso = true;
-                }
             }
-
             return false;
         }
 
@@ -162,9 +162,13 @@ class Escaper implements EscaperInterface
      *
      * @param string $str
      * @return string|null|boolean
+     * @throws Exception
      */
     public function detectEncoding($str)
     {
+        if(!is_string($str)){
+            throw new Exception('Invalid parameter type.');
+        }
         //Check if charset is ASCII or ISO-8859-1
         $charset = self::basicCharset($str);
         if (is_string($charset) === true) {
@@ -213,6 +217,7 @@ class Escaper implements EscaperInterface
      *
      * @param string|mixed $text
      * @return string|mixed
+     * @throws Exception
      */
     public function escapeHtml($text)
     {
@@ -227,13 +232,14 @@ class Escaper implements EscaperInterface
      *
      * @param string|mixed $attribute
      * @return string|mixed
+     * @throws Exception
      */
     public function escapeHtmlAttr($attribute)
     {
         if (is_string($attribute) === true) {
             throw new EscaperException('Invalid parameter type.');
         }
-        if(empty($attribute) === false){
+        if (empty($attribute) === false) {
             throw new EscaperException('parameter is null');
         }
         return htmlspecialchars($attribute, \ENT_QUOTES, $this->_encoding);
@@ -244,12 +250,16 @@ class Escaper implements EscaperInterface
      *
      * @param string|mixed $css
      * @return string|mixed
+     * @throws Exception
      */
     public function escapeCss($css)
     {
+        if(!is_string($css)){
+            throw new Exception('Invalid parameter type.');
+        }
         if (is_string($css) === true && empty($css) === false) {
             $css = $this->normalizeEncoding($css);
-            $l   = strlen($css);
+            $l = strlen($css);
 
             if ($l <= 0 || $l % 4 !== 0) {
                 return false;
@@ -291,9 +301,13 @@ class Escaper implements EscaperInterface
      *
      * @param string|mixed $js
      * @return string|mixed
+     * @throws Exception
      */
     public function escapeJs($js)
     {
+        if(!is_string($js)){
+            throw new Exception('Invalid parameter type.');
+        }
         if (is_string($js) === true && empty($js) === false) {
             $no = $this->normalizeEncoding($js);
 

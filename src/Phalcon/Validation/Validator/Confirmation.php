@@ -118,6 +118,9 @@ class Confirmation extends Validator
      */
     protected final function compare($a, $b)
     {
+        if(!is_string($a) || !is_string($b)){
+            throw new Exception('Invalid parameter type.');
+        }
         if ($this->getOption("ignoreCase", false)) {
             /**
              * mbstring is required here

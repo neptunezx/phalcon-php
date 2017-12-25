@@ -107,7 +107,7 @@ class Ip extends Validator
             throw new Exception("Field name must be a string");
         }
 
-        $value = $record->readAttribute(field);
+        $value = $record->readAttribute($field);
         $version = $this->getOption("version", FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6);
         $allowPrivate = $this->getOption("allowPrivate") ? 0 : FILTER_FLAG_NO_PRIV_RANGE;
         $allowReserved = $this->getOption("allowReserved") ? 0 : FILTER_FLAG_NO_RES_RANGE;

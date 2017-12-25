@@ -155,9 +155,13 @@ class Message implements MessageInterface
      * Sets code for the message
      * @param int $code
      * @return \Phalcon\Validation\Message
+     * @throws Exception
      */
     public function setCode($code)
 	{
+	    if(!is_int($code)){
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_code = $code;
 		return $this;
 	}

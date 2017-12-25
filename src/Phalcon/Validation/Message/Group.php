@@ -63,7 +63,7 @@ class Group implements Countable, ArrayAccess, Iterator
     public function offsetGet($index)
     {
         if (is_scalar($index) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.**');
         }
         if (isset($this->_messages[$index]) === true) {
             return $this->_messages[$index];
@@ -85,7 +85,7 @@ class Group implements Countable, ArrayAccess, Iterator
     public function offsetSet($index, $message)
     {
         if (is_scalar($index) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.***');
         }
 
         if (is_object($message) === false &&
@@ -110,7 +110,7 @@ class Group implements Countable, ArrayAccess, Iterator
     public function offsetExists($index)
     {
         if (is_string($index) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.****');
         }
 
         return isset($this->_messages[$index]);
@@ -129,7 +129,7 @@ class Group implements Countable, ArrayAccess, Iterator
     public function offsetUnset($index)
     {
         if (is_scalar($index) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.*****');
         }
         if (isset ($this->_messages[$index])) {
             array_splice($this->_messages, $index, 1);
@@ -163,7 +163,7 @@ class Group implements Countable, ArrayAccess, Iterator
      * $messages->appendMessages($messagesArray);
      * </code>
      *
-     * @param \Phalcon\Validation\MessageInterface[]|array $messages
+     * @param \Phalcon\Validation\Message\Group|array $messages
      * @throws Exception
      */
     public function appendMessages($messages)
@@ -214,7 +214,7 @@ class Group implements Countable, ArrayAccess, Iterator
     public function filter($fieldName)
     {
         if (is_string($fieldName) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.******');
         }
 
         $filtered = array();
@@ -306,7 +306,7 @@ class Group implements Countable, ArrayAccess, Iterator
     public static function __set_state($group)
     {
         if (is_array($group) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.*******');
         }
 
         return new Group($group['_messages']);
