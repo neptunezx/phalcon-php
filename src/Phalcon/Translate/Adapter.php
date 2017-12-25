@@ -2,18 +2,57 @@
 
 namespace Phalcon\Translate;
 
-use \ArrayAccess;
-use \Phalcon\Translate\Exception;
+use Phalcon\Translate\Exception;
+use Phalcon\Translate\InterpolatorInterface;
+use Phalcon\Translate\Interpolator;
 
 /**
  * Phalcon\Translate\Adapter
  *
  * Base class for Phalcon\Translate adapters
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/translate/adapter.c
  */
-abstract class Adapter implements ArrayAccess
+abstract class Adapter implements AdapterInterface
 {
+
+    /**
+     * @var
+     */
+    protected $_interpolator;
+
+    /**
+     * Adapter constructor.
+     * @param array $options
+     */
+    public function __construct(array $options)
+    {
+        if (!isset($options["interpolator"])) {
+            $interpolator = new AssociativeArray();
+        }
+        $this->setInterpolator($interpolator);
+    }
+
+    /**
+     * @param \Phalcon\Translate\InterpolatorInterface $interpolator
+     * @return $this
+     */
+    public function setInterpolator(InterpolatorInterface $interpolator)
+    {
+        $this->_interpolator = $interpolator;
+        return $this;
+    }
+
+    /**
+     * Returns the translation string of the given key
+     *
+     * @param string  translateKey
+     * @param array|null   placeholders
+     * @return string
+     */
+    public function t($translateKey, array $placeholders = null)
+    {
+        return $this->query($translateKey, $placeholders);
+    }
 
     /**
      * Returns the translation string of the given key
