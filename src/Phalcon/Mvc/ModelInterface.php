@@ -2,6 +2,9 @@
 
 namespace Phalcon\Mvc;
 
+use Phalcon\DiInterface;
+use Phalcon\Mvc\Model\TransactionInterface;
+
 /**
  * Phalcon\Mvc\ModelInterface initializer
  *
@@ -10,13 +13,6 @@ namespace Phalcon\Mvc;
 interface ModelInterface
 {
 
-    /**
-     * \Phalcon\Mvc\Model constructor
-     *
-     * @param \Phalcon\DiInterface|null $dependencyInjector
-     * @param \Phalcon\Mvc\Model\ManagerInterface|null $modelsManager
-     */
-    public function __construct($dependencyInjector = null, $modelsManager = null);
 
     /**
      * Sets a transaction related to the Model instance
@@ -24,7 +20,7 @@ interface ModelInterface
      * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
      * @return \Phalcon\Mvc\ModelInterface
      */
-    public function setTransaction($transaction);
+    public function setTransaction(TransactionInterface $transaction);
 
     /**
      * Returns table name mapped in the model
@@ -90,14 +86,29 @@ interface ModelInterface
     public function getWriteConnection();
 
     /**
+     * Sets the dirty state of the object using one of the DIRTY_STATE_* constants
+     *
+     * @param int $dirtyState
+     * @return \Phalcon\Mvc\ModelInterface
+     */
+    public function setDirtyState($dirtyState);
+
+	/**
+     * Returns one of the DIRTY_STATE_* constants telling if the record exists in the database or not
+     *
+     * @return int
+     */
+	public function getDirtyState();
+
+    /**
      * Assigns values to a model from an array
      *
-     * @param \Phalcon\Mvc\Model $object
+     * @param \Phalcon\Mvc\Model object
      * @param array $data
-     * @param array|null $columnMap
+     * @param array $columnMap
      * @return \Phalcon\Mvc\Model
      */
-    public function assign($data, $columnMap = null);
+    public function assign($data, $dataColumnMap = null, $whiteList = null);
 
     /**
      * Assigns values to a model from an array returning a new model
@@ -119,7 +130,7 @@ interface ModelInterface
      * @param int|null $dirtyState
      * @return \Phalcon\Mvc\Model
      */
-    public static function cloneResult($base, $data, $dirtyState = null);
+    public static function cloneResult(ModelInterface $base, $data, $dirtyState = null);
 
     /**
      * Returns an hydrated result based on the data and the column map
@@ -152,7 +163,7 @@ interface ModelInterface
      * @param \Phalcon\DiInterface|null $dependencyInjector
      * @return \Phalcon\Mvc\Model\CriteriaInterface
      */
-    public static function query($dependencyInjector = null);
+    public static function query(DiInterface $dependencyInjector = null);
 
     /**
      * Allows to count how many records match the specified conditions
@@ -282,6 +293,37 @@ interface ModelInterface
     public function refresh();
 
     /**
+     * Skips the current operation forcing a success state
+     *
+     * @param  boolean $skip
+     */
+    public function skipOperation($skip);
+
+    /**
+     * Returns related records based on defined relations
+     *
+     * @param string $alias
+     * @param array $arguments
+     * @return \Phalcon\Mvc\Model\ResultsetInterface
+     */
+    public function getRelated($alias, $arguments = null);
+
+    /**
+     * Sets the record's snapshot data.
+     * This method is used internally to set snapshot data when the model was set up to keep snapshot data
+     *
+     * @param array $data
+     * @param array $columnMap
+     */
+    public function setSnapshotData($data, $columnMap = null);
+
+	/**
+     * Reset a model instance data
+     */
+	public function reset();
+
+
+    /**
      * Reads an attribute value by its name
      *
      * @param string $attribute
@@ -296,13 +338,4 @@ interface ModelInterface
      * @param mixed $value
      */
     public function writeAttribute($attribute, $value);
-
-    /**
-     * Returns related records based on defined relations
-     *
-     * @param string $alias
-     * @param array|null $arguments
-     * @return \Phalcon\Mvc\Model\ResultsetInterface
-     */
-    public function getRelated($alias, $arguments = null);
 }

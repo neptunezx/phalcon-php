@@ -39,13 +39,13 @@ abstract class Adapter implements AdapterInterface
      * Sets the annotations parser
      *
      * @param \Phalcon\Annotations\ReaderInterface $reader
-     * @throws Exception
+     * @throws \Phalcon\Annotations\Exception
      */
     public function setReader($reader)
     {
         if (is_object($reader) === false ||
             $reader instanceof ReaderInterface === false) {
-            throw new Exception('Invalid annotations reader');
+            throw new \Phalcon\Annotations\Exception('Invalid annotations reader');
         }
 
         $this->_reader = $reader;
@@ -69,7 +69,7 @@ abstract class Adapter implements AdapterInterface
      *
      * @param string|object $className
      * @return \Phalcon\Annotations\Reflection
-     * @throws Exception
+     * @throws \Phalcon\Annotations\Exception
      */
     public function get($className)
     {
@@ -104,12 +104,12 @@ abstract class Adapter implements AdapterInterface
      *
      * @param string $className
      * @return array
-     * @throws Exception
+     * @throws \Phalcon\Annotations\Exception
      */
     public function getMethods($className)
     {
         if (is_string($className) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new \Phalcon\Annotations\Exception('Invalid parameter type.');
         }
         $classAnnotations = $this->get($className);
         if (is_object($classAnnotations)) {
@@ -124,13 +124,13 @@ abstract class Adapter implements AdapterInterface
      * @param string $className
      * @param string $methodName
      * @return \Phalcon\Annotations\Collection
-     * @throws Exception
+     * @throws \Phalcon\Annotations\Exception
      */
     public function getMethod($className, $methodName)
     {
         if (is_string($methodName) === false ||
             is_string($className)) {
-            throw new Exception('Invalid parameter type.');
+            throw new \Phalcon\Annotations\Exception('Invalid parameter type.');
         }
 
         $classAnnotations = $this->get($className);
@@ -154,12 +154,12 @@ abstract class Adapter implements AdapterInterface
      *
      * @param string $className
      * @return array
-     * @throws Exception
+     * @throws \Phalcon\Annotations\Exception
      */
     public function getProperties($className)
     {
         if (is_string($className)===false){
-            throw new Exception('Invalid parameter type.');
+            throw new \Phalcon\Annotations\Exception('Invalid parameter type.');
         }
         $classAnnotations = $this->get($className);
 
@@ -176,13 +176,13 @@ abstract class Adapter implements AdapterInterface
      * @param string $className
      * @param string $propertyName
      * @return \Phalcon\Annotations\Collection
-     * @throws Exception
+     * @throws \Phalcon\Annotations\Exception
      */
     public function getProperty($className, $propertyName)
     {
         if (is_string($propertyName) === false||
         is_string($className)===false) {
-            throw new Exception('Invalid parameter type.');
+            throw new \Phalcon\Annotations\Exception('Invalid parameter type.');
         }
 
         $classAnnotations = $this->get($className);

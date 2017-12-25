@@ -26,6 +26,7 @@ use Phalcon\Application as BaseApplication;
 use Phalcon\Cli\Router\Route;
 use Phalcon\Events\ManagerInterface;
 use Phalcon\Cli\Console\Exception;
+use Phalcon\Events\Manager;
 
 /**
  * Phalcon\Cli\Console
@@ -67,7 +68,7 @@ class Console extends BaseApplication
         }
         $eventsManager = $this->_eventsManager;
         if (is_object($eventsManager)) {
-            if ($eventsManager->fire('console:boot', $this) === false) {
+            if ($eventsManager->Manger->fire('console:boot', $this) === false) {
                 return false;
             }
         }
@@ -87,7 +88,7 @@ class Console extends BaseApplication
         }
         if ($moduleName) {
             if (is_object($eventsManager)) {
-                if ($eventsManager->fire('console:beforeStartModule', $this, $moduleName) === false) {
+                if ($eventsManager->Manager->fire('console:beforeStartModule', $this, $moduleName) === false) {
                     return false;
                 }
             }
@@ -113,7 +114,7 @@ class Console extends BaseApplication
             $moduleObject->registerAutoloaders();
             $moduleObject->registerServices($dependencyInjector);
             if (is_object($eventsManager)) {
-                if ($eventsManager->fire('console:afterStarModule', $this, $moduleObject) === false) {
+                if ($eventsManager->Manager->fire('console:afterStarModule', $this, $moduleObject) === false) {
                     return false;
                 }
             }
@@ -129,13 +130,13 @@ class Console extends BaseApplication
         $dispatcher->setParams($router->getParams());
         $dispatcher->setOptions($this->_options);
         if (is_object($eventsManager)) {
-            if ($eventsManager->fire('console:beforeHandleTask', $this, $dispatcher) === false) {
+            if ($eventsManager->Manager->fire('console:beforeHandleTask', $this, $dispatcher) === false) {
                 return false;
             }
         }
         $task = $dispatcher->dispatch();
         if (is_object($eventsManager)) {
-            $eventsManager->fire('console:afterHandleTask', $this, $task);
+            $eventsManager->Manager->fire('console:afterHandleTask', $this, $task);
         }
         return $task;
     }

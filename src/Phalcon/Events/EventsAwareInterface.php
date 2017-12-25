@@ -16,7 +16,7 @@ interface EventsAwareInterface
      *
      * @param ManagerInterface $eventsManager
      */
-    public function setEventsManager($eventsManager);
+    public function setEventsManager(ManagerInterface $eventsManager);
 
     /**
      * Returns the internal event manager

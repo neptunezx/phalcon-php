@@ -33,6 +33,12 @@ interface IndexInterface
     public function getColumns();
 
     /**
+     * Gets the index type
+     * @return string
+     */
+    public function getType();
+
+    /**
      * Restore a \Phalcon\Db\Index object from export
      *
      * @param array $data

@@ -222,7 +222,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @param \Phalcon\DiInterface $dependencyInjector
      */
-    public function setDI($dependencyInjector)
+    public function setDI(DiInterface $dependencyInjector)
     {
         if ($dependencyInjector instanceof DiInterface === false) {
             $this->_throwDispatchException('Invalid parameter type.');
@@ -247,7 +247,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      *
      * @param \Phalcon\Events\ManagerInterface $eventsManager
      */
-    public function setEventsManager($eventsManager)
+    public function setEventsManager(ManagerInterface $eventsManager)
     {
         if ($eventsManager instanceof ManagerInterface === false) {
             $this->_throwDispatchException('Invalid parameter type.');

@@ -18,13 +18,13 @@ class Document implements ArrayAccess
     /**
      * Checks whether an offset exists in the document
      *
-     * @param scalar $index
+     * @param string $index
      * @return boolean
      * @throws Exception
      */
     public function offsetExists($index)
     {
-        if (is_scalar($index) === false) {
+        if (is_string($index) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -34,13 +34,13 @@ class Document implements ArrayAccess
     /**
      * Returns the value of a field using the ArrayAccess interfase
      *
-     * @param scalar $index
+     * @param string $index
      * @return mixed
      * @throws Exception
      */
     public function offsetGet($index)
     {
-        if (is_scalar($index) === false) {
+        if (is_string($index) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -54,14 +54,13 @@ class Document implements ArrayAccess
     /**
      * Change a value using the ArrayAccess interface
      *
-     * @param scalar $index
+     * @param string $index
      * @param mixed $value
-     * @param \Phalcon\Mvc\ModelInterface $value
      * @throws Exception
      */
     public function offsetSet($index, $value)
     {
-        if (is_scalar($index) === false) {
+        if (is_string($index) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -86,13 +85,13 @@ class Document implements ArrayAccess
      *  echo $robot->readAttribute('name');
      * </code>
      *
-     * @param scalar $attribute
+     * @param string $attribute
      * @return mixed
      * @throws Exception
      */
     public function readAttribute($attribute)
     {
-        if (is_scalar($attribute) === false) {
+        if (is_string($attribute) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -110,17 +109,27 @@ class Document implements ArrayAccess
      *  $robot->writeAttribute('name', 'Rosey');
      * </code>
      *
-     * @param scalar $attribute
+     * @param string $attribute
      * @param mixed $value
      * @throws Exception
      */
     public function writeAttribute($attribute, $value)
     {
-        if (is_scalar($attribute) === false) {
+        if (is_string($attribute) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
         $this->$attribute = $value;
+    }
+
+    /**
+     * Returns the instance as an array representation
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return get_object_vars($this);
     }
 
 }

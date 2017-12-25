@@ -249,6 +249,7 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
      * @param  mixed $option
      * @param  mixed|null $filters
      * @param  mixed|null $defaultValue
+     * @return
      */
     public function getOption($option, $filters = null, $defaultValue = null)
     {

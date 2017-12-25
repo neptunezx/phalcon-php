@@ -62,7 +62,7 @@ abstract class Application extends Injectable implements EventsAwareInterface
 	 * @param ManagerInterface $eventsManager
 	 * @return Application
 	 */
-	public function setEventsManager($eventsManager)
+	public function setEventsManager(ManagerInterface $eventsManager)
 	{
 		$this->_eventsManager = $eventsManager;
 		return $this;
