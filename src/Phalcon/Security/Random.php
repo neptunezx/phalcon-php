@@ -20,7 +20,7 @@ class Random
         }
 
         if (function_exists("random_bytes")) {
-            return random_bytes(len);
+            return random_bytes($len);
         }
 
         if (function_exists("\\Sodium\\randombytes_buf")) {
@@ -28,7 +28,7 @@ class Random
         }
 
         if (function_exists("openssl_random_pseudo_bytes")) {
-            return openssl_random_pseudo_bytes(len);
+            return openssl_random_pseudo_bytes($len);
         }
 
         if (file_exists("/dev/urandom")) {
@@ -51,24 +51,15 @@ class Random
     }
 
     /**
-     * Generates a random hex string
-     *
-     * If $len is not specified, 16 is assumed. It may be larger in future.
-     * The length of the result string is usually greater of $len.
-     *
-     * <code>
-     * $random = new \Phalcon\Security\Random();
-     *
-     * echo $random->hex(10); // a29f470508d5ccb8e289
-     * </code>
-     *
-     * @param int $len
-     * @return string
-     * @throws Exception If secure random number generator is not available or unexpected partial read
+     * @param null $len
+     * @return mixed
+     * @throws Exception
+     * @throws \Exception
      */
     public function hex($len = null)
     {
-        return array_shift(unpack("H*", $this->bytes(len)));
+        $mVar=unpack("H*", $this->bytes($len));
+        return array_shift($mVar);
     }
 
     /**
@@ -170,7 +161,7 @@ class Random
      */
     public function base64Safe($len = null, $padding = false)
     {
-        $s = strtr(base64_encode($this->base64(len)), "+/", "-_");
+        $s = strtr(base64_encode($this->base64($len)), "+/", "-_");
         $s = preg_replace("#[^a-z0-9_=-]+#i", "", $s);
 
         if (!$padding) {
@@ -237,7 +228,7 @@ class Random
         }
 
         if (function_exists("random_int")) {
-            return random_int(0, len);
+            return random_int(0, $len);
         }
 
         if (function_exists("\\Sodium\\randombytes_uniform")) {
@@ -253,7 +244,7 @@ class Random
 
         $bin .= pack("H*", $hex);
 
-        $mask = ord(bin[0]);
+        $mask = ord($bin[0]);
         $mask = $mask | ($mask >> 1);
         $mask = $mask | ($mask >> 2);
         $mask = $mask | ($mask >> 4);
@@ -283,7 +274,7 @@ class Random
     {
         $byteString = "";
 
-        $bytes = unpack("C*", $this->bytes(n));
+        $bytes = unpack("C*", $this->bytes($n));
 
         foreach ($bytes as $idx) {
             $idx = $idx % 64;

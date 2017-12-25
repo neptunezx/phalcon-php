@@ -103,10 +103,10 @@ class Gettext extends Adapter implements \ArrayAccess
 
     /**
      * @param $index
-     * @param $placeholders null
+     * @param $placeholders null|array
      * @return string
      */
-    public function query($index, $placeholders = null)
+    public function query($index,array $placeholders = null)
     {
         $translation = gettext($index);
         return $this->replacePlaceholders($translation, $placeholders);
