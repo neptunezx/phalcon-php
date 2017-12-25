@@ -220,13 +220,14 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     /**
      * Sets the dependency injector
      *
-     * @param \Phalcon\DiInterface $dependencyInjector
+     * @param DiInterface $dependencyInjector
+     * @throws Exception
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
-        if ($dependencyInjector instanceof DiInterface === false) {
-            $this->_throwDispatchException('Invalid parameter type.');
-            return null;
+        if (is_object($dependencyInjector)===false||
+            $dependencyInjector instanceof DiInterface === false) {
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_dependencyInjector = $dependencyInjector;
@@ -246,12 +247,13 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      * Sets the events manager
      *
      * @param \Phalcon\Events\ManagerInterface $eventsManager
+     * @throws Exception
      */
     public function setEventsManager(ManagerInterface $eventsManager)
     {
-        if ($eventsManager instanceof ManagerInterface === false) {
-            $this->_throwDispatchException('Invalid parameter type.');
-            return null;
+        if (is_object($eventsManager)===false||
+            $eventsManager instanceof ManagerInterface === false) {
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_eventsManager = $eventsManager;
@@ -271,12 +273,12 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      * Sets the default action suffix
      *
      * @param string $actionSuffix
+     * @throws Exception
      */
     public function setActionSuffix($actionSuffix)
     {
         if (is_string($actionSuffix) === false) {
-            $this->_throwDispatchException('Invalid parameter type.');
-            return null;
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_actionSuffix = $actionSuffix;
@@ -286,13 +288,13 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      * Sets the module where the controller is (only informative)
      *
      * @param string|null $moduleName
+     * @throws Exception
      */
     public function setModuleName($moduleName)
     {
         if (is_string($moduleName) === false &&
             is_null($moduleName) === false) {
-            $this->_throwDispatchException('Invalid parameter type.');
-            return;
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_moduleName = $moduleName;
@@ -312,13 +314,13 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      * Sets the namespace where the controller class is
      *
      * @param string|null $namespaceName
+     * @throws Exception
      */
     public function setNamespaceName($namespaceName)
     {
         if (is_string($namespaceName) === false &&
             is_null($namespaceName) === false) {
-            $this->_throwDispatchException('Invalid parameter type.');
-            return;
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_namespaceName = $namespaceName;
@@ -338,12 +340,12 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      * Sets the default namespace
      *
      * @param string $namespace
+     * @throws Exception
      */
     public function setDefaultNamespace($namespace)
     {
         if (is_string($namespace) === false) {
-            $this->_throwDispatchException('Invalid parameter type.');
-            return null;
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_defaultNamespace = $namespace;
@@ -363,12 +365,12 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      * Sets the default action name
      *
      * @param string $actionName
+     * @throws Exception 
      */
     public function setDefaultAction($actionName)
     {
         if (is_string($actionName) === false) {
-            $this->_throwDispatchException('Invalid parameter type.');
-            return null;
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_defaultAction = $actionName;
