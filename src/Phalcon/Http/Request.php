@@ -65,7 +65,7 @@ class Request implements RequestInterface, InjectionAwareInterface
      *
      * @param \Phalcon\DiInterface $dependencyInjector
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {

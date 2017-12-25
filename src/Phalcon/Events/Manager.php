@@ -204,7 +204,7 @@ class Manager implements ManagerInterface
      * @return mixed
      * @throws Exception
      */
-    public function fireQueue($queue, EventInterface $event)
+    public function fireQueue($queue, $event)
     {
         if (is_array($queue) === false &&
             (is_object($queue) === false ||

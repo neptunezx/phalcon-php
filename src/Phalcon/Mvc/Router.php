@@ -246,7 +246,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
         $this->_dependencyInjector = $dependencyInjector;
     }
