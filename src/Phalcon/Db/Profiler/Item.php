@@ -23,7 +23,23 @@ class Item
     protected $_sqlStatement;
 
     /**
+     * QL bind types related to the profile
+     *
+     * @var null|array
+     * @access protected
+     */
+    protected $_sqlVariables;
+
+    /**
      * Initial Time
+     *
+     * @var null|array
+     * @access protected
+     */
+    protected $_sqlBindTypes;
+
+    /**
+     * SQL variables related to the profile
      *
      * @var null|int
      * @access protected
@@ -79,6 +95,34 @@ class Item
     }
 
     /**
+     * @param array $sqlvariables
+     *
+     * @throws \Phalcon\Db\Exception
+     */
+    public function setSQLVariables($sqlvariables)
+    {
+        if (is_array($sqlvariables) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+
+        $this->_sqlVariables = $sqlvariables;
+    }
+
+    /**
+     * @param array $sqlbindtypes
+     *
+     * @throws \Phalcon\Db\Exception
+     */
+    public function setSQLBindTypes($sqlbindtypes)
+    {
+        if (is_array($sqlbindtypes) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+
+        $this->_sqlBindTypes = $sqlbindtypes;
+    }
+
+    /**
      * Sets the timestamp on when the profile ended
      *
      * @param int $finalTime
@@ -111,6 +155,25 @@ class Item
     public function getFinalTime()
     {
         return $this->_finalTime;
+    }
+
+
+    /**
+     * @return array|null
+     */
+    public function getSQLVariables()
+    {
+
+        return $this->_sqlVariables;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getQLBindTypes()
+    {
+        return $this->_sqlBindTypes;
+
     }
 
     /**

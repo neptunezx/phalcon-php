@@ -113,12 +113,11 @@ class NativeArray implements AdapterInterface
      */
     public function getPaginate()
     {
+
+		$items  = config["data"];
         if (is_array($items) === false) {
             throw new Exception('Invalid data for paginator');
         }
-        $config = $this->_config;
-		$items  = config["data"];
-
         //@note no is_null check for $this->_limitRows
         $show       = (int) $this->_limitRows;
         $pageNumber = (int) $this->_page;
@@ -149,6 +148,23 @@ class NativeArray implements AdapterInterface
         $page->total_items = $number;
 
         return $page;
+    }
+    /**
+     * Set current rows limit
+     *
+     * @param $limit int
+     */
+    public function setLimit($limit){
+        $this->_limitRows=$limit;
+    }
+
+    /**
+     * Get current rows limit
+     *
+     * @return int
+     */
+    public function getLimit(){
+        return $this->_limitRows;
     }
 
 }

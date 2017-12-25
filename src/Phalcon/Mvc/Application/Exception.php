@@ -9,7 +9,7 @@ namespace Phalcon\Mvc\Application;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/application/exception.c
  */
-class Exception extends \Phalcon\Exception
+class Exception extends \Phalcon\Application\Exception
 {
     
 }

@@ -11,13 +11,18 @@ interface RouteInterface
 {
 
     /**
-     * \Phalcon\Mvc\Router\Route constructor
-     *
-     * @param string $pattern
-     * @param array|null $paths
-     * @param array|string|null $httpMethods
+     * Sets a hostname restriction to the route
+     * @param string|mixed $hostname
+     * @return RouteInterface
      */
-    public function __construct($pattern, $paths = null, $httpMethods = null);
+    public function setHostname($hostname);
+
+    /**
+     * Returns the hostname restriction if any
+     *
+     * @return string
+     */
+    public function getHostname();
 
     /**
      * Replaces placeholders from pattern returning a valid PCRE regular expression
@@ -30,7 +35,6 @@ interface RouteInterface
     /**
      * Set one or more HTTP methods that constraint the matching of the route
      *
-     * @param string|array $httpMethods
      */
     public function via($httpMethods);
 
@@ -38,7 +42,7 @@ interface RouteInterface
      * Reconfigure the route adding a new pattern and a set of paths
      *
      * @param string $pattern
-     * @param array|null $paths
+     * @param mixed $paths
      */
     public function reConfigure($pattern, $paths = null);
 
@@ -59,7 +63,7 @@ interface RouteInterface
     /**
      * Sets a set of HTTP methods that constraint the matching of the route
      *
-     * @param string|array $httpMethods
+     * @param mixed $httpMethods
      */
     public function setHttpMethods($httpMethods);
 
@@ -90,6 +94,13 @@ interface RouteInterface
      * @return array
      */
     public function getPaths();
+
+    /**
+     * Returns the paths using positions as keys and names as values
+     *
+     * @return array
+     */
+    public function getReversedPaths();
 
     /**
      * Returns the HTTP methods that constraint matching the route

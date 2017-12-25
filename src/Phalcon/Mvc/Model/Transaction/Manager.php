@@ -297,7 +297,6 @@ class Manager implements ManagerInterface, InjectionAwareInterface
      * Removes transactions from the TransactionManager
      *
      * @param \Phalcon\Mvc\Model\TransactionInterface $transaction
-     * @throws Exception
      */
     protected function _collectTransaction(TransactionInterface $transaction)
     {

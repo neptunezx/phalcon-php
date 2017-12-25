@@ -2,12 +2,14 @@
 
 namespace Phalcon\Db\Dialect;
 
+use function GuzzleHttp\Psr7\uri_for;
 use \Phalcon\Db\Dialect;
 use \Phalcon\Db\DialectInterface;
 use \Phalcon\Db\ColumnInterface;
 use \Phalcon\Db\IndexInterface;
 use \Phalcon\Db\ReferenceInterface;
 use \Phalcon\Db\Exception;
+use Phalcon\Db\Column;
 
 /**
  * Phalcon\Db\Dialect\Mysql
@@ -34,16 +36,25 @@ class Mysql extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function getColumnDefinition($column)
+    public function getColumnDefinition(ColumnInterface $column)
     {
         if (is_object($column) === false ||
             $column instanceof ColumnInterface === false) {
             throw new Exception('Column definition must be an object compatible with Phalcon\\Db\\ColumnInterface');
         }
 
+        $columnSql = "";
+
         $size = $column->getSize();
 
-        switch ((int) $column->getType()) {
+        $type = $column->getType();
+
+        if (is_string($type)) {
+            $columnSql .= $type;
+            $type = $column->getTypeReference();
+        }
+
+        /*switch ($type) {
             case 0:
                 return 'INT(' . $size . ')' . ($column->isUnsigned() === true ? ' UNSIGNED' : '');
                 break;
@@ -90,7 +101,170 @@ class Mysql extends Dialect implements DialectInterface
             default:
                 throw new Exception('Unrecognized MySQL data type');
                 break;
+        }*/
+
+        switch ($type) {
+            case Column::TYPE_INTEGER:
+                if (empty($columnSql)) {
+                    $columnSql .= "INT";
+                }
+                $columnSql .= "(" . $column->getSize() . ")";
+                if ($column->isUnsigned()) {
+                    $columnSql .= " UNSIGNED";
+                }
+                break;
+
+            case Column::TYPE_DATE:
+                if (empty($columnSql)) {
+                    $columnSql .= "DATE";
+                }
+                break;
+            case Column::TYPE_VARCHAR:
+                if (empty($columnSql)) {
+                    $columnSql .= "VARCHAR";
+                }
+                $columnSql .= "(" . $column->getSize() . ")";
+                break;
+
+            case Column::TYPE_DECIMAL:
+                if (empty($columnSql)) {
+                    $columnSql .= "DECIMAL";
+                }
+                $columnSql .= "(" . $column->getSize() . ","
+                    . $column->getScale() . ")";
+                if ($column->isUnsigned()) {
+                    $columnSql .= " UNSIGNED";
+                }
+                break;
+
+            case Column::TYPE_DATETIME:
+                if (empty($columnSql)) {
+                    $columnSql .= "DATETIME";
+                }
+                break;
+
+            case Column::TYPE_TIMESTAMP:
+                if (empty($columnSql)) {
+                    $columnSql .= "TIMESTAMP";
+                }
+                break;
+
+            case Column::TYPE_CHAR:
+                if (empty($columnSql)) {
+                    $columnSql .= "CHAR";
+                }
+                $columnSql .= "(" . $column->getSize() . ")";
+                break;
+
+            case Column::TYPE_TEXT:
+                if (empty($columnSql)) {
+                    $columnSql .= "TEXT";
+                }
+                break;
+
+            case Column::TYPE_BOOLEAN:
+                if (empty($columnSql)) {
+                    $columnSql .= "TINYINT(1)";
+                }
+                break;
+
+            case Column::TYPE_FLOAT:
+                if (empty($columnSql)) {
+                    $columnSql .= "FLOAT";
+                }
+                $size = $column->getSize();
+                if ($size) {
+                    $scale = $column->getScale();
+                    if ($scale) {
+                        $columnSql .= "(" . $size . "," . $scale . ")";
+                    } else {
+                        $columnSql .= "(" . $size . ")";
+                    }
+                }
+                if ($column->isUnsigned()) {
+                    $columnSql .= " UNSIGNED";
+                }
+                break;
+
+            case Column::TYPE_DOUBLE:
+                if (empty($columnSql)) {
+                    $columnSql .= "DOUBLE";
+                }
+                $size = $column->getSize();
+                if ($size) {
+                    $scale = $column->getScale();
+						$columnSql .= "(" . $size;
+					if ($scale) {
+                        $columnSql .= "," . $scale . ")";
+                    } else {
+                        $columnSql .= ")";
+                    }
+				}
+                if ($column->isUnsigned()) {
+                    $columnSql .= " UNSIGNED";
+                }
+                break;
+
+            case Column::TYPE_BIGINTEGER:
+                if (empty($columnSql)) {
+                    $columnSql .= "BIGINT";
+                }
+                $scale = $column->getSize();
+                if ($scale) {
+                    $columnSql .= "(" . $column->getSize() . ")";
+                }
+                if ($column->isUnsigned()) {
+                    $columnSql .= " UNSIGNED";
+                }
+                break;
+
+            case Column::TYPE_TINYBLOB:
+                if (empty($columnSql)) {
+                    $columnSql .= "TINYBLOB";
+                }
+                break;
+
+            case Column::TYPE_BLOB:
+                if (empty($columnSql)) {
+                    $columnSql .= "BLOB";
+                }
+                break;
+
+            case Column::TYPE_MEDIUMBLOB:
+                if (empty($columnSql)) {
+                    $columnSql .= "MEDIUMBLOB";
+                }
+                break;
+
+            case Column::TYPE_LONGBLOB:
+                if (empty($columnSql)) {
+                    $columnSql .= "LONGBLOB";
+                }
+                break;
+            default:
+                if (empty($columnSql)) {
+                    throw new Exception("Unrecognized MySQL data type at column " . $column->getName());
+                }
+                $typeValues = $column->getTypeValues();
+
+                if (!empty($typeValues)) {
+                    if (is_array($typeValues)) {
+
+                        $valueSql = "";
+
+                        foreach ($typeValues as $value) {
+                            $valueSql .= "\"" . addcslashes($value, "\"") . "\", ";
+                        }
+
+                        $columnSql .= "(" . substr($valueSql, 0, -2) . ")";
+
+                    }else{
+                        $columnSql .= "(\"" . addcslashes($typeValues, "\"") . "\")";
+                    }
+                }
         }
+
+        return $columnSql;
     }
 
     /**
@@ -102,7 +276,7 @@ class Mysql extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function addColumn($tableName, $schemaName, $column)
+    public function addColumn($tableName, $schemaName, ColumnInterface $column)
     {
         if (is_string($tableName) === false) {
             throw new Exception('Invalid parameter type.');
@@ -113,18 +287,24 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Column parameter must be an instance of Phalcon\\Db\\Column');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` ADD ';
-        } else {
-            $sql = 'ALTER TABLE `' . $tableName . '` ADD ';
-        }
+        $sql = "ALTER TABLE " . $this->prepareTable($tableName, $schemaName) . " ADD `" . $column->getName() . "` " . $this->getColumnDefinition($column);
 
-        $sql .= '`' . $column->getName() . '` ' . $this->getColumnDefinition($column);
+        if ($column->hasDefault()) {
+            $defaultValue = $column->getDefault();
+            if (strpos(strtoupper($defaultValue), "CURRENT_TIMESTAMP")) {
+                $sql .= " DEFAULT CURRENT_TIMESTAMP";
+            } else {
+                $sql .= " DEFAULT \"" . addcslashes($defaultValue, "\"") . "\"";
+            }
+        }
 
         if ($column->isNotNull() === true) {
             $sql .= ' NOT NULL';
         }
+
+        if ($column->isAutoIncrement()){
+            $sql .= " AUTO_INCREMENT";
+		}
 
         if ($column->isFirst() === true) {
             $sql .= ' FIRST';
@@ -144,10 +324,11 @@ class Mysql extends Dialect implements DialectInterface
      * @param string $tableName
      * @param string|null $schemaName
      * @param \Phalcon\Db\ColumnInterface $column
+     * @param \Phalcon\Db\ColumnInterface $currentColumn
      * @return string
      * @throws Exception
      */
-    public function modifyColumn($tableName, $schemaName, $column)
+    public function modifyColumn($tableName, $schemaName, $column , $currentColumn = null)
     {
         if (is_string($tableName) === false) {
             throw new Exception('Invalid parameter type.');
@@ -158,17 +339,32 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Column parameter must be an instance of Phalcon\\Db\\Column');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` MODIFY ';
-        } else {
-            $sql = 'ALTER TABLE `' . $tableName . '` MODIFY ';
-        }
+        $sql = "ALTER TABLE " . $this->prepareTable($tableName, $schemaName) . " MODIFY `" . $column->getName() . "` " . $this->getColumnDefinition($column);
 
-        $sql .= '`' . $column->getName() . '` ' . $this->getColumnDefinition($column);
+        if ($column->hasDefault()) {
+            $defaultValue = $column->getDefault();
+            if (strpos(strtoupper($defaultValue), "CURRENT_TIMESTAMP")) {
+                $sql .= " DEFAULT CURRENT_TIMESTAMP";
+            } else {
+                $sql .= " DEFAULT \"" . addcslashes($defaultValue, "\"") . "\"";
+            }
+        }
 
         if ($column->isNotNull() === true) {
             $sql .= ' NOT NULL';
+        }
+
+        if ($column->isAutoIncrement()){
+            $sql .= " AUTO_INCREMENT";
+        }
+
+        if ($column->isFirst() === true) {
+            $sql .= ' FIRST';
+        } else {
+            $afterPosition = $column->getAfterPosition();
+            if ($afterPosition == true) {
+                $sql .= ' AFTER ' . $afterPosition;
+            }
         }
 
         return $sql;
@@ -190,14 +386,9 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` DROP COLUMN ';
-        } else {
-            $sql = 'ALTER TABLE `' . $tableName . '` DROP COLUMN ';
-        }
+        return "ALTER TABLE " . $this->prepareTable($tableName, $schemaName) . " DROP COLUMN `" . $columnName . "`";
 
-        return $sql . '`' . $columnName . '`';
+
     }
 
     /**
@@ -220,16 +411,17 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Index parameter must be an instance of Phalcon\\Db\\Index');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` ADD INDEX ';
-        } else {
-            $sql = 'ALTER TABLE `' . $tableName . '` ADD INDEX ';
-        }
+        $sql = "ALTER TABLE " . $this->prepareTable($tableName, $schemaName);
 
-        $columns = $index->getColumns();
+		$indexType = $index->getType();
+		if (!empty($indexType)) {
+            $sql .= " ADD " . $indexType . " INDEX ";
+		} else {
+            $sql .= " ADD INDEX ";
+		}
 
-        return $sql . '`' . $index->getName() . '` (' . $this->getColumnList($columns) . ')';
+		$sql .= "`" . $index->getName() . "` (" . $this->getColumnList($index->getColumns()) . ")";
+		return $sql;
     }
 
     /**
@@ -248,14 +440,8 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` DROP INDEX ';
-        } else {
-            $sql = 'ALTER TABLE `' . $tableName . '` DROP INDEX ';
-        }
+        return "ALTER TABLE " . $this->prepareTable($tableName, $schemaName) . " DROP INDEX `" . $indexName . "`";
 
-        return $sql . '`' . $indexName . '`';
     }
 
     /**
@@ -277,15 +463,8 @@ class Mysql extends Dialect implements DialectInterface
             $index instanceof IndexInterface === false) {
             throw new Exception('Index parameter must be an instance of Phalcon\\Db\\Index');
         }
+        return "ALTER TABLE " . $this->prepareTable($tableName, $schemaName) . " ADD PRIMARY KEY (" . $this->getColumnList($index->getColumns()) . ")";
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` ADD PRIMARY KEY ';
-        } else {
-            $sql = 'ALTER TABLE `' . $tableName . '` ADD PRIMARY KEY ';
-        }
-
-        return $sql . '(' . $this->getColumnList($index->getColumns()) . ')';
     }
 
     /**
@@ -296,20 +475,13 @@ class Mysql extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function dropPrimaryKey($tableName, $schemaName)
+    public function dropPrimaryKey($tableName, $schemaName = null )
     {
         if (is_string($tableName) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            return 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` DROP PRIMARY KEY';
-        } elseif (is_null($schemaName) === true) {
-            return 'ALTER TABLE `' . $tableName . '` DROP PRIMARY KEY';
-        } else {
-            throw new Exception('Invalid parameter type.');
-        }
+        return "ALTER TABLE " . $this->prepareTable($tableName, $schemaName) . " DROP PRIMARY KEY";
     }
 
     /**
@@ -332,24 +504,23 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Reference parameter must be an instance of Phalcon\\Db\\Reference');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` ';
-        } else {
-            $sql = 'ALTER TABLE `' . $tableName . '` ';
-        }
+        $sql = "ALTER TABLE " . $this->prepareTable($tableName, $schemaName) . " ADD";
+		if ($reference->getName()) {
+            $sql .= " CONSTRAINT `" . $reference->getName() . "`";
+		}
+		$sql .= " FOREIGN KEY (" . $this->getColumnList($reference->getColumns()) . ") REFERENCES " . $this->prepareTable($reference->getReferencedTable(), $reference->getReferencedSchema()) . "(" . $this->getColumnList($reference->getReferencedColumns()) . ")";
 
-        $sql .= 'ADD CONSTRAINT `' . $reference->getName() . '` FOREIGN KEY (' .
-            $this->getColumnList($reference->getColumns()) . ') REFERENCES ';
+		$onDelete = $reference->getOnDelete();
+		if(!empty($onDelete)) {
+            $sql .= " ON DELETE " . $onDelete;
+		}
 
-        //Add the schema
-        $referencedSchema = $reference->getReferencedSchema();
-        if (is_string($referencedSchema) === true) {
-            $sql .= '`' . $referencedSchema . '`.';
-        }
+		$onUpdate = $reference->getOnUpdate();
+		if (!empty($onUpdate)) {
+            $sql .= " ON UPDATE " . $onUpdate;
+		}
 
-        return $sql . '`' . $reference->getReferencedTable() . '`(' .
-            $this->getColumnList($reference->getReferencedColumns()) . ')';
+		return $sql;
     }
 
     /**
@@ -368,14 +539,7 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $sql = 'ALTER TABLE `' . $schemaName . '`.`' . $tableName . '` DROP FOREIGN KEY ';
-        } else {
-            $sql = 'ALTER TABLE `' . $tableName . '` DROP FOREIGN KEY ';
-        }
-
-        return $sql . '`' . $referenceName . '`';
+        return "ALTER TABLE " . $this->prepareTable($tableName, $schemaName) . " DROP FOREIGN KEY `" . $referenceName . "`";
     }
 
     /**
@@ -397,19 +561,19 @@ class Mysql extends Dialect implements DialectInterface
 
             //Check if there is an ENGINE option
             if (isset($options['ENGINE']) === true &&
-                $options['ENGINE'] == true) {
+                $options['ENGINE'] ) {
                 $tableOptions[] = 'ENGINE=' . $options['ENGINE'];
             }
 
             //Check if there is a n AUTO_INCREMENT option
             if (isset($options['AUTO_INCREMENT']) === true &&
-                $options['AUTO_INCREMENT'] == true) {
+                $options['AUTO_INCREMENT'] ) {
                 $tableOptions[] = 'AUTO_INCREMENT=' . $options['AUTO_INCREMENT'];
             }
 
             //Check if there is an TABLE_COLLATION option
             if (isset($options['TABLE_COLLATION']) === true &&
-                $options['TABLE_COLLATION'] == true) {
+                $options['TABLE_COLLATION'] ) {
                 $collationParts = explode('_', $options['TABLE_COLLATION']);
                 $tableOptions[] = 'DEFAULT CHARSET=' . $collationParts[0];
                 $tableOptions[] = 'COLLATE=' . $options['TABLE_COLLATION'];
@@ -419,6 +583,8 @@ class Mysql extends Dialect implements DialectInterface
                 return implode(' ', $tableOptions);
             }
         }
+
+        return "";
     }
 
     /**
@@ -439,86 +605,132 @@ class Mysql extends Dialect implements DialectInterface
 
         if (isset($definition['columns']) === false) {
             throw new Exception("The index 'columns' is required in the definition array");
+        }else{
+            $columns = $definition["columns"];
         }
-
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $table = '`' . $schemaName . '`.`' . $tableName . '`';
-        } else {
-            $table = '`' . $tableName . '`';
-        }
-
+        $table = $this->prepareTable($tableName, $schemaName);
         $temporary = false;
-        if (isset($definition['options']) === true &&
-            isset($definition['options']['temporary']) === true) {
-            $temporary = (bool) $definition['options']['temporary'];
-        }
 
-        //Create a temporary or normal table
-        if ($temporary === true) {
-            $sql = 'CREATE TEMPORARY TABLE ' . $table . " (\n\t";
-        } else {
-            $sql = 'CREATE TABLE ' . $table . " (\n\t";
-        }
-
-        $createLines = array();
-
-        foreach ($definition['columns'] as $column) {
-            $columnLine = '`' . $column->getName() . '` ' . $this->getColumnDefinition($column);
-
-            //Add a NOT NULL clause
-            if ($column->isNotNull() === true) {
-                $columnLine .= ' NOT NULL';
+        if (isset($definition['options'])) {
+            $options = $definition['options'];
+            if (isset($options['temporary'])) {
+                $temporary = $options['temporary'];
             }
-
-            //Add an AUTO_INCREMENT clause
-            if ($column->isAutoIncrement() === true) {
-                $columnLine .= ' AUTO_INCREMENT';
-            }
-
-            //Mark the column as primary key
-            if ($column->isPrimary() === true) {
-                $columnLine .= ' PRIMARY KEY';
-            }
-
-            $createLines[] = $columnLine;
         }
-
-        //Create related indexes
-        if (isset($definition['indexes']) === true) {
-            foreach ($definition['indexes'] as $index) {
-                $indexName = $index->getName();
-                if ($indexName === 'PRIMARY') {
-                    $createLines[] = 'PRIMARY KEY (' . $this->getColumnList($index->getColumns()) . ')';
+        if ($temporary) {
+            $sql = "CREATE TEMPORARY TABLE " . $table . " (\n\t";
+		} else {
+            $sql = "CREATE TABLE " . $table . " (\n\t";
+		}
+        $createLines = [];
+        foreach ($columns as $column) {
+            $columnLine = "`" . $column->getName() . "` " . $this->getColumnDefinition($column);
+            if ($column->hasDefault()) {
+                $defaultValue = $column->getDefault();
+                if (strpos(strtoupper($defaultValue), "CURRENT_TIMESTAMP")) {
+                    $columnLine .= " DEFAULT CURRENT_TIMESTAMP";
                 } else {
-                    $createLines[] = 'KEY `' . $indexName . '` (' . $this->getColumnList($index->getColumns()) . ')';
+                    $columnLine .= " DEFAULT \"" . addcslashes($defaultValue, "\"") . "\"";
                 }
             }
+
+            /**
+             * Add a NOT NULL clause
+             */
+            if ($column->isNotNull()) {
+                $columnLine .= " NOT NULL";
+			}
+
+			/**
+             * Add an AUTO_INCREMENT clause
+             */
+			if ($column->isAutoIncrement()) {
+                $columnLine .= " AUTO_INCREMENT";
+			}
+
+			/**
+             * Mark the column as primary key
+             */
+			if ($column->isPrimary()) {
+                $columnLine .= " PRIMARY KEY";
+			}
+			$createLines[] = $columnLine;
         }
 
-        //Create related references
-        if (isset($definition['references']) === true) {
-            foreach ($definition['references'] as $reference) {
-                $name              = $reference->getName();
-                //$columns = $reference->getColumns();
-                //$columnList = $this->getColumnList($columns);
-                $referencedTable   = $reference->getReferencedTable();
-                $referencedColumns = $reference->getReferencedColumns();
-                $columnList        = $this->getColumnList($referencedColumns);
+        /**
+         * Create related indexes
+         */
+        if (isset($definition["indexes"])) {
+            foreach ($definition['indexes'] as $index) {
+                $indexName = $index->getName();
+				$indexType = $index->getType();
 
-                $constraintSql = 'CONSTRAINT `' . $name . '` FOREIGN KEY (' . $columnList . ')';
-                $createLines[] = $constraintSql . ' REFERENCES `' . $referencedTable . '`(' . $columnList . ')';
-                //@note there should be two different kinds of $columnList
+                if ($indexName == "PRIMARY") {
+                    $indexSql = "PRIMARY KEY (" . $this->getColumnList($index->getColumns()) . ")";
+
+                }else{
+                    if (!empty($indexType))  {
+                        $indexSql = $indexType . " KEY `" . $indexName . "` (" . $this->getColumnList($index->getColumns()) . ")";
+					} else {
+                        $indexSql = "KEY `" . $indexName . "` (" . $this->getColumnList($index->getColumns()) . ")";
+					}
+
+                }
+
+                $createLines[] = $indexSql;
+            }
+         }
+
+        /**
+         * Create related references
+         */
+        if (isset($definition["references"])) {
+            foreach ($definition['references'] as $reference) {
+                $referenceSql = "CONSTRAINT `" . $reference->getName() . "` FOREIGN KEY (" . $this->getColumnList($reference->getColumns()) . ")"
+                . " REFERENCES `" . $reference->getReferencedTable() . "`(" . $this->getColumnList($reference->getReferencedColumns()) . ")";
+
+                $onDelete = $reference->getOnDelete();
+				if(!empty($onDelete)){
+                    $referenceSql .= " ON DELETE " . $onDelete;
+				}
+
+                $onUpdate = $reference->getOnUpdate();
+				if (!empty($onUpdate)) {
+                    $referenceSql .= " ON UPDATE " . $onUpdate;
+				}
+
+                $createLines[] = $referenceSql;
             }
         }
 
-        $sql .= implode(",\n\t", $createLines) . "\n)";
-        if (isset($definition['options']) === true) {
-            $sql .= $this->_getTableOptions($definition);
-        }
-
+        $sql .= join(",\n\t", $createLines) . "\n)";
+		if (isset($definition["options"])) {
+            $sql .= " " . $this->_getTableOptions($definition);
+		}
         return $sql;
     }
+
+    /**
+     * Generates SQL to truncate a table
+     * @param string $tableName
+     * @param string $schemaName
+     * @return string
+     * @throws \Phalcon\Db\Exception
+     */
+    public function truncateTable($tableName, $schemaName)
+	{
+        if (!is_string($tableName)) {
+            throw new Exception('Invalid parameter type.');
+        }
+
+		if (is_string($schemaName)) {
+			$table = "`" . $schemaName . "`.`" . $tableName . "`";
+		} else {
+            $table = "`" . $tableName . "`";
+		}
+        $sql = "TRUNCATE TABLE " . $table;
+		return $sql;
+	}
 
     /**
      * Generates SQL to drop a table
@@ -529,7 +741,7 @@ class Mysql extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function dropTable($tableName, $schemaName, $ifExists = null)
+    public function dropTable($tableName, $schemaName, $ifExists = true)
     {
         if (is_string($tableName) === false) {
             throw new Exception('Invalid parameter type.');
@@ -541,18 +753,13 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $table = '`' . $schemaName . '`.`' . $tableName . '`';
-        } else {
-            $table = '`' . $tableName . '`';
+        $table = $this->prepareTable($tableName, $schemaName);
+        if ($ifExists) {
+            $sql = "DROP TABLE IF EXISTS " . $table;
+        }else{
+            $sql = "DROP TABLE " . $table;
         }
-
-        if ($ifExists === true) {
-            return 'DROP TABLE IF EXISTS ' . $table;
-        } else {
-            return 'DROP TABLE ' . $table;
-        }
+        return $sql;
     }
 
     /**
@@ -573,16 +780,10 @@ class Mysql extends Dialect implements DialectInterface
 
         if (isset($definition['sql']) === false) {
             throw new Exception("The index 'sql' is required in the definition array");
+        }else{
+            $viewSql = $definition['sql'];
         }
-
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $view = '`' . $schemaName . '`.`' . $viewName . '`';
-        } else {
-            $view = '`' . $viewName . '`';
-        }
-
-        return 'CREATE VIEW ' . $view . ' AS ' . $definition['sql'];
+		return "CREATE VIEW " . $this->prepareTable($viewName, $schemaName) . " AS " . $viewSql;
     }
 
     /**
@@ -594,7 +795,7 @@ class Mysql extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function dropView($viewName, $schemaName, $ifExists = null)
+    public function dropView($viewName, $schemaName, $ifExists = true)
     {
         if (is_string($viewName) === false) {
             throw new Exception('Invalid parameter type.');
@@ -606,18 +807,15 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            $view = $schemaName . '.' . $viewName; //@note no escape
-        } else {
-            $view = $viewName;
-        }
+        $view = $this->prepareTable($viewName, $schemaName);
 
-        if ($ifExists === true) {
-            return 'DROP VIEW IF EXISTS ' . $view;
-        } else {
-            return 'DROP VIEW ' . $view;
-        }
+        if($ifExists) {
+            $sql = "DROP VIEW IF EXISTS " . $view;
+		} else {
+            $sql = "DROP VIEW " . $view;
+		}
+
+        return $sql;
     }
 
     /**
@@ -639,12 +837,10 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($schemaName) === true &&
-            $schemaName === true) {
-            return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME`= '" . $tableName . "' AND `TABLE_SCHEMA`='" . $schemaName . "'";
+        if($schemaName) {
+            return "SELECT IF(COUNT(*) > 0, 1, 0) FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME`= '" . $tableName . "' AND `TABLE_SCHEMA` = '" . $schemaName . "'";
         }
-
-        return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME`='" . $tableName . "'";
+        return "SELECT IF(COUNT(*) > 0, 1, 0) FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_NAME` = '" . $tableName . "' AND `TABLE_SCHEMA` = DATABASE()";
     }
 
     /**
@@ -660,13 +856,10 @@ class Mysql extends Dialect implements DialectInterface
         if (is_string($viewName) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
-            return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_NAME`= '" . $viewName . "' AND `TABLE_SCHEMA`='" . $schemaName . "'";
+        if ($schemaName) {
+            return "SELECT IF(COUNT(*) > 0, 1, 0) FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_NAME`= '" . $viewName . "' AND `TABLE_SCHEMA`='" . $schemaName . "'";
         }
-
-        return "SELECT IF(COUNT(*)>0, 1 , 0) FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_NAME`='" . $viewName . "'";
+        return "SELECT IF(COUNT(*) > 0, 1, 0) FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_NAME`='" . $viewName . "' AND `TABLE_SCHEMA` = DATABASE()";
     }
 
     /**
@@ -687,12 +880,7 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($schema) === true &&
-            $schema == true) {
-            return 'DESCRIBE `' . $schema . '`.`' . $table . '`';
-        }
-
-        return 'DESCRIBE `' . $table . '`';
+        return "DESCRIBE " . $this->prepareTable($table, $schema);
     }
 
     /**
@@ -703,12 +891,11 @@ class Mysql extends Dialect implements DialectInterface
      * </code>
      *
      * @param string|null $schemaName
-     * @return array
+     * @return string
      */
     public function listTables($schemaName = null)
     {
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
+        if (is_string($schemaName) === true ) {
             return 'SHOW TABLES FROM `' . $schemaName . '`';
         }
 
@@ -719,12 +906,11 @@ class Mysql extends Dialect implements DialectInterface
      * Generates the SQL to list all views of a schema or user
      *
      * @param string|null $schemaName
-     * @return array
+     * @return string
      */
     public function listViews($schemaName = null)
     {
-        if (is_string($schemaName) === true &&
-            $schemaName == true) {
+        if (is_string($schemaName)) {
             return "SELECT `TABLE_NAME` AS view_name FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_SCHEMA` = '" . $schemaName . "' ORDER BY view_name";
         }
 
@@ -745,12 +931,9 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($schema) === true &&
-            $schema == true) {
-            return 'SHOW INDEXES FROM `' . $schema . '`.`' . $table . '`';
+        if (is_string($schema) === true) {
+            return "SHOW INDEXES FROM " . $this->prepareTable($table, $schema);
         }
-
-        return 'SHOW INDEXES FROM `' . $table . '`';
     }
 
     /**
@@ -767,15 +950,12 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $sql = 'SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME,REFERENCED_TABLE_SCHEMA,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_NAME IS NOT NULL AND ';
-
-        if (is_string($schema) === true &&
-            $schema == true) {
-            $sql .= 'CONSTRAINT_SCHEMA = "' . $schema . '" AND TABLE_NAME "' . $table . '"';
-        } else {
-            $sql .= 'TABLE NAME = "' . $table . '"';
-        }
-
+        $sql = "SELECT DISTINCT KCU.TABLE_NAME, KCU.COLUMN_NAME, KCU.CONSTRAINT_NAME, KCU.REFERENCED_TABLE_SCHEMA, KCU.REFERENCED_TABLE_NAME, KCU.REFERENCED_COLUMN_NAME, RC.UPDATE_RULE, RC.DELETE_RULE FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KCU LEFT JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS RC ON RC.CONSTRAINT_NAME = KCU.CONSTRAINT_NAME AND RC.CONSTRAINT_SCHEMA = KCU.CONSTRAINT_SCHEMA WHERE KCU.REFERENCED_TABLE_NAME IS NOT NULL AND ";
+        if($schema) {
+            $sql .= "KCU.CONSTRAINT_SCHEMA = '" . $schema . "' AND KCU.TABLE_NAME = '" . $table . "'";
+		} else {
+            $sql .= "KCU.CONSTRAINT_SCHEMA = DATABASE() AND KCU.TABLE_NAME = '" . $table . "'";
+		}
         return $sql;
     }
 
@@ -793,16 +973,20 @@ class Mysql extends Dialect implements DialectInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $sql = 'SELECT TABLES.TABLE_TYPE AS table_type,TABLES.AUTO_INCREMENT AS auto_increment,TABLES.ENGINE AS engine,TABLES.TABLE_COLLATION AS table_collation FROM INFORMATION_SCHEMA.TABLES WHERE ';
-
-        if (is_string($schema) === true &&
-            $schema == true) {
-            $sql .= 'TABLES.TABLE_SCHEMA = "' . $schema . '" AND TABLES.TABLE_NAME = "' . $table . '"';
-        } else {
-            $sql .= 'TABLES.TABLE_NAME = "' . $table . '"';
+        $sql = "SELECT TABLES.TABLE_TYPE AS table_type,TABLES.AUTO_INCREMENT AS auto_increment,TABLES.ENGINE AS engine,TABLES.TABLE_COLLATION AS table_collation FROM INFORMATION_SCHEMA.TABLES WHERE ";
+        if($schema) {
+            return $sql . "TABLES.TABLE_SCHEMA = '" . $schema . "' AND TABLES.TABLE_NAME = '" . $table . "'";
         }
-
-        return $sql;
+        return $sql . "TABLES.TABLE_SCHEMA = DATABASE() AND TABLES.TABLE_NAME = '" . $table . "'";
     }
+
+    /**
+     * Generates SQL to check DB parameter FOREIGN_KEY_CHECKS.
+     * @return string
+     */
+    public function getForeignKeyChecks()
+	{
+		return "SELECT @@foreign_key_checks";
+	}
 
 }

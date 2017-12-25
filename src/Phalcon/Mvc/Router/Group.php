@@ -2,9 +2,6 @@
 
 namespace Phalcon\Mvc\Router;
 
-use \Phalcon\Mvc\Router\Exception;
-use \Phalcon\Mvc\Router\Route;
-
 /**
  * Phalcon\Mvc\Router\Group
  *
@@ -97,8 +94,6 @@ class Group
     {
         if (is_array($paths) === true || is_string($paths) === true) {
             $this->_paths = $paths;
-        } else {
-            throw new Exception('Invalid parameter type.');
         }
 
         if (method_exists($this, 'initialize') === true) {
@@ -170,12 +165,7 @@ class Group
      */
     public function beforeMatch($beforeMatch)
     {
-        if (is_string($beforeMatch) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_beforeMatch = $beforeMatch;
-
         return $this;
     }
 
@@ -230,34 +220,52 @@ class Group
      *
      * @param string $patten
      * @param array $paths
-     * @param array $httpMethods
+     * @param  $httpMethods
      * @return \Phalcon\Mvc\Router\Route
      * @throws Exception
      */
     protected function _addRoute($pattern, $paths, $httpMethods)
     {
-        if (is_string($pattern) === false ||
-            is_array($paths) === false ||
-            is_array($httpMethods) === false) {
+        if ( is_string($pattern) === false ) {
             throw new Exception('Invalid parameter type.');
         }
 
-        //Add the prefix to the pattern
-        $pattern = (string) $this->_prefix . $pattern;
+        /**
+         * Check if the paths need to be merged with current paths
+         */
+        $defaultPaths = $this->_paths;
 
-        //Check if the paths need to be merged with current paths
-        if (is_array($this->_paths) === true) {
-            if (is_array($paths) === true) {
-                //Merge the paths with the defualt paths
-                $paths = array_merge($this->_paths, $paths);
+        if ( is_array($defaultPaths) ) {
+
+            if ( is_string($paths) ) {
+                $processedPaths = Route::getRoutePaths($paths);
             } else {
-                $paths = $this->_paths;
+                $processedPaths = $paths;
             }
+
+            if ( is_array($processedPaths) ) {
+                /**
+                 * Merge the paths with the default paths
+                 */
+                $mergedPaths = array_merge($defaultPaths, $processedPaths);
+            } else {
+                $mergedPaths = $defaultPaths;
+            }
+        } else {
+            $mergedPaths = $paths;
         }
 
-        //Every route is internally stored as a Phalcon\Mvc\Router\Route
-        $route           = new Route($pattern, $paths, $httpMethods);
+        /**
+         * Every route is internally stored as a Phalcon\Mvc\Router\Route
+         */
+        $route = new Route(
+            $this->_prefix.$pattern,
+            $mergedPaths,
+            $httpMethods
+        );
         $this->_routes[] = $route;
+
+        $route->setGroup($this);
         return $route;
     }
 
@@ -272,9 +280,13 @@ class Group
      * @param string|array|null $paths
      * @param string|null $httpMethods
      * @return \Phalcon\Mvc\Router\Route
+     * @throws Exception
      */
     public function add($pattern, $paths = null, $httpMethods = null)
     {
+        if(! is_string($pattern)) {
+            throw  new Exception('Invalid parameter type.');
+        }
         return $this->_addRoute($pattern, $paths, $httpMethods);
     }
 
@@ -284,9 +296,13 @@ class Group
      * @param string $pattern
      * @param string|array|null $paths
      * @return \Phalcon\Mvc\Router\Route
+     * @throws Exception
      */
     public function addGet($pattern, $paths = null)
     {
+        if(! is_string($pattern)) {
+            throw  new Exception('Invalid parameter type.');
+        }
         return $this->_addRoute($pattern, $paths, 'GET');
     }
 
@@ -296,9 +312,13 @@ class Group
      * @param string $pattern
      * @param string|array|null $paths
      * @return \Phalcon\Mvc\Router\Route
+     * @throws Exception
      */
     public function addPost($pattern, $paths = null)
     {
+        if(! is_string($pattern)) {
+            throw  new Exception('Invalid parameter type.');
+        }
         return $this->_addRoute($pattern, $paths, 'POST');
     }
 
@@ -308,9 +328,13 @@ class Group
      * @param string $pattern
      * @param string|array|null $paths
      * @return \Phalcon\Mvc\Router\Route
+     * @throws Exception
      */
     public function addPut($pattern, $paths = null)
     {
+        if(! is_string($pattern)) {
+            throw  new Exception('Invalid parameter type.');
+        }
         return $this->_addRoute($pattern, $paths, 'PUT');
     }
 
@@ -323,6 +347,9 @@ class Group
      */
     public function addPatch($pattern, $paths = null)
     {
+        if(! is_string($pattern)) {
+            throw  new Exception('Invalid parameter type.');
+        }
         return $this->_addRoute($pattern, $paths, 'PATCH');
     }
 
@@ -332,9 +359,13 @@ class Group
      * @param string $pattern
      * @param string|array|null $paths
      * @return \Phalcon\Mvc\Router\Route
+     * @throws Exception
      */
     public function addDelete($pattern, $paths = null)
     {
+        if(! is_string($pattern)) {
+            throw  new Exception('Invalid parameter type.');
+        }
         return $this->_addRoute($pattern, $paths, 'DELETE');
     }
 
@@ -344,9 +375,13 @@ class Group
      * @param string $pattern
      * @param string|array|null $paths
      * @return \Phalcon\Mvc\Router\Route
+     * @throws Exception
      */
     public function addOptions($pattern, $paths = null)
     {
+        if(! is_string($pattern)) {
+            throw  new Exception('Invalid parameter type.');
+        }
         return $this->_addRoute($pattern, $paths, 'OPTIONS');
     }
 
@@ -356,9 +391,13 @@ class Group
      * @param string $pattern
      * @param string|array|null $paths
      * @return \Phalcon\Mvc\Router\Route
+     * @throws Exception
      */
     public function addHead($pattern, $paths = null)
     {
+        if(! is_string($pattern)) {
+            throw  new Exception('Invalid parameter type.');
+        }
         return $this->_addRoute($pattern, $paths, 'HEAD');
     }
 

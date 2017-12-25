@@ -33,14 +33,24 @@ class Index implements IndexInterface
      */
     protected $_columns;
 
+
+    /**
+     * Index type
+     *
+     * @var string
+     */
+    protected $_type;
+
     /**
      * \Phalcon\Db\Index constructor
      *
-     * @param string $indexName
-     * @param array $columns
-     * @throws Exception
+     * @param string  $indexName
+     * @param array   $columns
+     * @param null    $type
+     *
+     * @throws \Phalcon\Db\Exception
      */
-    public function __construct($indexName, $columns)
+    public function __construct($indexName,  $columns, $type = null)
     {
         if (is_string($indexName) === false ||
             is_array($columns) === false) {
@@ -49,6 +59,7 @@ class Index implements IndexInterface
 
         $this->_indexName = $indexName;
         $this->_columns   = $columns;
+        $this->_type      = (string) $type;
     }
 
     /**
@@ -69,6 +80,17 @@ class Index implements IndexInterface
     public function getColumns()
     {
         return $this->_columns;
+    }
+
+
+    /**
+     * Gets the columns that comprends the index
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->_type;
     }
 
     /**
@@ -92,8 +114,14 @@ class Index implements IndexInterface
             throw new Exception('_columns parameter is required');
         }
 
+        if (isset($data['_type']) === false) {
+            $data['_type'] = null;
+        }
+
         //Return a Phalcon\Db\Index as part of the returning state
-        return new Index($data['_indexName'], $data['_columns']);
+        return new Index(
+            $data['_indexName'], $data['_columns'], $data['_type']
+        );
     }
 
 }

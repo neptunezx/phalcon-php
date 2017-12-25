@@ -72,6 +72,24 @@ class Reference implements ReferenceInterface
      */
     protected $_referencedColumns;
 
+
+    /**
+     * Referenced onDelete
+     *
+     * @var null|array
+     * @access protected
+     */
+    protected $_onDelete;
+
+
+    /**
+     * Referenced UPDATE
+     *
+     * @var null|array
+     * @access protected
+     */
+    protected $_onUpdate;
+
     /**
      * \Phalcon\Db\Reference constructor
      *
@@ -112,6 +130,14 @@ class Reference implements ReferenceInterface
 
         if (isset($definition['referencedSchema']) === true) {
             $this->_referencedSchema = $definition['referencedSchema'];
+        }
+
+        if (isset($definition['onDelete']) === true) {
+            $this->_onDelete = $definition['onDelete'];
+        }
+
+        if (isset($definition['onUpdate']) === true) {
+            $this->_onUpdate = $definition['onUpdate'];
         }
 
         if (count($definition['columns']) !== count($definition['referencedColumns'])) {
@@ -180,6 +206,27 @@ class Reference implements ReferenceInterface
     }
 
     /**
+     * Gets referenced _onDelete
+     *
+     * @return array
+     */
+    public function getOnDelete()
+    {
+        return $this->_onDelete;
+    }
+
+
+    /**
+     * Gets referenced _onUpdate
+     *
+     * @return array
+     */
+    public function getOnUpdate()
+    {
+        return $this->_onUpdate;
+    }
+
+    /**
      * Restore a \Phalcon\Db\Reference object from export
      *
      * @param array $data
@@ -193,7 +240,11 @@ class Reference implements ReferenceInterface
         }
 
         if (isset($data['_referenceName']) === false) {
-            throw new Exception('_referenceName parameter is required');
+            if (isset($data['_name'])) {
+                $constraintName = $data['_name'];
+            }else{
+                throw new Exception("_name parameter is required");
+            }
         } else {
             $constraintName = $data['_referenceName'];
         }
@@ -203,8 +254,12 @@ class Reference implements ReferenceInterface
         $definition['_referencedTable']   = (isset($data['_referencedTable']) === true ? $data['_referencedTable'] : null);
         $definition['_columns']           = (isset($data['_columns']) === true ? $data['_columns'] : null);
         $definition['_referencedColumns'] = (isset($data['_referencedColumns']) === true ? $data['_referencedColumns'] : null);
+        $definition['_onDelete']          = (isset($data['_onDelete']) === true ? $data['_onDelete'] : null);
+        $definition['_onUpdate']          = (isset($data['_onUpdate']) === true ? $data['_onUpdate'] : null);
 
         return new Reference($constraintName, $definition);
     }
+
+
 
 }

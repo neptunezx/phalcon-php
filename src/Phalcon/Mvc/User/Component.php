@@ -2,10 +2,6 @@
 
 namespace Phalcon\Mvc\User;
 
-use Phalcon\Di\Injectable;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-
 /**
  * Phalcon\Mvc\User\Component
  *
@@ -14,7 +10,7 @@ use \Phalcon\Di\InjectionAwareInterface;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/user/component.c
  */
-class Component extends Injectable implements EventsAwareInterface, InjectionAwareInterface
+class Component extends \Phalcon\Di\Injectable
 {
     
 }

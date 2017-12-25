@@ -2,13 +2,10 @@
 
 namespace Phalcon\Mvc\Router;
 
-use \Phalcon\Mvc\Router\RouteInterface;
-use \Phalcon\Mvc\Router\Exception;
 use \Phalcon\Text;
 
 /**
  * Phalcon\Mvc\Router\Route
- *
  * This class represents every route added to the router
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/router/route.c
@@ -88,6 +85,10 @@ class Route implements RouteInterface
      */
     protected $_beforeMatch;
 
+    protected $_match;
+
+    protected $_group;
+
     /**
      * Unique ID
      *
@@ -99,17 +100,16 @@ class Route implements RouteInterface
     /**
      * \Phalcon\Mvc\Router\Route constructor
      *
-     * @param string $pattern
-     * @param array|null $paths
+     * @param string            $pattern
+     * @param array|null        $paths
      * @param array|string|null $httpMethods
+     *
      * @throws Exception
      */
     public function __construct($pattern, $paths = null, $httpMethods = null)
     {
         /* Type check */
-        if (is_array($httpMethods) === false &&
-            is_string($httpMethods) === false &&
-            is_null($httpMethods) === false) {
+        if ( is_string($pattern) === false ) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -121,7 +121,7 @@ class Route implements RouteInterface
 
         //Get the unique Id from the static member _uniqueId
         $uniqueId = self::$_uniqueId;
-        if (is_null($uniqueId) === true) {
+        if ( is_null($uniqueId) === true ) {
             $uniqueId = 0;
         }
 
@@ -134,351 +134,399 @@ class Route implements RouteInterface
      * Replaces placeholders from pattern returning a valid PCRE regular expression
      *
      * @param string $pattern
+     *
      * @return string
      * @throws Exception
      */
     public function compilePattern($pattern)
     {
-        if (is_string($pattern) === false) {
+        if ( is_string($pattern) === false ) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $compiledPattern = $pattern;
 
         //If a pattern contains ':', maybe there are placeholders to replace
-        if (strpos($pattern, ':') !== false) {
-            //This is a pattern for valid identifers
-            $idPattern = '/([a-zA-Z0-9\\_\\-]+)';
+        if ( Text::memstr($pattern, ':') !== false ) {
 
-            //Replace the module part
-            if (strpos($pattern, '/:module') !== false) {
-                $compiledPattern = str_replace('/:module', $idPattern, $compiledPattern);
+            // This is a pattern for valid identifiers
+            $idPattern = "/([\\w0-9\\_\\-]+)";
+
+            // Replace the module part
+            if ( Text::memstr($pattern, "/:module") ) {
+                $pattern = str_replace("/:module", $idPattern, $pattern);
             }
 
-            //Replace the controller placeholder
-            if (strpos($pattern, '/:controller') !== false) {
-                $compiledPattern = str_replace('/:controller', $idPattern, $compiledPattern);
+            // Replace the controller placeholder
+            if ( Text::memstr($pattern, "/:controller") ) {
+                $pattern = str_replace("/:controller", $idPattern, $pattern);
             }
 
-            //Replace the namespace placeholder
-            if (strpos($pattern, '/:namespace') !== false) {
-                $compiledPattern = str_replace('/:namespace', $idPattern, $compiledPattern);
+            // Replace the namespace placeholder
+            if ( Text::memstr($pattern, "/:namespace") ) {
+                $pattern = str_replace("/:namespace", $idPattern, $pattern);
             }
 
-            //Replace the action placeholder
-            if (strpos($pattern, '/:action') !== false) {
-                $compiledPattern = str_replace('/:action', $idPattern, $compiledPattern);
+            // Replace the action placeholder
+            if ( Text::memstr($pattern, "/:action") ) {
+                $pattern = str_replace("/:action", $idPattern, $pattern);
             }
 
-            //Replace the params placeholder
-            if (strpos($pattern, '/:params') !== false) {
-                $compiledPattern = str_replace('/:params', '(/.*)*', $compiledPattern);
+            // Replace the params placeholder
+            if ( Text::memstr($pattern, "/:params") ) {
+                $pattern = str_replace("/:params", "(/.*)*", $pattern);
             }
 
-            //Replace the int placeholder
-            if (strpos($pattern, '/:int') !== false) {
-                $compiledPattern = str_replace('/:int', '/([0-9]+)', $compiledPattern);
+            // Replace the int placeholder
+            if ( Text::memstr($pattern, "/:int") ) {
+                $pattern = str_replace("/:int", "/([0-9]+)", $pattern);
             }
+
         }
 
-        //Check if the pattern has parantheses in order to add the regex delimiters
-        if (strpos($compiledPattern, '(') !== false ||
-            strpos($compiledPattern, '[') !== false) {
-            return '#^' . $compiledPattern . '$#';
+        // Check if the pattern has parentheses in order to add the regex delimiters
+        if ( Text::memstr($pattern, "(") ) {
+            return "#^".$pattern."$#u";
         }
 
-        return $compiledPattern;
+        // Square brackets are also checked
+        if ( Text::memstr($pattern, "[") ) {
+            return "#^".$pattern."$#u";
+        }
+
+        return $pattern;
     }
 
     /**
      * Set one or more HTTP methods that constraint the matching of the route
-     *
      * <code>
      * $route->via('GET');
      * $route->via(array('GET', 'POST'));
      * </code>
      *
      * @param string|array $httpMethods
+     *
      * @return \Phalcon\Mvc\Router\Route
-     * @throws Exception
      */
     public function via($httpMethods)
     {
-        if (is_string($httpMethods) === false &&
-            is_array($httpMethods) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_methods = $httpMethods;
-
         return $this;
     }
 
     /**
      * Extracts parameters from a string
      *
-     * @param string $str
-     * @param array $matches
-     * @throws Exception
+     * @param string $pattern
+     *
+     * @return array|boolean
      */
-    private static function extractNamedParameters($str, &$matches)
+    public function extractNamedParams($pattern)
     {
-        if (is_string($str) === false ||
-            strlen($str) <= 0 ||
-            is_array($matches) === false) {
+        if ( !is_string($pattern) ) {
+            throw new Exception("Invalid parameter type.");
+        }
+        $prevCh           = '\0';
+        $bracketCount     = 0;
+        $parenthesesCount = 0;
+        $notValid         = false;
+        $marker           = 0;
+        $intermediate     = 0;
+        $numberMatches    = 0;
+
+        if ( strlen($pattern) <= 0 ) {
             return false;
         }
 
-        $bracketCount     = 0;
-        $parenthesesCount = 0;
-        $intermediate     = 0;
-        $numberMatches    = 0;
-        $regexpLength     = 0;
-        $notValid         = false;
-        $marker           = null;
-        $variable         = null;
-        $item             = null;
-        $regexp           = null;
-        $cursorVar        = null;
-        $routeStr         = '';
-        $cursor           = 0;
+        $matches = [];
+        $route   = "";
 
-        $l = strlen($str);
-        for ($i = 0; $i < $l; ++$i) {
-            $ch = $str[$i];
+        $count = strlen($pattern);
+        for ( $cursor = 0; $cursor < $count; ++$cursor ) {
+            $ch = $pattern[$cursor];
 
-            if ($ch === "\0") {
-                break;
-            }
-
-            if ($parenthesesCount === 0) {
-                if ($ch === '{') {
-                    if ($bracketCount === 0) {
-                        $marker       = $i;
+            if ( $parenthesesCount == 0 ) {
+                if ( $ch == '{' ) {
+                    if ( $bracketCount == 0 ) {
+                        $marker       = $cursor + 1;
                         $intermediate = 0;
                         $notValid     = false;
                     }
-                    ++$bracketCount;
-                } elseif ($ch === '}') {
-                    --$bracketCount;
-                    if ($intermediate > 0) {
-                        if ($bracketCount === 0) {
-                            $numberMatches++;
-                            $variable  = null;
-                            $length    = $cursor - $marker - 1;
-                            $item      = substr($str, $marker + 1, $length);
-                            $cursorVar = $marker + 1;
-                            $marker    = $marker + 1;
-                            for ($j = 0; $j < $length; ++$j) {
-                                $ch  = $str[$cursorVar];
-                                $cha = ord($ch);
+                    $bracketCount++;
+                } else {
+                    if ( $ch == '}' ) {
+                        $bracketCount--;
+                        if ( $intermediate > 0 ) {
+                            if ( $bracketCount == 0 ) {
+                                $numberMatches++;
+                                $variable = null;
+                                $regexp   = null;
+                                $item     = substr(
+                                    $pattern,
+                                    $marker,
+                                    $cursor - $marker
+                                );
 
-                                if ($ch === "\0") {
-                                    break;
-                                }
-
-                                if ($j === 0 && !(($cha >= 97 && $cha <= 122) || ($cha >= 65 && $cha <= 90))) {
-                                    $notValid = true;
-                                    break;
-                                }
-
-                                if (($cha >= 97 && $cha <= 122) || ($cha >= 65 && $cha <= 90) || ($cha >= 48 && $cha <= 57) || $ch === '-' || $ch === '_' || $ch === ':') {
-                                    if ($ch === ':') {
-                                        $regexpLength   = $length - $j - 1;
-                                        $variableLength = $cursorVar - $marker;
-                                        $variable       = substr($str, $marker, $variableLength);
-                                        $regexp         = substr($str, $cursorVar + 1, $regexpLength);
+                                for ( $cursorVar = 0;
+                                    $cursorVar < strlen($item); ++$cursorVar ) {
+                                    $ch = $item[$cursorVar];
+                                    if ( $ch == '\0' ) {
                                         break;
                                     }
-                                } else {
-                                    $notValid = true;
-                                    break;
+
+                                    if ( $cursorVar == 0
+                                         && !(($ch >= 'a'
+                                               && $ch <= 'z')
+                                              || ($ch >= 'A'
+                                                  && $ch <= 'Z'))
+                                    ) {
+                                        $notValid = true;
+                                        break;
+                                    }
+
+                                    if ( ($ch >= 'a' && $ch <= 'z')
+                                         || ($ch >= 'A'
+                                             && $ch <= 'Z')
+                                         || ($ch >= '0' && $ch <= '9')
+                                         || $ch == '-'
+                                         || $ch == '_'
+                                         || $ch == ':'
+                                    ) {
+                                        if ( $ch == ':' ) {
+                                            $variable = (string) substr(
+                                                $item,
+                                                0,
+                                                $cursorVar
+                                            );
+                                            $regexp   = (string) substr(
+                                                $item,
+                                                $cursorVar + 1
+                                            );
+                                            break;
+                                        }
+                                    } else {
+                                        $notValid = true;
+                                        break;
+                                    }
                                 }
 
-                                $cursorVar++;
-                            }
+                                if ( !$notValid ) {
+                                    $tmp = $numberMatches;
 
-                            if ($notValid === false) {
-                                $tmp = $numberMatches;
-                                if (isset($variable) === true) {
-                                    if ($regexpLength > 0) {
-                                        if ($regexp === null) {
-                                            throw new Exception('Invalid assumption.');
-                                        }
-
-                                        //Check if we need to add parentheses to the expressions
+                                    if ( $variable && $regexp ) {
                                         $foundPattern = 0;
-                                        for ($k = 0; $k < $regexpLength; ++$k) {
-                                            if ($regexp[$k] === "\0") {
+                                        for ( $i = 0; $i < strlen($regexp);
+                                            ++$i ) {
+                                            $ch = $regexp[$i];
+
+                                            if ( $ch == '\0' ) {
                                                 break;
                                             }
-
-                                            if ($foundPattern === false) {
-                                                if ($regexp[$k] === '(') {
+                                            if ( !$foundPattern ) {
+                                                if ( $ch == '(' ) {
                                                     $foundPattern = 1;
                                                 }
                                             } else {
-                                                if ($regexp[$k] === ')') {
+                                                if ( $ch == ')' ) {
                                                     $foundPattern = 2;
                                                     break;
                                                 }
                                             }
                                         }
 
-                                        if ($foundPattern !== 2) {
-                                            $routeStr .= '(' . $regexp . ')';
+                                        if ( $foundPattern != 2 ) {
+                                            $route .= "(".$regexp.")";
                                         } else {
-                                            $routeStr .= $regexp;
+                                            $route .= $regexp;
                                         }
                                         $matches[$variable] = $tmp;
+                                    } else {
+                                        $route          .= "([^/]*)";
+                                        $matches[$item] = $tmp;
                                     }
                                 } else {
-                                    $routeStr       .= '([^/]*)';
-                                    $matches[$item] = $tmp;
+                                    $route .= "{".$item."}";
                                 }
+                                continue;
                             }
-                        } else {
-                            $routeStr .= '{' . $item . '}';
                         }
-
-                        $cursor++;
-                        continue;
                     }
                 }
             }
 
-            if ($bracketCount === 0) {
-                if ($ch === '(') {
+            if ( $bracketCount == 0 ) {
+                if ( $ch == '(' ) {
                     $parenthesesCount++;
                 } else {
-                    if ($ch === ')') {
+                    if ( $ch == ')' ) {
                         $parenthesesCount--;
-                        if ($parenthesesCount === 0) {
+                        if ( $parenthesesCount == 0 ) {
                             $numberMatches++;
                         }
                     }
                 }
             }
 
-            if ($bracketCount > 0) {
+            if ( $bracketCount > 0 ) {
                 $intermediate++;
             } else {
-                $routeStr .= $ch;
+                if ( $parenthesesCount == 0 && $prevCh != '\\' ) {
+                    if ( $ch == '.' || $ch == '+' || $ch == '|'
+                         || $ch == '#'
+                    ) {
+                        $route .= '\\';
+                    }
+                }
+                $route  .= $ch;
+                $prevCh = $ch;
             }
-
-            $cursor++;
         }
-
-        return $routeStr;
+        return [ $route, $matches ];
     }
 
     /**
      * Reconfigure the route adding a new pattern and a set of paths
      *
      * @param string $pattern
-     * @param array|null|string $paths
+     * @param        $paths
+     *
      * @throws Exception
      */
     public function reConfigure($pattern, $paths = null)
     {
-        if (is_string($pattern) === false) {
+        if ( is_string($pattern) === false ) {
             throw new Exception('The pattern must be string');
         }
 
-        $originalPattern = $pattern;
+        $routePaths = self::getRoutePaths($paths);
 
-        if (is_string($paths) === true) {
-            $moduleName     = null;
-            $controllerName = null;
-            $actionName     = null;
+        /**
+         * If the route starts with '#' we assume that it is a regular expression
+         */
+        if ( !Text::startsWith($pattern, "#") ) {
 
-            //Explode the short paths using the :: separator
-            $parts       = explode('::', $paths);
-            $numberParts = count($parts);
-
-            //Create the array paths dynamically
-            switch ($numberParts) {
-                case 3:
-                    $moduleName     = $parts[0];
-                    $controllerName = $parts[1];
-                    $actionName     = $parts[2];
-                    break;
-                case 2:
-                    $controllerName = $parts[0];
-                    $actionName     = $parts[1];
-                    break;
-                case 1:
-                    $controllerName = $parts[0];
-                    break;
-                //@note no default
+            if ( Text::memstr($pattern, "{") ) {
+                /**
+                 * The route has named parameters so we need to extract them
+                 */
+                $extracted   = $this->extractNamedParams($pattern);
+                $pcrePattern = $extracted[0];
+                $routePaths  = array_merge($routePaths, $extracted[1]);
+            } else {
+                $pcrePattern = $pattern;
             }
 
-            $routePaths = array();
+            /**
+             * Transform the route's pattern to a regular expression
+             */
+            $compiledPattern = $this->compilePattern($pcrePattern);
+        } else {
+            $compiledPattern = $pattern;
+        }
 
-            //Process module name
-            if (is_null($moduleName) === false) {
-                $routePaths['module'] = $moduleName;
-            }
+        /**
+         * Update the original pattern
+         */
+        $this->_pattern = $pattern;
 
-            //Process controller name
-            if (is_null($controllerName) === false) {
-                //Check if we need to obtain the namespace
-                if (strpos($controllerName, '\\') !== false) {
-                    $classWithNamespace = get_class($controllerName);
+        /**
+         * Update the compiled pattern
+         */
+        $this->_compiledPattern = $compiledPattern;
 
-                    //Extract the real class name from the namespaced class
-                    //Extract the namespace from the namespaced class
-                    $pos = strrpos($classWithNamespace, '\\');
-                    if ($pos !== false) {
-                        $namespaceName = substr($classWithNamespace, 0, $pos);
-                        $realClassName = substr($classWithNamespace, $pos);
-                    } else {
-                        $realClassName = $classWithNamespace;
-                    }
+        /**
+         * Update the route's paths
+         */
+        $this->_paths = $routePaths;
+    }
 
-                    //Update the namespace
-                    if (isset($namespaceName) === true) {
-                        $routePaths['namespace'] = $namespaceName;
+    /**
+     * Returns routePaths
+     *
+     * @return array
+     */
+    public static function getRoutePaths($paths = null)
+    {
+
+        if ( $paths !== null ) {
+            if ( is_string($paths) ) {
+
+                $moduleName     = null;
+                $controllerName = null;
+                $actionName     = null;
+
+                // Explode the short paths using the :: separator
+                $parts = explode("::", $paths);
+
+                // Create the array paths dynamically
+                switch (count($parts)) {
+
+                    case 3:
+                        $moduleName     = $parts[0];
+                        $controllerName = $parts[1];
+                        $actionName     = $parts[2];
+                        break;
+
+                    case 2:
+                        $controllerName = $parts[0];
+                        $actionName     = $parts[1];
+                        break;
+
+                    case 1:
+                        $controllerName = $parts[0];
+                        break;
+                }
+
+                $routePaths = [];
+
+                // Process module name
+                if ( $moduleName !== null ) {
+                    $routePaths["module"] = $moduleName;
+                }
+
+                // Process controller name
+                if ( $controllerName !== null ) {
+
+                    // Check if we need to obtain the namespace
+                    if ( Text::memstr($controllerName, "\\") ) {
+
+                        // Extract the real class name from the namespaced class
+                        $realClassName = Kernel::getClassNameFromClass(
+                            $controllerName
+                        );
+
+                        // Extract the namespace from the namespaced class
+                        $namespaceName = Kernel::getNamespaceFromClass(
+                            $controllerName
+                        );
+
+                        // Update the namespace
+                        if ( $namespaceName ) {
+                            $routePaths["namespace"] = $namespaceName;
+                        }
                     }
                 } else {
                     $realClassName = $controllerName;
                 }
 
-                //Always pass the controller to lowercase
-                $realClassName = Text::uncamelize($realClassName);
+                // Always pass the controller to lowercase
+                $routePaths["controller"] = uncamelize($realClassName);
 
-                //Update the controller path
-                $routePaths['controller'] = $realClassName;
+                // Process action name
+                if ( $actionName !== null ) {
+                    $routePaths["action"] = $actionName;
+                }
+            } else {
+                $routePaths = $paths;
             }
-
-            //Process action name
-            if (is_null($actionName) === false) {
-                $routePaths['action'] = $actionName;
-            }
-        } elseif (is_array($paths) === true) {
-            $routePaths = $paths;
-        } elseif (is_null($paths) === true) {
-            $routePaths = array();
         } else {
-            throw new Exception('The route contains invalid paths');
+            $routePaths = [];
         }
 
-        //If the route starts with '#' we assume that it is a regular expression
-        if (Text::startsWith($pattern, '#') === false) {
-            if (strpos($pattern, '{') !== false) {
-                //The route has named parameters so we need to extract them
-                $pattern = self::extractNamedParameters($pattern, $routePaths);
-            }
-
-            //Transform the route's pattern to a regular expression
-            $pattern = $this->compilePattern($pattern);
+        if ( !is_array($routePaths) ) {
+            throw new Exception("The route contains invalid paths");
         }
-
-        //Update member variables
-        $this->_pattern         = $originalPattern;
-        $this->_compiledPattern = $pattern;
-        $this->_paths           = $routePaths;
-    }
+		return $routePaths;
+	}
 
     /**
      * Returns the route's name
@@ -492,7 +540,6 @@ class Route implements RouteInterface
 
     /**
      * Sets the route's name
-     *
      * <code>
      * $router->add('/about', array(
      *     'controller' => 'about'
@@ -500,15 +547,15 @@ class Route implements RouteInterface
      * </code>
      *
      * @param string $name
+     *
      * @return \Phalcon\Mvc\Router\Route
      * @throws Exception
      */
     public function setName($name)
     {
-        if (is_string($name) === false) {
+        if ( is_string($name) === false ) {
             throw new Exception('Invalid parameter type.');
         }
-
         $this->_name = $name;
 
         return $this;
@@ -520,17 +567,13 @@ class Route implements RouteInterface
      * If the callback returns false the route is treaded as not matched
      *
      * @param callback $callback
+     *
      * @return \Phalcon\Mvc\Router\Route
      * @throws Exception
      */
     public function beforeMatch($callback)
     {
-        if (is_callable($callback) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_beforeMatch = $callback;
-
         return $this;
     }
 
@@ -545,9 +588,39 @@ class Route implements RouteInterface
     }
 
     /**
+     * Allows to set a callback to handle the request directly in the route
+     *
+     *<code>
+     * $router->add(
+     *     "/help",
+     *     []
+     * )->match(
+     *     function () {
+     *         return $this->getResponse()->redirect("https://support.google.com/", true);
+     *     }
+     * );
+     *</code>
+     */
+    public function match($callback)
+	{
+		$this->_match = $callback;
+		return $this;
+	}
+
+    /**
+     * Returns the 'match' callback if any
+     *
+     * @return
+     */
+    public function getMatch()
+	{
+		return $this->_match;
+	}
+
+    /**
      * Returns the route's id
      *
-     * @return int|null
+     * @return string
      */
     public function getRouteId()
     {
@@ -557,7 +630,7 @@ class Route implements RouteInterface
     /**
      * Returns the route's pattern
      *
-     * @return string|null
+     * @return string
      */
     public function getPattern()
     {
@@ -567,7 +640,7 @@ class Route implements RouteInterface
     /**
      * Returns the route's compiled pattern
      *
-     * @return string|null
+     * @return string
      */
     public function getCompiledPattern()
     {
@@ -577,7 +650,7 @@ class Route implements RouteInterface
     /**
      * Returns the paths
      *
-     * @return array|null
+     * @return array
      */
     public function getPaths()
     {
@@ -591,13 +664,8 @@ class Route implements RouteInterface
      */
     public function getReversedPaths()
     {
-        if (is_array($this->_paths) === false) {
-            $this->_paths = array();
-        }
-
-        $reversed = array();
-
-        foreach ($this->_paths as $path => $position) {
+        $reversed = [];
+        foreach ( $this->_paths as $path => $position ) {
             $reversed[$position] = $path;
         }
 
@@ -606,32 +674,26 @@ class Route implements RouteInterface
 
     /**
      * Sets a set of HTTP methods that constraint the matching of the route (alias of via)
-     *
      * <code>
      * $route->setHttpMethods('GET');
      * $route->setHttpMethods(array('GET', 'POST'));
      * </code>
      *
      * @param string|array $httpMethods
+     *
      * @return \Phalcon\Mvc\Router\Route
      * @throws Exception
      */
     public function setHttpMethods($httpMethods)
     {
-        if (is_string($httpMethods) === false &&
-            is_array($httpMethods) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_methods = $httpMethods;
-
         return $this;
     }
 
     /**
      * Returns the HTTP methods that constraint matching the route
      *
-     * @return string|array|null
+     * @return string|array
      */
     public function getHttpMethods()
     {
@@ -640,30 +702,29 @@ class Route implements RouteInterface
 
     /**
      * Sets a hostname restriction to the route
-     *
      * <code>
      * $route->setHostname('localhost');
      * </code>
      *
      * @param string $hostname
+     *
      * @return \Phalcon\Mvc\Router\Route
      * @throws Exception
      */
     public function setHostname($hostname)
     {
-        if (is_string($hostname) === false) {
+        if ( is_string($hostname) === false ) {
             throw new Exception('Invalid parameter type.');
         }
 
         $this->_hostname = $hostname;
-
         return $this;
     }
 
     /**
      * Returns the hostname restriction if any
      *
-     * @return string|null
+     * @return string
      */
     public function getHostname()
     {
@@ -671,24 +732,41 @@ class Route implements RouteInterface
     }
 
     /**
+     * Sets the group associated with the route
+     *
+     * @param GroupInterface $group
+     * @return Route
+     */
+    public function setGroup(GroupInterface $group)
+	{
+		$this->_group = $group;
+		return $this;
+	}
+
+    /**
+     * Returns the group associated with the route
+     *
+     * @return GroupInterface|null
+     */
+    public function getGroup()
+	{
+		return $this->_group;
+	}
+
+    /**
      * Adds a converter to perform an additional transformation for certain parameter
      *
-     * @param string $name
-     * @param callable $converter
+     * @param string   $name
+     * @param $converter
+     *
      * @return \Phalcon\Mvc\Router\Route
      * @throws Exception
      */
     public function convert($name, $converter)
     {
-        if (is_string($name) === false ||
-            is_callable($converter) === false) {
+        if ( is_string($name) === false || is_callable($converter) === false ) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($this->_converters) === false) {
-            $this->_converters = array();
-        }
-
         $this->_converters[$name] = $converter;
 
         return $this;
@@ -697,7 +775,7 @@ class Route implements RouteInterface
     /**
      * Returns the router converter
      *
-     * @return array|null
+     * @return array
      */
     public function getConverters()
     {
