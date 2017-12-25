@@ -272,7 +272,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param \Phalcon\Events\ManagerInterface $eventsManager
      * @throws Exception
      */
-    public function setEventsManager($eventsManager)
+    public function setEventsManager(EventsManagerInterface $eventsManager)
     {
         if (is_object($eventsManager) === false ||
             $eventsManager instanceof EventsManagerInterface === false) {
@@ -412,7 +412,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         if (isset($this->_initialized[$lowercased]) === true) {
             $model = $this->_initialized[$lowercased];
             if ($newInstance === true) {
-                return new $model($this->_dependencyInjector, $this);
+                return new $model(null, $this->_dependencyInjector, $this);
             }
 
             return $model;
@@ -420,7 +420,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
 
         //Load it using an autoloader
         if (class_exists($modelName) === true) {
-            return new $modelName($this->_dependencyInjector, $this);
+            return new $modelName(null, $this->_dependencyInjector, $this);
         }
 
         //The model doesn't exist throw an exception

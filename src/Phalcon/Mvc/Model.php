@@ -2,6 +2,7 @@
 
 namespace Phalcon\Mvc;
 
+use Serializable;
 use Phalcon\Di;
 use Phalcon\Db\Column;
 use Phalcon\Db\RawValue;
@@ -218,7 +219,6 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @access protected
      */
     protected $_snapshot;
-
     protected $_oldSnapshot = [];
 
     /**
@@ -229,51 +229,51 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param \Phalcon\Mvc\Model\ManagerInterface|null $modelsManager
      * @throws Exception
      */
-    final public function __construct($data = null,DiInterface $dependencyInjector = null,ManagerInterface $modelsManager = null)
+    final public function __construct($data = null, DiInterface $dependencyInjector = null, ManagerInterface $modelsManager = null)
     {
         /**
          * We use a default DI if the user doesn't define one
          */
-        if(! is_object($dependencyInjector)) {
+        if (!is_object($dependencyInjector)) {
             $dependencyInjector = Di::getDefault();
         }
 
-        if(! is_object($dependencyInjector)) {
+        if (!is_object($dependencyInjector)) {
             throw new Exception("A dependency injector container is required to obtain the services related to the ORM");
         }
 
-		$this->_dependencyInjector = $dependencyInjector;
+        $this->_dependencyInjector = $dependencyInjector;
 
-		/**
+        /**
          * Inject the manager service from the DI
          */
-		if(!is_object($modelsManager)) {
-		    $modelsManager = $dependencyInjector->getShared("modelsManager");
-		    if(!is_object($modelsManager)) {
+        if (!is_object($modelsManager)) {
+            $modelsManager = $dependencyInjector->getShared("modelsManager");
+            if (!is_object($modelsManager)) {
                 throw new Exception("The injected service 'modelsManager' is not valid");
             }
         }
 
-		/**
+        /**
          * Update the models-manager
          */
-		$this->_modelsManager = $modelsManager;
+        $this->_modelsManager = $modelsManager;
 
-		/**
+        /**
          * The manager always initializes the object
          */
-		$modelsManager->initialize($this);
+        $modelsManager->initialize($this);
 
-		/**
+        /**
          * This allows the developer to execute initialization stuff every time an instance is created
          */
-		if (method_exists($this, "onConstruct")) {
-           $this->{"onConstruct"}($data);
-		}
+        if (method_exists($this, "onConstruct")) {
+            $this->{"onConstruct"}($data);
+        }
 
-		if (is_array($data)) {
+        if (is_array($data)) {
             $this->assign($data);
-		}
+        }
     }
 
     /**
@@ -282,7 +282,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
         $this->_dependencyInjector = $dependencyInjector;
     }
@@ -565,7 +565,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public function getReadConnection()
     {
         $transaction = $this->_transaction;
-        if(is_object($transaction)) {
+        if (is_object($transaction)) {
             return $transaction->getConnection();
         }
 
@@ -602,73 +602,70 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return \Phalcon\Mvc\Model
      * @throws Exception
      */
-    public function assign($data, $dataColumnMap = null,$whiteList = null)
+    public function assign($data, $dataColumnMap = null, $whiteList = null)
     {
         $disableAssignSetters = Kernel::getGlobals("orm.disable_assign_setters");
 
-		// apply column map for data, if exist
-        if(is_array($dataColumnMap)) {
+        // apply column map for data, if exist
+        if (is_array($dataColumnMap)) {
             $dataMapped = [];
             foreach ($data as $key => $value) {
-                if(isset($dataColumnMap[$key])) {
-                    $keyMapped = $dataColumnMap[$key];
+                if (isset($dataColumnMap[$key])) {
+                    $keyMapped              = $dataColumnMap[$key];
                     $dataMapped[$keyMapped] = $value;
                 }
             }
-        }
-        else {
+        } else {
             $dataMapped = $data;
         }
 
-		if (count($dataMapped) == 0) {
+        if (count($dataMapped) == 0) {
             return $this;
         }
 
-		$metaData = $this->getModelsMetaData();
+        $metaData = $this->getModelsMetaData();
 
-		if (Kernel::getGlobals("orm.column_renaming")) {
-           $columnMap = $metaData->getColumnMap($this);
-		} else {
+        if (Kernel::getGlobals("orm.column_renaming")) {
+            $columnMap = $metaData->getColumnMap($this);
+        } else {
             $columnMap = null;
-		}
+        }
 
-		foreach ($metaData->getAttributes($this) as $attribute) {
+        foreach ($metaData->getAttributes($this) as $attribute) {
             // Check if we need to rename the field
-		    if(is_array($columnMap)) {
-		        if(!isset($columnMap[$attribute])) {
-		            $attributeField = $columnMap[$attribute];
-		            if(Kernel::getGlobals('orm.ignore_unknown_columns')) {
-                        throw new Exception("Column '" . $attribute. "' doesn\'t make part of the column map");
-                    }
-		            else {
+            if (is_array($columnMap)) {
+                if (!isset($columnMap[$attribute])) {
+                    $attributeField = $columnMap[$attribute];
+                    if (Kernel::getGlobals('orm.ignore_unknown_columns')) {
+                        throw new Exception("Column '" . $attribute . "' doesn\'t make part of the column map");
+                    } else {
                         continue;
                     }
                 }
-            }
-            else {
+            } else {
                 $attributeField = $attribute;
-			}
+            }
 
             // The value in the array passed
             // Check if we there is data for the field
 
-            if(isset($dataMapped[$attributeField])) {
-		        $value = $dataMapped[$attributeField];
+            if (isset($dataMapped[$attributeField])) {
+                $value = $dataMapped[$attributeField];
                 // If white-list exists check if the attribute is on that list
-                if(is_array($whiteList)) {
+                if (is_array($whiteList)) {
                     if (!in_array($attributeField, $whiteList)) {
-						continue;
+                        continue;
                     }
                 }
 
-				// Try to find a possible getter
-                if($disableAssignSetters || !$this->_possibleSetter($attributeField, $value)) {
+                // Try to find a possible getter
+                if ($disableAssignSetters || !$this->_possibleSetter($attributeField, $value)) {
                     $this->{$attributeField} = $value;
                 }
             }
         }
 
-		return $this;
+        return $this;
     }
 
     /**
@@ -698,31 +695,29 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
         $instance = clone $base;
 
-		// Change the dirty state to persistent
-		$instance->setDirtyState($dirtyState);
+        // Change the dirty state to persistent
+        $instance->setDirtyState($dirtyState);
 
-        foreach ( $data as $key => $value ) {
-            if(is_string($key)) {
+        foreach ($data as $key => $value) {
+            if (is_string($key)) {
                 // Only string keys in the data are valid
-                if (! is_array($columnMap)) {
+                if (!is_array($columnMap)) {
                     $instance->{$key} = $value;
-					continue;
-				}
+                    continue;
+                }
 
                 // Every field must be part of the column map
-                if(!isset($columnMap[$key])) {
-                    if(! Kernel::getGlobals('orm.ignore_unknown_columns')) {
+                if (!isset($columnMap[$key])) {
+                    if (!Kernel::getGlobals('orm.ignore_unknown_columns')) {
                         throw new Exception("Column '" . $key . "' doesn't make part of the column map");
-                    }
-                    else {
+                    } else {
                         continue;
                     }
-                }
-                else {
+                } else {
                     $attribute = $columnMap[$key];
                 }
 
-                if(!is_array($attribute)) {
+                if (!is_array($attribute)) {
                     $instance->{$attribute} = $value;
                     continue;
                 }
@@ -734,21 +729,21 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                         case Column::TYPE_INTEGER:
                             $castValue = intval($value, 10);
-							break;
+                            break;
 
                         case Column::TYPE_DOUBLE:
                         case Column::TYPE_DECIMAL:
                         case Column::TYPE_FLOAT:
                             $castValue = doubleval($value);
-							break;
+                            break;
 
                         case Column::TYPE_BOOLEAN:
                             $castValue = (boolean) $value;
-							break;
+                            break;
 
                         default:
                             $castValue = $value;
-							break;
+                            break;
                     }
                 } else {
                     switch ($attribute[1]) {
@@ -759,34 +754,33 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         case Column::TYPE_FLOAT:
                         case Column::TYPE_BOOLEAN:
                             $castValue = null;
-							break;
+                            break;
 
                         default:
                             $castValue = value;
-							break;
+                            break;
                     }
                 }
-                $attributeName = $attribute[0];
+                $attributeName              = $attribute[0];
                 $instance->{$attributeName} = $castValue;
-
             }
-		}
+        }
 
-		/**
+        /**
          * Models that keep snapshots store the original data in t
          */
-		if ($keepSnapshots) {
+        if ($keepSnapshots) {
             $instance->setSnapshotData($data, $columnMap);
-		}
+        }
 
-		/**
+        /**
          * Call afterFetch, this allows the developer to execute actions after a record is fetched from the database
          */
-		if (method_exists($instance, "fireEvent")) {
-           $instance->{"fireEvent"}("afterFetch");
-		}
+        if (method_exists($instance, "fireEvent")) {
+            $instance->{"fireEvent"}("afterFetch");
+        }
 
-		return $instance;
+        return $instance;
     }
 
     /**
@@ -826,49 +820,49 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
          */
         if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
             $hydrateArray = [];
-		} else {
+        } else {
             $hydrateObject = new \stdclass();
-		}
+        }
 
-		foreach ($data as $key => $value) {
+        foreach ($data as $key => $value) {
             if (!is_string($key)) {
                 continue;
             }
 
-			if (is_array($columnMap)) {
+            if (is_array($columnMap)) {
 
                 /**
                  * Every field must be part of the column map
                  */
-                if(!isset($columnMap[$key])) {
+                if (!isset($columnMap[$key])) {
                     if (!Kernel::getGlobals("orm.ignore_unknown_columns")) {
-						throw new Exception("Column '" . $key . "' doesn't make part of the column map");
-                } else {
+                        throw new Exception("Column '" . $key . "' doesn't make part of the column map");
+                    } else {
                         continue;
                     }
                 }
                 $attribute = $columnMap[$key];
 
-				/**
+                /**
                  * Attribute can store info about his type
                  */
-				if (is_array($attribute)) {
+                if (is_array($attribute)) {
                     $attributeName = $attribute[0];
-				} else {
+                } else {
                     $attributeName = $attribute;
-				}
+                }
 
-				if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
+                if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
                     $hydrateArray[$attributeName] = $value;
-				} else {
+                } else {
                     $hydrateArray->{$attributeName} = $value;
-				}
-			} else {
+                }
+            } else {
                 if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
                     $hydrateArray[$key] = $value;
-				} else {
+                } else {
                     $hydrateArray->{$key} = $value;
-				}
+                }
             }
         }
 
@@ -877,7 +871,6 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         return $hydrateObject;
-
     }
 
     /**
@@ -971,69 +964,69 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public static function find($parameters = null)
     {
         $dependencyInjector = Di::getDefault();
-		$manager = $dependencyInjector->getShared("modelsManager");
+        $manager            = $dependencyInjector->getShared("modelsManager");
 
-		if (! is_array($parameters)) {
+        if (!is_array($parameters)) {
             $params = [];
-			if ($parameters !== null) {
+            if ($parameters !== null) {
                 $params[] = $parameters;
-			}
-		} else {
+            }
+        } else {
             $params = $parameters;
-		}
+        }
 
-		/**
+        /**
          * Builds a query with the passed parameters
          */
-		$builder = $manager->createBuilder($params);
-		$builder->from(get_called_class());
+        $builder = $manager->createBuilder($params);
+        $builder->from(get_called_class());
 
-		$query = $builder->getQuery();
+        $query = $builder->getQuery();
 
-		/**
+        /**
          * Check for bind parameters
          */
-		if(isset($params["bind"])) {
-		    $bindParams = $params["bind"];
+        if (isset($params["bind"])) {
+            $bindParams = $params["bind"];
 
             if (is_array($bindParams)) {
                 $query->setBindParams($bindParams, true);
-			}
+            }
 
-			if(isset($params["bindTypes"])) {
+            if (isset($params["bindTypes"])) {
                 $bindTypes = $params["bindTypes"];
                 if (is_array($bindTypes)) {
                     $query->setBindTypes($bindTypes, true);
-				}
+                }
             }
         }
 
 
 
-		/**
+        /**
          * Pass the cache options to the query
          */
-		if(isset($params["cache"])) {
-		    $cache = $params["cache"];
+        if (isset($params["cache"])) {
+            $cache = $params["cache"];
             $query->cache($cache);
         }
 
-		/**
+        /**
          * Execute the query passing the bind-params and casting-types
          */
-		$resultset = $query->execute();
+        $resultset = $query->execute();
 
-		/**
+        /**
          * Define an hydration mode
          */
-		if (is_object($resultset)) {
-		    if(isset($params["hydration"] )) {
-		        $hydration = $params["hydration"];
+        if (is_object($resultset)) {
+            if (isset($params["hydration"])) {
+                $hydration = $params["hydration"];
                 $resultset->setHydrateMode($hydration);
             }
-		}
+        }
 
-		return $resultset;
+        return $resultset;
     }
 
     /**
@@ -1063,66 +1056,65 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     {
 
         $dependencyInjector = Di::getDefault();
-		$manager = $dependencyInjector->getShared("modelsManager");
+        $manager            = $dependencyInjector->getShared("modelsManager");
 
-		if (! is_array($parameters)) {
+        if (!is_array($parameters)) {
             $params = [];
-			if ($parameters !== null) {
+            if ($parameters !== null) {
                 $params[] = $parameters;
-			}
-		} else {
+            }
+        } else {
             $params = $parameters;
-		}
+        }
 
-		/**
+        /**
          * Builds a query with the passed parameters
          */
-		$builder = $manager->createBuilder($params);
-		$builder->from(get_called_class());
+        $builder = $manager->createBuilder($params);
+        $builder->from(get_called_class());
 
-		/**
+        /**
          * We only want the first record
          */
-		$builder->limit(1);
+        $builder->limit(1);
 
-		$query = $builder->getQuery();
+        $query = $builder->getQuery();
 
-		/**
+        /**
          * Check for bind parameters
          */
-		if (isset($params["bind"]))  {
-		    $bindParams = $params["bind"];
+        if (isset($params["bind"])) {
+            $bindParams = $params["bind"];
 
             if (is_array($bindParams)) {
                 $query->setBindParams($bindParams, true);
-			}
+            }
 
-			if(isset($params["bindTypes"])) {
+            if (isset($params["bindTypes"])) {
                 $bindTypes = $params["bindTypes"];
                 if (is_array($bindTypes)) {
                     $query->setBindTypes($bindTypes, true);
-				}
+                }
             }
+        }
 
-		}
-
-		/**
+        /**
          * Pass the cache options to the query
          */
-		if(isset($params["cache"])) {
-		    $cache = $params["cache"];
+        if (isset($params["cache"])) {
+            $cache = $params["cache"];
             $query->cache($cache);
         }
 
-		/**
+        /**
          * Return only the first row
          */
-		$query->setUniqueRow(true);
+        $query->setUniqueRow(true);
 
-		/**
+        /**
          * Execute the query passing the bind-params and casting-types
          */
-		return $query->execute();
+        return $query->execute();
     }
 
     /**
@@ -1143,13 +1135,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
          */
         if ($dependencyInjector instanceof DiInterface) {
             $criteria = $dependencyInjector->get("Phalcon\\Mvc\\Model\\Criteria");
-		} else {
+        } else {
             $criteria = new Criteria();
             $criteria->setDI($dependencyInjector);
-		}
+        }
         $criteria->setModelName(get_called_class());
 
-		return $criteria;
+        return $criteria;
     }
 
     /**
@@ -1161,98 +1153,94 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return boolean
      * @throws Exception
      */
-    protected function _exists(MetaDataInterface $metaData,AdapterInterface $connection, $table = null)
+    protected function _exists(MetaDataInterface $metaData, AdapterInterface $connection, $table = null)
     {
 
-        $uniqueParams  = null;
-        $uniqueTypes   = null;
-        $uniqueKey = $this->_uniqueKey;
+        $uniqueParams = null;
+        $uniqueTypes  = null;
+        $uniqueKey    = $this->_uniqueKey;
 
         //Builds an unique primary key condition
 
         if ($uniqueKey === null) {
 
-            $primaryKeys = $metaData->getPrimaryKeyAttributes($this);
+            $primaryKeys   = $metaData->getPrimaryKeyAttributes($this);
             $bindDataTypes = $metaData->getBindTypes($this);
 
-			$numberPrimary = count($primaryKeys);
-			if (!$numberPrimary) {
+            $numberPrimary = count($primaryKeys);
+            if (!$numberPrimary) {
                 return false;
             }
 
-			/**
+            /**
              * Check if column renaming is globally activated
              */
-			if(Kernel::getGlobals("orm.column_renaming"))
-             {
-               $columnMap = $metaData->getColumnMap($this);
-			} else {
+            if (Kernel::getGlobals("orm.column_renaming")) {
+                $columnMap = $metaData->getColumnMap($this);
+            } else {
                 $columnMap = null;
-			}
+            }
 
-			$numberEmpty = 0;
-            $wherePk = [];
+            $numberEmpty  = 0;
+            $wherePk      = [];
             $uniqueParams = [];
-            $uniqueTypes = [];
+            $uniqueTypes  = [];
 
-			/**
+            /**
              * We need to create a primary key based on the current data
              */
-			foreach ($primaryKeys as $field) {
-			    if(is_array($columnMap)) {
-			        if(!isset($columnMap[$field])) {
+            foreach ($primaryKeys as $field) {
+                if (is_array($columnMap)) {
+                    if (!isset($columnMap[$field])) {
                         throw new Exception("Column '" . field . "' isn't part of the column map");
                     }
                     $attributeField = $columnMap[$field];
-                }else {
+                } else {
                     $attributeField = $field;
-				}
+                }
 
                 /**
                  * If the primary key attribute is set append it to the conditions
                  */
                 $value = null;
-                if(isset($this->{$attributeField})) {
+                if (isset($this->{$attributeField})) {
                     $value = $this->{$attributeField};
-                    if($value === null || $value === "") {
+                    if ($value === null || $value === "") {
                         $numberEmpty++;
                     }
                     $uniqueParams[] = $value;
-                }
-                else {
+                } else {
                     $uniqueParams[] = null;
-					$numberEmpty++;
+                    $numberEmpty++;
                 }
 
-                if(! isset($bindDataTypes[$field])) {
+                if (!isset($bindDataTypes[$field])) {
                     throw new Exception("Column '" . $field . "' isn't part of the table columns");
-                }
-                else {
+                } else {
                     $type = $bindDataTypes[$field];
                 }
 
-				$uniqueTypes[] = $type;
-                $wherePk[] = $connection->escapeIdentifier($field) . " = ?";
-
+                $uniqueTypes[] = $type;
+                $wherePk[]     = $connection->escapeIdentifier($field) . " = ?";
             }
 
-			/**
+            /**
              * There are no primary key fields defined, assume the record does not exist
              */
-			if ($numberPrimary == $numberEmpty) {
+            if ($numberPrimary == $numberEmpty) {
                 return false;
             }
 
-			$joinWhere = join(" AND ", $wherePk);
+            $joinWhere = join(" AND ", $wherePk);
 
-			/**
+            /**
              * The unique key is composed of 3 parts _uniqueKey, uniqueParams, uniqueTypes
              */
             $this->_uniqueKey    = $joinWhere;
             $this->_uniqueParams = $uniqueParams;
-            $this->_uniqueTypes = $uniqueTypes;
-            $uniqueKey = $joinWhere;
-		}
+            $this->_uniqueTypes  = $uniqueTypes;
+            $uniqueKey           = $joinWhere;
+        }
 
 
         /**
@@ -1262,45 +1250,41 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             return true;
         }
 
-		if ($uniqueKey === null) {
+        if ($uniqueKey === null) {
             $uniqueKey = $this->_uniqueKey;
-		}
+        }
 
-		if ($uniqueParams === null) {
+        if ($uniqueParams === null) {
             $uniqueParams = $this->_uniqueParams;
-		}
+        }
 
-		if ($uniqueTypes === null) {
+        if ($uniqueTypes === null) {
             $uniqueTypes = $this->_uniqueTypes;
-		}
+        }
 
-		$schema = $this->getSchema();
+        $schema = $this->getSchema();
         $source = $this->getSource();
-		if ($schema) {
+        if ($schema) {
             $table = [$schema, $source];
-		} else {
+        } else {
             $table = $source;
-		}
+        }
 
-		/**
+        /**
          * Here we use a single COUNT(*) without PHQL to make the execution faster
          */
-		$num = $connection->fetchOne(
-		    "SELECT COUNT(*) \"rowcount\" FROM " . $connection->escapeIdentifier($table) . " WHERE " . $uniqueKey,
-			null,
-			$uniqueParams,
-			$uniqueTypes
-		);
-		if ($num["rowcount"]) {
+        $num = $connection->fetchOne(
+            "SELECT COUNT(*) \"rowcount\" FROM " . $connection->escapeIdentifier($table) . " WHERE " . $uniqueKey, null, $uniqueParams, $uniqueTypes
+        );
+        if ($num["rowcount"]) {
             $this->_dirtyState = self::DIRTY_STATE_PERSISTENT;
-			return true;
-		} else {
+            return true;
+        } else {
             $this->_dirtyState = self::DIRTY_STATE_TRANSIENT;
-		}
+        }
 
-		return false;
+        return false;
     }
-
 
     // ====== 伟大的分割线 ======
 
@@ -4380,6 +4364,15 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         if (isset($options['phqlLiterals']) === true) {
             $GLOBALS['_PHALCON_ORM_ENABLE_LITERALS'] = ($options['phqlLiterals'] == true ? true : false);
         }
+    }
+
+    /**
+     * Reset a model instance data
+     */
+    public function reset()
+    {
+        $this->_uniqueParams = null;
+        $this->_snapshot = null;
     }
 
 }

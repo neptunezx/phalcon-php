@@ -65,7 +65,7 @@ class Cookies implements CookiesInterface, InjectionAwareInterface
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {

@@ -19,7 +19,8 @@
 
 namespace Phalcon;
 
-use Phalcon\Application\Exception;
+use Phalcon\Application\Exception as ApplcationException;
+use Phalcon\DiInterface;
 use Phalcon\Di\Injectable;
 use Phalcon\Events\EventsAwareInterface;
 use Phalcon\Events\ManagerInterface;
@@ -50,9 +51,9 @@ abstract class Application extends Injectable implements EventsAwareInterface
 	 * Phalcon\Application
 	 * @param DiInterface $dependencyInjector
 	 */
-	public function __construct($dependencyInjector = null)
+	public function __construct(DiInterface $dependencyInjector = null)
 	{
-		if (!is_object($dependencyInjector)) {
+		if (is_object($dependencyInjector)) {
 			$this->_dependencyInjector = $dependencyInjector;
 		}
 	}
@@ -121,13 +122,13 @@ abstract class Application extends Injectable implements EventsAwareInterface
 	 * Gets the module definition registered in the application via module name
 	 * @param string $name
 	 * @return array|object
-	 * @throws \Phalcon\Exception
+	 * @throws \Phalcon\Application\Exception
 	 */
 	public function getModule($name)
 	{
 		$module = $this->_modules["name"];
 		if (!$module) {
-			throw new Exception("Module '" . $name . "' isn't registered in the application container");
+			throw new ApplcationException("Module '" . $name . "' isn't registered in the application container");
 		}
 		return $module;
 	}
