@@ -19,6 +19,14 @@ use \Closure;
  */
 class Manager implements ManagerInterface
 {
+    /**
+     * rewrite ManagerInterface's method detach()
+     * @param string $eventType
+     * @param object $handler
+     */
+    public function detach($eventType, $handler){
+
+    }
 
     /**
      * Events
@@ -203,8 +211,9 @@ class Manager implements ManagerInterface
      * @param \Phalcon\Events\Event $event
      * @return mixed
      * @throws Exception
+     * @update EventsInterface to Event
      */
-    public function fireQueue($queue, EventInterface $event)
+    public function fireQueue($queue, Event $event)
     {
         if (is_array($queue) === false &&
             (is_object($queue) === false ||

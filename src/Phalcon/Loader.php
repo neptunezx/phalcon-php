@@ -100,6 +100,13 @@ class Loader implements EventsAwareInterface
     protected $_directories = [];
 
     /**
+     * Files
+     * @var array
+     * @access protected
+     */
+    protected $_files = [];
+
+    /**
      * Registered
      *
      * @var boolean
@@ -299,13 +306,43 @@ class Loader implements EventsAwareInterface
 
     /**
      * Return current directories registered in the autoloader
-     *
      * @return array|null
      */
     public function getDirs()
     {
         return $this->_directories;
     }
+
+    /**
+     * Registers files that are "non-classes" hence need a "require". This is very useful for including files that only
+     * have functions
+     * @param $files array
+     * @param $merge boolean
+     * @throws Exception
+     * @return Loader
+     */
+    public function registerFiles($files, $merge = false)
+	{
+		if(!is_array($files)){
+            throw new LoaderException('params 1 must be array,'.gettype($files)." given");
+        }
+	    if ( $merge === true ) {
+			$this->_files = array_merge($this->_files, $files);
+		} else {
+            $this->_files = $files;
+		}
+
+    return $this;
+}
+
+    /**
+     * Returns the files currently registered in the autoloader
+     * @return array
+     */
+    public function getFiles()
+	{
+        return $this->_files;
+	}
 
     /**
      * Register classes and their locations

@@ -23,25 +23,6 @@ use Phalcon\Test\Module\UnitTest;
  * through the world-wide-web, please send an email to license@phalconphp.com
  * so that we can send you a copy immediately.
  */
-//class LoaderTestForProtected extends Loader{
-//    public function prepareNamespace($namespace){
-//        if ( ! is_array($namespace ) ){
-//            throw new LoaderException('namespace must be array!');
-//        }
-//        $localPaths = [];
-//        $prepared = [];
-//        foreach($namespace as $name=>$paths){
-//            if( !is_array($paths) ){
-//                $localPaths[] = $paths;
-//            }else{
-//                $localPaths = $paths;
-//            }
-//            $prepared[$name] = $localPaths;
-//        }
-//        return $prepared;
-//    }
-//}
-
 class LoaderTest extends UnitTest
 {
     protected $loaders;
@@ -104,7 +85,8 @@ class LoaderTest extends UnitTest
                 expect(new \Example\Adapter\Some())->isInstanceOf('Example\Adapter\Some');
                 expect(new \Example\Adapter\LeSome())->isInstanceOf('Example\Adapter\LeSome');
                 expect(new \Example\Engines\LeEngine())->isInstanceOf('Example\Engines\LeEngine');
-                expect(new \Example\Example\Example())->isInstanceOf('Example\Example\Example');
+                // test util has no Class Example
+                //expect(new \Example\Example\Example())->isInstanceOf('Example\Example\Example');
 
                 $loader->unregister();
             }
@@ -192,6 +174,7 @@ class LoaderTest extends UnitTest
                     PATH_DATA . 'vendor/Example/Other/NoClass2.php'
                 ], true);
                 $loader->register();
+
                 expect(function_exists('noClassFoo'))->true();
                 expect(function_exists('noClassBar'))->true();
                 expect(function_exists('noClass1Foo'))->true();
@@ -199,6 +182,8 @@ class LoaderTest extends UnitTest
                 expect(function_exists('noClass2Foo'))->true();
                 expect(function_exists('noClass2Bar'))->true();
                 // TEST CASE : We are going to un-register it, but the functions should still be accessible
+
+                //注销加载事件 安注释所说注销自动加载以后 已经加载的方法仍旧可以访问
                 $loader->unregister();
                 expect(function_exists('noClassFoo'))->true();
                 expect(function_exists('noClassBar'))->true();
