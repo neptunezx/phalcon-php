@@ -5,26 +5,17 @@ namespace Phalcon\Translate;
 /**
  * Phalcon\Translate\AdapterInterface initializer
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/translate/adapterinterface.c
  */
 interface AdapterInterface
 {
-
-    /**
-     * \Phalcon\Translate\Adapter\NativeArray constructor
-     *
-     * @param array $options
-     */
-    public function __construct($options);
-
     /**
      * Returns the translation string of the given key
      *
-     * @param string $translateKey
-     * @param array|null $placeholders
-     * @return string
+     * @param	string translateKey
+     * @param	array placeholders
+     * @return	string
      */
-    public function _($translateKey, $placeholders = null);
+    public function t($translateKey,array $placeholders = null);
 
     /**
      * Returns the translation related to the given key
@@ -33,7 +24,7 @@ interface AdapterInterface
      * @param array|null $placeholders
      * @return string
      */
-    public function query($index, $placeholders = null);
+    public function query($index,array $placeholders = null);
 
     /**
      * Check whether is defined a translation key in the internal array

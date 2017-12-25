@@ -2,9 +2,8 @@
 
 namespace Phalcon\Annotations\Adapter;
 
-use \Phalcon\Annotations\AdapterInterface;
 use \Phalcon\Annotations\Adapter;
-use \Phalcon\Annotations\Exception;
+use Phalcon\Annotations\Exception;
 use \Phalcon\Annotations\Reflection;
 
 /**
@@ -18,14 +17,14 @@ use \Phalcon\Annotations\Reflection;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/annotations/adapter/xcache.c
  */
-class Xcache extends Adapter implements AdapterInterface
+class Xcache extends Adapter
 {
 
     /**
      * Reads parsed annotations from XCache
      *
      * @param string $key
-     * @return \Phalcon\Annotations\Reflection|null
+     * @return \Phalcon\Annotations\Reflection|false
      * @throws Exception
      */
     public function read($key)
@@ -35,10 +34,13 @@ class Xcache extends Adapter implements AdapterInterface
         }
 
         $serialized = xcache_get(strtolower('_PHAN' . $key));
-        if (is_string($serialized) === true) {
-            $unserialized = unserialize($serialized);
-            return (is_object($unserialized) === true ? $unserialized : null);
+        if (is_string($serialized)) {
+            $data = unserialize($serialized);
+            if (is_object($data)){
+                return $data;
+            }
         }
+        return false;
     }
 
     /**
@@ -56,8 +58,7 @@ class Xcache extends Adapter implements AdapterInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $serialized = serialize($data);
-        xcache_set(strtolower('_PHAN' . $key), $serialized);
+        xcache_set(strtolower("_PHAN" . $key), serialize($data));
     }
 
 }

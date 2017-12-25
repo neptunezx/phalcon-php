@@ -12,8 +12,10 @@
 
 namespace Phalcon\Paginator\Adapter;
 
-use \Phalcon\Paginator\AdapterInterface;
-use \Phalcon\Paginator\Exception;
+use Phalcon\Mvc\Model\Query\Builder;
+use Phalcon\Paginator\Adapter;
+use Phalcon\Paginator\Exception;
+use Phalcon\Db;
 use \stdClass;
 
 /**
@@ -22,21 +24,23 @@ use \stdClass;
  * Pagination using a PHQL query builder as source of data
  *
  * <code>
- *  $builder = $this->modelsManager->createBuilder()
- *                   ->columns('id, name')
- *                   ->from('Robots')
- *                   ->orderBy('name');
+ * use Phalcon\Paginator\Adapter\QueryBuilder;
  *
- *  $paginator = new Phalcon\Paginator\Adapter\QueryBuilder(array(
- *      "builder" => $builder,
- *      "limit"=> 20,
- *      "page" => 1
- *  ));
- * </code>
+ * $builder = $this->modelsManager->createBuilder()
+ *                 ->columns("id, name")
+ *                 ->from("Robots")
+ *                 ->orderBy("name");
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/paginator/adapter/querybuilder.c
+ * $paginator = new QueryBuilder(
+ *     [
+ *         "builder" => $builder,
+ *         "limit"   => 20,
+ *         "page"    => 1,
+ *     ]
+ * );
+ *</code>
  */
-class QueryBuilder implements AdapterInterface
+class QueryBuilder extends Adapter
 {
 
     /**
@@ -54,6 +58,13 @@ class QueryBuilder implements AdapterInterface
      * @access protected
      */
     protected $_builder;
+
+    /**
+     * Columns for count query if builder has having
+     * @var null|int
+     * @access protected
+     */
+    protected $_columns;
 
     /**
      * Limit Rows
@@ -74,10 +85,10 @@ class QueryBuilder implements AdapterInterface
     /**
      * \Phalcon\Paginator\Adapter\QueryBuilder
      *
-     * @param array $config
+     * @param $config array
      * @throws Exception
      */
-    public function __construct($config)
+    public function __construct(array $config)
     {
         if (is_array($config) === false) {
             throw new Exception('Invalid parameter type.');
@@ -100,20 +111,39 @@ class QueryBuilder implements AdapterInterface
         if (isset($config['page']) === true) {
             $this->_page = $config['page'];
         }
+        if (isset($config['columns']) === true) {
+            $this->_columns = $config['columns'];
+        }
     }
 
     /**
-     * Set the current page number
-     *
-     * @param int $page
-     * @throws Exception
+     * Get the current page number
+     * @return int
      */
-    public function setCurrentPage($currentPage)
+    public function getCurrentPage()
     {
-        if (is_int($currentPage) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->_page = $currentPage;
+        return $this->_page;
+    }
+
+    /**
+     * Set query builder object
+     * @param $builder \Phalcon\Mvc\Model\Query\Builder
+     * @return QueryBuilder
+     */
+    public function setQueryBuilder($builder)
+    {
+        $this->_builder = $builder;
+
+        return $this;
+    }
+
+    /**
+     * Get query builder object
+     * @return null|object
+     */
+    public function getQueryBuilder()
+    {
+        return $this->_builder;
     }
 
     /**
@@ -123,19 +153,20 @@ class QueryBuilder implements AdapterInterface
      */
     public function getPaginate()
     {
+        $columns = $this->_columns;
         /* Clone the original builder */
-        $builder      = clone $this->_builder;
+        $builder = clone $this->_builder;
         $totalBuilder = clone $builder;
 
-        $limit      = $this->_limitRows;
-        $numberPage = $this->_page;
+        $limit = $this->_limitRows;
+        $numberPage = ( int )$this->_page;
 
-        if (is_null($numberPage) === true) {
+        if (is_null($numberPage) === true || $numberPage <= 0) {
             $numberPage = 1;
         }
 
         $prevNumberPage = $numberPage - 1;
-        $number         = $limit * $prevNumberPage;
+        $number = $limit * $prevNumberPage;
 
         //Set the limit clause avoiding negative offsets
         if ($number < $limit) {
@@ -146,37 +177,108 @@ class QueryBuilder implements AdapterInterface
 
         $query = $builder->getQuery();
 
-        //Change the queried columns by a COUNT(*)
-        $totalBuilder->columns('COUNT(*) [rowcount]');
-
-        //Remove the 'ORDER BY' clause, PostgreSQL requires this
-        $totalBuilder->orderBy(null);
-
-        //Obtain the PHQL for the total query
-        $totalQuery = $totalBuilder->getQuery();
-
-        //Obtain the result of the total query
-        $result = $totalQuery->execute();
-        $row    = $result->getFirst();
-
-        $totalPages    = $row['rowcount'] / $limit;
-        $intTotalPages = (int) $totalPages;
-
-        if ($intTotalPages !== $totalPages) {
-            $totalPages = $intTotalPages + 1;
+        if ($numberPage == 1) {
+            $before = 1;
+        } else {
+            $before = $numberPage - 1;
         }
 
-        $page              = new stdClass();
-        $page->first       = 1;
-        $page->before      = ($numberPage === 1 ? 1 : ($numberPage - 1));
-        $page->items       = $query->execute();
-        $page->next        = ($numberPage < $totalPages ? ($numberPage + 1) : $totalPages);
-        $page->last        = $totalPages;
-        $page->current     = $numberPage;
+        /**
+         * Execute the query an return the requested slice of data
+         */
+        $items = $query->execute();
+
+        $hasHaving = !isEmpty($totalBuilder->getHaving());
+
+        $groups = $totalBuilder->getGroupBy();
+
+        $hasGroup = !isEmpty($groups);
+
+        /**
+         * Change the queried columns by a COUNT(*)
+         */
+
+        if ($hasHaving && !$hasGroup) {
+            if (isEmpty($columns)) {
+                throw new Exception("When having is set there should be columns option provided for which calculate row count");
+            }
+            $totalBuilder->columns($columns);
+        } else {
+            $totalBuilder->columns("COUNT(*) [rowcount]");
+        }
+
+        /**
+         * Change 'COUNT()' parameters, when the query contains 'GROUP BY'
+         */
+        if ($hasGroup) {
+            if (is_array($groups)) {
+                $groupColumn = implode(",", $groups);
+            } else {
+                $groupColumn = $groups;
+            }
+
+            if (!$hasHaving) {
+                $totalBuilder->groupBy(null)->columns[] = "COUNT(DISTINCT " . groupColumn . ") AS [rowcount]";
+            } else {
+                $totalBuilder->columns[] = "DISTINCT " . groupColumn;
+            }
+        }
+
+        /**
+         * Remove the 'ORDER BY' clause, PostgreSQL requires this
+         */
+        $totalBuilder->orderBy(null);
+
+        /**
+         * Obtain the PHQL for the total query
+         */
+        $totalQuery = $totalBuilder->getQuery();
+
+        /**
+         * Obtain the result of the total query
+         * If we have having perform native count on temp table
+         */
+        if ($hasHaving) {
+            $sql = $totalQuery->getSql();
+		    $modelClass = $builder->_models;
+
+			if (is_array($modelClass)) {
+                $arr = array_values($modelClass);
+                $modelClass = $arr[0];
+            }
+
+			$model = new $modelClass();
+			$dbService = $model->getReadConnectionService();
+			$db = $totalBuilder->getDI()->get(dbService);
+			$row = $db->fetchOne("SELECT COUNT(*) as \"rowcount\" FROM (" . sql["sql"] . ") as T1", Db::FETCH_ASSOC, sql["bind"]);
+		    $rowcount = $row ? intval($row["rowcount"]) : 0;
+		    $totalPages = intval(ceil($rowcount / limit));
+		} else {
+            $result = $totalQuery->execute();
+            $row = $result->getFirst();
+            $rowcount = $row ? intval($row->rowcount) : 0;
+            $totalPages = intval(ceil($rowcount / $limit));
+        }
+
+        if ($numberPage < $totalPages) {
+            $next = $numberPage + 1;
+        } else {
+            $next = $totalPages;
+        }
+
+        $page = new \stdClass();
+        $page->items = $items;
+        $page->first = 1;
+        $page->before = $before;
+        $page->current = $numberPage;
+        $page->last = $totalPages;
+        $page->next = $next;
         $page->total_pages = $totalPages;
-        $page->total_items = (int) $row['rowcount'];
+        $page->total_items = $rowcount;
+        $page->limit = $this->_limitRows;
 
         return $page;
+
     }
 
 }

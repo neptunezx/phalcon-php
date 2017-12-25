@@ -8,3 +8,7 @@ phpunit.phar
 composer.lock
 vendor/
 /nbproject/
+
+# gaopu
+tests/_bootstrap.php
+tests/unit.suite.yml

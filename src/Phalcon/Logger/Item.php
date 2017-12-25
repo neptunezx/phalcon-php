@@ -2,14 +2,12 @@
 
 namespace Phalcon\Logger;
 
-use \Phalcon\Logger\Exception;
 
 /**
  * Phalcon\Logger\Item
  *
  * Represents each item in a logging transaction
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/item.c
  */
 class Item
 {
@@ -17,7 +15,7 @@ class Item
     /**
      * Type
      *
-     * @var null|int
+     * @var int
      * @access protected
      */
     protected $_type;
@@ -25,7 +23,7 @@ class Item
     /**
      * Message
      *
-     * @var null|string
+     * @var string
      * @access protected
      */
     protected $_message;
@@ -33,22 +31,31 @@ class Item
     /**
      * Time
      *
-     * @var null|int
+     * @var int
      * @access protected
      */
     protected $_time;
 
     /**
+     * Context
+     *
+     * @var array
+     * @access protected
+     */
+    protected $_context;
+
+    /**
      * \Phalcon\Logger\Item constructor
      *
-     * @param string $message
-     * @param integer $type
-     * @param integer $time
+     * @param $message string
+     * @param $type int
+     * @param $time int
+     * @param $context
      * @throws Exception
      */
-    public function __construct($message, $type, $time = null)
+    public function __construct($message, $type, $time = null , $context)
     {
-        if (is_string($message) === false || is_int($type) === false) {
+        if (is_string($message) === false || is_int($type) === false ){
             throw new Exception('Invalid parameter type.');
         }
 
@@ -61,6 +68,9 @@ class Item
         $this->_message = $message;
         $this->_type    = $type;
         $this->_time    = $time;
+        if(is_array($context)){
+            $this->_context = $context;
+        }
     }
 
     /**
@@ -91,6 +101,15 @@ class Item
     public function getTime()
     {
         return $this->_time;
+    }
+
+    /**
+     * Returns log context
+     *
+     */
+    public function getContext()
+    {
+        return $this->_context;
     }
 
 }

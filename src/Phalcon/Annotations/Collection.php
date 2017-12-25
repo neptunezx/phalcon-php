@@ -7,26 +7,6 @@ use \Countable;
 use \Phalcon\Annotations\Exception;
 use \Phalcon\Annotations\Annotation;
 
-/**
- * Phalcon\Annotations\Collection
- *
- * Represents a collection of annotations. This class allows to traverse a group of annotations easily
- *
- * <code>
- * //Traverse annotations
- * foreach ($classAnnotations as $annotation) {
- *     echo 'Name=', $annotation->getName(), PHP_EOL;
- * }
- *
- * //Check if the annotations has a specific
- * var_dump($classAnnotations->has('Cacheable'));
- *
- * //Get an specific annotation in the collection
- * $annotation = $classAnnotations->get('Cacheable');
- * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/annotations/collection.c
- */
 class Collection implements Iterator, Countable
 {
 
@@ -54,17 +34,16 @@ class Collection implements Iterator, Countable
      */
     public function __construct($reflectionData = null)
     {
-        if (is_array($reflectionData) === true) {
-            $annotations = array();
-
+        if (is_array($reflectionData) === false && $reflectionData !== null) {
+            throw new Exception('Reflection data must be an array');
+        }
+        $annotations = [];
+        if (is_array($reflectionData)) {
             foreach ($reflectionData as $annotationData) {
                 $annotations[] = new Annotation($annotationData);
             }
-
-            $this->_annotations = $annotations;
-        } elseif (is_null($reflectionData) === false) {
-            throw new Exception('Reflection data must be an array');
         }
+        $this->_annotations = $annotations;
     }
 
     /**
@@ -74,11 +53,7 @@ class Collection implements Iterator, Countable
      */
     public function count()
     {
-        if (is_array($this->_annotations) === true) {
-            return count($this->_annotations);
-        } else {
-            return 0;
-        }
+        return count($this->_annotations);
     }
 
     /**
@@ -92,14 +67,14 @@ class Collection implements Iterator, Countable
     /**
      * Returns the current annotation in the iterator
      *
-     * @return \Phalcon\Annotations\Annotation|null
+     * @return Annotation|boolean
      */
     public function current()
     {
-        if (isset($this->_annotations[$this->_position]) === true) {
+        if (isset($this->_annotations[$this->_position])) {
             return $this->_annotations[$this->_position];
         } else {
-            return null;
+            return false;
         }
     }
 
@@ -119,7 +94,7 @@ class Collection implements Iterator, Countable
      */
     public function next()
     {
-        ++$this->_position;
+        $this->_position++;
     }
 
     /**
@@ -135,7 +110,7 @@ class Collection implements Iterator, Countable
     /**
      * Returns the internal annotations as an array
      *
-     * @return \Phalcon\Annotations\Annotation[]|null
+     * @return Annotation[]
      */
     public function getAnnotations()
     {
@@ -154,11 +129,10 @@ class Collection implements Iterator, Countable
         if (is_string($name) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($this->_annotations) === true) {
-            foreach ($this->_annotations as $annotation) {
-                $annotationName = $annotation->getName();
-                if ($name == $annotationName) {
+        $annotations = $this->_annotations;
+        if (is_array($annotations)) {
+            foreach ($annotations as $annotation) {
+                if ($name == $annotation->getName()) {
                     return $annotation;
                 }
             }
@@ -171,7 +145,7 @@ class Collection implements Iterator, Countable
      * Returns all the annotations that match a name
      *
      * @param string $name
-     * @return \Phalcon\Annotations\Annotation[]
+     * @return Annotation[]
      * @throws Exception
      */
     public function getAll($name)
@@ -179,13 +153,11 @@ class Collection implements Iterator, Countable
         if (is_string($name) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($this->_annotations) === true) {
-            $found = array();
-
-            foreach ($this->_annotations as $annotation) {
-                $annotationName = $annotation->getName();
-                if ($name == $annotationName) {
+        $found = [];
+        $annotations = $this->_annotations;
+        if (is_array($annotations)) {
+            foreach ($annotations as $annotation) {
+                if ($name == $annotation->getName()) {
                     $found[] = $annotation;
                 }
             }
@@ -206,17 +178,16 @@ class Collection implements Iterator, Countable
         if (is_string($name) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($this->_annotations) === true) {
-            foreach ($this->_annotations as $annotation) {
-                $annotationName = $annotation->getName();
-                if ($name == $annotationName) {
+        $annotations = $this->_annotations;
+        if (is_array($annotations)) {
+            foreach ($annotations as $annotation) {
+                if ($name == $annotation->geName()) {
                     return true;
                 }
             }
         }
-
         return false;
+
     }
 
 }

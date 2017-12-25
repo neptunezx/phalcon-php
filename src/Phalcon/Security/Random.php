@@ -2,101 +2,16 @@
 
 namespace Phalcon\Security;
 
-/**
- * Phalcon\Security\Random
- *
- * Secure random number generator class.
- *
- * Provides secure random number generator which is suitable for generating
- * session key in HTTP cookies, etc.
- *
- * It supports following secure random number generators:
- *
- * - random_bytes (PHP 7)
- * - libsodium
- * - openssl, libressl
- * - /dev/urandom
- *
- * `Phalcon\Security\Random` could be mainly useful for:
- *
- * - Key generation (e.g. generation of complicated keys)
- * - Generating random passwords for new user accounts
- * - Encryption systems
- *
- * <code>
- * $random = new \Phalcon\Security\Random();
- *
- * // Random binary string
- * $bytes = $random->bytes();
- *
- * // Random hex string
- * echo $random->hex(10); // a29f470508d5ccb8e289
- * echo $random->hex(10); // 533c2f08d5eee750e64a
- * echo $random->hex(11); // f362ef96cb9ffef150c9cd
- * echo $random->hex(12); // 95469d667475125208be45c4
- * echo $random->hex(13); // 05475e8af4a34f8f743ab48761
- *
- * // Random base62 string
- * echo $random->base62(); // z0RkwHfh8ErDM1xw
- *
- * // Random base64 string
- * echo $random->base64(12); // XfIN81jGGuKkcE1E
- * echo $random->base64(12); // 3rcq39QzGK9fUqh8
- * echo $random->base64();   // DRcfbngL/iOo9hGGvy1TcQ==
- * echo $random->base64(16); // SvdhPcIHDZFad838Bb0Swg==
- *
- * // Random URL-safe base64 string
- * echo $random->base64Safe();           // PcV6jGbJ6vfVw7hfKIFDGA
- * echo $random->base64Safe();           // GD8JojhzSTrqX7Q8J6uug
- * echo $random->base64Safe(8);          // mGyy0evy3ok
- * echo $random->base64Safe(null, true); // DRrAgOFkS4rvRiVHFefcQ==
- *
- * // Random UUID
- * echo $random->uuid(); // db082997-2572-4e2c-a046-5eefe97b1235
- * echo $random->uuid(); // da2aa0e2-b4d0-4e3c-99f5-f5ef62c57fe2
- * echo $random->uuid(); // 75e6b628-c562-4117-bb76-61c4153455a9
- * echo $random->uuid(); // dc446df1-0848-4d05-b501-4af3c220c13d
- *
- * // Random number between 0 and $len
- * echo $random->number(256); // 84
- * echo $random->number(256); // 79
- * echo $random->number(100); // 29
- * echo $random->number(300); // 40
- *
- * // Random base58 string
- * echo $random->base58();   // 4kUgL2pdQMSCQtjE
- * echo $random->base58();   // Umjxqf7ZPwh765yR
- * echo $random->base58(24); // qoXcgmw4A9dys26HaNEdCRj9
- * echo $random->base58(7);  // 774SJD3vgP
- * </code>
- *
- * This class partially borrows SecureRandom library from Ruby
- *
- * @link http://ruby-doc.org/stdlib-2.2.2/libdoc/securerandom/rdoc/SecureRandom.html
- */
 class Random
 {
 
     /**
      * Generates a random binary string
      *
-     * The `Random::bytes` method returns a string and accepts as input an int
-     * representing the length in bytes to be returned.
-     *
-     * If $len is not specified, 16 is assumed. It may be larger in future.
-     * The result may contain any byte: "x00" - "xFF".
-     *
-     * <code>
-     * $random = new \Phalcon\Security\Random();
-     *
-     * $bytes = $random->bytes();
-     * var_dump(bin2hex($bytes));
-     * // Possible output: string(32) "00f6c04b144b41fad6a59111c126e1ee"
-     * </code>
-     *
      * @param int $len
      * @return string
      * @throws Exception If secure random number generator is not available or unexpected partial read
+     * @throws \Exception
      */
     public function bytes($len = 16)
     {

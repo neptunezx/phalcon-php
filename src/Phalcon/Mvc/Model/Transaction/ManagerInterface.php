@@ -14,7 +14,6 @@ namespace Phalcon\Mvc\Model\Transaction;
 /**
  * Phalcon\Mvc\Model\Transaction\ManagerInterface initializer
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/transaction/managerinterface.c
  */
 interface ManagerInterface
 {

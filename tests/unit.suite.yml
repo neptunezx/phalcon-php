@@ -24,8 +24,8 @@ modules:
             # export TEST_DB_MYSQL_DSN="mysql:host=10.1.0.3.;dbname=phalcon_test"
             # ...
             dsn: mysql:host=127.0.0.1;dbname=phalcon_test
-            user: woai662
-            password: weiwei66291
+            user: root
+            password:
             populate: true
             cleanup: false
             dump: tests/_data/schemas/mysql/phalcon_test.sql

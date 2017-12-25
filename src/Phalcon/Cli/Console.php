@@ -1,296 +1,200 @@
 <?php
 
+
+/*
+ +------------------------------------------------------------------------+
+ | Phalcon Framework                                                      |
+ +------------------------------------------------------------------------+
+ | Copyright (c) 2011-2017 Phalcon Team (https://phalconphp.com)          |
+ +------------------------------------------------------------------------+
+ | This source file is subject to the New BSD License that is bundled     |
+ | with this package in the file LICENSE.txt.                             |
+ |                                                                        |
+ | If you did not receive a copy of the license and are unable to         |
+ | obtain it through the world-wide-web, please send an email             |
+ | to license@phalconphp.com so we can send you a copy immediately.       |
+ +------------------------------------------------------------------------+
+ | Authors: Andres Gutierrez <andres@phalconphp.com>                      |
+ |          Eduar Carvajal <eduar@phalconphp.com>                         |
+ |          Rack Lin <racklin@gmail.com>                                  |
+ +------------------------------------------------------------------------+
+ */
+
 namespace Phalcon\Cli;
 
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\DiInterface;
-use \Phalcon\Events\ManagerInterface;
-use \Phalcon\Cli\Console\Exception;
-use \Phalcon\DispatcherInterface;
-
+use Phalcon\Application as BaseApplication;
+use Phalcon\Cli\Router\Route;
+use Phalcon\Events\ManagerInterface;
+use Phalcon\Cli\Console\Exception;
 /**
  * Phalcon\Cli\Console
  *
  * This component allows to create CLI applications using Phalcon
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cli/console.c
  */
-class Console implements InjectionAwareInterface, EventsAwareInterface
+class Console extends BaseApplication
 {
 
-    /**
-     * Dependency Injector
-     *
-     * @var null|\Phalcon\DiInterface
-     * @access protected
-     */
-    protected $_dependencyInjector;
+    protected $_arguments = [];
+
+    protected $_options = [];
 
     /**
-     * Events Manager
-     *
-     * @var null|\Phalcon\Events\ManagerInterface
-     * @access protected
-     */
-    protected $_eventsManager;
-
-    /**
-     * Modules
-     *
-     * @var null|array
-     * @access protected
-     */
-    protected $_modules;
-
-    /**
-     * Module Object
-     *
-     * @var null
-     * @access protected
-     */
-    protected $_moduleObject;
-
-    /**
-     * \Phalcon\Cli\Console constructor
-     *
-     * @param \Phalcon\DiInterface|null $dependencyInjector
-     */
-    public function __construct($dependencyInjector = null)
-    {
-        if (is_object($dependencyInjector) === true &&
-            $dependencyInjector instanceof DiInterface === true) {
-            $this->_dependencyInjector = $dependencyInjector;
-        }
-    }
-
-    /**
-     * Sets the DependencyInjector container
-     *
-     * @param \Phalcon\DiInterface $dependencyInjector
-     */
-    public function setDI($dependencyInjector)
-    {
-        if (is_object($dependencyInjector) === true &&
-            $dependencyInjector instanceof \Phalcon\DiInterface === true) {
-            $this->_dependencyInjector = $dependencyInjector;
-        }
-    }
-
-    /**
-     * Returns the internal dependency injector
-     *
-     * @return \Phalcon\DiInterface|null
-     */
-    public function getDI()
-    {
-        return $this->_dependencyInjector;
-    }
-
-    /**
-     * Sets the events manager
-     *
-     * @param \Phalcon\Events\ManagerInterface $eventsManager
-     */
-    public function setEventsManager($eventsManager)
-    {
-        if (is_object($eventsManager) === true &&
-            $eventsManager instanceof ManagerInterface === true) {
-            $this->_eventsManager = $eventsManager;
-        }
-    }
-
-    /**
-     * Returns the internal event manager
-     *
-     * @return \Phalcon\Events\ManagerInterface|null
-     */
-    public function getEventsManager()
-    {
-        return $this->_eventsManager;
-    }
-
-    /**
-     * Register an array of modules present in the console
-     *
-     * <code>
-     *  $application->registerModules(array(
-     *      'frontend' => array(
-     *          'className' => 'Multiple\Frontend\Module',
-     *          'path' => '../apps/frontend/Module.php'
-     *      ),
-     *      'backend' => array(
-     *          'className' => 'Multiple\Backend\Module',
-     *          'path' => '../apps/backend/Module.php'
-     *      )
-     *  ));
-     * </code>
-     *
      * @param array $modules
-     * @throws Exception
-     */
-    public function registerModules($modules)
-    {
-        if (is_array($modules) === false) {
-            throw new Exception('Modules must be an array');
-        }
-
-        $this->_modules = $modules;
-    }
-
-    /**
-     * Merge modules with the existing ones
-     *
-     * <code>
-     *  $application->addModules(array(
-     *      'admin' => array(
-     *          'className' => 'Multiple\Admin\Module',
-     *          'path' => '../apps/admin/Module.php'
-     *      )
-     *  ));
-     * </code>
-     *
-     * @param array $modules
-     * @throws Exception
+     * @return BaseApplication
      */
     public function addModules($modules)
     {
-        if (is_array($modules) === false) {
-            throw new Exception('Modules must be an Array');
-        }
-
-        if (is_array($this->_modules) === false) {
-            $this->_modules = array();
-        }
-
-        $this->_modules = array_merge($modules, $this->_modules);
+        return $this->registerModules($modules, true);
     }
 
     /**
-     * Return the modules registered in the console
-     *
-     * @return array|null
-     */
-    public function getModules()
-    {
-        return $this->_modules;
-    }
-
-    /**
-     * Handle the command-line arguments.
-     *
-     *
-     * <code>
-     *  $arguments = array(
-     *      'task' => 'taskname',
-     *      'action' => 'action',
-     *      'params' => array('parameter1', 'parameter2')
-     *  );
-     *  $console->handle($arguments);
-     * </code>
-     *
-     * @param array $arguments
-     * @return mixed
+     * Handle the whole command-line tasks
+     * @param array |null $arguments
      * @throws Exception
+     * @return mixed
      */
     public function handle($arguments = null)
     {
-        /* Type check */
-        if (is_null($arguments) === true) {
-            $arguments = array();
-        } elseif (is_array($arguments) === false) {
-            throw new Exception('Invalid parameter type.');
+        $className = null;
+        $dependencyInjector = $this->_dependencyInjector;
+        if (is_object($dependencyInjector) === false) {
+            throw new Exception("A dependency injection object is required to access internal services");
         }
-
-        if (is_object($this->_dependencyInjector) === false) {
-            throw new Exception('A dependency injection object is required to access internal services');
+        if (is_object($this->_eventsManager) === false ||
+            !$this->_eventsManager instanceof ManagerInterface) {
+            throw new Exception('Invalid annotations reader');
         }
-
-        $router     = $this->_dependencyInjector->getShared('router');
-        $router->handle($arguments);
-        $moduleName = $router->getModuleName();
-
-        if (isset($moduleName) === true) {
-            //Event: console:beforeStartModule
-            if (is_object($this->_eventsManager) === true) {
-                if ($this->_eventsManager->fire('console:beforeStartModule', $this, $moduleName) === false) {
-                    return false;
-                }
-            }
-
-            //Validate module structure
-            if (is_array($this->_modules) === false ||
-                isset($this->_modules[$moduleName]) === false) {
-                throw new Exception('Module \'' . $moduleName . '\' isn\'t registered in the console container');
-            }
-
-            if (is_array($this->_modules[$moduleName]) === false) {
-                throw new Exception('Invalid module definition path');
-            }
-
-            //Require ['path']
-            if (isset($this->_modules[$moduleName]['path']) === true) {
-                if (file_exists($this->_modules[$moduleName]['path']) === true) {
-                    require($this->_modules[$moduleName]['path']);
-                } else {
-                    throw new Exception('Module definition path \'' . $this->_modules[$moduleName]['path'] . '" doesn\'t exist');
-                }
-            }
-
-            //Get class name
-            if (isset($this->_modules[$moduleName]['className']) === true) {
-                $className = $this->_modules[$moduleName]['className'];
-            } else {
-                $className = 'Module';
-            }
-
-            //Prepare $moduleObject
-            $moduleObject = $this->_dependencyInjector->get($className);
-            $moduleObject->registerAutoloaders();
-            $moduleObject->registerServices($this->_dependencyInjector);
-
-            //Event: console:afterStartModule
-            if (is_object($this->_eventsManager) === true) {
-                $this->_moduleObject = $moduleObject;
-
-                if ($this->_eventsManager->fire('console:afterStartModule', $this, $moduleName) === false) {
-                    return false;
-                }
-            }
-        }
-
-        //Get route
-        $taskName   = $router->getTaskName();
-        $actionName = $router->getActionName();
-        $params     = $router->getParams();
-
-        //Get dispatcher
-        $dispatcher = $this->_dependencyInjector->getShared('dispatcher');
-        if (is_object($dispatcher) === false ||
-            $dispatcher instanceof DispatcherInterface === false) {
-            throw new Exception('Dispatcher service is not available.');
-        }
-
-        //Set route
-        $dispatcher->setTaskName($taskName);
-        $dispatcher->setActionName($actionName);
-        $dispatcher->setParams($params);
-
-        //Event: console:beforeHandleTask
-        if (is_object($this->_eventsManager) === true) {
-            if ($this->_eventsManager->fire('console:beforeHandleTask', $this, $dispatcher) === false) {
+        $eventsManager = $this->_eventsManager;
+        if (is_object($eventsManager)) {
+            if ($eventsManager->Manger->fire('console:boot', $this) === false) {
                 return false;
             }
         }
-
-        //Dispatch
-        $task = $dispatcher->dispatch();
-
-        if (is_object($this->_eventsManager) === true) {
-            $this->_eventsManager->fire('console:afterHandleTask', $this, $task);
+        if (is_object($dependencyInjector->getShared('router')) === false ||
+            !$dependencyInjector->getShared('router') instanceof Router) {
+            throw new Exception('Invalid annotations reader');
         }
+        $router = $dependencyInjector->getShared('router');
+        if (!count($arguments) && $this->_arguments) {
+            $router->handle($this->_arguments);
+        } else {
+            $router->handle($arguments);
+        }
+        $moduleName = $router->getModuleName();
+        if (!$moduleName) {
+            $moduleName = $this->_defaultModule;
+        }
+        if ($moduleName) {
+            if (is_object($eventsManager)) {
+                if ($eventsManager->Manager->fire('console:beforeStartModule', $this, $moduleName) === false) {
+                    return false;
+                }
+            }
+            $modules = $this->_modules;
+            if (!isset($modules[$moduleName])) {
+                throw new Exception("Module '" . $moduleName . "' isn't registered in the console container");
+            }
+            $module = $modules[$moduleName];
+            if (is_array($module) === false) {
+                throw new Exception('Invalid module definition path');
+            }
+            if (isset($module['path'])) {
+                $path = $module['path'];
+                if (!file_exists($path)) {
+                    throw new Exception("Module definition path '" . $path . "' doesn't exist");
+                }
+                require $path;
+            }
+            if (!isset($module['className'])) {
+                $className = 'Module';
+            }
+            $moduleObject = $dependencyInjector->get($className);
+            $moduleObject->registerAutoloaders();
+            $moduleObject->registerServices($dependencyInjector);
+            if (is_object($eventsManager)) {
+                if ($eventsManager->Manager->fire('console:afterStarModule', $this, $moduleObject) === false) {
+                    return false;
+                }
+            }
 
+        }
+        if (is_object($dependencyInjector->getShared("dispatcher")) === false ||
+            $dependencyInjector->getShared("dispatcher") instanceof Dispatcher) {
+            throw new Exception('Invalid module definition path');
+        }
+        $dispatcher = $dependencyInjector->getShared("dispatcher");
+        $dispatcher->setTaskName($router->getTaskName());
+        $dispatcher->setActionName($router->getActionName());
+        $dispatcher->setParams($router->getParams());
+        $dispatcher->setOptions($this->_options);
+        if (is_object($eventsManager)) {
+            if ($eventsManager->Manager->fire('console:beforeHandleTask', $this, $dispatcher) === false) {
+                return false;
+            }
+        }
+        $task = $dispatcher->dispatch();
+        if (is_object($eventsManager)) {
+            $eventsManager->Manager->fire('console:afterHandleTask', $this, $task);
+        }
         return $task;
     }
 
+    /**
+     * Set an specific argument
+     * @param array |null $arguments
+     * @param boolean $str
+     * @param boolean $shift
+     * @return Console
+     * @throws Exception
+     */
+    public function setArgument($arguments = null, $str = true, $shift = true)
+    {
+        if (is_array($arguments) === false ||
+            is_bool($str) || is_bool($shift)) {
+            throw new Exception('Invalid module definition path');
+        }
+        $args = [];
+        $opts = [];
+        $handleArgs = [];
+        if ($shift&&count($arguments)){
+            array_shift($arguments);
+        }
+        foreach ($arguments as $arg){
+            if (is_string($arg)){
+                if (strncmp($arg,'--',2)==0){
+                    $pos = strpos($arg,'=');
+                    if ($pos){
+                        $opts[trim(substr($arg,2,$pos-2))] = trim(substr($arg,$pos+1));
+                    }else{
+                        $opts[trim(substr($arg,2))] = true;
+                    }
+                }else{
+                    if (strncmp($arg,'-',1)==0){
+                        $opts[substr($arg,1)] =true;
+                    }else{
+                        $args[] = $arg;
+                    }
+                }
+            }else{
+                $args[] = $arg;
+            }
+        }
+        if ($str){
+            $this->_arguments = implode(Route::getDelimiter(),$args);
+        }else{
+            if (count($args)){
+                $handleArgs['task'] = array_shift($args);
+            }
+            if (count($args)){
+                $handleArgs['action'] = array_shift($args);
+            }
+            if (count($args)){
+                $handleArgs = array_merge($handleArgs,$args);
+            }
+            $this->_arguments = $handleArgs;
+        }
+        $this->_options = $opts;
+        return $this;
+    }
 }
+

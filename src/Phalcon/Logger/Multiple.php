@@ -2,7 +2,6 @@
 
 namespace Phalcon\Logger;
 
-use \Phalcon\Logger\Exception;
 use \Phalcon\Logger\AdapterInterface;
 use \Phalcon\Logger\FormatterInterface;
 use \Phalcon\Logger;
@@ -12,7 +11,6 @@ use \Phalcon\Logger;
  *
  * Handles multiples logger handlers
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/multiple.c
  */
 class Multiple
 {
@@ -34,9 +32,17 @@ class Multiple
     protected $_formatter;
 
     /**
+     * Formatter
+     *
+     * @var null|\Phalcon\Logger\FormatterInterface
+     * @access protected
+     */
+    protected $_logLevel;
+
+    /**
      * Pushes a logger to the logger tail
      *
-     * @param \Phalcon\Logger\AdapterInterface $logger
+     * @param $logger \Phalcon\Logger\AdapterInterface
      * @throws Exception
      */
     public function push($logger)
@@ -66,7 +72,7 @@ class Multiple
     /**
      * Sets a global formatter
      *
-     * @param \Phalcon\Logger\FormatterInterface $formatter
+     * @param $formatter \Phalcon\Logger\FormatterInterface
      * @throws Exception
      */
     public function setFormatter($formatter)
@@ -86,6 +92,26 @@ class Multiple
     }
 
     /**
+     * Sets a global level
+     *
+     * @param $level int
+     * @throws \Exception
+     */
+    public function setLogLevel($level)
+    {
+        if (is_int($level) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        $loggers = $this->_loggers;
+        if (is_array($loggers)) {
+            foreach ($loggers as $logger) {
+                $logger->setLogLevel($level);
+            }
+        }
+        $this->_logLevel = $level;
+    }
+
+    /**
      * Returns a formatter
      *
      * @return \Phalcon\Logger\FormatterInterface|null
@@ -98,19 +124,18 @@ class Multiple
     /**
      * Sends a message to each registered logger
      *
-     * @param string $message
-     * @param int|null $type
+     * @param $type
+     * @param $message null|var
+     * @param $context array|null
      * @throws Exception
      */
-    public function log($message, $type = null)
+    public function log($type, $message, array $context = null)
     {
-        if (is_string($message) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (!is_null($context) && !is_array($context)) {
+            throw new Exeption('Invalid parameter type.');
         }
-
-        if (is_null($type) === true) {
-            $type = 7;
-        } elseif (is_int($type) === false) {
+        $loggers = $this->_loggers;
+        if (is_int($type) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -122,73 +147,122 @@ class Multiple
     }
 
     /**
+     * Sends/Writes an critical message to the log
+     *
+     * @param $message string
+     * @param $context array|null
+     */
+    public function critical($message, array $context = null)
+    {
+        if (!is_string($message) || (!is_null($context) && !is_array($context))) {
+            throw new Exeption('Invalid parameter type.');
+        }
+        $this->log(Logger::CRITICAL, $message, $context);
+    }
+
+    /**
      * Sends/Writes an emergence message to the log
      *
-     * @param string $message
+     * @param $message string
+     * @param $context array
+     * @throws Exception
      */
-    public function emergence($message)
+    public function emergence($message, array $context = null)
     {
-        $this->log($message, Logger::EMERGENCE);
+        if (!is_string($message) || (!is_null($context) && !is_array($context))) {
+            throw new Exeption('Invalid parameter type.');
+        }
+        $this->log(Logger::EMERGENCY, message, context);
     }
 
     /**
      * Sends/Writes a debug message to the log
      *
-     * @param string $message
+     * @param $message string
+     * @param $context array
+     * @throws Exception
      */
-    public function debug($message)
+    public function debug($message, array $context = null)
     {
-        $this->log($message, Logger::DEBUG);
+        if (!is_string($message) || (!is_null($context) && !is_array($context))) {
+            throw new Exeption('Invalid parameter type.');
+        }
+        $this->log(Logger::DEBUG, message, context);
     }
 
     /**
      * Sends/Writes an error message to the log
      *
-     * @param string $message
+     * @param $message string
+     * @param $context array
+     * @throws Exception
      */
-    public function error($message)
+    public function error($message, array $context = null)
     {
-        $this->log($message, Logger::ERROR);
+        if (!is_string($message) || (!is_null($context) && !is_array($context))) {
+            throw new Exeption('Invalid parameter type.');
+        }
+        $this->log(Logger::ERROR, message, context);
     }
 
     /**
      * Sends/Writes an info message to the log
      *
-     * @param string $message
+     * @param $message string
+     * @param $context array
+     * @throws Exception
      */
-    public function info($message)
+    public function info($message, array $context = null)
     {
-        $this->log($message, Logger::INFO);
+        if (!is_string($message) || (!is_null($context) && !is_array($context))) {
+            throw new Exeption('Invalid parameter type.');
+        }
+        $this->log(Logger::INFO, message, context);
     }
 
     /**
      * Sends/Writes a notice message to the log
      *
-     * @param string $message
+     * @param $message string
+     * @param $context array
+     * @throws Exception
      */
-    public function notice($message)
+    public function notice($message, array $context = null)
     {
-        $this->log($message, Logger::NOTICE);
+        if (!is_string($message) || (!is_null($context) && !is_array($context))) {
+            throw new Exeption('Invalid parameter type.');
+        }
+        $this->log(Logger::NOTICE, message, context);
     }
 
     /**
      * Sends/Writes a warning message to the log
      *
-     * @param string $message
+     * @param $message string
+     * @param $context array
+     * @throws Exception
      */
-    public function warning($message)
+    public function warning($message, array $context = null)
     {
-        $this->log($message, Logger::WARNING);
+        if (!is_string($message) || (!is_null($context) && !is_array($context))) {
+            throw new Exeption('Invalid parameter type.');
+        }
+        $this->log(Logger::WARNING, message, context);
     }
 
     /**
      * Sends/Writes an alert message to the log
      *
-     * @param string $message
+     * @param $message string
+     * @param $context array
+     * @throws Exception
      */
-    public function alert($message)
+    public function alert($message, array $context = null)
     {
-        $this->log($message, Logger::ALERT);
+        if (!is_string($message) || (!is_null($context) && !is_array($context))) {
+            throw new Exeption('Invalid parameter type.');
+        }
+        $this->log(Logger::ALERT, message, context);
     }
 
 }
