@@ -2,8 +2,7 @@
 
 namespace Phalcon\Cli;
 
-use Phalcon\FilterInterface;
-use Phalcon\Events\ManagerInterface;
+
 use Phalcon\Cli\Dispatcher\Exception;
 use Phalcon\Dispatcher as CliDispatcher;
 
@@ -15,7 +14,7 @@ use Phalcon\Dispatcher as CliDispatcher;
  * instantiating a task and calling an action on it.
  *
  * <code>
- *
+
  *  $di = new Phalcon\Di();
  *
  *  $dispatcher = new Phalcon\Cli\Dispatcher();
@@ -207,7 +206,7 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
     /**
      * Returns the lastest dispatched controller
      *
-     * @return TaskInterface
+     * @return TaskInterface|Object
      */
     public function getLastTask()
     {
@@ -217,7 +216,7 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
     /**
      * Returns the active task in the dispatcher
      *
-     * @return TaskInterface
+     * @return TaskInterface|Object
      */
     public function getActiveTask()
     {
@@ -249,11 +248,11 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
      * @param  mixed $option
      * @param  mixed|null $filters
      * @param  mixed|null $defaultValue
-     * @return
+     * @return mixed
      */
     public function getOption($option, $filters = null, $defaultValue = null)
     {
-        $optionValue = null;
+        $optionValue = '';
         $options = $this->_options;
         if (!isset($options[$option])) {
             $optionValue = $options[$option];

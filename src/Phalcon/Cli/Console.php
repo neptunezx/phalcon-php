@@ -26,8 +26,6 @@ use Phalcon\Application as BaseApplication;
 use Phalcon\Cli\Router\Route;
 use Phalcon\Events\ManagerInterface;
 use Phalcon\Cli\Console\Exception;
-use Phalcon\Events\Manager;
-
 /**
  * Phalcon\Cli\Console
  *
