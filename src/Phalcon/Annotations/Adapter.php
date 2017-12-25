@@ -89,7 +89,6 @@ abstract class Adapter implements AdapterInterface
         if ($classAnnotations === null || $classAnnotations === false) {
             $reader = $this->getReader();
             $parseAnnotations = $reader->parse($realClassName);
-
             if (is_array($parseAnnotations)) {
                 $classAnnotations = new Reflection($parseAnnotations);
                 $this->_annotations[$realClassName] = $classAnnotations;

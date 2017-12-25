@@ -365,7 +365,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      * Sets the default action name
      *
      * @param string $actionName
-     * @throws Exception 
+     * @throws Exception
      */
     public function setDefaultAction($actionName)
     {

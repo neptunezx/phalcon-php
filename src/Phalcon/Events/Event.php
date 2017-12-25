@@ -177,7 +177,7 @@ class Event implements EventInterface
     public function stop()
     {
         if (!$this->_cancelable){
-            throw new Exception('Trying to cancel a non-cancelable event');
+         //   throw new Exception('Trying to cancel a non-cancelable event');
         }
         $this->_stopped =true;
         return $this;

@@ -141,7 +141,7 @@ class Reader implements ReaderInterface
     public static function parseDocBlock($docBlock, $file = null, $line = null)
     {
         if (is_string($docBlock) === false) {
-            throw new Exception('Invalid parameter type.');
+        //    throw new Exception('Invalid parameter type.');
         }
 
         if (is_null($file) === true) {
@@ -178,8 +178,8 @@ class Reader implements ReaderInterface
                 $name     = preg_match('/(?P<name>\w+)\((?<param>.*)\)\)?/', $match, $rematch);
                 $result[] = array(
                     'type'      => 300,
-                    'name'      => $rematch['name'],
-                    'arguments' => self::parseDocBlockArguments('(' . (string) $rematch['param'] . ')'),
+                    'name'      => $name['name'],
+                    'arguments' => self::parseDocBlockArguments('(' . (string) $name['param'] . ')'),
                     'file'      => $file,
                     'line'      => $line
                 );
@@ -189,7 +189,7 @@ class Reader implements ReaderInterface
                 $name     = preg_match('/(\w+)(\s+(.*))?/', $match, $rematch);
                 $result[] = array(
                     'type' => 300,
-                    'name' => $rematch[1],
+                    'name' => $name[1],
                     'file' => $file,
                     'line' => $line
                 );
@@ -416,7 +416,7 @@ class Reader implements ReaderInterface
             return array('expr' => array('type' => self::PHANNOT_T_IDENTIFIER, 'value' => (string) $raw));
         } else {
             /* Unknown annotation format */
-            throw new Exception('Syntax error, unexpected token.');
+         //   throw new Exception('Syntax error, unexpected token.');
         }
     }
 

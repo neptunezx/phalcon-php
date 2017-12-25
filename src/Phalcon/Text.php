@@ -81,7 +81,7 @@ abstract class Text
     {
         if (is_string($str) === false) {
             //@warning The Exception is an E_ERROR in the original API
-            throw new Exception('Invalid arguments supplied for camelize()');
+        //    throw new Exception('Invalid arguments supplied for camelize()');
         }
 
         if (is_null($delimiter)) {

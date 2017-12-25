@@ -234,7 +234,7 @@ class Route
     public function reConfigure($pattern, $paths = null)
     {
         if (is_string($paths) === false) {
-            throw new Exception('Invalid annotations reader');
+         //   throw new Exception('Invalid annotations reader');
         }
         if ($paths !== null) {
             if (is_string($paths)) {
@@ -294,7 +294,9 @@ class Route
             if (Text::memstr($pattern, '{')) {
                 $extracted = $this->extractNamedParams($pattern);
                 $pcrePattern = $extracted[0];
-                $routePaths = array_merge($routePaths, $extracted[1]);
+                if (is_array($extracted[1])) {
+                    $routePaths = array_merge($routePaths, $extracted[1]);
+                }
             } else {
                 $pcrePattern = $pattern;
             }

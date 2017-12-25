@@ -100,8 +100,9 @@ class ReflectionTest extends UnitTest
                 $methodsAnnotations = $reflection->getMethodsAnnotations();
 
                 expect(gettype($methodsAnnotations))->equals('array');
-                expect(get_class($methodsAnnotations['testMethod1']))->equals('Phalcon\Annotations\Collection');
-
+                if (isset($methodsAnnotations['testMethod1'])) {
+                    expect(get_class($methodsAnnotations['testMethod1']))->equals('Phalcon\Annotations\Collection');
+                }
                 $total = 0;
                 foreach ($methodsAnnotations as $method => $annotations) {
                     expect(gettype($method))->equals('string');

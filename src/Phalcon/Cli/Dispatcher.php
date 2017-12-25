@@ -141,7 +141,7 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
     public function setTaskName($taskName)
     {
         if (is_string($taskName) === false && is_null($taskName) === false) {
-            throw new Exception('Invalid parameter type.');
+        //    throw new Exception('Invalid parameter type.');
         }
 
         //@see \Phalcon\Dispatcher::_handlerName

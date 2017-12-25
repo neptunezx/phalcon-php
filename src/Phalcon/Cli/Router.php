@@ -186,11 +186,11 @@ class Router implements InjectionAwareInterface
         $this->_matchedRoute = null;
         if (!is_array($arguments)) {
             if (!is_string($arguments) && is_null($arguments)) {
-                throw new Exception('Arguments must be an array or string');
+            //    throw new Exception('Arguments must be an array or string');
             }
             foreach ($this->_routes as $route) {
                 $pattern = $route->getCompiledPattern();
-                if (Text::memstr($pattern, '^')) {
+                if (Text::memstr($pattern, '\^')) {
                     $routeFound = preg_match($pattern, $arguments, $matches);
                 } else {
                     $routeFound = $pattern == $arguments;
