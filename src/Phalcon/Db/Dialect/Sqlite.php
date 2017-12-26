@@ -33,7 +33,7 @@ class Sqlite extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function getColumnDefinition($column)
+    public function getColumnDefinition(ColumnInterface $column)
     {
         if (is_object($column) === false ||
             $column instanceof ColumnInterface === false) {
