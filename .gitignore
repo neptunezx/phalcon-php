@@ -8,3 +8,6 @@ phpunit.phar
 composer.lock
 vendor/
 /nbproject/
+
+tests/
+test/

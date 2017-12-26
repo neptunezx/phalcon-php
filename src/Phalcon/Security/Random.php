@@ -105,7 +105,7 @@ class Random
         }
 
         if (function_exists("random_bytes")) {
-            return random_bytes(len);
+            return random_bytes($len);
         }
 
         if (function_exists("\\Sodium\\randombytes_buf")) {
@@ -113,7 +113,7 @@ class Random
         }
 
         if (function_exists("openssl_random_pseudo_bytes")) {
-            return openssl_random_pseudo_bytes(len);
+            return openssl_random_pseudo_bytes($len);
         }
 
         if (file_exists("/dev/urandom")) {
@@ -255,7 +255,7 @@ class Random
      */
     public function base64Safe($len = null, $padding = false)
     {
-        $s = strtr(base64_encode($this->base64(len)), "+/", "-_");
+        $s = strtr(base64_encode($this->base64($len)), "+/", "-_");
         $s = preg_replace("#[^a-z0-9_=-]+#i", "", $s);
 
         if (!$padding) {

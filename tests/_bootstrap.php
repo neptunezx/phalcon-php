@@ -53,17 +53,10 @@ $defaults = [
     // SQLite
     "TEST_DB_SQLITE_NAME"       => PATH_OUTPUT . 'phalcon_test.sqlite',
     // MySQL
-<<<<<<< HEAD
     "TEST_DB_MYSQL_HOST"        => '182.92.161.188',
     "TEST_DB_MYSQL_PORT"        => 3306,
     "TEST_DB_MYSQL_USER"        => 'root',
     "TEST_DB_MYSQL_PASSWD"      => '426759',
-=======
-    "TEST_DB_MYSQL_HOST"        => '127.0.0.1',
-    "TEST_DB_MYSQL_PORT"        => 3306,
-    "TEST_DB_MYSQL_USER"        => 'woai662',
-    "TEST_DB_MYSQL_PASSWD"      => 'weiwei66291',
->>>>>>> d52fa504c0b69a595ebe9e0019e570c71ff3c88c
     "TEST_DB_MYSQL_NAME"        => 'phalcon_test',
     "TEST_DB_MYSQL_CHARSET"     => 'utf8',
     // Postgresql
