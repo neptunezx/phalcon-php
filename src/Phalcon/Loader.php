@@ -125,7 +125,7 @@ class Loader implements EventsAwareInterface
      * @param object $eventsManager
      * @throws
      */
-    public function setEventsManager($eventsManager)
+    public function setEventsManager(ManagerInterface $eventsManager)
     {
         if (is_object($eventsManager) === false ||
             $eventsManager instanceof ManagerInterface === false) {
