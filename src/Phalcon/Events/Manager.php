@@ -20,15 +20,6 @@ use Phalcon\Events\Exception;
 class Manager implements ManagerInterface
 {
     /**
-     * rewrite ManagerInterface's method detach()
-     * @param string $eventType
-     * @param object $handler
-     */
-    public function detach($eventType, $handler){
-
-    }
-
-    /**
      * Events
      *
      * @var array|null

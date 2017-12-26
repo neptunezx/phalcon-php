@@ -85,18 +85,12 @@ class LoaderTest extends UnitTest
                 expect(new \Example\Adapter\Some())->isInstanceOf('Example\Adapter\Some');
                 expect(new \Example\Adapter\LeSome())->isInstanceOf('Example\Adapter\LeSome');
                 expect(new \Example\Engines\LeEngine())->isInstanceOf('Example\Engines\LeEngine');
-                // test util has no Class Example
-                //expect(new \Example\Example\Example())->isInstanceOf('Example\Example\Example');
+                expect(new \Example\Example\Example())->isInstanceOf('Example\Example\Example');
 
                 $loader->unregister();
             }
         );
     }
-
-//    public function testPrepareNamespace(){
-//        $loader = new LoaderTestForProtected();
-//        $this->assertTrue(is_array($loader->prepareNamespace()));
-//    }
 
     public function testNamespacesExtensions()
     {
@@ -174,7 +168,6 @@ class LoaderTest extends UnitTest
                     PATH_DATA . 'vendor/Example/Other/NoClass2.php'
                 ], true);
                 $loader->register();
-
                 expect(function_exists('noClassFoo'))->true();
                 expect(function_exists('noClassBar'))->true();
                 expect(function_exists('noClass1Foo'))->true();
@@ -182,8 +175,6 @@ class LoaderTest extends UnitTest
                 expect(function_exists('noClass2Foo'))->true();
                 expect(function_exists('noClass2Bar'))->true();
                 // TEST CASE : We are going to un-register it, but the functions should still be accessible
-
-                //注销加载事件 安注释所说注销自动加载以后 已经加载的方法仍旧可以访问
                 $loader->unregister();
                 expect(function_exists('noClassFoo'))->true();
                 expect(function_exists('noClassBar'))->true();
@@ -209,10 +200,10 @@ class LoaderTest extends UnitTest
                 $loader->registerNamespaces(
                     [
                         "Example\\Adapter" =>
-                        [
-                            PATH_DATA . 'vendor/Example/Adapter/',
-                            PATH_DATA . 'vendor/Example/Adapter2/',
-                        ],
+                            [
+                                PATH_DATA . 'vendor/Example/Adapter/',
+                                PATH_DATA . 'vendor/Example/Adapter2/',
+                            ],
                     ],
                     true
                 );
@@ -222,10 +213,10 @@ class LoaderTest extends UnitTest
                         PATH_DATA . 'vendor/Example/Base/'
                     ],
                     "Example\\Adapter" =>
-                    [
-                        PATH_DATA . 'vendor/Example/Adapter/',
-                        PATH_DATA . 'vendor/Example/Adapter2/',
-                    ],
+                        [
+                            PATH_DATA . 'vendor/Example/Adapter/',
+                            PATH_DATA . 'vendor/Example/Adapter2/',
+                        ],
                 ]);
 
                 $loader->register();
