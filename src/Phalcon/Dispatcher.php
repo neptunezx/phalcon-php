@@ -523,7 +523,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                 $hasService = (bool)class_exists($handlerClass);
             }
             if (!$hasService) {
-                $status = $this->{'-throwDispatchException'}($handlerClass . 'handler class cannot be loaded', self::EXCEPTION_HANDLER_NOT_FOUND);
+                $status = $this->{'_throwDispatchException'}($handlerClass . 'handler class cannot be loaded', self::EXCEPTION_HANDLER_NOT_FOUND);
                 if ($status === false && $this->_finished === false) {
                     continue;
                 }
@@ -560,7 +560,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                         continue;
                     }
                 }
-                $status = $this->{'throwDispatchException'}("Action'" . $actionName . "'was not found on handler'" . $handlerName . "'", self::EXCEPTION_ACTION_NOT_FOUND);
+                $status = $this->{'_throwDispatchException'}("Action'" . $actionName . "'was not found on handler'" . $handlerName . "'", self::EXCEPTION_ACTION_NOT_FOUND);
                 if ($status === false && $this->_finished === false) {
                     continue;
                 }

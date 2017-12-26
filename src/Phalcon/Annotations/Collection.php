@@ -181,7 +181,7 @@ class Collection implements Iterator, Countable
         $annotations = $this->_annotations;
         if (is_array($annotations)) {
             foreach ($annotations as $annotation) {
-                if ($name == $annotation->geName()) {
+                if ($name == $annotation->getName()) {
                     return true;
                 }
             }

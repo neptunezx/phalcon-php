@@ -287,7 +287,7 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
      * @param  array $params
      * @return mixed
      */
-    public function callActionMethod($handler, $actionMethod, $params)
+    public function callActionMethod($handler, $actionMethod, array $params=[])
     {
         $options = $this->_options;
 
