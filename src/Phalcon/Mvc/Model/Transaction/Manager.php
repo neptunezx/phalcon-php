@@ -74,7 +74,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface
         if ($dependencyInjector) {
             $this->_dependencyInjector = $dependencyInjector;
         } else {
-            $this->_dependencyInjector = DI::getDefault();
+            $this->_dependencyInjector = \Phalcon\Di::getDefault();
             if (is_object($this->_dependencyInjector) === false) {
                 throw new Exception('A dependency injector container is required to obtain the services related to the ORM');
             }
