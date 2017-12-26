@@ -703,11 +703,12 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function _getConnectionService(ModelInterface $model, $connectionServices)
     {
-        if (!isset($connectionServices[get_class_lower(get_class($model))])) {
+        $name = strtolower(get_class($model));
+        if (!isset($connectionServices[$name])) {
             return "db";
         }
 
-        return $connectionServices[strtolower(get_class($model))];
+        return $connectionServices[$name];
     }
 
     /**
@@ -1960,17 +1961,12 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
     /**
      * Creates a \Phalcon\Mvc\Model\Query\Builder
      *
-     * @param string|null $params
+     * @param mixed $params
      * @return \Phalcon\Mvc\Model\Query\BuilderInterface
      * @throws Exception
      */
     public function createBuilder($params = null)
     {
-        if (is_string($params) === false &&
-            is_null($params) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $dependencyInjector = $this->_dependencyInjector;
         if (is_object($dependencyInjector) === false) {
             throw new Exception('A dependency injection object is required to access ORM services');
