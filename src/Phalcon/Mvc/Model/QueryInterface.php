@@ -24,7 +24,7 @@ interface QueryInterface
      * @param array cacheOptions
      * @return \Phalcon\Mvc\Model\Query
      */
-    public function cache($cacheOptions);
+    public function cache(array $cacheOptions);
 
     /**
      * Returns the current cache options

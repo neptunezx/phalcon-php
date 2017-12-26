@@ -119,11 +119,13 @@ class Annotation
             $arguments = array();
 
             foreach ($exprArguments as $argument) {
-                $resolvedArgument = $this->getExpression($argument['expr']);
-                if (isset($argument['name'])) {
-                    $arguments[$argument['name']] = $resolvedArgument;
-                } else {
-                    $arguments[] = $resolvedArgument;
+                if (is_array($argument['expr'])) {
+                    $resolvedArgument = $this->getExpression($argument['expr']);
+                    if (isset($argument['name'])) {
+                        $arguments[$argument['name']] = $resolvedArgument;
+                    } else {
+                        $arguments[] = $resolvedArgument;
+                    }
                 }
             }
 

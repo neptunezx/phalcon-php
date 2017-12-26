@@ -62,7 +62,7 @@ class Console extends BaseApplication
         }
         if (is_object($this->_eventsManager) === false ||
             !$this->_eventsManager instanceof ManagerInterface) {
-            throw new Exception('Invalid annotations reader');
+         //   throw new Exception('Invalid annotations reader');
         }
         $eventsManager = $this->_eventsManager;
         if (is_object($eventsManager)) {
@@ -120,7 +120,7 @@ class Console extends BaseApplication
         }
         if (is_object($dependencyInjector->getShared("dispatcher")) === false ||
             $dependencyInjector->getShared("dispatcher") instanceof Dispatcher) {
-            throw new Exception('Invalid module definition path');
+        //    throw new Exception('Invalid module definition path');
         }
         $dispatcher = $dependencyInjector->getShared("dispatcher");
         $dispatcher->setTaskName($router->getTaskName());
@@ -151,7 +151,7 @@ class Console extends BaseApplication
     {
         if (is_array($arguments) === false ||
             is_bool($str) || is_bool($shift)) {
-            throw new Exception('Invalid module definition path');
+         //   throw new Exception('Invalid module definition path');
         }
         $args = [];
         $opts = [];

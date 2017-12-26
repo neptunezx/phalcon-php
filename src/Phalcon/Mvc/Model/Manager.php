@@ -1,29 +1,25 @@
 <?php
 
-/**
- * Manager
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
- */
-
 namespace Phalcon\Mvc\Model;
 
-use \Phalcon\Mvc\Model\ManagerInterface;
-use \Phalcon\Mvc\Model\BehaviorInterface;
-use \Phalcon\Mvc\Model\Relation;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\Model\Query;
-use \Phalcon\Mvc\Model\Query\Builder;
-use \Phalcon\Mvc\ModelInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Events\ManagerInterface as EventsManagerInterface;
-use \Phalcon\DiInterface;
-use \Phalcon\Text;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\Model\Relation;
+use Phalcon\Mvc\Model\RelationInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Db\AdapterInterface;
+use Phalcon\Mvc\Model\ResultsetInterface;
+use Phalcon\Mvc\Model\ManagerInterface;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Events\EventsAwareInterface;
+use Phalcon\Mvc\Model\Query;
+use Phalcon\Mvc\Model\QueryInterface;
+use Phalcon\Mvc\Model\Query\Builder;
+use Phalcon\Mvc\Model\Query\BuilderInterface;
+use Phalcon\Mvc\Model\BehaviorInterface;
+use Phalcon\Events\ManagerInterface as EventsManagerInterface;
+use Phalcon\Text;
+use Phalcon\Kernel;
 
 /**
  * Phalcon\Mvc\Model\Manager
@@ -34,16 +30,20 @@ use \Phalcon\Text;
  * A ModelsManager is injected to a model via a Dependency Injector/Services Container such as Phalcon\Di.
  *
  * <code>
- * $di = new Phalcon\Di();
+ * use Phalcon\Di;
+ * use Phalcon\Mvc\Model\Manager as ModelsManager;
  *
- * $di->set('modelsManager', function() {
- *      return new Phalcon\Mvc\Model\Manager();
- * });
+ * $di = new Di();
+ *
+ * $di->set(
+ *     "modelsManager",
+ *     function() {
+ *         return new ModelsManager();
+ *     }
+ * );
  *
  * $robot = new Robots($di);
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/manager.c
  */
 class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareInterface
 {
@@ -95,6 +95,14 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @access protected
      */
     protected $_aliases;
+
+    /**
+     * Model Visibility
+     *
+     * @var array
+     * @access protected
+     */
+    protected $_modelVisibility = [];
 
     /**
      * Has Many
@@ -167,6 +175,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @access protected
      */
     protected $_initialized;
+    protected $_prefix = "";
 
     /**
      * Sources
@@ -274,11 +283,6 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function setEventsManager(EventsManagerInterface $eventsManager)
     {
-        if (is_object($eventsManager) === false ||
-            $eventsManager instanceof EventsManagerInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_eventsManager = $eventsManager;
     }
 
@@ -406,25 +410,87 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $lowercased = strtolower($modelName);
+        /**
+         * Check if a modelName is an alias
+         */
+        $colonPos = strpos($modelName, ":");
 
-        //Check if a model with the same name is already loaded
-        if (isset($this->_initialized[$lowercased]) === true) {
-            $model = $this->_initialized[$lowercased];
-            if ($newInstance === true) {
-                return new $model(null, $this->_dependencyInjector, $this);
+        if ($colonPos !== false) {
+            $className      = substr($modelName, $colonPos + 1);
+            $namespaceAlias = substr($modelName, 0, $colonPos);
+            $namespaceName  = $this->getNamespaceAlias($namespaceAlias);
+            $modelName      = $namespaceName . "\\" . $className;
+        }
+
+        /**
+         * The model doesn't exist throw an exception
+         */
+        if (!class_exists($modelName)) {
+            throw new Exception("Model '" . $modelName . "' could not be loaded");
+        }
+
+        /**
+         * Check if a model with the same is already loaded
+         */
+        if (!$newInstance) {
+            if (isset($this->_initialized[strtolower($modelName)])) {
+                $model = $this->_initialized[strtolower($modelName)];
+                $model->reset();
+                return $model;
             }
-
-            return $model;
         }
 
-        //Load it using an autoloader
-        if (class_exists($modelName) === true) {
-            return new $modelName(null, $this->_dependencyInjector, $this);
-        }
+        /**
+         * Load it using an autoloader
+         */
+        return new $modelName(null, $this->_dependencyInjector, $this);
+    }
 
-        //The model doesn't exist throw an exception
-        throw new Exception("Model '" . $modelName . "' could not be loaded");
+    /**
+     * Sets the prefix for all model sources.
+     *
+     * <code>
+     * use Phalcon\Mvc\Model\Manager;
+     *
+     * $di->set("modelsManager", function () {
+     *     $modelsManager = new Manager();
+     *     $modelsManager->setModelPrefix("wp_");
+     *
+     *     return $modelsManager;
+     * });
+     *
+     * $robots = new Robots();
+     * echo $robots->getSource(); // wp_robots
+     * </code>
+     */
+    public function setModelPrefix($prefix)
+    {
+        if (is_string($prefix) === false) {
+            throw new Exception('Prefix must be a string');
+        }
+        $this->_prefix = $prefix;
+    }
+
+    /**
+     * Returns the prefix for all model sources.
+     *
+     * <code>
+     * use Phalcon\Mvc\Model\Manager;
+     *
+     * $di->set("modelsManager", function () {
+     *     $modelsManager = new Manager();
+     *     $modelsManager->setModelPrefix("wp_");
+     *
+     *     return $modelsManager;
+     * });
+     *
+     * $robots = new Robots();
+     * echo $robots->getSource(); // wp_robots
+     * </code>
+     */
+    public function getModelPrefix()
+    {
+        return $this->_prefix;
     }
 
     /**
@@ -457,19 +523,12 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function getModelSource(ModelInterface $model)
     {
-        $entity = strtolower(get_class($model));
-
-        if (is_array($this->_sources) === true) {
-            if (isset($this->_sources[$entity]) === true) {
-                return $this->_sources[$entity];
-            }
-        } else {
-            $this->_sources = array();
+        $entityName = strtolower(get_class($model));
+        if (!isset($this->_sources[$entityName])) {
+            $this->_sources[$entityName] = Text::uncamelize(Kernel::getClassNameFromClass($model));
         }
 
-        $source                  = Text::uncamelize($entity);
-        $this->_sources[$entity] = $source;
-        return $source;
+        return $this->_prefix . $this->_sources[$entityName];
     }
 
     /**
@@ -497,7 +556,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * Returns the mapped schema for a model
      *
      * @param \Phalcon\Mvc\ModelInterface $model
-     * @return string|null
+     * @return string
      * @throws Exception
      */
     public function getModelSchema(ModelInterface $model)
@@ -510,7 +569,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             }
         }
 
-        return null;
+        return '';
     }
 
     /**
@@ -526,18 +585,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             throw new Exception('The connection service must be a string');
         }
 
-        if (is_array($this->_readConnectionServices) === false) {
-            $this->_readConnectionServices = array();
-        }
-
-        if (is_array($this->_writeConnectionServices) === false) {
-            $this->_writeConnectionServices = array();
-        }
-
-        $entityName = strtolower(get_class($model));
-
-        $this->_readConnectionServices[$entityName]  = $connectionService;
-        $this->_writeConnectionServices[$entityName] = $connectionService;
+        $this->setReadConnectionService($model, $connectionService);
+        $this->setWriteConnectionService($model, $connectionService);
     }
 
     /**
@@ -581,39 +630,6 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
     }
 
     /**
-     * Returns the connection to write data related to a model
-     *
-     * @param \Phalcon\Mvc\ModelInterface $model
-     * @return \Phalcon\Db\AdapterInterface
-     * @throws Exception
-     */
-    public function getWriteConnection(ModelInterface $model)
-    {
-        $service = 'db';
-
-        if (is_array($this->_writeConnectionServices) === true) {
-            $entityName = strtolower(get_class($model));
-
-            //Check if the model has a custom connection service
-            if (isset($this->_writeConnectionServices[$entityName]) === true) {
-                $service = $this->_writeConnectionServices[$entityName];
-            }
-        }
-
-        if (is_object($this->_dependencyInjector) === false) {
-            throw new Exception('A dependency injector container is required to obtain the services related to the ORM');
-        }
-
-        //Request the connection service from the DI
-        $connection = $this->_dependencyInjector->getShared($service);
-        if (is_object($connection) === false) {
-            throw new Exception('Invalid injected connection service');
-        }
-
-        return $connection;
-    }
-
-    /**
      * Returns the connection to read data related to a model
      *
      * @param \Phalcon\Mvc\ModelInterface $model
@@ -622,16 +638,27 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function getReadConnection(ModelInterface $model)
     {
-        $service = 'db';
+        return $this->_getConnection($model, $this->_readConnectionServices);
+    }
 
-        if (is_array($this->_readConnectionServices) === true) {
-            $entityName = strtolower(get_class($model));
+    /**
+     * Returns the connection to write data related to a model
+     *
+     * @param \Phalcon\Mvc\ModelInterface $model
+     * @return \Phalcon\Db\AdapterInterface
+     * @throws Exception
+     */
+    public function getWriteConnection(ModelInterface $model)
+    {
+        return $this->_getConnection($model, $this->_writeConnectionServices);
+    }
 
-            //Check if the model has a custom connection service
-            if (isset($this->_readConnectionServices[$entityName]) === true) {
-                $service = $this->_readConnectionServices[$entityName];
-            }
-        }
+    /**
+     * Returns the connection to read or write data related to a model depending on the connection services.
+     */
+    protected function _getConnection(ModelInterface $model, $connectionServices)
+    {
+        $service = $this->_getConnectionService($model, $connectionServices);
 
         if (is_object($this->_dependencyInjector) === false) {
             throw new Exception('A dependency injector container is required to obtain the services related to the ORM');
@@ -655,16 +682,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function getReadConnectionService(ModelInterface $model)
     {
-        if (is_array($this->_readConnectionServices) === true) {
-            $entityName = strtolower(get_class($model));
-
-            //Check if there is a custom service connection
-            if (isset($this->_readConnectionServices[$entityName]) === true) {
-                return $this->_readConnectionServices[$entityName];
-            }
-        }
-
-        return 'db';
+        return $this->_getConnectionService($model, $this->_readConnectionServices);
     }
 
     /**
@@ -676,16 +694,20 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function getWriteConnectionService(ModelInterface $model)
     {
-        if (is_array($this->_writeConnectionServices) === true) {
-            $entityName = strtolower(get_class($model));
+        return $this->_getConnectionService($model, $this->_writeConnectionServices);
+    }
 
-            //Check if there is a custom service connection
-            if (isset($this->_writeConnectionServices[$entityName]) === true) {
-                return $this->_writeConnectionServices[$entityName];
-            }
+    /**
+     * Returns the connection service name used to read or write data related to
+     * a model depending on the connection services
+     */
+    public function _getConnectionService(ModelInterface $model, $connectionServices)
+    {
+        if (!isset($connectionServices[get_class_lower(get_class($model))])) {
+            return "db";
         }
 
-        return 'db';
+        return $connectionServices[strtolower(get_class($model))];
     }
 
     /**
@@ -703,13 +725,15 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             throw new Exception('Invalid parameter type.');
         }
 
+        $status     = null;
         $entityName = strtolower(get_class($model));
 
         if (is_array($this->_behaviors) === true &&
             isset($this->_behaviors[$entityName]) === true) {
             //Notify all the events on the behavior
             foreach ($this->_behaviors[$entityName] as $behavior) {
-                if ($behavior->notify($eventName, $model) === false) {
+                $status = $behavior->notify($eventName, $model);
+                if ($status === false) {
                     return false;
                 }
             }
@@ -725,12 +749,13 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         //A model can have a specific events manager
         if (is_array($this->_customEventsManager) === true &&
             isset($this->_customEventsManager[$entityName]) === true) {
-            if ($this->_customEventsManager[$entityName]->fire('model:' . $eventName, $model) === false) {
+            $status = $this->_customEventsManager[$entityName]->fire('model:' . $eventName, $model);
+            if ($status === false) {
                 return false;
             }
         }
 
-        return null;
+        return $status;
     }
 
     /**
@@ -740,29 +765,33 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @param \Phalcon\Mvc\ModelInterface $model
      * @param string $eventName
-     * @param array $data
+     * @param mixed $data
      * @return mixed
      * @throws Exception
      */
     public function missingMethod(ModelInterface $model, $eventName, $data)
     {
-        if (is_string($eventName) === false ||
-            is_array($data) === false) {
+        if (is_string($eventName) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_array($this->_behaviors) === true) {
-            $entityName = strtolower(get_class($model));
-            if (isset($this->_behaviors[$entityName]) === true) {
-                //Notify all the events on the behavior
-                foreach ($this->_behaviors[$entityName] as $behavior) {
-                    $result = $behavior->missingMethod($model, $eventName, $data);
-                    if (is_null($result) === false) {
-                        return $result;
-                    }
+        /**
+         * Dispatch events to the global events manager
+         */
+        $entityName = strtolower(get_class($model));
+        if (isset($this->_behaviors[$entityName])) {
+            $modelsBehaviors = $this->_behaviors[$entityName];
+            /**
+             * Notify all the events on the behavior
+             */
+            foreach ($modelsBehaviors as $behavior) {
+                $result = $behavior->missingMethod($model, $eventName, $data);
+                if ($result !== null) {
+                    return $result;
                 }
             }
         }
+
 
         //Dispatch events to the global events manager
         if (is_object($this->_eventsManager) === true) {
@@ -781,11 +810,6 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function addBehavior(ModelInterface $model, BehaviorInterface $behavior)
     {
-        if (is_object($behavior) === false ||
-            $behavior instanceof BehaviorInterface === false) {
-            throw new Exception('The behavior is invalid');
-        }
-
         $entityName = strtolower(get_class($model));
 
         //Get the current behaviors
@@ -811,21 +835,16 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function keepSnapshots(ModelInterface $model, $keepSnapshots)
     {
-        if (is_bool($keepSnapshots) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_keepSnapshots) === false) {
             $this->_keepSnapshots = array();
         }
 
-        $this->_keepSnapshots[strtolower(get_class($model))] = $keepSnapshots;
+        $this->_keepSnapshots[strtolower(get_class($model))] = (bool) $keepSnapshots;
     }
 
     /**
      * Checks if a model is keeping snapshots for the queried records
-     *
-     * @param \Phalcon\Mvc\ModelInterface $model
+     * e'
      * @return boolean
      * @throws Exception
      */
@@ -850,10 +869,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function useDynamicUpdate(ModelInterface $model, $dynamicUpdate)
     {
-        if (is_bool($dynamicUpdate) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
+        $dynamicUpdate = (bool) $dynamicUpdate;
         if (is_array($this->_dynamicUpdate) === false) {
             $this->_dynamicUpdate = array();
         }
@@ -922,9 +938,12 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         }
 
         //Create a relationship instance
-        $relation = new Relation(1, $referencedModel, $fields, $referencedFields, $options);
+        $relation = new Relation(Relation::HAS_ONE, $referencedModel, $fields, $referencedFields, $options);
 
         if (isset($options['alias']) === true) {
+            if (!is_string($options['alias'])) {
+                throw new Exception("Relation alias must be a string");
+            }
             $lowerAlias = strtolower($options['alias']);
         } else {
             $lowerAlias = $referencedEntity;
@@ -934,6 +953,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         $relations[] = $relation;
 
         //Update the global alias
+        if ($this->_aliases == null) {
+            $this->_aliases = [];
+        }
         $this->_aliases[$entityName . '$' . $lowerAlias] = $relation;
 
         //Update the relations
@@ -991,9 +1013,12 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         }
 
         //Create a relationship instance
-        $relation = new Relation(0, $referencedModel, $fields, $referencedFields, $options);
+        $relation = new Relation(Relation::BELONGS_TO, $referencedModel, $fields, $referencedFields, $options);
 
         if (isset($options['alias']) === true) {
+            if (!is_string($options['alias'])) {
+                throw new Exception("Relation alias must be a string");
+            }
             $lowerAlias = strtolower($options['alias']);
         } else {
             $lowerAlias = $referencedEntity;
@@ -1063,6 +1088,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         $relation = new Relation(2, $referencedModel, $fields, $referencedFields, $options);
 
         if (isset($options['alias']) === true) {
+            if (!is_string($options['alias'])) {
+                throw new Exception("Relation alias must be a string");
+            }
             $lowerAlias = strtolower($options['alias']);
         } else {
             $lowerAlias = $referencedEntity;
@@ -1137,12 +1165,15 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         //Check if the number of fields is the same from the intermediate model to the
         //referenced model
         //Create a relationship instance
-        $relation = new Relation(4, $referencedModel, $fields, $referencedFields, $options);
+        $relation = new Relation(Relation::HAS_MANY_THROUGH, $referencedModel, $fields, $referencedFields, $options);
 
         //Set extended intermediate relation data
         $relation->setIntermediateRelation($intermediateFields, $intermediateModel, $intermediateFields);
 
         if (isset($options['alias']) === true) {
+            if (!is_string($options['alias'])) {
+                throw new Exception("Relation alias must be a string");
+            }
             $lowerAlias = strtolower($options['alias']);
         } else {
             $lowerAlias = $referencedEntity;
@@ -1299,56 +1330,75 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
     }
 
     /**
-     * Returns a string representation of the value $input
-     *
-     * @param mixed $input
-     * @return string
+     * Merge two arrays of find parameters
      */
-    private static function appendPrintableVal($input)
+    protected final function _mergeFindParameters($findParamsOne, $findParamsTwo)
     {
-        switch (getType($input)) {
-            case 'string':
-            case 'integer':
-            case 'double':
-                return $input;
-            case 'boolean':
-                return ($input === true ? '1' : '');
-            case 'NULL':
-                return '';
-            default:
-                return (string) $input;
-                break;
-        }
-    }
-
-    /**
-     * Returns a string representation of the array $input
-     *
-     * @param array $input
-     * @return string
-     */
-    private static function appendPrintableArray($input)
-    {
-        $str = '[';
-
-        $end = count($input);
-        $pos = 0;
-        foreach ($input as $tmp) {
-            if (is_object($tmp) === true) {
-                $str .= '0';
-            } elseif (is_array($tmp) === true) {
-                $str .= self::appendPrintableArray($tmp);
-            } else {
-                $str .= self::appendPrintableVal($tmp);
-            }
-
-            if ($pos !== $end) {
-                $str .= ',';
-            }
-            ++$pos;
+        if (is_string($findParamsOne) && is_string($findParamsTwo)) {
+            return ["(" . $findParamsOne . ") AND (" . $findParamsTwo . ")"];
         }
 
-        return $str . ']';
+        $findParams = [];
+        if (is_array($findParamsOne)) {
+
+            foreach ($findParamsOne as $key => $value) {
+
+                if ($key === 0 || $key === "conditions") {
+                    if (!isset($findParams[0])) {
+                        $findParams[0] = $value;
+                    } else {
+                        $findParams[0] = "(" . $findParams[0] . ") AND (" . $value . ")";
+                    }
+                    continue;
+                }
+
+                $findParams[$key] = $value;
+            }
+        } else {
+            if (is_string($findParamsOne)) {
+                $findParams = ["conditions" => $findParamsOne];
+            }
+        }
+
+        if (is_array($findParamsTwo)) {
+
+            foreach ($findParamsTwo as $key => $value) {
+
+                if ($key === 0 || $key === "conditions") {
+                    if (!isset($findParams[0])) {
+                        $findParams[0] = $value;
+                    } else {
+                        $findParams[0] = "(" . $findParams[0] . ") AND (" . $value . ")";
+                    }
+                    continue;
+                }
+
+                if ($key === "bind" || $key === "bindTypes") {
+                    if (!isset($findParams[$key])) {
+                        if (is_array($value)) {
+                            $findParams[$key] = $value;
+                        }
+                    } else {
+                        if (is_array($value)) {
+                            $findParams[$key] = array_merge($findParams[$key], $value);
+                        }
+                    }
+                    continue;
+                }
+
+                $findParams[$key] = $value;
+            }
+        } else {
+            if (is_string($findParamsTwo)) {
+                if (!isset($findParams[0])) {
+                    $findParams[0] = $findParamsTwo;
+                } else {
+                    $findParams[0] = "(" . $findParams[0] . ") AND (" . $findParamsTwo . ")";
+                }
+            }
+        }
+
+        return $findParams;
     }
 
     /**
@@ -1357,6 +1407,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @param string $prefix
      * @param array|string $value
      * @return string|null
+     * @todo
      */
     private static function uniqueKey($prefix, $value)
     {
@@ -1380,16 +1431,8 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      * @return \Phalcon\Mvc\Model\Resultset\Simple
      * @throws Exception
      */
-    public function getRelationRecords($relation, $method, ModelInterface $record, $parameters = null)
+    public function getRelationRecords(RelationInterface $relation, $method, ModelInterface $record, $parameters = null)
     {
-        if (is_object($relation) === false ||
-            $relation instanceof RelationInterface === false ||
-            is_string($method) === false ||
-            (is_array($parameters) === false &&
-            is_null($parameters) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         //Re-use conditions
         if (is_array($parameters) === true) {
             if (isset($parameters[0]) === true) {
@@ -1405,18 +1448,14 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             }
         }
 
-        //Re-use bound parameters
-        if (is_array($parameters) === true) {
-            if (isset($parameters['bind']) === true) {
-                $placeholders = $parameters['bind'];
-                unset($parameters['bind']);
-            } else {
-                $placeholders = array();
-            }
-        } else {
-            $placeholders = array();
-        }
-
+        /**
+         * Re-use bound parameters
+         */
+        $placeholders    = [];
+        /**
+         * Returns parameters that must be always used when the related records are obtained
+         */
+        $extraParameters = $relation->getParams();
         //Perform the query on the referenced model
         $referencedModel = $relation->getReferencedModel();
 
@@ -1429,82 +1468,68 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             //Appends conditions created from the fields defined in the relation
             $fields = $relation->getFields();
             if (is_array($fields) === false) {
-                $value          = $record->readAttribute($fields);
-                $conditions[]   = '[' . $intermediateModel . '].[' . $intermediateFields . '] = ?0';
-                $placeholders[] = $value;
+                $conditions[]         = '[' . $intermediateModel . '].[' . $intermediateFields . '] = :APR0:';
+                $placeholders["APR0"] = $record->readAttribute($fields);
             } else {
                 throw new Exception('Not supported');
             }
+            /**
+             * We don't trust the user or the database so we use bound parameters
+             * Create a query builder
+             */
+            $builder = $this->createBuilder($this->_mergeFindParameters($extraParameters, $parameters));
 
-            $joinConditions = array();
-
-            //Create the join conditions
-            $intermediateFields = $relation->getIntermediateReferencedFields();
-            if (is_array($intermediateFields) === false) {
-                $referencedFields = $relation->getReferencedFields();
-                $condition        = '[' . $intermediateModel . '].[' . $intermediateFields . '] = [' . $referencedModel . '].[' . $referencedFields . ']';
-            } else {
-                throw new Exception('Not supported');
-            }
-
-            //We don't trust the user or the database so we use bound parameters
-            $joinedJoinConditions = implode(' AND ', $joinConditions);
-
-            //Add extra conditions passed by the programmer
-            if (empty($preConditions) === false) {
-                $conditions[] = $preConditions;
-            }
-
-            //We don't trust the user or the database so we use bound parameters
-            $joinedConditions = implode(' AND ', $conditions);
-
-            //Create a query builder
-            $builder = $this->createBuilder($parameters);
             $builder->from($referencedModel);
-            $builder->innerJoin($intermediateModel, $joinedJoinConditions);
-            $builder->andWhere($joinedConditions, $placeholders);
+            $builder->innerJoin($intermediateModel, join(" AND ", $joinConditions));
+            $builder->andWhere(join(" AND ", $conditions), $placeholders);
 
-            //Get the query
-            $query = $builder->getQuery();
+            if ($method == "count") {
+                $builder->columns("COUNT(*) AS rowcount");
 
-            //Execute the query
-            return $query->execute();
+                $rows = $builder->getQuery()->execute();
+
+                $firstRow = $rows->getFirst();
+
+                return (int) $firstRow->readAttribute("rowcount");
+            }
+
+            /**
+             * Get the query
+             * Execute the query
+             */
+            return $builder->getQuery()->execute();
         }
 
-        if (is_null($preConditions) === false) {
-            $conditions = array($preConditions);
-        } else {
-            $conditions = array();
-        }
+        $conditions = [];
 
         //Append conditions create from the fields defined in the relation
         $fields = $relation->getFields();
         if (is_array($fields) === false) {
-            $value           = $record->readAttribute($fields);
-            $referencedField = $relation->getReferencedFields();
-            $conditions[]    = '[' . $referencedField . '] = ?0';
-            $placeholders[]  = $value;
+            $value                = $record->readAttribute($fields);
+            $referencedField      = $relation->getReferencedFields();
+            $conditions[]         = '[' . $referencedField . '] = :APR0:';
+            $placeholders['APR0'] = $value;
         } else {
             //Compound relation
             $referencedFields = $relation->getReferencedFields();
             foreach ($fields as $refPosition => $field) {
-                $value           = $record->readAttribute($field);
-                $referencedField = $referencedFields[$refPosition];
-                $conditions[]    = '[' . $referencedField . '] = ?' . $refPosition;
-                $placeholders[]  = $value;
+                $value                              = $record->readAttribute($field);
+                $referencedField                    = $referencedFields[$refPosition];
+                $conditions[]                       = '[' . $referencedField . "] = :APR" . $refPosition . ":";
+                $placeholders["APR" . $refPosition] = $record->readAttribute($field);
             }
         }
 
         //We don't trust the user or the database so we use bound parameters
-        $findParams = array(implode(' AND ', $conditions), 'bind' => $placeholders, 'di' => $record->getDi());
+        $findParams = array(join(" AND ", $conditions), 'bind' => $placeholders, 'di' => $record->getDi());
 
-        if (is_array($parameters) === true) {
-            $findArguments = array_merge($findParams, $parameters);
+        $findArguments = $this->_mergeFindParameters($findParams, $parameters);
+
+        if (is_array($extraParameters)) {
+            $findParams = $this->_mergeFindParameters($extraParameters, $findArguments);
         } else {
-            $findArguments = $findParams;
+            $findParams = $findArguments;
         }
-
-        $arguments = array($findArguments);
 
         //Check the right method to get the data
         if (is_null($method) === true) {
@@ -1516,9 +1541,12 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
                 case Relation::HAS_MANY:
                     $method = 'find';
                     break;
+                default:
+                    throw new Exception("Unknown relation type");
             }
         }
 
+        $arguments = [$findParams];
         //Find first results could be reusable
         $iReusable = $relation->isReusable();
         if ($iReusable === true) {
@@ -1885,12 +1913,13 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_object($this->_dependencyInjector) === false) {
+        $dependencyInjector = $this->_dependencyInjector;
+        if (is_object($dependencyInjector) === false) {
             throw new Exception('A dependency injection object is required to access ORM services');
         }
 
         //Create a query
-        $query            = new Query($phql);
+        $query            = $dependencyInjector->get("Phalcon\\Mvc\\Model\\Query", [$phql, $dependencyInjector]);
         $query->setDi($this->_dependencyInjector);
         $this->_lastQuery = $query;
 
@@ -1902,28 +1931,30 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      *
      * @param string $phql
      * @param array|null $placeholders
+     * @param array|null $types
      * @return \Phalcon\Mvc\Model\QueryInterface
      * @throws Exception
      */
-    public function executeQuery($phql, $placeholders = null)
+    public function executeQuery($phql, $placeholders = null, $types = null)
     {
-        if (is_string($phql) === false ||
-            (is_array($placeholders) === false &&
-            is_null($placeholders) === false)) {
+        if (is_string($phql) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_object($this->_dependencyInjector) === false) {
-            throw new Exception('A dependency injection object is required to access ORM services');
+        $query = $this->createQuery($phql);
+
+        if (is_array($placeholders)) {
+            $query->setBindParams($placeholders);
         }
 
-        //Create a query
-        $query            = new Query($phql);
-        $query->setDi($this->_dependencyInjector);
-        $this->_lastQuery = $query;
+        if (is_array($$types)) {
+            $query->setBindTypes($types);
+        }
 
-        //Execute the query
-        return $query->execute($placeholders);
+        /**
+         * Execute the query
+         */
+        return $query->execute();
     }
 
     /**
@@ -1940,12 +1971,17 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_object($this->_dependencyInjector) === false) {
+        $dependencyInjector = $this->_dependencyInjector;
+        if (is_object($dependencyInjector) === false) {
             throw new Exception('A dependency injection object is required to access ORM services');
         }
 
         //Create a query builder
-        return new Builder($params, $this->_dependencyInjector);
+        return $dependencyInjector->get(
+                "Phalcon\\Mvc\\Model\\Query\\Builder", [
+                $params,
+                $dependencyInjector
+        ]);
     }
 
     /**
@@ -2017,7 +2053,9 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
      */
     public function __destruct()
     {
-        
+        //TODO: implement phalcon_orm_destroy_cache
+        //phalcon_orm_destroy_cache();
+        Query::clean();
     }
 
 }

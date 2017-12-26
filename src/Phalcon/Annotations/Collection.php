@@ -35,7 +35,7 @@ class Collection implements Iterator, Countable
     public function __construct($reflectionData = null)
     {
         if (is_array($reflectionData) === false && $reflectionData !== null) {
-            throw new Exception('Reflection data must be an array');
+//            throw new Exception('Reflection data must be an array');
         }
         $annotations = [];
         if (is_array($reflectionData)) {
