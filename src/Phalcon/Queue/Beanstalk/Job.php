@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: gaopu
@@ -18,6 +19,7 @@ use Phalcon\Queue\Beanstalk\Exception;
  */
 class Job
 {
+
     /**
      * @var string
      */
@@ -33,7 +35,6 @@ class Job
      */
     protected $_queue;
 
-
     /**
      * Phalcon\Queue\Beanstalk\Job
      *
@@ -44,8 +45,8 @@ class Job
     public function __construct($queue, $id, $body)
     {
         $this->_queue = $queue;
-        $this->_id = $id;
-        $this->_body = $body;
+        $this->_id    = $id;
+        $this->_body  = $body;
     }
 
     /**
@@ -59,7 +60,8 @@ class Job
         $queue = $this->_queue;
         $queue->write("delete " . $this->_id);
 
-        return ($queue->readStatus())[0] == "DELETED";
+        $status = $queue->readStatus();
+        return isset($status[0]) ? $status[0] == "DELETED" : false;
     }
 
     /**
@@ -73,9 +75,10 @@ class Job
      */
     public function release($priority = 100, $delay = 0)
     {
-        $queue = $this->_queue;
+        $queue  = $this->_queue;
         $queue->write("release " . $this->_id . " " . $priority . " " . $delay);
-        return ($queue->readStatus())[0] == "RELEASED";
+        $status = $queue->readStatus();
+        return isset($status[0]) ? $status[0] == "RELEASED" : false;
     }
 
     /**
@@ -87,12 +90,12 @@ class Job
      * @return bool
      * @throws \Phalcon\Exception
      */
-
     public function bury($priority = 100)
     {
-        $queue = $this->_queue;
+        $queue  = $this->_queue;
         $queue->write("bury " . $this->_id . " " . $priority);
-        return ($queue->readStatus())[0] == "BURIED";
+        $status = $queue->readStatus();
+        return isset($status[0]) ? $status[0] == "BURIED" : false;
     }
 
     /**
@@ -106,12 +109,12 @@ class Job
      * @return bool
      * @throws \Phalcon\Exception
      */
-
     public function touch()
     {
-        $queue = $this->_queue;
+        $queue  = $this->_queue;
         $queue->write("touch " . $this->_id);
-        return ($queue->readStatus())[0] == "TOUCHED";
+        $status = $queue->readStatus();
+        return isset($status[0]) ? $status[0] == "TOUCHED" : false;
     }
 
     /**
@@ -122,9 +125,10 @@ class Job
      */
     public function kick()
     {
-        $queue = $this->_queue;
+        $queue  = $this->_queue;
         $queue->write("kick-job " . $this->_id);
-        return ($queue->readStatus())[0] == "KICKED";
+        $status = $queue->readStatus();
+        return isset($status[0]) ? $status[0] == "KICKED" : false;
     }
 
     /**
@@ -133,7 +137,6 @@ class Job
      * @return bool | array
      * @throws \Phalcon\Exception
      */
-
     public function stats()
     {
         $queue = $this->_queue;
@@ -154,8 +157,9 @@ class Job
     {
         if (!is_string($this->_id)) {
             throw new Exception(
-                "Unexpected inconsistency in Phalcon\\Queue\\Beanstalk\\Job::__wakeup() - possible break-in attempt!"
+            "Unexpected inconsistency in Phalcon\\Queue\\Beanstalk\\Job::__wakeup() - possible break-in attempt!"
             );
         }
     }
+
 }
