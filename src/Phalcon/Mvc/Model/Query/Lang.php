@@ -151,6 +151,7 @@ abstract class Lang
      */
     public static function parsePHQL($phql)
     {
+        return \Fend\Mvc\Model\Query\Lang::parsePHQL($phql);
         if (!is_string($phql)) {
             return null;
         }

@@ -1665,7 +1665,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return array
      * @throws Exception
      */
-    protected function _prepareSelect($ast, $merge = null)
+    protected function _prepareSelect($ast = null, $merge = null)
     {
         if (empty($ast)) {
             $ast = $this->_ast;
@@ -1764,9 +1764,9 @@ class Query implements QueryInterface, InjectionAwareInterface
             $modelName     = $qualifiedName["name"];
 
             // Check if the table has a namespace alias
-            if (Text::memstr(modelName, ":")) {
-                $nsAlias       = explode(":", modelName);
-                $realModelName = $manager->getNamespaceAlias(nsAlias[0]) . "\\" . $nsAlias[1];
+            if (Text::memstr($modelName, ":")) {
+                $nsAlias       = explode(":", $modelName);
+                $realModelName = $manager->getNamespaceAlias($nsAlias[0]) . "\\" . $nsAlias[1];
             } else {
                 $realModelName = $modelName;
             }
@@ -2308,7 +2308,7 @@ class Query implements QueryInterface, InjectionAwareInterface
                 $completeSource[]                  = $alias;
                 $sqlTables[]                       = $completeSource;
                 $sqlAliasesModelsInstances[$alias] = $model;
-                $models[alias]                     = $realModelName;
+                $models[$alias]                    = $realModelName;
             } else {
                 $sqlAliases[$realModelName]                = $source;
                 $sqlAliasesModelsInstances[$realModelName] = $model;
@@ -2353,16 +2353,15 @@ class Query implements QueryInterface, InjectionAwareInterface
     public function parse()
     {
         $intermediate = $this->_intermediate;
-        if (is_array($intermediate)) {
+        if (is_array($intermediate)) { 
             return $intermediate;
         }
 
         /**
          * This function parses the PHQL statement
          */
-        $phql = $this->_phql;
-        $ast  = Lang::parsePHQL($phql);
-
+        $phql     = $this->_phql;
+        $ast      = Lang::parsePHQL($phql);
         $irPhql   = null;
         $uniqueId = null;
 
