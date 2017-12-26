@@ -2,7 +2,6 @@
 
 namespace Phalcon\Events;
 
-use \Phalcon\Events\Exception;
 
 /**
  * Phalcon\Events\Event
@@ -11,7 +10,7 @@ use \Phalcon\Events\Exception;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/events/event.c
  */
-class Event
+class Event implements EventInterface
 {
 
     /**
@@ -66,24 +65,16 @@ class Event
     public function __construct($type, $source, $data = null, $cancelable = null)
     {
         if (is_string($type) === false ||
-            is_object($source) === false) {
+            is_object($source) === false ||
+            is_bool($cancelable)) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_null($cancelable) === true) {
-            $cancelable = true;
-        } elseif (is_bool($cancelable) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->_type   = $type;
+        $this->_type = $type;
         $this->_source = $source;
-
-        if (is_null($data) === false) {
+        if ($data!==null){
             $this->_data = $data;
         }
-
-        if ($cancelable !== true) {
+        if ($cancelable!==true){
             $this->_cancelable = $cancelable;
         }
     }
@@ -91,19 +82,22 @@ class Event
     /**
      * Set the event's type
      *
-     * @param string $eventType
+     * @param string $type
      * @throws Exception
+     * @return $this
      */
-    public function setType($eventType)
+    public function setType($type)
     {
-        if (is_string($eventType) === false) {
+        if (is_string($type) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $this->_type = $eventType;
+        $this->_type = $type;
+        return $this;
     }
 
     /**
+     * (没用了)
      * Returns the event's type
      *
      * @return string
@@ -114,6 +108,7 @@ class Event
     }
 
     /**
+     * (没用了)
      * Returns the event's source
      *
      * @return object
@@ -127,13 +122,16 @@ class Event
      * Set the event's data
      *
      * @param mixed $data
+     * @return $this
      */
-    public function setData($data)
+    public function setData($data = null)
     {
         $this->_data = $data;
+        return $this;
     }
 
     /**
+     * (没用了)
      * Returns the event's data
      *
      * @return mixed
@@ -144,6 +142,7 @@ class Event
     }
 
     /**
+     * (没用了)
      * Sets if the event is cancelable
      *
      * @param boolean $cancelable
@@ -159,6 +158,7 @@ class Event
     }
 
     /**
+     * (没用了)
      * Check whether the event is cancelable
      *
      * @return boolean
@@ -172,14 +172,15 @@ class Event
      * Stops the event preventing propagation
      *
      * @throws Exception
+     * @return $this
      */
     public function stop()
     {
-        if ($this->_cancelable === true) {
-            $this->_stopped = true;
-        } else {
+        if (!$this->_cancelable){
             throw new Exception('Trying to cancel a non-cancelable event');
         }
+        $this->_stopped =true;
+        return $this;
     }
 
     /**
@@ -190,6 +191,15 @@ class Event
     public function isStopped()
     {
         return $this->_stopped;
+    }
+
+    /**
+     * Check whether the event is cancelable.
+     * @return boolean
+     */
+    public function isCancelable()
+    {
+        return $this->_cancelable;
     }
 
 }

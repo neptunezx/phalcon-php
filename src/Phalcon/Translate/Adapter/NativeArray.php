@@ -11,10 +11,8 @@ use \Phalcon\Translate\Exception;
  * Phalcon\Translate\Adapter\NativeArray
  *
  * Allows to define translation lists using PHP arrays
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/translate/adapter/nativearray.c
  */
-class NativeArray extends Adapter implements \ArrayAccess, AdapterInterface
+class NativeArray extends Adapter implements \ArrayAccess
 {
 
     /**
@@ -33,6 +31,7 @@ class NativeArray extends Adapter implements \ArrayAccess, AdapterInterface
      */
     public function __construct($options)
     {
+        parent::__construct($options);
         if (is_array($options) === false) {
             throw new Exception('Invalid options');
         }
@@ -52,11 +51,11 @@ class NativeArray extends Adapter implements \ArrayAccess, AdapterInterface
      * Returns the translation related to the given key
      *
      * @param string $index
-     * @param array|null $placeholders
+     * @param $placeholders array|null
      * @return string
      * @throws Exception
      */
-    public function query($index, $placeholders = null)
+    public function query($index,array $placeholders = null)
     {
         if (is_string($index) === false) {
             throw new Exception('Invalid parameter type.');
@@ -68,17 +67,9 @@ class NativeArray extends Adapter implements \ArrayAccess, AdapterInterface
         }
 
         if (isset($this->_translate[$index]) === true) {
-            $translation = $this->_translate[$index];
-            if (is_array($placeholders) === true && empty($placeholders) === false) {
-                foreach ($placeholders as $key => $value) {
-                    $translation = str_replace('%' . $key . '%', $value, $translation);
-                }
-            }
-
-            return $translation;
+            $translation = $index;
         }
-
-        return $index;
+        return $this->replacePlaceholders($translation, $placeholders);
     }
 
     /**

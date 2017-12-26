@@ -71,73 +71,73 @@ class Reflection
     /**
      * Returns the annotations found in the class docblock
      *
-     * @return \Phalcon\Annotations\Collection|boolean
+     * @return Collection|boolean
      */
     public function getClassAnnotations()
     {
-        if (is_object($this->_classAnnotations) === false) {
-            if (isset($this->_reflectionData['class']) === true) {
-                $this->_classAnnotations = new Collection($this->_reflectionData['class']);
+        $annotations = $this->_classAnnotations;
+        if (is_object($annotations) === false) {
+            if (isset($this->_reflectionData['class'])) {
+                $collection = new Collection($this->_reflectionData['class']);
+                $this->_classAnnotations = $collection;
+                return $collection;
             }
-
             $this->_classAnnotations = false;
+            return false;
         }
-
-        return $this->_classAnnotations;
+        return $annotations;
     }
 
     /**
      * Returns the annotations found in the methods' docblocks
      *
-     * @return \Phalcon\Annotations\Collection[]|boolean
+     * @return Collection[]|boolean
      */
     public function getMethodsAnnotations()
     {
-        if (is_object($this->_methodAnnotations) === false) {
-            if (isset($this->_reflectionData['methods']) === true) {
-                $this->_methodAnnotations = array();
-                if (empty($this->_reflectionData['methods']) === false) {
-                    foreach ($this->_reflectionData['methods'] as $methodName => $reflectionMethod) {
-                        $collection                            = new Collection($reflectionMethod);
-                        $this->_methodAnnotations[$methodName] = $collection;
+        $annotations = $this->_methodAnnotations;
+        if (is_object($annotations) === false) {
+            if (isset($this->_reflectionData['methods'])) {
+                $reflectionMethods = $this->_reflectionData['methods'];
+                if (count($reflectionMethods)) {
+                    $collections = [];
+                    foreach ($reflectionMethods as $methodName => $reflectionMethod) {
+                        $collections[$methodName] = new Collection($reflectionMethod);
                     }
-
-                    return $this->_methodAnnotations;
+                    $this->_methodAnnotations = $collections;
+                    return $collections;
                 }
             }
-
             $this->_methodAnnotations = false;
             return false;
         }
-
-        return $this->_methodAnnotations;
+        return $annotations;
     }
 
     /**
      * Returns the annotations found in the properties' docblocks
      *
-     * @return \Phalcon\Annotations\Collection[]|boolean
+     * @return Collection[]|boolean
      */
     public function getPropertiesAnnotations()
     {
-        if (is_object($this->_propertyAnnotations) === false) {
-            if (isset($this->_reflectionData['properties']) === true) {
-                $this->_propertyAnnotations = array();
-                if (empty($this->_reflectionData['properties']) === false) {
-                    foreach ($this->_reflectionData['properties'] as $property => $reflectionProperty) {
-                        $collection                            = new Collection($reflectionProperty);
-                        $this->_propertyAnnotations[$property] = $collection;
+        $annotations = $this->_propertyAnnotations;
+        if (is_object($annotations) === false) {
+            if (isset($this->_reflectionData['properties'])) {
+                $reflectionProperties = $this->_reflectionData['properties'];
+                if (count($reflectionProperties)) {
+                    $collections = [];
+                    foreach ($reflectionProperties as $property => $reflectionProperty) {
+                        $collections[$property] = new Collection($reflectionProperty);
                     }
-
-                    return $this->_propertyAnnotations;
+                    $this->_propertyAnnotations = $collections;
+                    return $collections;
                 }
             }
-
             $this->_propertyAnnotations = false;
             return false;
         }
-
-        return $this->_propertyAnnotations;
+        return $annotations;
     }
 
     /**
@@ -154,17 +154,17 @@ class Reflection
      * Restores the state of a \Phalcon\Annotations\Reflection variable export
      *
      * @param array $data
-     * @return \Phalcon\Annotations\Reflection
+     * @return Reflection
      */
     public static function __set_state($data)
     {
-        if (is_array($data) === true) {
+        if (is_array($data)) {
             if (isset($data['_reflectionData'])) {
-                return new Reflection($data['_reflectionData']);
+                return new self($data['_reflectionData']);
             }
         }
 
-        return new Reflection();
+        return new self();
     }
 
 }

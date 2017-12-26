@@ -5,6 +5,8 @@ namespace Phalcon\Cli;
 use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\Cli\Router\Exception;
 use \Phalcon\DiInterface;
+use \Phalcon\Cli\Router\Route;
+use Phalcon\Text;
 
 /**
  * Phalcon\Cli\Router
@@ -29,85 +31,44 @@ use \Phalcon\DiInterface;
 class Router implements InjectionAwareInterface
 {
 
-    /**
-     * Dependency Injector
-     *
-     * @var null|\Phalcon\DiInterface
-     * @access protected
-     */
-    protected $_dependencyInjector = null;
+    protected $_dependencyInjector;
 
-    /**
-     * Module
-     *
-     * @var null|string
-     * @access protected
-     */
-    protected $_module = null;
+    protected $_module;
 
-    /**
-     * Task
-     *
-     * @var null|string
-     * @access protected
-     */
-    protected $_task = null;
+    protected $_task;
 
-    /**
-     * Action
-     *
-     * @var null|string
-     * @access protected
-     */
-    protected $_action = null;
+    protected $_action;
 
-    /**
-     * Params
-     *
-     * @var null|array
-     * @access protected
-     */
-    protected $_params = null;
+    protected $_params = [];
 
-    /**
-     * Default Module
-     *
-     * @var null|string
-     * @access protected
-     */
     protected $_defaultModule = null;
 
-    /**
-     * Default Task
-     *
-     * @var null|string
-     * @access protected
-     */
     protected $_defaultTask = null;
 
-    /**
-     * Default Action
-     *
-     * @var null|string
-     * @access protected
-     */
     protected $_defaultAction = null;
 
-    /**
-     * Default Params
-     *
-     * @var null|array
-     * @access protected
-     */
-    protected $_defaultParams = null;
+    protected $_defaultParams = [];
+
+    protected $_routes;
+
+    protected $_matchedRoute;
+
+    protected $_matches;
+
+    protected $_wasMatched = false;
 
     /**
      * \Phalcon\Cli\Router constructor
+     * @param boolean $defaultRoutes
      */
-    public function __construct()
+    public function __construct($defaultRoutes = true)
     {
-        $this->_params        = array();
-        $this->_defaultParams = array();
+        $routes = [];
+        if ($defaultRoutes === true) {
+            $routes[] = new Route("#^(?::delimiter)?([a-zA-Z0-9\\_\\-]+)[:delimiter]{0,1}$#", ['task' => 1]);
+            $routes[] = new Route("#^(?::delimiter)?([a-zA-Z0-9\\_\\-]+):delimiter([a-zA-Z0-9\\.\\_]+)(:delimiter.*)*$#", ["task" => 1, "action" => 2, "params" => 3]);
+        }
+        $this->_routes = $routes;
     }
 
     /**
@@ -182,48 +143,176 @@ class Router implements InjectionAwareInterface
     }
 
     /**
+     * Sets an array of default paths. If a route is missing a path the router will use the defined here
+     * This method must not be used to set a 404 route
+     * @param array $defaults
+     * @return Router
+     * @throws Exception
+     */
+    public function setDefaults($defaults)
+    {
+        if (is_array($defaults) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        if (isset($defaults['module'])) {
+            $this->_defaultModule = $defaults['module'];
+        }
+        if (isset($defaults['task'])) {
+            $this->_defaultTask = $defaults['task'];
+        }
+        if (isset($defaults['action'])) {
+            $this->_defaultAction = $defaults['action'];
+        }
+        if (isset($defaults['params'])) {
+            $this->_defaultParams = $defaults['params'];
+        }
+        return $this;
+    }
+
+    /**
      * Handles routing information received from command-line arguments
      *
      * @param array|null $arguments
+     * @return $this
      * @throws Exception
      */
     public function handle($arguments = null)
     {
-        /* Type check */
-        if (is_null($arguments) === true) {
-            $arguments = array();
-        } elseif (is_array($arguments) === false) {
-            throw new Exception('Arguments must be an Array');
-        }
-
-        //Check for a module
-        if (isset($arguments['module']) === true) {
-            $moduleName = $arguments['module'];
-            unset($arguments['module']);
+        $routeFound = false;
+        $parts = [];
+        $params = [];
+        $matches = null;
+        $this->_wasMatched = false;
+        $this->_matchedRoute = null;
+        if (!is_array($arguments)) {
+            if (!is_string($arguments) && is_null($arguments)) {
+                throw new Exception('Arguments must be an array or string');
+            }
+            foreach ($this->_routes as $route) {
+                $pattern = $route->getCompiledPattern();
+                if (Text::memstr($pattern, '^')) {
+                    $routeFound = preg_match($pattern, $arguments, $matches);
+                } else {
+                    $routeFound = $pattern == $arguments;
+                }
+                if ($routeFound) {
+                    $beforeMatch = $route->getBeforeMatch();
+                    if ($beforeMatch !== null) {
+                        if (!is_callable($beforeMatch)) {
+                            throw new Exception('Before-Match callback is not callable in matched route');
+                        }
+                        $routeFound = call_user_func_array($beforeMatch, [$arguments, $route, $this]);
+                    }
+                }
+                if ($routeFound) {
+                    $path = $route->getPaths();
+                    $parts = $path;
+                    if (is_array($matches)) {
+                        $converters = $route->getConverters();
+                        foreach ($path as $part => $position) {
+                            if (isset($matches[$position])) {
+                                $matchPosition = $matches[$position];
+                                if (is_array($converters)) {
+                                    if (isset($converters[$part])) {
+                                        $converter = $converters[$part];
+                                        $parts[$part] = call_user_func_array($converter, [$matchPosition]);
+                                        continue;
+                                    }
+                                }
+                                $parts[$part] = $matchPosition;
+                            } else {
+                                if (is_array($converters)) {
+                                    if (isset($converters[$part])) {
+                                        $converter = $converters[$part];
+                                        $parts[$part] = call_user_func_array($converter, [$position]);
+                                    }
+                                }
+                            }
+                        }
+                        $this->_matches = $matches;
+                    }
+                    $this->_matchedRoute = $route;
+                    break;
+                }
+            }
+            if ($routeFound) {
+                $this->_wasMatched = true;
+            } else {
+                $this->_wasMatched = false;
+                $this->_module = $this->_defaultModule;
+                $this->_task = $this->_defaultTask;
+                $this->_action = $this->_defaultAction;
+                $this->_params = $this->_defaultParams;
+				return $this;
+            }
         } else {
-            $moduleName = null;
+            $parts = $arguments;
         }
-
-        //Check for a task
-        if (isset($arguments['task']) === true) {
-            $taskName = $arguments['task'];
-            unset($arguments['task']);
+        $moduleName = null;
+        $taskName = null;
+        $actionName = null;
+        if (isset($parts['module'])) {
+            $moduleName = $parts['module'];
+            unset($parts['module']);
         } else {
-            $taskName = null;
+            $moduleName = $this->_defaultModule;
         }
-
-        //Check for an action
-        if (isset($arguments['action']) === true) {
-            $actionName = $arguments['action'];
-            unset($arguments['action']);
+        if (isset($parts['task'])) {
+            $taskName = $parts['task'];
+            unset($parts['task']);
         } else {
-            $actionName = null;
+            $taskName = $this->_defaultTask;
         }
-
+        if (isset($parts['action'])) {
+            $actionName = $parts['action'];
+            unset($parts['action']);
+        } else {
+            $actionName = $this->_defaultAction;
+        }
+        if (isset($parts['params'])) {
+            $params = $parts['params'];
+            if (!is_array($params)) {
+                $strParams = substr((string)$params, 1);
+                if ($strParams) {
+                    $params = explode(Route::getDelimiter(), $strParams);
+                } else {
+                    $params = [];
+                }
+            }
+            unset($parts['params']);
+        }
+        if (count($params)) {
+            $params = array_merge($params, $parts);
+        } else {
+            $params = $parts;
+        }
         $this->_module = $moduleName;
-        $this->_task   = $taskName;
+        $this->_task = $taskName;
         $this->_action = $actionName;
-        $this->_params = $arguments;
+        $this->_params = $params;
+        return $this;
+    }
+
+    /**
+     * Adds a route to the router
+     *
+     *<code>
+     * $router->add("/about", "About::main");
+     *</code>
+     *
+     * @param string $pattern
+     * @param mixed /array $paths
+     * @return Route
+     * @throws Exception
+     */
+    public function add($pattern, $paths = null)
+    {
+        if (is_string($pattern) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        $route = new Route($pattern, $paths);
+        $this->_routes[] = $route;
+        return $route;
     }
 
     /**
@@ -264,6 +353,70 @@ class Router implements InjectionAwareInterface
     public function getParams()
     {
         return $this->_params;
+    }
+
+    public function getMatchedRoute()
+    {
+        return $this->_matchedRoute;
+    }
+
+    /**
+     * Returns the sub expressions in the regular expression matched
+     *
+     * @return array
+     */
+    public function getMatches()
+    {
+        return $this->_matches;
+    }
+
+    /**
+     * Checks if the router matches any of the defined routes
+     * @return boolean
+     */
+    public function wasMatched()
+    {
+        return $this->_wasMatched;
+    }
+
+    /**
+     * Returns all the routes defined in the router
+     * @return Route[]
+     */
+    public function getRoutes()
+    {
+        return $this->_routes;
+    }
+
+    /**
+     * Returns a route object by its id
+     *
+     * @param int $id
+     * @return \Phalcon\Cli\Router\Route |boolean
+     */
+    public function getRouteById($id)
+    {
+        foreach ($this->_routes as $route) {
+            if ($route->getRouteId() == $id) {
+                return $route;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns a route object by its name
+     * @param string $name
+     * @return Route | boolean
+     */
+    public function getRouteByName($name)
+    {
+        foreach ($this->_routes as $route) {
+            if ($route->getName() == $name) {
+                return $route;
+            }
+        }
+        return false;
     }
 
 }

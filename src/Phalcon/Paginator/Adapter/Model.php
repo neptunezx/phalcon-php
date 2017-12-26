@@ -19,11 +19,23 @@ use \stdClass;
 /**
  * Phalcon\Paginator\Adapter\Model
  *
- * This adapter allows to paginate data using a Phalcon\Mvc\Model resultset as base
+ * This adapter allows to paginate data using a Phalcon\Mvc\Model resultset as a base.
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/paginator/adapter/model.c
+ * <code>
+ * use Phalcon\Paginator\Adapter\Model;
+ *
+ * $paginator = new Model(
+ *     [
+ *         "data"  => Robots::find(),
+ *         "limit" => 25,
+ *         "page"  => $currentPage,
+ *     ]
+ * );
+ *
+ * $paginate = $paginator->getPaginate();
+ *</code>
  */
-class Model implements AdapterInterface
+class Model extends Adapter
 {
 
     /**
@@ -40,7 +52,7 @@ class Model implements AdapterInterface
      * @var null|array
      * @access protected
      */
-    protected $_config;
+    protected $_config = null;
 
     /**
      * Page
@@ -96,11 +108,17 @@ class Model implements AdapterInterface
      */
     public function getPaginate()
     {
-        $pageNumber = $this->_page;
-        $show       = $this->_limitRows;
-        $items      = $this->_config['data'];
 
-        if (is_int($pageNumber) === false) {
+        $show = (int)$this->_limitRows;
+        $config = $this->_config;
+        $items = $config["data"];
+        $pageNumber = (int)$this->_page;
+
+        if (is_object($items)) {
+            throw new Exception("Invalid data for paginator");
+        }
+
+        if (is_int($pageNumber) === false || $pageNumber <= 0) {
             $pageNumber = 1;
         }
 
@@ -108,18 +126,16 @@ class Model implements AdapterInterface
             throw new Exception('The start page number is zero or less');
         }
 
-        $n             = count($items);
-        $lastShowPage  = $pageNumber - 1;
-        $start         = $show * $lastShowPage;
-        $possiblePages = $n / $show;
-        $totalPages    = ceil($possiblePages);
-
-        if (is_object($items) === false) {
-            throw new Exception('Invalid data for paginator');
-        }
-
+        $n = count($items);
+        $lastShowPage = $pageNumber - 1;
+        $start = $show * $lastShowPage;
         $pageItems = array();
-        $page      = new stdClass();
+
+        if ($n % $show != 0) {
+            $totalPages = (int)($n / $show + 1);
+        } else {
+            $totalPages = (int)($n / $show);
+        }
 
         if ($n > 0) {
             //Seek to the desired position
@@ -127,69 +143,44 @@ class Model implements AdapterInterface
                 $items->seek($start);
             } else {
                 $items->seek(0);
-                $pageNumber   = 1;
-                $lastShowPage = 0;
-                $start        = 0;
+                $pageNumber = 1;
             }
 
             //The record must be iterable
             $i = 1;
-            while ($items->valid() === true) {
+            while ($items->valid()) {
                 $pageItems[] = $items->current();
-
                 if ($i > $show) {
                     break;
                 }
 
                 ++$i;
+                $items->next();
             }
         }
 
-        //Add items to page object
-        $page->items = $pageItems;
-
-        $maximumPages = $start + $show;
-        if ($maximumPages < $n) {
-            $next = $pageNumber + 1;
-        } else {
-            if ($maximumPages === $n) {
-                $next = $n;
-            } else {
-                $possiblePages  = $n / $show;
-                $additionalPage = $possiblePages + 1;
-                $next           = (int) $additionalPage;
-            }
-        }
-
+        //Fix next
+        $next = $pageNumber + 1;
         if ($next > $totalPages) {
             $next = $totalPages;
         }
 
-        $page->next = $next;
-
-        if ($pageNumber > 0) {
+        if ($pageNumber > 1) {
             $before = $pageNumber - 1;
         } else {
             $before = 1;
         }
 
-        $page->first   = 1;
-        $page->before  = $before;
+        $page = new \stdClass();
+        $page->items = $pageItems;
+        $page->first = 1;
+        $page->before = $before;
         $page->current = $pageNumber;
-
-        $reminder      = $n % $show;
-        $possiblePages = $n / $show;
-
-        if (is_int($reminder) === false) {
-            $next       = $possiblePages + 1;
-            $pagesTotal = (int) $next;
-        } else {
-            $pagesTotal = $possiblePages;
-        }
-
-        $page->last        = $pagesTotal;
+        $page->last = $totalPages;
+        $page->next = $next;
         $page->total_pages = $totalPages;
         $page->total_items = $n;
+        $page->limit = $this->_limitRows;
 
         return $page;
     }

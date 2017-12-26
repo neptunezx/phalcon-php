@@ -3,8 +3,7 @@
 namespace Phalcon\Cli;
 
 use \Phalcon\Di\Injectable;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Di\InjectionAwareInterface;
+
 
 /**
  * Phalcon\Cli\Task
@@ -36,7 +35,7 @@ use \Phalcon\Di\InjectionAwareInterface;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cli/task.c
  */
-class Task extends Injectable implements EventsAwareInterface, InjectionAwareInterface
+class Task extends Injectable implements TaskInterface
 {
 
     /**
@@ -44,6 +43,9 @@ class Task extends Injectable implements EventsAwareInterface, InjectionAwareInt
      */
     final public function __construct()
     {
+        if (method_exists($this,'onConstruct')){
+            $this->{'onConstruct'}();
+        }
         //Look at the original code...
     }
 

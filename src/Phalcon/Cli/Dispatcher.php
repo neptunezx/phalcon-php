@@ -2,11 +2,9 @@
 
 namespace Phalcon\Cli;
 
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\DispatcherInterface;
-use \Phalcon\Cli\Dispatcher\Exception;
-use \Phalcon\Dispatcher as DefaultDispatcher;
+
+use Phalcon\Cli\Dispatcher\Exception;
+use Phalcon\Dispatcher as CliDispatcher;
 
 /**
  * Phalcon\Cli\Dispatcher
@@ -16,7 +14,7 @@ use \Phalcon\Dispatcher as DefaultDispatcher;
  * instantiating a task and calling an action on it.
  *
  * <code>
- *
+
  *  $di = new Phalcon\Di();
  *
  *  $dispatcher = new Phalcon\Cli\Dispatcher();
@@ -33,7 +31,7 @@ use \Phalcon\Dispatcher as DefaultDispatcher;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/cli/dispatcher.c
  */
-class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, InjectionAwareInterface, DispatcherInterface
+class Dispatcher extends CliDispatcher implements DispatcherInterface
 {
 
     /**
@@ -85,6 +83,8 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
      * @access protected
      */
     protected $_handlerSuffix = 'Task';
+
+    protected $_options = [];
 
     /**
      * Default Handler
@@ -174,10 +174,8 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
 
         $exception = new Exception($message, $exceptionCode);
 
-        if (is_object($this->_eventsManager) === true) {
-            if ($this->_eventsManager->fire('dispatch:beforeException', $this, $exception) === false) {
-                return false;
-            }
+        if ($this->_handleException($exception) === false) {
+            return false;
         }
 
         //Throw the exception if it wasn't handled
@@ -189,9 +187,14 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
      *
      * @param \Exception $exception
      * @return boolean|null
+     * @throws Exception
      */
     protected function _handleException($exception)
     {
+        if (is_object($exception) === false ||
+            !$exception instanceof Exception) {
+            throw new Exception('Invalid parameter type.');
+        }
         if (is_object($this->_eventsManager) === true) {
             if ($this->_eventsManager->fire('dispatch:beforeException', $this, $exception) === false) {
                 return false;
@@ -199,20 +202,11 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
         }
     }
 
-    /**
-     * Possible task class name that will be located to dispatch the request
-     *
-     * @return string
-     */
-    public function getTaskClass()
-    {
-        return $this->getHandlerName();
-    }
 
     /**
      * Returns the lastest dispatched controller
      *
-     * @return null|object
+     * @return TaskInterface|Object
      */
     public function getLastTask()
     {
@@ -222,11 +216,82 @@ class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, Inje
     /**
      * Returns the active task in the dispatcher
      *
-     * @return null|object
+     * @return TaskInterface|Object
      */
     public function getActiveTask()
     {
         return $this->_activeHandler;
+    }
+
+
+    /**
+     * Set the options to be dispatched
+     * @param array $options
+     */
+    public function setOptions($options)
+    {
+        $this->_options = $options;
+    }
+
+    /**
+     * Get dispatched options
+     * @return array
+     */
+    public function getOptions()
+    {
+        return $this->_options;
+    }
+
+    /**
+     * Gets an option by its name or numeric index
+     *
+     * @param  mixed $option
+     * @param  mixed|null $filters
+     * @param  mixed|null $defaultValue
+     * @return mixed
+     */
+    public function getOption($option, $filters = null, $defaultValue = null)
+    {
+        $optionValue = '';
+        $options = $this->_options;
+        if (!isset($options[$option])) {
+            $optionValue = $options[$option];
+            return $defaultValue;
+        }
+        if ($filters === null) {
+            return $optionValue;
+        }
+        $dependencyInjector = $this->_dependencyInjector;
+        if (is_object($dependencyInjector) === false) {
+            $this->{'_throeDispatchException'}("A dependency injection object is required 
+            to access the 'filter' service", CliDispatcher::EXCEPTION_NO_DI);
+        }
+        $filter = $dependencyInjector->getShared('filter');
+        return $filter->sanitize($optionValue, $filters);
+    }
+
+    /**
+     * Check if an option exists
+     * @param mixed $option
+     * @return boolean
+     */
+    public function hasOption($option)
+    {
+        return isset($this->_options[$option]);
+    }
+
+    /**
+     * Calls the action method.
+     * @param mixed $handler
+     * @param string $actionMethod
+     * @param  array $params
+     * @return mixed
+     */
+    public function callActionMethod($handler, $actionMethod, $params)
+    {
+        $options = $this->_options;
+
+        return call_user_func_array([$handler, $actionMethod], [$params, $options]);
     }
 
 }

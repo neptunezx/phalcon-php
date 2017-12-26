@@ -16,28 +16,29 @@ use \Phalcon\Paginator\AdapterInterface;
 use \Phalcon\Paginator\Exception;
 use \stdClass;
 
+
 /**
  * Phalcon\Paginator\Adapter\NativeArray
  *
  * Pagination using a PHP array as source of data
  *
  * <code>
- *  $paginator = new \Phalcon\Paginator\Adapter\Model(
- *      array(
- *          "data"  => array(
- *              array('id' => 1, 'name' => 'Artichoke'),
- *              array('id' => 2, 'name' => 'Carrots'),
- *              array('id' => 3, 'name' => 'Beet'),
- *              array('id' => 4, 'name' => 'Lettuce'),
- *              array('id' => 5, 'name' => '')
- *          ),
- *          "limit" => 2,
- *          "page"  => $currentPage
- *      )
- *  );
- * </code>
+ * use Phalcon\Paginator\Adapter\NativeArray;
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/paginator/adapter/nativearray.c
+ * $paginator = new NativeArray(
+ *     [
+ *         "data"  => [
+ *             ["id" => 1, "name" => "Artichoke"],
+ *             ["id" => 2, "name" => "Carrots"],
+ *             ["id" => 3, "name" => "Beet"],
+ *             ["id" => 4, "name" => "Lettuce"],
+ *             ["id" => 5, "name" => ""],
+ *         ],
+ *         "limit" => 2,
+ *         "page"  => $currentPage,
+ *     ]
+ * );
+ *</code>
  */
 class NativeArray implements AdapterInterface
 {
@@ -56,7 +57,7 @@ class NativeArray implements AdapterInterface
      * @var null|array
      * @access protected
      */
-    protected $_config;
+    protected $_config = array();
 
     /**
      * Page
@@ -69,7 +70,7 @@ class NativeArray implements AdapterInterface
     /**
      * \Phalcon\Paginator\Adapter\NativeArray constructor
      *
-     * @param array $config
+     * @param $config array
      * @throws Exception
      */
     public function __construct($config)
@@ -112,29 +113,28 @@ class NativeArray implements AdapterInterface
      */
     public function getPaginate()
     {
-        $items = $this->_config['data'];
 
+		$items  = config["data"];
         if (is_array($items) === false) {
             throw new Exception('Invalid data for paginator');
         }
-
         //@note no is_null check for $this->_limitRows
-        $show       = $this->_limitRows;
-        $pageNumber = $this->_page;
+        $show       = (int) $this->_limitRows;
+        $pageNumber = (int) $this->_page;
 
-        if (is_null($pageNumber) === true) {
+        if (is_null($pageNumber) === true || pageNumber <= 0) {
             $pageNumber = 0;
         }
 
         $number = count($items);
-
-        $roundedTotal = $number / $show;
+        $roundedTotal = $number / floatval($show);
         $totalPages   = (int) $roundedTotal;
 
         //Increase total pages if it wasn't iteger
         if ($totalPages !== $roundedTotal) {
             $totalPages++;
         }
+        $items = array_slice($items, $show * ($pageNumber - 1), $show);
 
         /* Generate stdClass object */
         $page              = new stdClass();
@@ -148,6 +148,23 @@ class NativeArray implements AdapterInterface
         $page->total_items = $number;
 
         return $page;
+    }
+    /**
+     * Set current rows limit
+     *
+     * @param $limit int
+     */
+    public function setLimit($limit){
+        $this->_limitRows=$limit;
+    }
+
+    /**
+     * Get current rows limit
+     *
+     * @return int
+     */
+    public function getLimit(){
+        return $this->_limitRows;
     }
 
 }

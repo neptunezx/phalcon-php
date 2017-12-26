@@ -23,7 +23,6 @@
 		"satooshi/php-coveralls": "dev-master",
 		"mustache/mustache": "@stable",
         "phpunit/phpunit": "^4.8",
-        "mustache/mustache": "^2.11",
         "twig/twig": "~1.34",
         "predis/predis": "^1.1",
         "codeception/codeception": "^2.3",
