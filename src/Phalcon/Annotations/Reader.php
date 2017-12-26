@@ -91,42 +91,50 @@ class Reader implements ReaderInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (class_exists($className) === false) {
-            throw new Exception('Class ' . $className . ' does not exist');
+        $annotations = [];
+        $reflection = new \ReflectionClass($className);
+        $comment = $reflection->getDocComment();
+        if (is_string($comment)){
+            $classAnnotations = phannot_parse_annotations($comment, $reflection->getFileName(), $reflection->getStartLine());
+            if (is_array($classAnnotations)){
+                $annotations['class'] = $classAnnotations;
+            }
         }
-
-        $reflection = new ReflectionClass($className);
-        $path       = $reflection->getFileName();
-
-        if ($path === false) {
-            return array();
-        } else {
-            $annotations               = array();
-            $annotations['properties'] = array();
-            $annotations['methods']    = array();
-
-            //Class info
-            if ($reflection->getDocComment() !== false) {
-                $annotations['class'] = $this->parseDocBlock($reflection->getDocComment(), $path, $reflection->getStartLine());
-            }
-
-            //Class properties
-            $properties = $reflection->getProperties();
-            foreach ($properties as $property) {
-                //@note we don't set the line since the parser doesn't provides this information
-                $annotations['properties'][] = $this->parseDocBlock($property->getDocComment(), $path, 0);
-            }
-
-            //Class methods
-            $methods = $reflection->getMethods();
-            foreach ($methods as $method) {
-                if ($method->getDocComment() !== false) {
-                    $annotations['methods'][] = $this->parseDocBlock($method->getDocComment(), $path, $method->getStartLine());
+        $properties = $reflection->getProperties();
+        if (count($properties)){
+            $line =1;
+            $annotationsProperties = [];
+            foreach ($properties as $property){
+                $comment = $property->getDocComment();
+                if (is_string($comment)){
+                    $propertyAnnotations = phannot_parse_annotations($comment, $reflection->getFileName(), $line);
+				    if (is_array($propertyAnnotations)){
+				        $annotationsProperties[$property->name] = $propertyAnnotations;
+                    }
                 }
             }
-
-            return $annotations;
+            if (count($annotationsProperties)){
+                $annotations['properties'] = $annotationsProperties;
+            }
         }
+        $methods = $reflection->getMethods();
+        if (count($methods)){
+            $annotationsMethods = [];
+            foreach ($methods as $method){
+                $comment = $method->getDocComment();
+                if (is_string($comment)){
+                    $methodAnnotations = phannot_parse_annotations($comment, $method->getFileName(), $method->getStartLine());
+	                if (is_array($methodAnnotations)){
+	                    $annotationsMethods[$method->name] = $methodAnnotations;
+                    }
+                }
+            }
+            if (count($annotationsMethods)){
+                $annotations['methods'] = $annotationsMethods;
+            }
+        }
+        return $annotations;
+
     }
 
     /**
@@ -143,60 +151,10 @@ class Reader implements ReaderInterface
         if (is_string($docBlock) === false) {
         //    throw new Exception('Invalid parameter type.');
         }
-
-        if (is_null($file) === true) {
-            $file = '';
-        } elseif (is_string($file) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (is_string($file)===false){
+            $file = 'eval code';
         }
-
-        if (is_null($line) === true) {
-            $file = '';
-        } elseif (is_int($line) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (strlen($docBlock) < 2) {
-            return false;
-        }
-
-        $matches = array();
-
-        if (preg_match_all('/@(.*)\r?\n/m', $docBlock, $matches) === false) {
-            throw new Exception('Error parsing annotation');
-        }
-
-        if (empty($matches[1]) === true) {
-            return false;
-        }
-
-        $result = array();
-        foreach ($matches[1] as $match) {
-            if (strpos($match, '(') !== false) {
-                //Parameterized annotation
-                $rematch  = array();
-                $name     = preg_match('/(?P<name>\w+)\((?<param>.*)\)\)?/', $match, $rematch);
-                $result[] = array(
-                    'type'      => 300,
-                    'name'      => $name['name'],
-                    'arguments' => self::parseDocBlockArguments('(' . (string) $name['param'] . ')'),
-                    'file'      => $file,
-                    'line'      => $line
-                );
-            } else {
-                //Only the name
-                $rematch  = array();
-                $name     = preg_match('/(\w+)(\s+(.*))?/', $match, $rematch);
-                $result[] = array(
-                    'type' => 300,
-                    'name' => $name[1],
-                    'file' => $file,
-                    'line' => $line
-                );
-            }
-        }
-
-        return $result;
+        return phannot_parse_annotations(docBlock, file, line);
     }
 
     /**

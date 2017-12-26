@@ -252,10 +252,10 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
      */
     public function getOption($option, $filters = null, $defaultValue = null)
     {
-        $optionValue = '';
         $options = $this->_options;
-        if (!isset($options[$option])) {
+        if (isset($options[$option])) {
             $optionValue = $options[$option];
+        }else{
             return $defaultValue;
         }
         if ($filters === null) {
