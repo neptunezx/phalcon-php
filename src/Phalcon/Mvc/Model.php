@@ -30,6 +30,7 @@ use Phalcon\Mvc\Model\MessageInterface;
 //use Phalcon\ValidationInterface;
 use Phalcon\Mvc\Model\ValidationFailed;
 use Phalcon\Events\ManagerInterface as EventsManagerInterface;
+use Phalcon\Kernel;
 
 /**
  * Phalcon\Mvc\Model

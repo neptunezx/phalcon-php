@@ -4,7 +4,7 @@ namespace Phalcon\Translate;
 
 use Phalcon\Translate\Exception;
 use Phalcon\Translate\InterpolatorInterface;
-use Phalcon\Translate\Interpolator;
+use Phalcon\Translate\Interpolator\AssociativeArray;
 
 /**
  * Phalcon\Translate\Adapter
@@ -28,6 +28,8 @@ abstract class Adapter implements AdapterInterface
     {
         if (!isset($options["interpolator"])) {
             $interpolator = new AssociativeArray();
+        } else {
+            $interpolator = $options["interpolator"];
         }
         $this->setInterpolator($interpolator);
     }
@@ -109,6 +111,16 @@ abstract class Adapter implements AdapterInterface
     public function offsetGet($translateKey)
     {
         return $this->query($translateKey, null);
+    }
+
+    /**
+     * @param $translation
+     * @param null $placeholders
+     * @return mixed
+     */
+    protected function replacePlaceholders($translation, $placeholders = null)
+    {
+        return $this->_interpolator->{"replacePlaceholders"}($translation, $placeholders);
     }
 
 }
