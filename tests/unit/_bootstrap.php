@@ -16,7 +16,12 @@ foreach ($files as $file) {
     require_once(PROJECT_PATH . '/src/Phalcon/' . $file);
 }
 
-$loader = new \Phalcon\Loader();
+if (class_exists('\Phalcon\LoaderFallback')) {
+    $loader = new \Phalcon\LoaderFallback();
+} else {
+    $loader = new \Phalcon\Loader();
+}
+
 $loader->registerNamespaces(array(
     'Phalcon' => PROJECT_PATH . '/src/Phalcon/'
 ));

@@ -62,8 +62,7 @@ class Manager implements ManagerInterface
     public function attach($eventType, $handler, $priority = 100)
     {
         $priorityQueue = '';
-        if (is_string($eventType) === false ||
-            is_int($priority)) {
+        if (is_string($eventType) === false || !is_int($priority)) {
             throw new Exception('Invalid parameter type.');
         }
         if (!is_object($handler)) {
@@ -247,7 +246,7 @@ class Manager implements ManagerInterface
         $status = null;
         $arguments = null;
         $eventName = $event->getType();
-        if (is_string($eventName)) {
+        if (!is_string($eventName)) {
             throw new Exception('The event type not valid');
         }
         // Get the object who triggered the event
@@ -345,10 +344,9 @@ class Manager implements ManagerInterface
      * @return mixed
      * @throws Exception
      */
-    public function fire($eventType, $source, $data = null, $cancelable = null)
+    public function fire($eventType, $source, $data = null, $cancelable = true)
     {
-        if (is_string($eventType) === false ||
-            is_bool($cancelable) === false) {
+        if (is_string($eventType) === false || is_bool($cancelable) === false) {
             throw new Exception('Invalid parameter type.');
         }
         $events = $this->_events;

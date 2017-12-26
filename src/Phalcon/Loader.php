@@ -125,10 +125,9 @@ class Loader implements EventsAwareInterface
      * @param object $eventsManager
      * @throws
      */
-    public function setEventsManager($eventsManager)
+    public function setEventsManager(ManagerInterface $eventsManager)
     {
-        if (is_object($eventsManager) === false ||
-            $eventsManager instanceof ManagerInterface === false) {
+        if (is_object($eventsManager) === false || $eventsManager instanceof ManagerInterface === false) {
             throw new Exception('Invalid parameter type.');
         }
         $this->_eventsManager = $eventsManager;
@@ -153,7 +152,7 @@ class Loader implements EventsAwareInterface
     public function setExtensions($extensions)
     {
         if (is_array($extensions) === false) {
-            throw new LoaderException('Parameter extension must be an array');
+            throw new Exception('Parameter extension must be an array');
         }
 
         $this->_extensions = $extensions;
@@ -182,10 +181,10 @@ class Loader implements EventsAwareInterface
     public function registerNamespaces($namespaces, $merge = false)
     {
         if(!is_array($namespaces)){
-            throw new LoaderException('namespace must be array!');
+            throw new Exception('namespace must be array!');
         }
         if(!is_bool($merge)){
-            throw new LoaderException('merge must be boolean!');
+            throw new Exception('merge must be boolean!');
         }
 		$preparedNamespaces = $this->prepareNamespace($namespaces);
 
@@ -210,7 +209,7 @@ class Loader implements EventsAwareInterface
      */
     protected function prepareNamespace($namespace){
         if ( ! is_array($namespace) ){
-            throw new LoaderException('namespace must be array!');
+            throw new Exception('namespace must be array!');
         }
         $prepared = [];
         foreach($namespace as $name=>$paths){
@@ -243,12 +242,12 @@ class Loader implements EventsAwareInterface
      */
     public function registerDirs($directories, $merge = false)
 	{
-		if(!is_array($directories)){
-            throw new LoaderException('params 1 must be array,'.gettype($directories)." given");
-        }
-        if(!is_bool($merge)){
-            throw new LoaderException('params 2 must be boolean,'.gettype($merge)." given");
-        }
+//		if(!is_array($directories)){
+//            throw new Exception('params 1 must be array,'.gettype($directories)." given");
+//        }
+//        if(!is_bool($merge)){
+//            throw new Exception('params 2 must be boolean,'.gettype($merge)." given");
+//        }
 	    if ($merge) {
 			$this->_directories = array_merge($this->_directories, $directories);
 		} else {
@@ -278,11 +277,11 @@ class Loader implements EventsAwareInterface
     public function registerFiles($files, $merge = false)
 	{
 		if(!is_array($files)){
-            throw new LoaderException('params 1 must be array,'.gettype($files)." give");
+            throw new Exception('params 1 must be array,'.gettype($files)." give");
         }
 
         if(!is_bool($merge)){
-            throw new LoaderException('params 2 must be boolean,'.gettype($merge)." give");
+            throw new Exception('params 2 must be boolean,'.gettype($merge)." give");
         }
 
 	    if ( $merge === true ) {
@@ -314,11 +313,11 @@ class Loader implements EventsAwareInterface
     public function registerClasses($classes, $merge = false)
     {
         if(!is_array($classes)){
-            throw new LoaderException('params 1 must be array,'.gettype($classes)." give");
+            throw new Exception('params 1 must be array,'.gettype($classes)." give");
         }
 
         if(!is_bool($merge)){
-            throw new LoaderException('params 2 must be boolean,'.gettype($merge)." give");
+            throw new Exception('params 2 must be boolean,'.gettype($merge)." give");
         }
         if($merge) {
             $this->_classes = array_merge($this->_classes, $classes);
@@ -417,7 +416,7 @@ class Loader implements EventsAwareInterface
 		}
 
         $classes = $this->_classes;
-		if ( isset($classes[$className]) && !empty($classes[$className]) ){
+		if ( isset($classes[$className]) ){
 		    $filePath = $classes[$className];
             if( is_object($eventsManager) ){
                 $this->_foundPath = $filePath;
@@ -436,122 +435,121 @@ class Loader implements EventsAwareInterface
          * Checking in namespaces
          */
 		$namespaces = $this->_namespaces;
-		foreach($namespaces as $nsPrefix=>$directories){
-            if( Text::startsWith($className, $nsPrefix) === false){
-				continue;
+		foreach($namespaces as $nsPrefix=>$directories) {
+            if (!Text::startsWith($className, $nsPrefix)) {
+                continue;
             }
 
             /**
              * Append the namespace separator to the prefix
              */
             $fileName = substr($className, strlen($nsPrefix . $ns));
-
-            if( !$fileName ){
+            if (!$fileName) {
                 continue;
             }
 
             $fileName = str_replace($ns, $ds, $fileName);
-            foreach($directories as $directory){
+            foreach ($directories as $directory) {
                 $fixedDirectory = rtrim($directory, $ds) . $ds;
-                foreach($extensions as $extension){
+                foreach ($extensions as $extension) {
                     $filePath = $fixedDirectory . $fileName . "." . $extension;
 
-					/**
+                    /**
                      * Check if a events manager is available
                      */
-					if( is_object($eventsManager) ){
+                    if (is_object($eventsManager)) {
                         $this->_checkedPath = $filePath;
-						$eventsManager->fire("loader:beforeCheckPath", $this);
+                        $eventsManager->fire("loader:beforeCheckPath", $this);
+                    }
+
+                    /**
+                     * This is probably a good path, let's check if the file exists
+                     */
+                    if (is_file($filePath)) {
+
+                        if (is_object($eventsManager)) {
+                            $this->_foundPath = $filePath;
+                            $eventsManager->fire("loader:pathFound", $this, $filePath);
+                        }
+
+                        /**
+                         * Simulate a require
+                         */
+                        require($filePath);
+
+                        /**
+                         * Return true mean success
+                         */
+                        return true;
+                    }
+                }
+            }
+        }
+
+        /**
+         * Change the namespace separator by directory separator too
+         */
+        $nsClassName = str_replace("\\", $ds, $className);
+
+        /**
+         * Checking in directories
+         */
+        $directories = $this->_directories;
+        foreach($directories as $directory){
+            /**
+             * Add a trailing directory separator if the user forgot to do that
+             */
+            $fixedDirectory = rtrim($directory, $ds) . $ds;
+
+            foreach($extensions as $extension){
+                /**
+                 * Create a possible path for the file
+                 */
+                $filePath = $fixedDirectory . $nsClassName . "." . $extension;
+
+				if (is_object($eventsManager) ){
+                    $this->_checkedPath = $filePath;
+					$eventsManager->fire("loader:beforeCheckPath", $this, $filePath);
+				}
+
+				/**
+                 * Check in every directory if the class exists here
+                 */
+				if( is_file($filePath) ){
+
+                    /**
+                     * Call 'pathFound' event
+                     */
+					if( is_object($eventsManager) ){
+                        $this->_foundPath = $filePath;
+						$eventsManager->fire("loader:pathFound", $this, $filePath);
 					}
 
 					/**
-                     * This is probably a good path, let's check if the file exists
+                     * Simulate a require
                      */
-					if( is_file($filePath) ){
+					require($filePath);
 
-						if ( is_object($eventsManager) ) {
-                            $this->_foundPath = $filePath;
-							$eventsManager->fire("loader:pathFound", $this, $filePath);
-						}
+					/**
+                     * Return true meaning success
+                     */
+					return true;
+				}
+			}
+		}
 
-						/**
-                         * Simulate a require
-                         */
-						require($filePath);
+		/**
+         * Call 'afterCheckClass' event
+         */
+		if( is_object($eventsManager) ){
+            $eventsManager->fire("loader:afterCheckClass", $this, $className);
+		}
 
-						/**
-                         * Return true mean success
-                         */
-						return true;
-					}
-                }
-            }
-//
-//            /**
-//             * Change the namespace separator by directory separator too
-//             */
-//            $nsClassName = str_replace("\\", $ds, $className);
-//
-//            /**
-//             * Checking in directories
-//             */
-//		    $directories = $this->_directories;
-//
-//		    foreach($directories as $directory){
-//                /**
-//                 * Add a trailing directory separator if the user forgot to do that
-//                 */
-//                $fixedDirectory = rtrim($directory, $ds) . $ds;
-//
-//			    foreach($extensions as $extension){
-//                    /**
-//                     * Create a possible path for the file
-//                     */
-//                    $filePath = $fixedDirectory . $nsClassName . "." . $extension;
-//
-//				if (is_object($eventsManager) ){
-//                    $this->_checkedPath = $filePath;
-//					$eventsManager->fire("loader:beforeCheckPath", $this, $filePath);
-//				}
-//
-//				/**
-//                 * Check in every directory if the class exists here
-//                 */
-//				if( is_file($filePath) ){
-//
-//                    /**
-//                     * Call 'pathFound' event
-//                     */
-//					if( is_object($eventsManager) ){
-//                        $this->_foundPath = $filePath;
-//						$eventsManager->fire("loader:pathFound", $this, $filePath);
-//					}
-//
-//					/**
-//                     * Simulate a require
-//                     */
-//					require($filePath);
-//
-//					/**
-//                     * Return true meaning success
-//                     */
-//					return true;
-//				}
-//			}
-//		}
-//
-//		/**
-//         * Call 'afterCheckClass' event
-//         */
-//		if( is_object($eventsManager) ){
-//                $eventsManager->fire("loader:afterCheckClass", $this, $className);
-//		}
-//
-//		/**
-//         * Cannot find the class, return false
-//         */
-//		return false;
-        }
+		/**
+         * Cannot find the class, return false
+         */
+		return false;
+
 	}
 
     /**
