@@ -151,10 +151,10 @@ class DI implements DiInterface
 
     /**
      * Registers an "always shared" service in the services container
-     *
-     * @param string $name
-     * @param mixed $definition
-     * @return \Phalcon\Di\ServiceInterface|null
+     * @param $name string
+     * @param $definition
+     * @throws
+     * @return object
      */
     public function setShared($name, $definition)
     {
@@ -325,7 +325,7 @@ class DI implements DiInterface
                  * The DI also acts as builder for any class even if it isn't defined in the DI
                  */
                 if (!class_exists($name)) {
-                    throw new Exception("Service '" . $name . "' wasn't found in the dependency injection container");
+                    throw new DiException("Service '" . $name . "' wasn't found in the dependency injection container");
                 }
 
                 if (is_array($parameters) && count($parameters)) {

@@ -333,8 +333,10 @@ class Memory extends Adapter
      * );
      * </code>
      *
-     * @param   Phalcon\Acl\Resource|string resourceValue
+     * @param   \Phalcon\Acl\Resource |string resourceValue
      * @param   array|string accessList
+     * @return  void
+     * @throws Exception type error
      */
     public function addResource($resource, $accessList = null)
     {

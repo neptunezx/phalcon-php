@@ -7,7 +7,6 @@ use SplPriorityQueue;
 use Phalcon\Text;
 use Phalcon\Events\Exception;
 
-
 /**
  * Phalcon\Events\Manager
  *
@@ -62,26 +61,27 @@ class Manager implements ManagerInterface
      */
     public function attach($eventType, $handler, $priority = 100)
     {
-        if (is_string($eventType) === false ||
-            is_int($priority)) {
-           // throw new Exception('Invalid parameter type.');
+
+        $priorityQueue = '';
+        if (is_string($eventType) === false || !is_int($priority)) {
+            throw new Exception('Invalid parameter type.');
         }
         if (!is_object($handler)) {
             throw new Exception('Event handler must be an Object');
         }
         if (!isset($this->_events[$eventType])) {
             if ($this->_enablePriorities) {
-                $priorityQueue = new SplPriorityQueue();
+                $priorityQueue             = new SplPriorityQueue();
                 $priorityQueue->setExtractFlags(SplPriorityQueue::EXTR_DATA);
                 $this->_events[$eventType] = $priorityQueue;
             } else {
                 $priorityQueue = [];
             }
         }
-        if (isset($priorityQueue)&&is_object($priorityQueue)) {
+        if (isset($priorityQueue) && is_object($priorityQueue)) {
             $priorityQueue->insert($handler, $priority);
         } else {
-            $priorityQueue[] = $handler;
+            $priorityQueue[]           = $handler;
             $this->_events[$eventType] = $priorityQueue;
         }
     }
@@ -226,28 +226,29 @@ class Manager implements ManagerInterface
      * @param EventInterface $event
      * @return mixed
      * @throws Exception
+     * @update EventsInterface to Event
      */
-    public function fireQueue($queue, EventInterface $event)
+    public function fireQueue($queue, Event $event)
     {
         if (!is_array($queue)) {
             if (is_object($queue)) {
                 if (!($queue instanceof SplPriorityQueue)) {
                     throw new Exception(
-                        sprintf(
-                            "Unexpected value type: expected object of type SplPriorityQueue, %s given",
-                            get_class($queue)
-                        )
+                    sprintf(
+                        "Unexpected value type: expected object of type SplPriorityQueue, %s given", get_class($queue)
+                    )
                     );
                 }
             } else {
                 throw new Exception('The queue is not valid');
             }
         }
-        $status = null;
+        $status    = null;
         $arguments = null;
         $eventName = $event->getType();
-        if (is_string($eventName)) {
-        //    throw new Exception('The event type not valid');
+
+        if (!is_string($eventName)) {
+            throw new Exception('The event type not valid');
         }
         // Get the object who triggered the event
         $source = $event->getSource();
@@ -256,10 +257,10 @@ class Manager implements ManagerInterface
         $data = $event->getData();
 
         // Tell if the event is cancelable
-        $cancelable = (boolean)$event->isCancelable();
+        $cancelable = (boolean) $event->isCancelable();
 
         // Responses need to be traced?
-        $collect = (boolean)$this->_collect;
+        $collect = (boolean) $this->_collect;
         if (is_object($queue)) {
             $iterator = clone $queue;
             $iterator->top();
@@ -344,11 +345,10 @@ class Manager implements ManagerInterface
      * @return mixed
      * @throws Exception
      */
-    public function fire($eventType, $source, $data = null, $cancelable = null)
+    public function fire($eventType, $source, $data = null, $cancelable = true)
     {
-        if (is_string($eventType) === false ||
-            is_bool($cancelable) === false) {
-           // throw new Exception('Invalid parameter type.');
+        if (is_string($eventType) === false || is_bool($cancelable) === false) {
+            throw new Exception('Invalid parameter type.');
         }
         $events = $this->_events;
         if (!is_array($events)) {
@@ -358,9 +358,9 @@ class Manager implements ManagerInterface
             throw new Exception("Invalid event type " . $eventType);
         }
         $eventParts = explode(':', $eventType);
-        $type = $eventParts[0];
-        $eventName = $eventParts[1];
-        $status = null;
+        $type       = $eventParts[0];
+        $eventName  = $eventParts[1];
+        $status     = null;
         if ($this->_collect) {
             $this->_responses = null;
         }
@@ -368,7 +368,7 @@ class Manager implements ManagerInterface
         if (isset($events[$type])) {
             $fireEvents = $events[$type];
             if (is_object($fireEvents) || is_array($fireEvents)) {
-                $event = new Event($eventName, $source, $data, $cancelable);
+                $event  = new Event($eventName, $source, $data, $cancelable);
                 $status = $this->fireQueue($fireEvents, $event);
             }
         }

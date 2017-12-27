@@ -62,11 +62,9 @@ class Event implements EventInterface
      * @param boolean|null $cancelable
      * @throws Exception
      */
-    public function __construct($type, $source, $data = null, $cancelable = null)
+    public function __construct($type, $source, $data = null, $cancelable = true)
     {
-        if (is_string($type) === false ||
-            is_object($source) === false ||
-            is_bool($cancelable)) {
+        if (is_string($type) === false || is_object($source) === false || is_bool($cancelable) === false) {
             throw new Exception('Invalid parameter type.');
         }
         $this->_type = $type;

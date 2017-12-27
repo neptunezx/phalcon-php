@@ -57,7 +57,16 @@ class Kernel
      */
     public static function getClassNameFromClass($className)
     {
-        return substr($$className, strrpos($$className, '\\') + 1);
+        if ($className == null) {
+            return '';
+        }
+        if (is_object($className)) {
+            $className = get_class($className);
+        }
+        if (!is_string($className)) {
+            throw new Exception("get_class_ns expects an object");
+        }
+        return substr($className, strrpos($className, '\\') + 1);
     }
 
     /**
@@ -67,6 +76,15 @@ class Kernel
      */
     public static function getNamespaceFromClass($className)
     {
+        if ($className == null) {
+            return '';
+        }
+        if (is_object($className)) {
+            $className = get_class($className);
+        }
+        if (!is_string($className)) {
+            throw new Exception("get_ns_class expects an object");
+        }
         return substr($className, 0, strrpos($className, '\\'));
     }
 
