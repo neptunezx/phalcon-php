@@ -2,12 +2,14 @@
 
 namespace Phalcon\Db;
 
-
+use Phalcon\Db\ColumnInterface;
+use Phalcon\Db\ReferenceInterface;
 use Phalcon\Db\IndexInterface;
+
 /**
- * Phalcon\Db\DialectInterface initializer
+ * Phalcon\Db\DialectInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/dialectinterface.c
+ * Interface for Phalcon\Db dialects
  */
 interface DialectInterface
 {
@@ -51,7 +53,7 @@ interface DialectInterface
      * @param array $columnList
      * @return string
      */
-    public function getColumnList($columnList);
+    public function getColumnList(array $columnList);
 
     /**
      * Gets the column name in MySQL
@@ -70,17 +72,16 @@ interface DialectInterface
      */
     public function addColumn($tableName, $schemaName, ColumnInterface $column);
 
-
     /**
      * Generates SQL to modify a column in a table
-     * @param  string                            $tableName
+     * @param  string                           $tableName
      * @param  string                           $schemaName
      * @param \Phalcon\Db\ColumnInterface       $column
      * @param \Phalcon\Db\ColumnInterface|null  $currentColumn
      *
      * @return mixed
      */
-    public function modifyColumn($tableName, $schemaName,  $column , $currentColumn = null );
+    public function modifyColumn($tableName, $schemaName, ColumnInterface $column, ColumnInterface $currentColumn = null);
 
     /**
      * Generates SQL to delete a column from a table
@@ -100,7 +101,7 @@ interface DialectInterface
      * @param \Phalcon\Db\IndexInterface $index
      * @return string
      */
-    public function addIndex($tableName, $schemaName, $index);
+    public function addIndex($tableName, $schemaName, IndexInterface $index);
 
     /**
      * Generates SQL to delete an index from a table
@@ -120,7 +121,7 @@ interface DialectInterface
      * @param \Phalcon\Db\IndexInterface $index
      * @return string
      */
-    public function addPrimaryKey($tableName, $schemaName, $index);
+    public function addPrimaryKey($tableName, $schemaName, IndexInterface $index);
 
     /**
      * Generates SQL to delete primary key from a table
@@ -139,7 +140,7 @@ interface DialectInterface
      * @param \Phalcon\Db\ReferenceInterface $reference
      * @return string
      */
-    public function addForeignKey($tableName, $schemaName, $reference);
+    public function addForeignKey($tableName, $schemaName, ReferenceInterface $reference);
 
     /**
      * Generates SQL to delete a foreign key from a table
@@ -180,7 +181,6 @@ interface DialectInterface
      */
     public function dropView($tableName, $schemaName, $ifExists = true);
 
-
     /**
      * Generates SQL checking for the existence of a schema.table
      *
@@ -189,7 +189,6 @@ interface DialectInterface
      * @return string
      */
     public function tableExists($tableName, $schemaName = null);
-
 
     /**
      * Generates SQL checking for the existence of a schema.view

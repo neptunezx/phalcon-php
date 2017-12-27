@@ -71,7 +71,7 @@ class Sqlite extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function addColumn($tableName, $schemaName, $column)
+    public function addColumn($tableName, $schemaName, ColumnInterface $column)
     {
         if (is_string($tableName) === false) {
             throw new Exception('Invalid parameter type.');
@@ -107,7 +107,7 @@ class Sqlite extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function modifyColumn($tableName, $schemaName, $column)
+    public function modifyColumn($tableName, $schemaName, ColumnInterface $column)
     {
         throw new Exception('Altering a DB column is not supported by SQLite');
     }
@@ -135,7 +135,7 @@ class Sqlite extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function addIndex($tableName, $schemaName, $index)
+    public function addIndex($tableName, $schemaName, IndexInterface $index)
     {
         if (is_string($tableName) === false) {
             throw new Exception('Invalid parameter type.');
@@ -187,7 +187,7 @@ class Sqlite extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function addPrimaryKey($tableName, $schemaName, $index)
+    public function addPrimaryKey($tableName, $schemaName, IndexInterface $index)
     {
         throw new Exception('Adding a primary key after table has been created is not supported by SQLite');
     }

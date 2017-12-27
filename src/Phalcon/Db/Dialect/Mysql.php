@@ -453,7 +453,7 @@ class Mysql extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function addPrimaryKey($tableName, $schemaName, $index)
+    public function addPrimaryKey($tableName, $schemaName, IndexInterface $index)
     {
         if (is_string($tableName) === false) {
             throw new Exception('Invalid parameter type.');
@@ -493,7 +493,7 @@ class Mysql extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function addForeignKey($tableName, $schemaName, $reference)
+    public function addForeignKey($tableName, $schemaName,ReferenceInterface $reference)
     {
         if (is_string($tableName) === false) {
             throw new Exception('Invalid parameter type.');
