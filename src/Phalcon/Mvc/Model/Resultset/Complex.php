@@ -31,11 +31,11 @@ class Complex extends Resultset implements ResultsetInterface
      * \Phalcon\Mvc\Model\Resultset\Complex constructor
      *
      * @param array $columnsTypes
-     * @param \Phalcon\Db\ResultInterface $result
+     * @param \Phalcon\Db\ResultInterface|false $result
      * @param \Phalcon\Cache\BackendInterface|null $cache
      * @throws Exception
      */
-    public function __construct(array $columnsTypes, ResultInterface $result, BackendInterface $cache = null)
+    public function __construct($columnsTypes, $result = null, BackendInterface $cache = null)
     {
         //Column types tell the resultset how to build the result
         $this->_columnTypes = $columnsTypes;

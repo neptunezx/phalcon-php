@@ -2218,29 +2218,20 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Sends a pre-build INSERT SQL statement to the relational database system
      *
-     * @param \Phalcon\Mvc\Model\MetaDataInterface $metaData
-     * @param \Phalcon\Db\AdapterInterface $connection
-     * @param string $table
-     * @param string|boolean $identityField
+     * @param \Phalcon\Mvc\Model\MetaDataInterface metaData
+     * @param \Phalcon\Db\AdapterInterface connection
+     * @param string|array table
+     * @param boolean|string identityField
      * @return boolean
-     * @throws Exception
      */
-    protected function _doLowInsert($metaData, $connection, $table, $identityField)
+    protected function _doLowInsert(MetaDataInterface $metaData, AdapterInterface $connection, $table, $identityField)
     {
-        if (is_object($metaData) === false ||
-            is_object($connection) === false ||
-            $metaData instanceof MetaDataInterface === false ||
-            $connection instanceof DbAdapterInterface === false ||
-            is_string($table) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_string($identityField) === false &&
             is_bool($identityField) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $bindSkip  = 1024;
+        $bindSkip  = Column::BIND_SKIP;
         $fields    = array();
         $values    = array();
         $bindTypes = array();
@@ -2279,12 +2270,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         throw new Exception("Column '" . $field . "' has not defined a bind data type");
                     }
 
-                    $value       = $this->$attributeField;
-                    $values[]    = $value;
+                    $value    = $this->$attributeField;
+                    $values[] = $value;
+
                     $bindTypes[] = $bindDataTypes[$field];
                 } else {
-                    $values[]  = null;
-                    $bindTypes = $bindSkip;
+                    $values[]    = null;
+                    $bindTypes[] = $bindSkip;
                 }
             }
         }
@@ -4373,7 +4365,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public function reset()
     {
         $this->_uniqueParams = null;
-        $this->_snapshot = null;
+        $this->_snapshot     = null;
     }
 
 }

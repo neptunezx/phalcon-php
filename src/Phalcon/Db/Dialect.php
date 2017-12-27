@@ -1148,7 +1148,6 @@ abstract class Dialect implements DialectInterface
      */
     protected function prepareQualified($column, $domain = null, $escapeChar = null)
     {
-        codecept_debug('$column = ' . json_encode($column));
         if (is_string($column) === false) {
             throw new Exception('Invalid parameter type.');
         }

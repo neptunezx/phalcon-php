@@ -7,6 +7,7 @@ use \Phalcon\Db\DialectInterface;
 use \Phalcon\Db\ColumnInterface;
 use \Phalcon\Db\IndexInterface;
 use \Phalcon\Db\Exception;
+use Phalcon\Db\ReferenceInterface;
 
 /**
  * Phalcon\Db\Dialect\Sqlite
@@ -107,7 +108,7 @@ class Sqlite extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function modifyColumn($tableName, $schemaName, ColumnInterface $column)
+    public function modifyColumn($tableName, $schemaName, ColumnInterface $column, ColumnInterface $currentColumn = null)
     {
         throw new Exception('Altering a DB column is not supported by SQLite');
     }
@@ -210,11 +211,11 @@ class Sqlite extends Dialect implements DialectInterface
      *
      * @param string $tableName
      * @param string $schemaName
-     * @param \Phalcon\Db\Reference $reference
+     * @param \Phalcon\Db\ReferenceInterface $reference
      * @return string
      * @throws Exception
      */
-    public function addForeignKey($tableName, $schemaName, $reference)
+    public function addForeignKey($tableName, $schemaName, ReferenceInterface $reference)
     {
         throw new Exception('Adding a foreign key constraint to an existing table is not supported by SQLite');
     }

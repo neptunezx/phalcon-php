@@ -1948,7 +1948,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
             $query->setBindParams($placeholders);
         }
 
-        if (is_array($$types)) {
+        if (is_array($types)) {
             $query->setBindTypes($types);
         }
 
