@@ -15,8 +15,6 @@ use \Phalcon;
  * Phalcon\Db\Adapter
  *
  * Base class for Phalcon\Db adapters
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/adapter.c
  */
 abstract class Adapter implements EventsAwareInterface , AdapterInterface
 {

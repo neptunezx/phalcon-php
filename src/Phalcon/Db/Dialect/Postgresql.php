@@ -72,7 +72,7 @@ class Postgresql extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function addColumn($tableName, $schemaName, $column)
+    public function addColumn($tableName, $schemaName, ColumnInterface $column)
     {
         throw new Exception('Not implemented yet');
     }

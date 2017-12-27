@@ -2,12 +2,11 @@
 
 namespace Phalcon\Mvc\Model\Resultset;
 
-namespace Phalcon\Mvc\Model\Resultset;
-
 use Phalcon\Mvc\Model;
 use Phalcon\Mvc\Model\Resultset;
 use Phalcon\Mvc\Model\Exception;
 use Phalcon\Cache\BackendInterface;
+use Phalcon\Mvc\Model\ResultsetInterface;
 use Phalcon\Kernel;
 
 /**
@@ -44,15 +43,14 @@ class Simple extends Resultset implements ResultsetInterface
     protected $_keepSnapshots = false;
 
     /**
-     * \Phalcon\Mvc\Model\Resultset\Simple constructor
-     *
-     * @param array $columnMap
-     * @param \Phalcon\Mvc\ModelInterface $model
-     * @param \Phalcon\Db\Result\Pdo $result
-     * @param \Phalcon\Cache\BackendInterface|null $cache
-     * @param boolean|null $keepSnapshots
-     * @throws Exception
-     */
+	 * Phalcon\Mvc\Model\Resultset\Simple constructor
+	 *
+	 * @param array columnMap
+	 * @param \Phalcon\Mvc\ModelInterface|Phalcon\Mvc\Model\Row model
+	 * @param \Phalcon\Db\Result\Pdo|null result
+	 * @param \Phalcon\Cache\BackendInterface cache
+	 * @param boolean keepSnapshots
+	 */
     public function __construct(array $columnMap, $model, $result, BackendInterface $cache = null, $keepSnapshots = null)
     {
         $this->_model     = $model;

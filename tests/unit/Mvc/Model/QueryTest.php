@@ -51,7 +51,17 @@ class QueryTest extends UnitTest
 
                 $query->setDI($this->di);
 
-                expect($query->parse())->equals($expected);
+                $parsed = $query->parse();
+               
+                try {
+                    expect($parsed)->equals($expected);
+                } catch (\PHPUnit_Framework_ExpectationFailedException $ex) {
+                    codecept_debug('------error------');
+                    codecept_debug('phql: '.json_encode($phql));
+                    codecept_debug('actual: '.json_encode($parsed));
+                    codecept_debug('expect: '.json_encode($expected));
+                    throw $ex;
+                }
             },
             ["examples" => require PATH_FIXTURES . 'query/select_parsing.php']
         );

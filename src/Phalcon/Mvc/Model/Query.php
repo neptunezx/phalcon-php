@@ -356,10 +356,10 @@ class Query implements QueryInterface, InjectionAwareInterface
     protected function _getQualified(array $expr)
     {
         $columnName       = $expr['name'];
-        $sqlColumnAliases = $expr['_sqlColumnAliases'];
+        $sqlColumnAliases = $this->_sqlColumnAliases;
 
         //Check if the qualified name is a column alias
-        if (isset($sqlColumnAliases[$columnName]) === true) {
+        if (isset($sqlColumnAliases[$columnName]) && (!isset($expr["domain"]) || empty($expr["domain"]))) {
             return array('type' => 'qualified', 'name' => $columnName);
         }
 
@@ -501,8 +501,8 @@ class Query implements QueryInterface, InjectionAwareInterface
      */
     protected function _getCallArgument(array $argument)
     {
-        if ($this->_type === Lang::PHQL_T_STARALL) {
-            return array('type' => 'all');
+        if ($argument["type"] == Lang::PHQL_T_STARALL) {
+            return ["type" => "all"];
         }
 
         return $this->_getExpression($argument);
@@ -564,7 +564,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return string
      * @throws Exception
      */
-    protected function _getExpression(array $expr, $quoting = null)
+    protected function _getExpression(array $expr, $quoting = true)
     {
         $quoting = (bool) $quoting;
         if (isset($expr["type"])) {
@@ -586,6 +586,14 @@ class Query implements QueryInterface, InjectionAwareInterface
                 if (isset($expr["right"])) {
                     $right = $this->_getExpression($expr["right"], $tempNotQuoting);
                 }
+            }
+
+            /**
+             * $exprType小于256时是ascii码表示，C语言里可以进行隐式转换，在这里需要显示转换下
+             * 不然后续switch判断将出现问题，比如当exprType是61是其实是'='(Lang::PHQL_T_EQUALS)
+             */
+            if ($exprType <= 256) {
+                $exprType = chr($exprType);
             }
 
             /**
@@ -933,67 +941,130 @@ class Query implements QueryInterface, InjectionAwareInterface
      */
     protected function _getSelectColumn(array $column)
     {
-        if (isset($column['type']) === false) {
-            throw new Exception('Corrupted SELECT AST');
+        if (!isset($column["type"])) {
+            throw new Exception("Corrupted SELECT AST");
+        }
+        $columnType = $column["type"];
+        $sqlColumns = [];
+
+        /**
+         * Check if column is eager loaded
+         */
+        $eager = isset($column["eager"]) ? $column["eager"] : null;
+
+        /**
+         * Check for select * (all)
+         */
+        if ($columnType == Lang::PHQL_T_STARALL) {
+            foreach ($this->_models as $modelName => $source) {
+
+                $sqlColumn = [
+                    "type"   => "object",
+                    "model"  => $modelName,
+                    "column" => $source,
+                    "balias" => lcfirst($modelName)
+                ];
+
+                if ($eager !== null) {
+                    $sqlColumn["eager"]     = $eager;
+                    $sqlColumn["eagerType"] = $column["eagerType"];
+                }
+
+                $sqlColumns[] = $sqlColumn;
+            }
+            return $sqlColumns;
         }
 
-        $sqlColumns = array();
+        if (!isset($column["column"])) {
+            throw new Exception("Corrupted SELECT AST");
+        }
 
-        //Check for SELECT * (all)
-        $columnType = $column['type'];
-        if ($columnType === 352) {
-            foreach ($this->_models as $modelName => $source) {
-                $sqlColumns[] = array('type' => 'object', 'model' => $modelName, 'column' => $source);
+        /**
+         * Check if selected column is qualified.*, ex: robots.*
+         */
+        if ($columnType == Lang::PHQL_T_DOMAINALL) {
+
+            $sqlAliases = $this->_sqlAliases;
+
+            /**
+             * We only allow the alias.*
+             */
+            $columnDomain = $column["column"];
+
+            if (!isset($sqlAliases[$columnDomain])) {
+                throw new Exception("Unknown model or alias '" . $columnDomain . "' (2), when preparing: " . $this->_phql);
             }
+            $source         = $sqlAliases[$columnDomain];
+            /**
+             * Get the SQL alias if any
+             */
+            $sqlColumnAlias = $source;
+
+            $preparedAlias = isset($column["balias"]) ? $column["balias"] : null;
+
+            /**
+             * Get the real source name
+             */
+            $sqlAliasesModels = $this->_sqlAliasesModels;
+            $modelName        = $sqlAliasesModels[$columnDomain];
+
+            if (!is_string($preparedAlias)) {
+                /**
+                 * If the best alias is the model name, we lowercase the first letter
+                 */
+                if ($columnDomain == $modelName) {
+                    $preparedAlias = lcfirst($modelName);
+                } else {
+                    $preparedAlias = $columnDomain;
+                }
+            }
+
+            /**
+             * Each item is a complex type returning a complete object
+             */
+            $sqlColumn = [
+                "type"   => "object",
+                "model"  => $modelName,
+                "column" => $sqlColumnAlias,
+                "balias" => $preparedAlias
+            ];
+
+            if ($eager !== null) {
+                $sqlColumn["eager"]     = $eager;
+                $sqlColumn["eagerType"] = $column["eagerType"];
+            }
+
+            $sqlColumns[] = $sqlColumn;
 
             return $sqlColumns;
         }
 
-        if (isset($column['column']) === false) {
-            throw new Exception('Corrupted SELECT AST');
-        }
+        /**
+         * Check for columns qualified and not qualified
+         */
+        if ($columnType == Lang::PHQL_T_EXPR) {
+            /**
+             * The sql_column is a scalar type returning a simple string
+             */
+            $sqlColumn     = ["type" => "scalar"];
+            $columnData    = $column["column"];
+            $sqlExprColumn = $this->_getExpression($columnData);
 
-        //Check if selected column is qualified.
-        if ($columnType === 353) {
-            $sqlAliases = $this->_sqlAliases;
-
-            //We only allow the alias.
-            $columnDomain = $column['column'];
-
-            if (isset($sqlAliases[$columnDomain]) === false) {
-                throw new Exception("Unknown model or alias '" . $columnDomain . "' (2), when preparing: " . $this->_phql);
+            /**
+             * Create balias and sqlAlias
+             */
+            if (isset($sqlExprColumn["balias"])) {
+                $balias                = $sqlExprColumn["balias"];
+                $sqlColumn["balias"]   = $balias;
+                $sqlColumn["sqlAlias"] = $balias;
             }
 
-            //Get the SQL alias if any
-            $sqlColumnAlias = $sqlAliases[$columnDomain];
-
-            //Get the real source name
-            $modelName = $this->_sqlAliasesModels[$columnDomain];
-
-            //Get the best alias for the column
-            $bestAlias = $this->_sqlModelsAliases[$modelName];
-
-            //If the best alias is the model name we lowercase the first letter
-            $alias = ($bestAlias === $modelName ? lcfirst($modelName) : $bestAlias);
-
-            //The sql column is a complex type returning a complete object
-            return array('type' => 'object', 'model' => $modelName, 'column' => $sqlColumnAlias, 'balias' => $alias);
-        }
-
-        //Check for columns qualified and not qualified
-        if ($columnType === 354) {
-            //The sql_column is a scalar type returning a simple string
-            $sqlColumn     = array('type' => 'scalar');
-            $sqlExprColumn = $this->_getExpression($column['column']);
-
-            //Create balias and sqlAlias
-            if (isset($sqlExprColumn['balias']) === true) {
-                $balias                = $sqlExprColumn['balias'];
-                $sqlColumn['balias']   = $balias;
-                $sqlColumn['sqlAlias'] = $balias;
+            if ($eager !== null) {
+                $sqlColumn["eager"]     = $eager;
+                $sqlColumn["eagerType"] = $column["eagerType"];
             }
 
-            $sqlColumn['column'] = $sqlExprColumn;
+            $sqlColumn["column"] = $sqlExprColumn;
             $sqlColumns[]        = $sqlColumn;
 
             return $sqlColumns;
@@ -1052,7 +1123,6 @@ class Query implements QueryInterface, InjectionAwareInterface
                 $model  = $manager->load($realModelName, true);
                 $source = $model->getSource();
                 $schema = $model->getSchema();
-
                 return [
                     "schema"    => $schema,
                     "source"    => $source,
@@ -1077,7 +1147,7 @@ class Query implements QueryInterface, InjectionAwareInterface
         if (isset($join['type']) === false) {
             throw new Exception('Corrupted SELECT AST');
         }
-
+        $type = $join['type'];
         switch ($type) {
 
             case Lang::PHQL_T_INNERJOIN:
@@ -1103,19 +1173,16 @@ class Query implements QueryInterface, InjectionAwareInterface
      * Resolves joins involving has-one/belongs-to/has-many relations
      *
      * @param string $joinType
-     * @param string $joinSource
-     * @param string $modelAlias
-     * @param string $joinAlias
+     * @param mixed $joinSource
+     * @param mixed $modelAlias
+     * @param mixed $joinAlias
      * @param \Phalcon\Mvc\Model\RelationInterface $relation
      * @return array
      * @throws Exception
      */
     protected function _getSingleJoin($joinType, $joinSource, $modelAlias, $joinAlias, RelationInterface $relation)
     {
-        if (is_string($joinType) === false ||
-            is_string($joinSource) === false ||
-            is_string($modelAlias) === false ||
-            is_string($joinAlias) === false) {
+        if (is_string($joinType) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -1376,20 +1443,20 @@ class Query implements QueryInterface, InjectionAwareInterface
         $sqlModelsAliases          = $this->_sqlModelsAliases;
         $sqlAliasesModelsInstances = $this->_sqlAliasesModelsInstances;
         $modelsInstances           = $this->_modelsInstances;
-        $fromModels                = $modelsInstances;
+        $fromModels                = $models;
         $manager                   = $this->_manager;
 
-        $sqlJoins          = array();
-        $joinModels        = array();
-        $joinSources       = array();
-        $joinTypes         = array();
-        $joinPreConditions = array();
-        $joinPrepared      = array();
+        $sqlJoins         = [];
+        $joinModels       = [];
+        $joinSources      = [];
+        $joinTypes        = [];
+        $joinPreCondition = [];
+        $joinPrepared     = [];
 
         if (isset($select['tables'][0]) === false) {
             $selectTables = array($select['tables']);
         } else {
-            $selectTables = $select['joins'];
+            $selectTables = $select['tables'];
         }
 
         if (isset($select['joins'][0]) === false) {
@@ -1397,14 +1464,13 @@ class Query implements QueryInterface, InjectionAwareInterface
         } else {
             $selectJoins = $select['joins'];
         }
-
         foreach ($selectJoins as $joinItem) {
             //Check join alias
             $joinData       = $this->_getJoin($manager, $joinItem);
             $source         = $joinData['source'];
             $schema         = $joinData['schema'];
             $model          = $joinData['model'];
-            $modelName      = $joinData['modelName'];
+            $realModelName  = $joinData['modelName'];
             $completeSource = array($source, $schema);
 
             //Check join alias
@@ -1429,46 +1495,46 @@ class Query implements QueryInterface, InjectionAwareInterface
                 $sqlAliases[$alias] = $alias;
 
                 //Update model => alias
-                $joinModels[$alias]                = $modelName;
-                $sqlModelsAliases[$modelName]      = $alias;
-                $sqlAliasesModels[$alias]          = $modelName;
+                $joinModels[$alias]                = $realModelName;
+                $sqlModelsAliases[$realModelName]  = $alias;
+                $sqlAliasesModels[$alias]          = $realModelName;
                 $sqlAliasesModelsInstances[$alias] = $model;
 
                 //Update model => alias
-                $models[$modelName] = $alias;
+                $models[$realModelName] = $alias;
 
                 //Complete source related to a model
                 $joinSources[$alias]  = $completeSource;
                 $joinPrepared[$alias] = $joinItem;
             } else {
                 //Check if alias is unique
-                if (isset($joinModels[$modelName]) === true) {
-                    throw new Exception("Cannot use '" . $modelName . "' as join because it was already used, when preparing: " . $this->_phql);
+                if (isset($joinModels[$realModelName]) === true) {
+                    throw new Exception("Cannot use '" . $realModelName . "' as join because it was already used, when preparing: " . $this->_phql);
                 }
 
                 //Set the join type
-                $joinTypes[$modelName] = $joinType;
+                $joinTypes[$realModelName] = $joinType;
 
                 //Update model => source
-                $sqlAliases[$modelName] = $source;
-                $joinModels[$modelName] = $source;
+                $sqlAliases[$realModelName] = $source;
+                $joinModels[$realModelName] = $source;
 
                 //Update model => model
-                $sqlModelsAliases[$modelName] = $modelName;
-                $sqlAliasesModels[$modelName] = $modelName;
+                $sqlModelsAliases[$realModelName] = $realModelName;
+                $sqlAliasesModels[$realModelName] = $realModelName;
 
                 //Update model => model instances
-                $sqlAliasesModelsInstances[$modelName] = $model;
+                $sqlAliasesModelsInstances[$realModelName] = $model;
 
                 //Update model => source
-                $models[$modelName] = $source;
+                $models[$realModelName] = $source;
 
                 //Complete source related to a model
-                $joinSources[$modelName]  = $completeSource;
-                $joinPrepared[$modelName] = $joinItem;
+                $joinSources[$realModelName]  = $completeSource;
+                $joinPrepared[$realModelName] = $joinItem;
             }
 
-            $modelsInstances[$modelName] = $model;
+            $modelsInstances[$realModelName] = $model;
         }
 
         //Update temporary properties
@@ -1482,22 +1548,24 @@ class Query implements QueryInterface, InjectionAwareInterface
         foreach ($joinPrepared as $joinAliasName => $joinItem) {
             //Check for predefined conditions
             if (isset($joinItem['conditions']) === true) {
-                $joinPreConditions[$joinAliasName] = $this->_getExpression($joinItem['conditions']);
+                $joinPreCondition[$joinAliasName] = $this->_getExpression($joinItem['conditions']);
             }
         }
 
         /**
          * Skip all implicit joins if the option is not enabled
          */
+        $this->_enableImplicitJoins = true;
         if (!$this->_enableImplicitJoins) {
             foreach ($joinPrepared as $joinAliasName => $_) {
                 $joinType     = $joinTypes[$joinAliasName];
                 $joinSource   = $joinSources[$joinAliasName];
-                $preCondition = $joinPreCondition[$joinAliasName];
+                $preCondition = isset($joinPreCondition[$joinAliasName]) ? $joinPreCondition[$joinAliasName] : null;
+                $condition    = empty($preCondition) ? [] : [$preCondition];
                 $sqlJoins[]   = [
                     "type"       => $joinType,
                     "source"     => $joinSource,
-                    "conditions" => [$preCondition]
+                    "conditions" => $condition
                 ];
             }
             return $sqlJoins;
@@ -1508,21 +1576,20 @@ class Query implements QueryInterface, InjectionAwareInterface
          */
         $fromModels = [];
         foreach ($selectTables as $tableItem) {
-            $fromModels[tableItem["qualifiedName"]["name"]] = true;
+            $fromModels[$tableItem["qualifiedName"]["name"]] = true;
         }
 
 
         //Create join relationships dynamically
-        foreach ($fromModels as $fromModelName => $source) {
+        foreach ($fromModels as $fromModelName => $_) {
             foreach ($joinModels as $joinAlias => $joinModel) {
                 //Real source name for joined model
                 $joinSource = $joinSources[$joinAlias];
-
                 //Join type is: LEFT, RIGHT, INNER, etc.
-                $joinType = $joinTypes[$joinAlias];
+                $joinType   = $joinTypes[$joinAlias];
 
                 //Check if the model already has pre-defined conditions
-                if (isset($joinPreConditions[$joinAlias]) === false) {
+                if (isset($joinPreCondition[$joinAlias]) === false) {
                     //Get the model name from its source
                     $modelNameAlias = $sqlAliasesModels[$joinAlias];
 
@@ -1530,12 +1597,11 @@ class Query implements QueryInterface, InjectionAwareInterface
                     $relation = $manager->getRelationByAlias($fromModelName, $modelNameAlias);
                     if ($relation === false) {
                         $relations = $manager->getRelationsBetween($fromModelName, $modelNameAlias);
-
                         if (is_array($relations) === true) {
                             //More than one relation must throw an exception
                             $numberRelations = count($relations);
                             if ($numberRelations !== 1) {
-                                throw new Exception("There is more than one relation between models '" . $modelName . "' and '" . $joinModel . '", the join must be done using an alias, when preparing: ' . $this->_phql);
+                                throw new Exception("There is more than one relation between models '" . $realModelName . "' and '" . $joinModel . '", the join must be done using an alias, when preparing: ' . $this->_phql);
                             }
 
                             //Get the first relationship
@@ -1549,21 +1615,23 @@ class Query implements QueryInterface, InjectionAwareInterface
                         $modelAlias = $sqlModelsAliases[$fromModelName];
 
                         //Generate the conditions based on the type of join
-                        if ($relation->isThrough() === false) {
+                        if (!$relation->isThrough()) {
                             $sqlJoin = $this->_getSingleJoin($joinType, $joinSource, $modelAlias, $joinAlias, $relation); //no Many-To-Many
                         } else {
                             $sqlJoin = $this->_getMultiJoin($joinType, $joinSource, $modelAlias, $joinAlias, $relation);
                         }
 
                         //Append or merge joins
-                        if (isset($sqlJoins[0]) === true) {
-                            $sqlJoins = array_merge($sqlJoins, $sqlJoin);
+                        if (isset($sqlJoin[0])) {
+                            foreach ($sqlJoin as $sqlJoinItem) {
+                                $sqlJoins[] = $sqlJoinItem;
+                            }
                         } else {
                             $sqlJoins[] = $sqlJoin;
                         }
                     } else {
                         //Join without conditions because no relation has been found between the models
-                        $sqlJoin = [
+                        $sqlJoins[] = [
                             'type'       => $joinType,
                             'source'     => $joinSource,
                             'conditions' => []
@@ -1630,7 +1698,7 @@ class Query implements QueryInterface, InjectionAwareInterface
     {
         if (isset($group[0]) === true) {
             //The SELECT is grouped by several columns
-            $groupParts = array();
+            $groupParts = [];
             foreach ($group as $groupItem) {
                 $groupParts[] = $this->_getExpression($groupItem);
             }
@@ -1649,11 +1717,11 @@ class Query implements QueryInterface, InjectionAwareInterface
         $limit = [];
 
         if (isset($limitClause["number"])) {
-            $limit["number"] = $this->_getExpression(limitClause["number"]);
+            $limit["number"] = $this->_getExpression($limitClause["number"]);
         }
 
         if (isset($limitClause["offset"])) {
-            $limit["offset"] = $this->_getExpression(limitClause["offset"]);
+            $limit["offset"] = $this->_getExpression($limitClause["offset"]);
         }
 
         return $limit;
@@ -1676,7 +1744,6 @@ class Query implements QueryInterface, InjectionAwareInterface
         }
 
         $select = isset($ast["select"]) ? $ast["select"] : $ast;
-
         if (!isset($select["tables"])) {
             throw new Exception("Corrupted SELECT AST");
         }
@@ -1803,7 +1870,7 @@ class Query implements QueryInterface, InjectionAwareInterface
                  * Append or convert complete source to an array
                  */
                 if (is_array($completeSource)) {
-                    $completeSource[] = alias;
+                    $completeSource[] = $alias;
                 } else {
                     $completeSource = [$source, null, $alias];
                 }
@@ -1852,10 +1919,10 @@ class Query implements QueryInterface, InjectionAwareInterface
 
                     $selectColumns[] = [
                         "type"      => Lang::PHQL_T_DOMAINALL,
-                        "column"    => joinAlias,
-                        "eager"     => alias,
-                        "eagerType" => eagerType,
-                        "balias"    => bestAlias
+                        "column"    => $joinAlias,
+                        "eager"     => $alias,
+                        "eagerType" => $eagerType,
+                        "balias"    => $bestAlias
                     ];
 
                     $automaticJoins[] = [
@@ -1924,7 +1991,6 @@ class Query implements QueryInterface, InjectionAwareInterface
                 $sqlJoins = [];
             }
         }
-
         // Resolve selected columns
         $position         = 0;
         $sqlColumnAliases = [];
@@ -2109,7 +2175,7 @@ class Query implements QueryInterface, InjectionAwareInterface
     {
         $ast = $this->_ast;
 
-        if (isset($ast["update"])) {
+        if (!isset($ast["update"])) {
             throw new Exception("Corrupted UPDATE AST");
         }
 
@@ -2353,7 +2419,7 @@ class Query implements QueryInterface, InjectionAwareInterface
     public function parse()
     {
         $intermediate = $this->_intermediate;
-        if (is_array($intermediate)) { 
+        if (is_array($intermediate)) {
             return $intermediate;
         }
 
@@ -2438,7 +2504,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\ResultsetInterface
      * @throws Exception
      */
-    protected function _executeSelect(array $intermediate, array $bindParams, array $bindTypes)
+    protected function _executeSelect($intermediate, $bindParams, $bindTypes, $simulate = false)
     {
         $manager = $this->_manager;
 
@@ -2454,8 +2520,9 @@ class Query implements QueryInterface, InjectionAwareInterface
             if (!isset($this->_modelsInstances[$modelName])) {
                 $model                              = $manager->load($modelName, true);
                 $this->_modelsInstances[$modelName] = $model;
+            } else {
+                $model = $this->_modelsInstances[$modelName];
             }
-            $model = $this->_modelsInstances[$modelName];
             // Get database connection
             if (method_exists($model, "selectReadConnection")) {
                 // use selectReadConnection() if implemented in extended Model class
@@ -2609,7 +2676,6 @@ class Query implements QueryInterface, InjectionAwareInterface
         if (is_array($bindParams)) {
             $processed = [];
             foreach ($bindParams as $wildcard => $value) {
-
                 if (is_int($wildcard)) {
                     $wildcardValue = ":" . $wildcard;
                 } else {
@@ -2773,18 +2839,19 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\Query\StatusInterface
      * @throws Exception
      */
-    protected function _executeInsert(array $intermediate, array $bindParams, array $bindTypes)
+    protected function _executeInsert($intermediate, $bindParams, $bindTypes)
     {
-        $modelName = intermediate["model"];
+        $modelName = $intermediate["model"];
 
         $manager = $this->_manager;
         /**
          * Load the model from the modelsManager or from the _modelsInstances property
          */
         if (!isset($this->_modelsInstances[$modelName])) {
-            $model = $this->_manager->load($modelName);
+            $model = $this->_manager->load($modelName, true);
+        } else {
+            $model = $this->_modelsInstances[$modelName];
         }
-        $model = $this->_modelsInstances[$modelName];
 
         /**
          * Get the model connection
@@ -2808,14 +2875,16 @@ class Query implements QueryInterface, InjectionAwareInterface
          */
         if (!isset($intermediate["fields"])) {
             $automaticFields = true;
-            $fields          = attributes;
+            $fields          = $attributes;
             if (Kernel::getGlobals("orm.column_renaming")) {
                 $columnMap = $metaData->getColumnMap($model);
             } else {
                 $columnMap = null;
             }
+        } else {
+            $fields = $intermediate["fields"];
         }
-        $fields = $intermediate["fields"];
+
         $values = $intermediate["values"];
 
         /**
@@ -2856,7 +2925,7 @@ class Query implements QueryInterface, InjectionAwareInterface
                     $wildcard = str_replace(":", "", $dialect->getSqlExpression($exprValue));
                     if (!isset($bindParams[$wildcard])) {
                         throw new Exception(
-                        "Bound parameter '" . wildcard . "' cannot be replaced because it isn't in the placeholders list"
+                        "Bound parameter '" . $wildcard . "' cannot be replaced because it isn't in the placeholders list"
                         );
                     }
                     $insertValue = $bindParams[$wildcard];
@@ -2867,7 +2936,7 @@ class Query implements QueryInterface, InjectionAwareInterface
                     break;
             }
 
-            $fieldName = $fields[number];
+            $fieldName = $fields[$number];
 
             /**
              * If the user didn't define a column list we assume all the model's attributes as columns
@@ -2876,8 +2945,9 @@ class Query implements QueryInterface, InjectionAwareInterface
                 if (is_array($columnMap)) {
                     if (!isset($columnMap[$fieldName])) {
                         throw new Exception("Column '" . $fieldName . "' isn't part of the column map");
+                    } else {
+                        $attributeName = $columnMap[$fieldName];
                     }
-                    $attributeName = $columnMap[$fieldName];
                 } else {
                     $attributeName = $fieldName;
                 }
@@ -2885,7 +2955,7 @@ class Query implements QueryInterface, InjectionAwareInterface
                 $attributeName = $fieldName;
             }
 
-            $insertValues[attributeName] = $insertValue;
+            $insertValues[$attributeName] = $insertValue;
         }
 
         /**
@@ -2910,7 +2980,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\Query\StatusInterface
      * @throws Exception
      */
-    protected function _executeUpdate(array $intermediate, array $bindParams, array $bindTypes)
+    protected function _executeUpdate($intermediate, $bindParams, $bindTypes)
     {
         $models = $intermediate["models"];
 
@@ -2925,8 +2995,9 @@ class Query implements QueryInterface, InjectionAwareInterface
          */
         if (!isset($this->_modelsInstances[$modelName])) {
             $model = $this->_manager->load($modelName);
+        } else {
+            $model = $this->_modelsInstances[$modelName];
         }
-        $model = $this->_modelsInstances[$modelName];
 
         if (method_exists($model, "selectWriteConnection")) {
             $connection = $model->selectWriteConnection($intermediate, $bindParams, $bindTypes);
@@ -3073,7 +3144,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\Query\StatusInterface
      * @throws Exception
      */
-    protected function _executeDelete(array $intermediate, array $bindParams, array $bindTypes)
+    protected function _executeDelete($intermediate, $bindParams, $bindTypes)
     {
         $models = $intermediate['models'];
         if (isset($models[1]) === true) {
@@ -3139,7 +3210,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @param array $bindTypes
      * @return \Phalcon\Mvc\Model\ResultsetInterface
      */
-    protected function _getRelatedRecords(Model $model, array $intermediate, array $bindParams, array $bindTypes)
+    protected function _getRelatedRecords(Model $model, $intermediate, $bindParams, $bindTypes)
     {/**
      * Instead of create a PHQL string statement we manually create the IR representation
      */

@@ -564,7 +564,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
         $entityName = strtolower(get_class($model));
 
         if (is_array($this->_schemas) === true) {
-            if (isset($this->_schemas[$entityName]) === true) {
+            if (isset($this->_schemas[$entityName])) {
                 return $this->_schemas[$entityName];
             }
         }
