@@ -129,11 +129,49 @@ class Kernel
      * Build-in function for get globals config
      * @param type $name
      * @return boolean
+     * 
      */
     public static function getGlobals($name)
     {
+
         $key = '_PHALCON_' . strtoupper(str_replace('.', '_', $name));
-        return isset($GLOBALS[$key]) ? $GLOBALS[$key] : false;
+        return isset($GLOBALS[$key]) ? $GLOBALS[$key] : self::getDefaultGlobals($key);
+    }
+
+    public static function getDefaultGlobals($key)
+    {
+        //; ----- Options to use the Phalcon Framework
+        //; phalcon.db.escape_identifiers = On
+        //; phalcon.db.force_casting = Off
+        //; phalcon.orm.events = On
+        //; phalcon.orm.virtual_foreign_keys = On
+        //; phalcon.orm.column_renaming = On
+        //; phalcon.orm.not_null_validations = On
+        //; phalcon.orm.exception_on_failed_save = Off
+        //; phalcon.orm.enable_literals = On
+        //; phalcon.orm.late_state_binding = Off
+        //; phalcon.orm.enable_implicit_joins = On
+        //; phalcon.orm.cast_on_hydrate = Off
+        //; phalcon.orm.ignore_unknown_columns = Off
+        //; phalcon.orm.update_snapshot_on_save = On
+        //; phalcon.orm.disable_assign_setters = Off
+        $PAHLCON_INI = [
+            '_PHALCON_DB_ESCAPE_IDENTIFIERS'        => true,
+            '_PHALCON_DB_FORCE_CASTING'             => false,
+            '_PHALCON_ORM_EVENTS'                   => true,
+            '_PHALCON_ORM_VIRTUAL_FOREIGN_KEYS'     => true,
+            '_PHALCON_ORM_COLUMN_RENAMING'          => true,
+            '_PHALCON_ORM_NOT_NULL_VALIDATIONS'     => true,
+            '_PHALCON_ORM_EXCEPTION_ON_FAILED_SAVE' => false,
+            '_PHALCON_ORM_ENABLE_LITERALS'          => true,
+            '_PHALCON_ORM_LATE_STATE_BINDING'       => false,
+            '_PHALCON_ORM_ENABLE_IMPLICIT_JOINS'    => true,
+            '_PHALCON_ORM_CAST_ON_HYDRATE'          => false,
+            '_PHALCON_ORM_IGNORE_UNKNOWN_COLUMNS'   => false,
+            '_PHALCON_ORM_UPDATE_SNAPSHOT_ON_SAVE'  => true,
+            '_PHALCON_ORM_DISABLE_ASSIGN_SETTERS'   => false,
+        ];
+        return isset($PAHLCON_INI[$key]) ? $PAHLCON_INI[$key] : false;
     }
 
     /**

@@ -361,16 +361,16 @@ class Column implements ColumnInterface
         //Check if the column has a decimal scale
         if (isset($definition['scale'])) {
             switch ($type) {
-                case  self::TYPE_INTEGER:
-                case  self::TYPE_FLOAT:
-                case  self::TYPE_DECIMAL:
-                case  self::TYPE_DOUBLE:
-                case  self::TYPE_BIGINTEGER:
+                case self::TYPE_INTEGER:
+                case self::TYPE_FLOAT:
+                case self::TYPE_DECIMAL:
+                case self::TYPE_DOUBLE:
+                case self::TYPE_BIGINTEGER:
                     $this->_scale = $definition['scale'];
                     break;
                 default:
                     throw new Exception(
-                        "Column type does not support scale parameter"
+                    "Column type does not support scale parameter"
                     );
             }
         }
@@ -394,14 +394,14 @@ class Column implements ColumnInterface
 
             if (!$definition['autoIncrement']) {
                 $this->_autoIncrement = false;
-            }else{
+            } else {
                 if (in_array(
-                    $type, [
-                    self::TYPE_INTEGER,
-                    self::TYPE_BIGINTEGER,
-                ])) {
+                        $type, [
+                        self::TYPE_INTEGER,
+                        self::TYPE_BIGINTEGER,
+                    ])) {
                     $this->_autoIncrement = true;
-                }else{
+                } else {
                     throw new Exception("Column type cannot be auto-increment");
                 }
             }
@@ -518,7 +518,6 @@ class Column implements ColumnInterface
      */
     public function getDefault()
     {
-        // TODO: Implement getDefault() method.
         return $this->_default;
     }
 
@@ -527,7 +526,6 @@ class Column implements ColumnInterface
      */
     public function getTypeReference()
     {
-        // TODO: Implement getTypeReference() method.
         return $this->_typeReference;
     }
 
@@ -536,7 +534,6 @@ class Column implements ColumnInterface
      */
     public function getTypeValues()
     {
-        // TODO: Implement getTypeValues() method.
         return $this->_typeValues;
     }
 
@@ -607,9 +604,9 @@ class Column implements ColumnInterface
 
         if (isset($data["_typeReference"])) {
             $definition["typeReference"] = $data["_typeReference"];
-		} else {
+        } else {
             $definition["typeReference"] = -1;
-		}
+        }
 
         if (isset($data["typeValues"])) {
             $definition["typeValues"] = $data["_typeValues"];
@@ -633,14 +630,12 @@ class Column implements ColumnInterface
 
         if (isset($data['_scale']) === true) {
             if (
-            in_array($definition['type'],
-                [
+                in_array($definition['type'], [
                     self::TYPE_INTEGER,
                     self::TYPE_FLOAT,
                     self::TYPE_DECIMAL,
                     self::TYPE_DOUBLE,
                     self::TYPE_BIGINTEGER,
-
                 ])
             ) {
                 $definition['scale'] = $data['_scale'];
@@ -674,7 +669,6 @@ class Column implements ColumnInterface
         return new Column($columnName, $definition);
     }
 
-
     /**
      * Check whether column has default value
      * @return bool
@@ -682,11 +676,11 @@ class Column implements ColumnInterface
     public function hasDefault()
     {
         // TODO: Implement hasDefault() method.
-        if($this->isAutoIncrement()){
-			return false;
-		}
+        if ($this->isAutoIncrement()) {
+            return false;
+        }
 
-		return $this->_default !== null;
+        return $this->_default !== null;
     }
 
 }
