@@ -44,6 +44,7 @@ class Builder
                 throw new Exception('The dependency injector container is not valid');
             }
 
+            //服务可能查找失败
             return $dependencyInjector->get($argument['name']);
         }
 
@@ -114,23 +115,15 @@ class Builder
         if (isset($definition['className']) === false) {
             throw new Exception("Invalid service definition. Missing 'className' parameter");
         }
-
+        $instance = null;
         /* Get instance */
         if (is_array($parameters) === true) {
             //Build the instance overriding the definition constructor parameters
             if (empty($parameters) === true) {
-                try {
-                    $instance = new $definition['className'];
-                } catch (\Exception $e) {
-                    return null;
-                }
+                $instance = new $definition['className'];
             } else {
-                try {
-                    $mirror   = new ReflectionClass($definition['className']);
-                    $instance = $mirror->newInstanceArgs($parameters);
-                } catch (\Exception $e) {
-                    return null;
-                }
+                $mirror   = new ReflectionClass($definition['className']);
+                $instance = $mirror->newInstanceArgs($parameters);
             }
         } else {
             //Check if the argument has constructor arguments
@@ -139,18 +132,10 @@ class Builder
                 $buildArguments = $this->_buildParameters($dependencyInjector, $definition['arguments']);
 
                 //Create the instance based on the parameters
-                try {
-                    $mirror   = new ReflectionClass($definition['className']);
-                    $instance = $mirror->newInstanceArgs($buildArguments);
-                } catch (\Exception $e) {
-                    return null;
-                }
+                $mirror   = new ReflectionClass($definition['className']);
+                $instance = $mirror->newInstanceArgs($buildArguments);
             } else {
-                try {
-                    $instance = new $definition['className'];
-                } catch (\Exception $e) {
-                    return null;
-                }
+                $instance = new $definition['className'];
             }
         }
 

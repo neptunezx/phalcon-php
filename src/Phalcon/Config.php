@@ -45,12 +45,10 @@ class Config implements \ArrayAccess, \Countable
      */
     public function __construct(array $arrayConfig = null)
     {
-        if (is_array($arrayConfig) === false) {
-            throw new ConfigException('The configuration must be an Array');
-        }
-
-        foreach ($arrayConfig as $key => $value) {
-            $this->offsetSet($key, $value);
+        if ($arrayConfig) {
+            foreach ($arrayConfig as $key => $value) {
+                $this->offsetSet($key, $value);
+            }
         }
     }
 
