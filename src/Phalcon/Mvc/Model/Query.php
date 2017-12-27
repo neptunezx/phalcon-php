@@ -3211,9 +3211,10 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\ResultsetInterface
      */
     protected function _getRelatedRecords(Model $model, $intermediate, $bindParams, $bindTypes)
-    {/**
-     * Instead of create a PHQL string statement we manually create the IR representation
-     */
+    {
+        /**
+         * Instead of create a PHQL string statement we manually create the IR representation
+         */
         $selectIr = [
             "columns" => [[
                 "type"   => "object",

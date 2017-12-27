@@ -600,7 +600,6 @@ class DI implements DiInterface
      */
     public function loadFromYaml($filePath, array $callbacks = null)
     {
-
         $services = new Yaml($filePath, $callbacks);
 
         $this->loadFromConfig($services);

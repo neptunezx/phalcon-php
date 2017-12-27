@@ -1133,6 +1133,7 @@ abstract class Dialect implements DialectInterface
         if ($alias != "") {
             $table = $table . " AS " . $this->escape($alias, $escapeChar);
         }
+        
         return $table;
     }
 
