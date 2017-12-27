@@ -13,7 +13,6 @@ use Phalcon\Mvc\Model\Resultset\Simple;
  * @method static int countByTheType(string $type)
  * @method static Simple findByTheType(string $type)
  * @method static Simple findFirstByCode(string|int $code)
- *
  * @package Phalcon\Test\Models
  */
 class Robotters extends Model

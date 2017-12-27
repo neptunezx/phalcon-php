@@ -93,8 +93,8 @@ class Session extends MetaData
 
         $prefixKey = '$PMM$' . $this->_prefix;
 
-        if (is_array($_SESSION[$prefixKey]) === false) {
-            $_SESSION[$prefixKey] = array();
+        if (!isset($_SESSION[$prefixKey])) {
+            $_SESSION[$prefixKey] = [];
         }
 
         $_SESSION[$prefixKey][$key] = $data;

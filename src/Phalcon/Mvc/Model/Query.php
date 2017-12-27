@@ -868,8 +868,6 @@ class Query implements QueryInterface, InjectionAwareInterface
                     break;
 
                 default:
-                    codecept_debug(json_encode($expr));
-                    codecept_debug(json_encode($this->_ast));
                     throw new Exception("Unknown expression type " . $exprType);
             }
 
@@ -2506,7 +2504,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\ResultsetInterface
      * @throws Exception
      */
-    protected function _executeSelect(array $intermediate, array $bindParams, array $bindTypes, $simulate = false)
+    protected function _executeSelect($intermediate, $bindParams, $bindTypes, $simulate = false)
     {
         $manager = $this->_manager;
 
@@ -2841,7 +2839,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\Query\StatusInterface
      * @throws Exception
      */
-    protected function _executeInsert(array $intermediate, array $bindParams, array $bindTypes)
+    protected function _executeInsert($intermediate, $bindParams, $bindTypes)
     {
         $modelName = $intermediate["model"];
 
@@ -2982,7 +2980,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\Query\StatusInterface
      * @throws Exception
      */
-    protected function _executeUpdate(array $intermediate, array $bindParams, array $bindTypes)
+    protected function _executeUpdate($intermediate, $bindParams, $bindTypes)
     {
         $models = $intermediate["models"];
 
@@ -3146,7 +3144,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\Query\StatusInterface
      * @throws Exception
      */
-    protected function _executeDelete(array $intermediate, array $bindParams, array $bindTypes)
+    protected function _executeDelete($intermediate, $bindParams, $bindTypes)
     {
         $models = $intermediate['models'];
         if (isset($models[1]) === true) {
@@ -3212,7 +3210,7 @@ class Query implements QueryInterface, InjectionAwareInterface
      * @param array $bindTypes
      * @return \Phalcon\Mvc\Model\ResultsetInterface
      */
-    protected function _getRelatedRecords(Model $model, array $intermediate, array $bindParams, array $bindTypes)
+    protected function _getRelatedRecords(Model $model, $intermediate, $bindParams, $bindTypes)
     {/**
      * Instead of create a PHQL string statement we manually create the IR representation
      */
