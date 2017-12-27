@@ -136,7 +136,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI($dependencyInjector)
+    public function setDI(DiInterface $dependencyInjector)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {

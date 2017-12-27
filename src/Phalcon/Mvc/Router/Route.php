@@ -3,6 +3,7 @@
 namespace Phalcon\Mvc\Router;
 
 use \Phalcon\Text;
+use \Phalcon\Kernel;
 
 /**
  * Phalcon\Mvc\Router\Route
@@ -446,7 +447,6 @@ class Route implements RouteInterface
      */
     public static function getRoutePaths($paths = null)
     {
-
         if ( $paths !== null ) {
             if ( is_string($paths) ) {
 
@@ -504,12 +504,13 @@ class Route implements RouteInterface
                             $routePaths["namespace"] = $namespaceName;
                         }
                     }
-                } else {
-                    $realClassName = $controllerName;
+                    else {
+                        $realClassName = $controllerName;
+                    }
+                    // Always pass the controller to lowercase
+                    $routePaths["controller"] = strtolower($realClassName);
                 }
 
-                // Always pass the controller to lowercase
-                $routePaths["controller"] = uncamelize($realClassName);
 
                 // Process action name
                 if ( $actionName !== null ) {
@@ -525,7 +526,7 @@ class Route implements RouteInterface
         if ( !is_array($routePaths) ) {
             throw new Exception("The route contains invalid paths");
         }
-		return $routePaths;
+        return $routePaths;
 	}
 
     /**
@@ -737,7 +738,7 @@ class Route implements RouteInterface
      * @param GroupInterface $group
      * @return Route
      */
-    public function setGroup(GroupInterface $group)
+    public function setGroup($group)
 	{
 		$this->_group = $group;
 		return $this;
