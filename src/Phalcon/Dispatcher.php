@@ -26,9 +26,9 @@ use Phalcon\Mvc\Model\BinderInterface;
 abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterface, EventsAwareInterface
 {
 
-    protected $_dependencyInjector;
+    protected $_dependencyInjector= null;
 
-    protected $_eventsManager;
+    protected $_eventsManager=null;
 
     protected $_activeHandler;
 
@@ -466,6 +466,9 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
             //   throw new Exception('Invalid parameter type.');
         }
         $dependencyInjector = $this->_dependencyInjector;
+        if (!$dependencyInjector instanceof FilterInterface) {
+            $dependencyInjector = null;
+        }
         if (is_object($dependencyInjector) === false) {
             $this->{"_throwDispatchException"}("e", self::EXCEPTION_NO_DI);
             return false;
@@ -475,6 +478,9 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
             //   throw new Exception('Invalid parameter type.');
         }
         $eventsManager = $this->_eventsManager;
+        if (!$eventsManager instanceof ManagerInterface) {
+            $eventsManager = null;
+        }
         $hasEventsManager = is_object($eventsManager);
         $this->_finished = true;
         if ($hasEventsManager) {
@@ -523,7 +529,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                 $hasService = (bool)class_exists($handlerClass);
             }
             if (!$hasService) {
-                $status = $this->{'-throwDispatchException'}($handlerClass . 'handler class cannot be loaded', self::EXCEPTION_HANDLER_NOT_FOUND);
+                $status = $this->{'_throwDispatchException'}($handlerClass . 'handler class cannot be loaded', self::EXCEPTION_HANDLER_NOT_FOUND);
                 if ($status === false && $this->_finished === false) {
                     continue;
                 }
@@ -560,7 +566,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                         continue;
                     }
                 }
-                $status = $this->{'throwDispatchException'}("Action'" . $actionName . "'was not found on handler'" . $handlerName . "'", self::EXCEPTION_ACTION_NOT_FOUND);
+                $status = $this->{'_throwDispatchException'}("Action'" . $actionName . "'was not found on handler'" . $handlerName . "'", self::EXCEPTION_ACTION_NOT_FOUND);
                 if ($status === false && $this->_finished === false) {
                     continue;
                 }

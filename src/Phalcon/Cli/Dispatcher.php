@@ -3,6 +3,10 @@
 namespace Phalcon\Cli;
 
 
+namespace Phalcon\Cli;
+
+use Phalcon\FilterInterface;
+use Phalcon\Events\ManagerInterface;
 use Phalcon\Cli\Dispatcher\Exception;
 use Phalcon\Dispatcher as CliDispatcher;
 
@@ -102,6 +106,8 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
      */
     protected $_defaultAction = 'main';
 
+    protected $_eventsManager = null;
+
     /**
      * Sets the default task suffix
      *
@@ -195,11 +201,16 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
             !$exception instanceof Exception) {
             throw new Exception('Invalid parameter type.');
         }
-        if (is_object($this->_eventsManager) === true) {
-            if ($this->_eventsManager->fire('dispatch:beforeException', $this, $exception) === false) {
+        $eventsManager = $this->_eventsManager;
+        if (!$eventsManager instanceof ManagerInterface) {
+            $eventsManager = null;
+        }
+        if (is_object($eventsManager)){
+            if ($eventsManager->fire('dispatch:beforeException', $this, $exception) === false) {
                 return false;
             }
         }
+        return null;
     }
 
 
@@ -266,8 +277,12 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
             $this->{'_throeDispatchException'}("A dependency injection object is required 
             to access the 'filter' service", CliDispatcher::EXCEPTION_NO_DI);
         }
-        $filter = $dependencyInjector->getShared('filter');
-        return $filter->sanitize($optionValue, $filters);
+        $dependencyInjector = $this->_dependencyInjector;
+        if (!$dependencyInjector instanceof FilterInterface) {
+            $dependencyInjector = null;
+        }
+//        $filter = $dependencyInjector->getShared('filter');
+        return $dependencyInjector->sanitize($optionValue, $filters);
     }
 
     /**
@@ -287,9 +302,10 @@ class Dispatcher extends CliDispatcher implements DispatcherInterface
      * @param  array $params
      * @return mixed
      */
-    public function callActionMethod($handler, $actionMethod, $params)
+    public function callActionMethod($handler, $actionMethod, array $params=[])
     {
         $options = $this->_options;
+
 
         return call_user_func_array([$handler, $actionMethod], [$params, $options]);
     }
