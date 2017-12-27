@@ -3,8 +3,8 @@
 if (!file_exists(__DIR__ . '/config.db.local.php')) {
     $configMysql = array(
         'host'     => '192.168.2.42',
-        'username' => 'andy',
-        'password' => '123456',
+        'username' => 'root',
+        'password' => '',
         'dbname'   => 'phalcon_test'
     );
 

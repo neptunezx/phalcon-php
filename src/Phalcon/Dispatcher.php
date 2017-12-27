@@ -26,9 +26,9 @@ use Phalcon\Mvc\Model\BinderInterface;
 abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterface, EventsAwareInterface
 {
 
-    protected $_dependencyInjector;
+    protected $_dependencyInjector= null;
 
-    protected $_eventsManager;
+    protected $_eventsManager=null;
 
     protected $_activeHandler;
 
@@ -466,6 +466,9 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
             //   throw new Exception('Invalid parameter type.');
         }
         $dependencyInjector = $this->_dependencyInjector;
+        if (!$dependencyInjector instanceof FilterInterface) {
+            $dependencyInjector = null;
+        }
         if (is_object($dependencyInjector) === false) {
             $this->{"_throwDispatchException"}("e", self::EXCEPTION_NO_DI);
             return false;
@@ -475,6 +478,9 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
             //   throw new Exception('Invalid parameter type.');
         }
         $eventsManager = $this->_eventsManager;
+        if (!$eventsManager instanceof ManagerInterface) {
+            $eventsManager = null;
+        }
         $hasEventsManager = is_object($eventsManager);
         $this->_finished = true;
         if ($hasEventsManager) {
