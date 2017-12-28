@@ -20,7 +20,6 @@ use \Phalcon\Logger\Formatter\Line;
  *  $logger->close();
  * </code>
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/file.c
  */
 class File extends Adapter implements AdapterInterface
 {
@@ -36,7 +35,7 @@ class File extends Adapter implements AdapterInterface
     /**
      * Path
      *
-     * @var null|string
+     * @var string
      * @access protected
      */
     protected $_path;
@@ -158,5 +157,14 @@ class File extends Adapter implements AdapterInterface
         //Re-open the file handler if the logger was serialized
         $this->_fileHandler = fopen($this->_path, $mode);
     }
+
+    /**
+     * @return string
+     */
+    public function getPath(){
+        return $this->_path;
+    }
+
+
 
 }

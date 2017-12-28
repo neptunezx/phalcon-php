@@ -3,17 +3,15 @@
 namespace Phalcon\Logger\Formatter;
 
 use \Phalcon\Logger\Formatter;
-use \Phalcon\Logger\FormatterInterface;
-use \Phalcon\Logger\Exception;
+use \Phalcon\Logger;
 
 /**
  * Phalcon\Logger\Formatter\Firephp
  *
  * Formats messages so that they can be sent to FirePHP
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/formatter/firephp.c
  */
-class Firephp extends Formatter implements FormatterInterface
+class Firephp extends Formatter
 {
 
     /**
@@ -25,6 +23,11 @@ class Firephp extends Formatter implements FormatterInterface
     protected $_showBacktrace = true;
 
     /**
+     * @var bool
+     */
+    protected $_enableLabels = true;
+
+    /**
      * Returns the string meaning of a logger constant
      *
      * @param int $type
@@ -32,14 +35,27 @@ class Firephp extends Formatter implements FormatterInterface
      */
     public function getTypeString($type)
     {
-        $lut = array('ERROR', 'ERROR', 'WARN', 'ERROR', 'WARN', 'INFO', 'INFO', 'LOG', 'INFO', 'LOG');
+        switch ($type) {
+            case Logger::EMERGENCY:
+            case Logger::CRITICAL:
+            case Logger::ERROR:
+                return "ERROR";
 
-        $type = (int) $type;
-        if ($type > 0 && $type < 10) {
-            return $lut[$type];
+            case Logger::ALERT:
+            case Logger::WARNING:
+                return "WARN";
+
+            case Logger::INFO:
+            case Logger::NOTICE:
+            case Logger::CUSTOM:
+                return "INFO";
+
+            case Logger::DEBUG:
+            case Logger::SPECIAL:
+                return "LOG";
         }
 
-        return 'CUSTOM';
+        return "CUSTOM";
     }
 
     /**
@@ -55,10 +71,10 @@ class Firephp extends Formatter implements FormatterInterface
     /**
      * Set _showBacktrace member variable
      *
-     * @param boolean $show
+     * @param boolean|null $show
      * @throws Exception
      */
-    public function setShowBacktrace($show)
+    public function setShowBacktrace($show = null)
     {
         if (is_bool($show) === false) {
             throw new Exception('Invalid parameter type.');
@@ -68,15 +84,40 @@ class Firephp extends Formatter implements FormatterInterface
     }
 
     /**
+     * Returns the string meaning of a logger constant
+     *
+     * @param null|bool $isEnable
+     * @return Firephp
+     */
+    public function enableLabels($isEnable = null)
+    {
+        $isEnable = (boolean)$isEnable;
+        $this->_enableLabels = $isEnable;
+        return $this;
+    }
+
+    /**
+     * Returns the labels enabled
+     *
+     * @return bool
+     */
+    public function labelsEnabled()
+    {
+        return $this->_enableLabels;
+    }
+
+
+    /**
      * Applies a format to a message before sending it to the log
      *
      * @param string $message
      * @param int $type
      * @param int $timestamp
+     * @param var $context
      * @return string
      * @throws Exception
      */
-    public function format($message, $type, $timestamp)
+    public function format($message, $type, $timestamp, $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||
@@ -84,11 +125,16 @@ class Firephp extends Formatter implements FormatterInterface
             throw new Exception('Invalid parameter type.');
         }
 
+        if (is_array($context)) {
+            $message = $this->interpolate($message, $context);
+        }
+
         if ($this->_showBacktrace === true) {
             $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS);
         }
+        $meta = array("Type" => $this->getTypeString($type));
 
-        if (is_array($backtrace) === true) {
+        if (isset($backtrace) === true) {
             foreach ($backtrace as $key => $value) {
                 if (is_array($value) === true) {
                     if (isset($value['file']) === false) {
@@ -127,37 +173,52 @@ class Firephp extends Formatter implements FormatterInterface
          * )
          */
         $meta = array('Type' => $this->getTypeString($type), 'Label' => $message);
+        if ($this->_showBacktrace) {
+            $param = DEBUG_BACKTRACE_IGNORE_ARGS;
 
-        if (is_array($backtrace) === true) {
-            foreach ($backtrace as $trace) {
-                if (isset($meta['File']) === false &&
-                    array_key_exists('file', $trace) === true) {
-                    $meta['File'] = $trace['file'];
-                }
+            $backtrace = debug_backtrace($param);
+            $lastTrace = end($backtrace);
 
-                if (isset($meta['Line']) === false &&
-                    array_key_exists('line', $trace) === true) {
-                    $meta['Line'] = $trace['line'];
-                }
+            if (isset($lastTrace["file"])) {
+                $meta["File"] = $lastTrace["file"];
+            }
 
-                if (isset($meta['Line']) === true &&
-                    isset($meta['File']) === true) {
-                    break;
-                }
+            if (isset($lastTrace["line"])) {
+                $meta["Line"] = $lastTrace["line"];
+            }
+
+            foreach ($backtrace as $key => $backtraceItem) {
+                unset($backtraceItem["object"]);
+                unset($backtraceItem["args"]);
+
+                $backtrace[$key] = $backtraceItem;
             }
         }
 
-        $body = array();
-        if ($this->_showBacktrace === true) {
-            $body['backtrace'] = $backtrace;
+        if ($this->_enableLabels) {
+            $meta["Label"] = $message;
         }
 
-        $payload = array($meta, $body);
-        //@note no result check
-        $encoded = json_encode($payload);
-        unset($payload);
+        if (!$this->_enableLabels && !$this->_showBacktrace) {
+            $body = $message;
+        } else if ($this->_enableLabels && !$this->_showBacktrace) {
+            $body = "";
+        } else {
+            $body = array();
 
-        return (string) strlen($encoded) . '|' . $encoded . '|';
+            if ($this->_showBacktrace) {
+                $body["backtrace"] = $backtrace;
+            }
+
+            if (!$this->_enableLabels) {
+                $body["message"] = $message;
+            }
+        }
+
+        $encoded = json_encode(array($meta, $body));
+        $len = strlen($encoded);
+
+        return $len . "|" . $encoded . "|";
     }
 
 }

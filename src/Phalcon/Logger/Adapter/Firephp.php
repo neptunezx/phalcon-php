@@ -12,16 +12,8 @@ use \Phalcon\Logger\Formatter\Firephp as FirephpFormatter;
  *
  * Sends logs to FirePHP
  *
- * <code>
- *  $logger = new \Phalcon\Logger\Adapter\Firephp("");
- *  $logger->log("This is a message");
- *  $logger->log("This is an error", \Phalcon\Logger::ERROR);
- *  $logger->error("This is another error");
- * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/firephp.c
  */
-class Firephp extends Adapter implements AdapterInterface
+class Firephp extends Adapter
 {
 
     /**
@@ -30,7 +22,7 @@ class Firephp extends Adapter implements AdapterInterface
      * @var boolean
      * @access private
      */
-    private static $_initialized = false;
+    private  $_initialized = false;
 
     /**
      * Index
@@ -38,7 +30,7 @@ class Firephp extends Adapter implements AdapterInterface
      * @var int
      * @access private
      */
-    private static $_index = 1;
+    private $_index = 1;
 
     /**
      * Returns the internal formatter
@@ -61,40 +53,34 @@ class Firephp extends Adapter implements AdapterInterface
      * @param string $message
      * @param int $type
      * @param int $time
-     * @see http://www.firephp.org/Wiki/Reference/Protocol
      * @throws Exception
      */
-    public function logInternal($message, $type, $time)
+    public function logInternal($message, $type, $time ,array $context)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||
-            is_int($time) === false) {
+            is_int($time) === false ||
+            is_array($context) == false ) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (headers_sent() === true) {
-            throw new Exception('Headers have already been sent.');
-        }
 
-        if (self::$_initialized === false) {
-            if (ob_get_level() > 0) {
-                ob_end_clean();
-            }
+        if ($this->_initialized === false) {
 
             //Send the required initialization headers.
             header("X-Wf-Protocol-1: http://meta.wildfirehq.org/Protocol/JsonStream/0.2");
             header("X-Wf-1-Plugin-1: http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/0.3");
             header("X-Wf-1-Structure-1: http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1");
 
-            self::$_initialized = true;
+            $this->_initialized = true;
         }
 
-        $appliedFormat = $this->getFormatter()->format($message, $type, $time);
+        $appliedFormat = $this->getFormatter()->format($message, $type, $time ,$context);
         if (is_string($appliedFormat) === false) {
             throw new Exception('The formatted message is not valid');
         }
 
-        $index  = self::$_index;
+        $index  = $this->_index;
         $size   = strlen($appliedFormat);
         $offset = 0;
 
@@ -120,7 +106,7 @@ class Firephp extends Adapter implements AdapterInterface
             $index++;
         }
 
-        self::$_index = $index;
+        $this->_index = $index;
     }
 
     /**
