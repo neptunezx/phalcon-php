@@ -16,12 +16,20 @@ class Factory extends BaseFactory
      * @param \Phalcon\Config|array config
      * @return AdapterInterface
      * @throws Exception
+     * @throws \Phalcon\Exception
      */
     public static function load($config)
     {
         return self::loadClass("Phalcon\\Logger\\Adapter", $config);
     }
 
+    /**
+     * @param $namespace
+     * @param $config
+     * @return mixed
+     * @throws Exception
+     * @throws \Phalcon\Exception
+     */
     protected static function loadClass($namespace, $config)
     {
         if (is_object($config) && $config instanceof Config) {

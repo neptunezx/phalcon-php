@@ -68,6 +68,7 @@ class File extends Adapter implements AdapterInterface
         }
 
         if (isset($options['mode']) === true) {
+            $mode = $options['mode'];
             if (strpos($options['mode'], 'r') === true) {
                 throw new Exception('Logger must be opened in append or write mode');
             }
@@ -166,5 +167,13 @@ class File extends Adapter implements AdapterInterface
     }
 
 
-
+    /**
+     * @param string $message
+     * @param array|null $context
+     * @return mixed
+     */
+    public function emergency($message, array $context = null)
+    {
+        // TODO: Implement emergency() method.
+    }
 }

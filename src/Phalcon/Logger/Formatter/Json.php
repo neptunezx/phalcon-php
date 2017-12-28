@@ -25,7 +25,7 @@ class Json extends Formatter
      * @return string
      * @throws Exception
      */
-    public function format($message, $type, $timestamp, $context = null)
+    public function format($message, $type, $timestamp,array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||

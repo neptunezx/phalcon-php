@@ -50,10 +50,10 @@ class Item
      * @param $message string
      * @param $type int
      * @param $time int
-     * @param $context
+     * @param $context array|null
      * @throws Exception
      */
-    public function __construct($message, $type, $time = null ,array $context)
+    public function __construct($message, $type, $time = null ,array $context=null)
     {
         if (is_string($message) === false || is_int($type) === false ){
             throw new Exception('Invalid parameter type.');

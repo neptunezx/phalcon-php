@@ -3,10 +3,6 @@
 namespace Phalcon\Logger;
 
 use Phalcon\Logger;
-use Phalcon\Logger\Item;
-use Phalcon\Logger\Exception;
-use Phalcon\Logger\AdapterInterface;
-use Phalcon\Logger\FormatterInterface;
 
 /**
  * Phalcon\Logger\Adapter
@@ -217,7 +213,7 @@ abstract class Adapter implements AdapterInterface
         if (!is_string($message)) {
             throw new Exception('Invalid parameter type.');
         }
-        if (!isEmpty($context) && !is_array($context)) {
+        if (!empty($context) && !is_array($context)) {
             throw new Exception('Invalid parameter type.');
         }
         $this->log($message, Logger::DEBUG);
@@ -237,7 +233,7 @@ abstract class Adapter implements AdapterInterface
         if (!is_string($message)) {
             throw new Exception('Invalid parameter type.');
         }
-        if (!isEmpty($context) && !is_array($context)) {
+        if (!empty($context) && !is_array($context)) {
             throw new Exception('Invalid parameter type.');
         }
         $this->log($message, Logger::ERROR);
@@ -257,7 +253,7 @@ abstract class Adapter implements AdapterInterface
         if (!is_string($message)) {
             throw new Exception('Invalid parameter type.');
         }
-        if (!isEmpty($context) && !is_array($context)) {
+        if (!empty($context) && !is_array($context)) {
             throw new Exception('Invalid parameter type.');
         }
         $this->log($message, Logger::INFO);
@@ -277,7 +273,7 @@ abstract class Adapter implements AdapterInterface
         if (!is_string($message)) {
             throw new Exception('Invalid parameter type.');
         }
-        if (!isEmpty($context) && !is_array($context)) {
+        if (!empty($context) && !is_array($context)) {
             throw new Exception('Invalid parameter type.');
         }
         $this->log($message, Logger::NOTICE);
@@ -297,7 +293,7 @@ abstract class Adapter implements AdapterInterface
         if (!is_string($message)) {
             throw new Exception('Invalid parameter type.');
         }
-        if (!isEmpty($context) && !is_array($context)) {
+        if (!empty($context) && !is_array($context)) {
             throw new Exception('Invalid parameter type.');
         }
         $this->log($message, Logger::WARNING);
@@ -317,7 +313,7 @@ abstract class Adapter implements AdapterInterface
         if (!is_string($message)) {
             throw new Exception('Invalid parameter type.');
         }
-        if (!isEmpty($context) && !is_array($context)) {
+        if (!empty($context) && !is_array($context)) {
             throw new Exception('Invalid parameter type.');
         }
         $this->log($message, Logger::ALERT);
@@ -336,16 +332,16 @@ abstract class Adapter implements AdapterInterface
     public function log($type, $message = null, array $context = null)
     {
         if (is_string($type) && is_integer($message)) {
-            $toggledMessage = type;
-            $toggledType = message;
-        } else if (is_string($type) && isEmpty($message)) {
-            $toggledMessage = type;
-            $toggledType = message;
+            $toggledMessage = $type;
+            $toggledType = $message;
+        } else if (is_string($type) && empty($message)) {
+            $toggledMessage = $type;
+            $toggledType = $message;
         } else {
-            $toggledMessage = message;
-            $toggledType = type;
+            $toggledMessage = $message;
+            $toggledType = $type;
         }
-        if (isEmpty(toggledType)) {
+        if (empty($toggledType)) {
             $toggledType = Logger::DEBUG;
         }
 
@@ -356,7 +352,7 @@ abstract class Adapter implements AdapterInterface
         if ($this->_logLevel >= $toggledType) {
             $timestamp = time();
             if ($this->_transaction) {
-                $this->_queue[] = new Item(toggledMessage, toggledType, timestamp, context);
+                $this->_queue[] = new Item($toggledMessage, $toggledType, $timestamp, $context);
             } else {
                 $this->logInternal($toggledMessage, $toggledType, $timestamp, $context);
             }
