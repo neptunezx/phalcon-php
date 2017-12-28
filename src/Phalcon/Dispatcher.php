@@ -2,88 +2,57 @@
 
 namespace Phalcon;
 
-use function GuzzleHttp\Psr7\uri_for;
+use Exception;
+use Phalcon\DiInterface;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\DispatcherInterface;
+use Phalcon\Events\EventsAwareInterface;
+use Phalcon\Events\ManagerInterface;
+use Phalcon\Exception as PhalconException;
+use Phalcon\FilterInterface;
 use Phalcon\Mvc\Model\Binder;
-use \ReflectionMethod;
-use \Phalcon\DispatcherInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\DiInterface;
-use \Phalcon\Text;
-use \Phalcon\Exception;
-use \Phalcon\FilterInterface;
-use \Phalcon\Events\ManagerInterface;
 use Phalcon\Mvc\Model\BinderInterface;
+use Phalcon\Text;
 
 /**
  * Phalcon\Dispatcher
  *
  * This is the base class for Phalcon\Mvc\Dispatcher and Phalcon\Cli\Dispatcher.
- * This class can't be instantiated directly, you can use it to create your own dispatchers
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/dispatcher.c
+ * This class can't be instantiated directly, you can use it to create your own dispatchers.
  */
 abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterface, EventsAwareInterface
 {
 
-    protected $_dependencyInjector= null;
-
-    protected $_eventsManager=null;
-
+    protected $_dependencyInjector;
+    protected $_eventsManager;
     protected $_activeHandler;
-
-    protected $_finished = false;
-
-    protected $_forwarded = false;
-
-    protected $_moduleName = null;
-
-    protected $_namespaceName = null;
-
-    protected $_handlerName = null;
-
-    protected $_actionName = null;
-
-    protected $_params = [];
-
-    protected $_returnedValue = null;
-
-    protected $_lastHandler = null;
-
-    protected $_defaultNamespace = null;
-
-    protected $_defaultHandler = null;
-
-    protected $_defaultAction = "";
-
-    protected $_handlerSuffix = "";
-
-    protected $_actionSuffix = "Action";
-
-    protected $_previousNamespaceName = null;
-
-    protected $_previousHandlerName = null;
-
-    protected $_previousActionName = null;
-
-    protected $_modelBinding = false;
-
-    protected $_modelBinder = null;
-
+    protected $_finished               = false;
+    protected $_forwarded              = false;
+    protected $_moduleName             = null;
+    protected $_namespaceName          = null;
+    protected $_handlerName            = null;
+    protected $_actionName             = null;
+    protected $_params                 = [];
+    protected $_returnedValue          = null;
+    protected $_lastHandler            = null;
+    protected $_defaultNamespace       = null;
+    protected $_defaultHandler         = null;
+    protected $_defaultAction          = "";
+    protected $_handlerSuffix          = "";
+    protected $_actionSuffix           = "Action";
+    protected $_previousNamespaceName  = null;
+    protected $_previousHandlerName    = null;
+    protected $_previousActionName     = null;
+    protected $_modelBinding           = false;
+    protected $_modelBinder            = null;
     protected $_isControllerInitialize = false;
 
-    const EXCEPTION_NO_DI = 0;
-
-    const EXCEPTION_CYCLIC_ROUTING = 1;
-
+    const EXCEPTION_NO_DI             = 0;
+    const EXCEPTION_CYCLIC_ROUTING    = 1;
     const EXCEPTION_HANDLER_NOT_FOUND = 2;
-
-    const EXCEPTION_INVALID_HANDLER = 3;
-
-    const EXCEPTION_INVALID_PARAMS = 4;
-
-    const EXCEPTION_ACTION_NOT_FOUND = 5;
-
+    const EXCEPTION_INVALID_HANDLER   = 3;
+    const EXCEPTION_INVALID_PARAMS    = 4;
+    const EXCEPTION_ACTION_NOT_FOUND  = 5;
 
     /**
      * \Phalcon\Dispatcher constructor
@@ -103,7 +72,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
-            //    throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_dependencyInjector = $dependencyInjector;
@@ -127,11 +96,6 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      */
     public function setEventsManager(ManagerInterface $eventsManager)
     {
-        if (is_object($eventsManager) === false ||
-            $eventsManager instanceof ManagerInterface === false) {
-            //   throw new Exception('Invalid parameter type.');
-        }
-
         $this->_eventsManager = $eventsManager;
     }
 
@@ -154,7 +118,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     public function setActionSuffix($actionSuffix)
     {
         if (is_string($actionSuffix) === false) {
-            //   throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_actionSuffix = $actionSuffix;
@@ -204,7 +168,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     {
         if (is_string($namespaceName) === false &&
             is_null($namespaceName) === false) {
-            //   throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_namespaceName = $namespaceName;
@@ -229,7 +193,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     public function setDefaultNamespace($namespace)
     {
         if (is_string($namespace) === false) {
-            //    throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_defaultNamespace = $namespace;
@@ -254,7 +218,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     public function setDefaultAction($actionName)
     {
         if (is_string($actionName) === false) {
-            //    throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_defaultAction = $actionName;
@@ -268,7 +232,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     {
         if (is_string($actionName) === false &&
             is_null($actionName) === false) {
-            //   throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.');
         }
 
         $this->_actionName = $actionName;
@@ -290,12 +254,8 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
      * @param array $params
      * @throws Exception
      */
-    public function setParams($params)
+    public function setParams(array $params)
     {
-        if (is_array($params) === false) {
-            //    throw new Exception('Invalid parameter type.');
-        }
-
         $this->_params = $params;
     }
 
@@ -312,11 +272,14 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     /**
      * Set a param by its name or numeric index
      *
-     * @param mixed $param
+     * @param string $param
      * @param mixed $value
      */
     public function setParam($param, $value)
     {
+        if (!is_string($param)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_params[$param] = $value;
     }
 
@@ -349,6 +312,9 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
             //    throw new Exception('Invalid parameter type.');
         }
         $filter = $dependencyInjector->getShared('filter');
+        if (!$filter instanceof FilterInterface) {
+            throw new Exception('Wrong filter service');
+        }
         return $filter->sanitize($paramValue, $filters);
     }
 
@@ -402,18 +368,28 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     }
 
     /**
-     * @param $value
-     * @param null $cache
-     * @return $this
+     * Enable/Disable model binding during dispatch
+     *
+     * <code>
+     * $di->set('dispatcher', function() {
+     *     $dispatcher = new Dispatcher();
+     *
+     *     $dispatcher->setModelBinding(true, 'cache');
+     *     return $dispatcher;
+     * });
+     * </code>
+     *
+     * @deprecated 3.1.0 Use setModelBinder method
+     * @see Phalcon\Dispatcher::setModelBinder()
      */
     public function setModelBinding($value, $cache = null)
     {
         if (is_bool($value) === false) {
-            //   throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.');
         }
         if (is_string($cache)) {
             $dependencyInjector = $this->_dependencyInjector;
-            $cache = $dependencyInjector->get($cache);
+            $cache              = $dependencyInjector->get($cache);
         }
         $this->_modelBinding = $value;
         if ($value) {
@@ -423,31 +399,33 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     }
 
     /**
-     * @param $modelBinder
-     * @param null $cache
-     * @return $this
+     * Enable model binding during dispatch
+     *
+     * <code>
+     * $di->set('dispatcher', function() {
+     *     $dispatcher = new Dispatcher();
+     *
+     *     $dispatcher->setModelBinder(new Binder(), 'cache');
+     *     return $dispatcher;
+     * });
+     * </code>
      */
-    public function setModelBinder($modelBinder, $cache = null)
+    public function setModelBinder(BinderInterface $modelBinder, $cache = null)
     {
-        if (is_object($modelBinder) === false ||
-            !$modelBinder instanceof BinderInterface) {
-            //    throw new Exception('Invalid parameter type.');
-        }
         if (is_string($cache)) {
             $dependencyInjector = $this->_dependencyInjector;
-            $cache = $dependencyInjector->get($cache);
+            $cache              = $dependencyInjector->get($cache);
         }
         if ($cache != null) {
             $modelBinder->setCache($cache);
         }
         $this->_modelBinding = true;
-        $this->_modelBinder = $modelBinder;
+        $this->_modelBinder  = $modelBinder;
         return $this;
     }
 
     /**
      * Gets model binder
-     * @return  BinderInterface|null
      */
     public function getModelBinder()
     {
@@ -455,54 +433,69 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     }
 
     /**
-     * Dispatches a handle action taking into account the routing parameters
+     * Process the results of the router by calling into the appropriate controller action(s)
+     * including any routing data or injected parameters.
      *
-     * @return object|boolean
+     * @return object|false Returns the dispatched handler class (the Controller for Mvc dispatching or a Task
+     *                      for CLI dispatching) or <tt>false</tt> if an exception occurred and the operation was
+     *                      stopped by returning <tt>false</tt> in the exception handler.
+     *
+     * @throws \Exception if any uncaught or unhandled exception occurs during the dispatcher process.
      */
     public function dispatch()
     {
-        if (is_object($this->_dependencyInjector) === false ||
-            !$this->_dependencyInjector instanceof DiInterface) {
-            //   throw new Exception('Invalid parameter type.');
-        }
         $dependencyInjector = $this->_dependencyInjector;
-        if (!$dependencyInjector instanceof FilterInterface) {
-            $dependencyInjector = null;
-        }
-        if (is_object($dependencyInjector) === false) {
-            $this->{"_throwDispatchException"}("e", self::EXCEPTION_NO_DI);
+        if (!$dependencyInjector instanceof DiInterface) {
+            $this->{"_throwDispatchException"}("A dependency injection container is required to access related dispatching services", self::EXCEPTION_NO_DI);
             return false;
         }
-        if (is_object($this->_eventsManager) === false ||
-            !$this->_eventsManager instanceof DiInterface) {
-            //   throw new Exception('Invalid parameter type.');
+        
+        if (is_object($this->_eventsManager) && !$this->_eventsManager instanceof ManagerInterface) {
+            throw new Exception('Wrong EventManager service');
         }
-        $eventsManager = $this->_eventsManager;
-        if (!$eventsManager instanceof ManagerInterface) {
-            $eventsManager = null;
+
+        $eventsManager    = $this->_eventsManager;
+        $hasEventsManager = false;
+        if ($eventsManager && $eventsManager instanceof ManagerInterface) {
+            $hasEventsManager = true;
         }
-        $hasEventsManager = is_object($eventsManager);
         $this->_finished = true;
+
         if ($hasEventsManager) {
             try {
+                // Calling beforeDispatchLoop event
+                // Note: Allow user to forward in the beforeDispatchLoop.
                 if ($eventsManager->fire('dispatch:beforeDispatchLoop', $this) === false && $this->_finished !== false) {
                     return false;
                 }
             } catch (Exception $e) {
+                // Exception occurred in beforeDispatchLoop.
+                // The user can optionally forward now in the `dispatch:beforeException` event or
+                // return <tt>false</tt> to handle the exception and prevent it from bubbling. In
+                // the event the user does forward but does or does not return false, we assume the forward
+                // takes precedence. The returning false intuitively makes more sense when inside the
+                // dispatch loop and technically we are not here. Therefore, returning false only impacts
+                // whether non-forwarded exceptions are silently handled or bubbled up the stack. Note that
+                // this behavior is slightly different than other subsequent events handled inside the
+                // dispatch loop.
+
                 $status = $this->{'_handelException'}($e);
                 if ($this->_finished !== false) {
                     if ($status === false) {
                         return false;
                     }
+                    // Otherwise, bubble Exception
                     throw $e;
                 }
+
+                // Otherwise, user forwarded, continue
             }
         }
-        $value = null;
-        $handler = null;
+        $value            = null;
+        $handler          = null;
         $numberDispatches = 0;
-        $actionSuffix = $this->_actionSuffix;
-        $this->_finished = false;
+        $actionSuffix     = $this->_actionSuffix;
+        $this->_finished  = false;
         while (!$this->_finished) {
             $numberDispatches++;
             if ($numberDispatches == 256) {
@@ -524,9 +517,9 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                 }
             }
             $handlerClass = $this->getHandlerClass();
-            $hasService = (bool)$dependencyInjector->has($handlerClass);
+            $hasService   = (bool) $dependencyInjector->has($handlerClass);
             if (!$hasService) {
-                $hasService = (bool)class_exists($handlerClass);
+                $hasService = (bool) class_exists($handlerClass);
             }
             if (!$hasService) {
                 $status = $this->{'_throwDispatchException'}($handlerClass . 'handler class cannot be loaded', self::EXCEPTION_HANDLER_NOT_FOUND);
@@ -535,7 +528,7 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                 }
                 break;
             }
-            $handler = $dependencyInjector->getShared($handlerClass);
+            $handler  = $dependencyInjector->getShared($handlerClass);
             $wasFresh = $dependencyInjector->wasFreshInstance();
             if (is_object($handler) === false) {
                 $status = $this->{'_throwDispatchException'}('Invalid handler returned from the services contaioner', self::EXCEPTION_INVALID_HANDLER);
@@ -545,10 +538,10 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                 break;
             }
             $this->_activeHandler = $handler;
-            $namespaceName = $this->_namespaceName;
-            $handlerName = $this->_handlerName;
-            $actionName = $this->_actionName;
-            $params = $this->_params;
+            $namespaceName        = $this->_namespaceName;
+            $handlerName          = $this->_handlerName;
+            $actionName           = $this->_actionName;
+            $params               = $this->_params;
             if (is_array($params) === false) {
                 $status = $this->{'_throwDispatchException'}('Action parameters must be an Array', self::EXCEPTION_INVALID_PARAMS);
                 if ($status === false && $this->_finished === false) {
@@ -566,12 +559,20 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                         continue;
                     }
                 }
+                // Try to throw an exception when an action isn't defined on the object
                 $status = $this->{'_throwDispatchException'}("Action'" . $actionName . "'was not found on handler'" . $handlerName . "'", self::EXCEPTION_ACTION_NOT_FOUND);
                 if ($status === false && $this->_finished === false) {
                     continue;
                 }
                 break;
             }
+
+            // In order to ensure that the initialize() gets called we'll destroy the current handlerClass
+            // from the DI container in the event that an error occurs and we continue out of this block. This
+            // is necessary because there is a disjoin between retrieval of the instance and the execution
+            // of the initialize() event. From a coding perspective, it would have made more sense to probably
+            // put the initialize() prior to the beforeExecuteRoute which would have solved this. However, for
+            // posterity, and to remain consistency, we'll ensure the default and documented behavior works correctly.
             if ($hasEventsManager) {
                 try {
                     if ($eventsManager->fire('dispatch:beforeExecuteRoute', $this) === false || $this->_finished === false) {
@@ -583,9 +584,40 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                         $dependencyInjector->remove($handlerClass);
                         continue;
                     }
-                    throw  $e;
+                    throw $e;
                 }
             }
+
+
+            if (method_exists($handler, "beforeExecuteRoute")) {
+                try {
+                    // Calling "beforeExecuteRoute" as direct method
+                    if ($handler->beforeExecuteRoute($this) === false || $this->_finished === false) {
+                        $dependencyInjector->remove($handlerClass);
+                        continue;
+                    }
+                } catch (Exception $e) {
+                    if ($this->{"_handleException"}($e) === false || $this->_finished === false) {
+                        $dependencyInjector->remove($handlerClass);
+                        continue;
+                    }
+
+                    throw $e;
+                }
+            }
+
+            // Call the "initialize" method just once per request
+            //
+			// Note: The `dispatch:afterInitialize` event is called regardless of the presence of an `initialize`
+            //       method. The naming is poor; however, the intent is for a more global "constructor is ready
+            //       to go" or similarly "__onConstruct()" methodology.
+            //
+			// Note: In Phalcon 4.0, the initialize() and `dispatch:afterInitialize` event will be handled
+            // prior to the `beforeExecuteRoute` event/method blocks. This was a bug in the original design
+            // that was not able to change due to widespread implementation. With proper documentation change
+            // and blog posts for 4.0, this change will happen.
+            //
+			// @see https://github.com/phalcon/cphalcon/pull/13112
             if ($wasFresh === true) {
                 if (method_exists($handler, 'initialize')) {
                     try {
@@ -593,13 +625,20 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                         $handler->initialize();
                     } catch (Exception $e) {
                         $this->_isControllerInitialize = false;
+
+                        // If this is a dispatch exception (e.g. From forwarding) ensure we don't handle this twice. In
+                        // order to ensure this doesn't happen all other exceptions thrown outside this method
+                        // in this class should not call "_throwDispatchException" but instead throw a normal Exception.
                         if ($this->{'_handleException'}($e) === false || $this->_finished === false) {
                             continue;
                         }
                         throw $e;
                     }
                 }
+
                 $this->_isControllerInitialize = false;
+
+                // Calling "dispatch:afterInitialize" event
                 if ($eventsManager) {
                     try {
                         if ($eventsManager->fire('dispatch:afterInitialize', $this) === false || $this->_finished === false) {
@@ -609,34 +648,46 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                         if ($this->{'_handeleException'}($e) === false || $this->_finished === false) {
                             continue;
                         }
-                        throw  $e;
+                        throw $e;
                     }
                 }
             }
             if ($this->_modelBinding) {
-                $modelBinder = $this->_modelBinder;
+                $modelBinder  = $this->_modelBinder;
                 $bindCacheKey = '_PHMB_' . $handlerClass . '_' . $actionMethod;
-                $params = $modelBinder->bindToHandler($handler, $params, $bindCacheKey, $actionMethod);
+                $params       = $modelBinder->bindToHandler($handler, $params, $bindCacheKey, $actionMethod);
             }
+
+            // Calling afterBinding
             if ($hasEventsManager) {
                 if ($eventsManager) {
                     if ($eventsManager->fire('dispatch:afterBinding', $this) === false) {
                         continue;
                     }
+
+                    // Check if the user made a forward in the listener
                     if ($this->_finished === false) {
                         continue;
                     }
                 }
+
+                // Calling afterBinding as callback and event
                 if (method_exists($handler, 'afterBinding')) {
                     if ($handler->afterBinding($this) === false) {
                         continue;
                     }
+
+                    // Check if the user made a forward in the listener
                     if ($this->_finished === false) {
                         continue;
                     }
                 }
+
+                // Save the current handler
                 $this->_lastHandler = $handler;
+
                 try {
+                    // We update the latest value produced by the latest handler
                     $this->_returnedValue = $this->callActionMethod($handler, $actionMethod, $params);
                     if ($this->_finished === false) {
                         continue;
@@ -648,6 +699,8 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                     throw $e;
                 }
             }
+
+            // Calling "dispatch:afterExecuteRoute" event
             if (method_exists($handler, 'afterExcuteRoute')) {
                 try {
                     if ($handler->afterExcuteRoute($this, $value) === false || $this->_finished === false) {
@@ -660,10 +713,13 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                     throw e;
                 }
             }
+
+            // Calling "afterExecuteRoute" as direct method
             if ($hasEventsManager) {
                 try {
                     $eventsManager->fire('dispatch:afterDispatch', $this, $value);
                 } catch (Exception $e) {
+                    // Still check for finished here as we want to prioritize forwarding() calls
                     if ($this->{'_handleException'}($e) === false || $this->_finished === false) {
                         continue;
                     }
@@ -671,33 +727,54 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
                 }
             }
         }
+
         if ($hasEventsManager) {
             try {
+                // Calling "dispatch:afterDispatchLoop" event
+                // Note: We don't worry about forwarding in after dispatch loop.
                 $eventsManager->fire('dispatch:afterDispatchLoop', $this);
             } catch (Exception $e) {
+                // Exception occurred in afterDispatchLoop.
                 if ($this->{'_handleException'}($e) === false) {
                     return false;
                 }
+
+                // Otherwise, bubble Exception
                 throw $e;
             }
         }
+
         return $handler;
     }
 
     /**
-     * am array $forward
+     * Forwards the execution flow to another controller/action.
+     *
+     * <code>
+     * $this->dispatcher->forward(
+     *     [
+     *         "controller" => "posts",
+     *         "action"     => "index",
+     *     ]
+     * );
+     * </code>
+     *
+     * @param array forward
+     *
+     * @throws \Phalcon\Exception
      */
-    public function forward($forward)
+    public function forward(array $forward)
     {
         if ($this->_isControllerInitialize === true) {
-            throw new Exception("Forward parameter must be an Array");
+            // Note: Important that we do not throw a "_throwDispatchException" call here. This is important
+            // because it would allow the application to break out of the defined logic inside the dispatcher
+            // which handles all dispatch exceptions.
+            throw new PhalconException("Forwarding inside a controller's initialize() method is forbidden");
         }
-        if (is_array($forward) === false) {
-            throw new Exception("Forward parameter must be an Array");
-        }
+
         $this->_previousNamespaceName = $this->_namespaceName;
-        $this->_previousHandlerName = $this->_handlerName;
-        $this->_previousActionName = $this->_actionName;
+        $this->_previousHandlerName   = $this->_handlerName;
+        $this->_previousActionName    = $this->_actionName;
 
         //Check if we need to forward to another namespace
         if (isset($forward['namespace'])) {
@@ -719,14 +796,11 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
         }
 
         //Check if we need to forward changing the current parameters
-
         if (isset($forward['params'])) {
-            //@note Changed "fetch_string" to "fetch_array", since the parameters are passed
-            //as an array
             $this->_params = $forward['params'];
         }
 
-        $this->_finished = false;
+        $this->_finished  = false;
         $this->_forwarded = true;
     }
 
@@ -749,15 +823,19 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
     {
         $this->_resolveEmptyProperties();
         $handlerSuffix = $this->_handlerSuffix;
-        $handlerName = $this->_handlerName;
+        $handlerName   = $this->_handlerName;
         $namespaceName = $this->_namespaceName;
+
+        // We don't camelize the classes if they are in namespaces
         if (!Text::memstr($handlerName, '\\')) {
             $camelizedClass = Text::camelize($handlerName);
         } else {
             $camelizedClass = $handlerName;
         }
+
+        // Create the complete controller class name prepending the namespace
         if ($namespaceName) {
-            if (substr($namespaceName, -1) === '\\') {
+            if (Text::endsWith($namespaceName, "\\")) {
                 $handlerClass = $namespaceName . $camelizedClass . $handlerSuffix;
             } else {
                 $handlerClass = $namespaceName . '\\' . $camelizedClass . $handlerSuffix;
@@ -765,12 +843,13 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
         } else {
             $handlerClass = $camelizedClass . $handlerSuffix;
         }
+
         return $handlerClass;
     }
 
     /**
      * @param $handler
-     * @param $actionMethod
+     * @param $action Method
      * @param array $params
      * @return mixed
      * @throws \Phalcon\Exception
@@ -783,8 +862,19 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
         return call_user_func_array([$handler, $actionMethod], $params);
     }
 
-
     /**
+     * Returns bound models from binder instance
+     *
+     * <code>
+     * class UserController extends Controller
+     * {
+     *     public function showAction(User $user)
+     *     {
+     *         $boundModels = $this->dispatcher->getBoundModels(); // return array with $user
+     *     }
+     * }
+     * </code>
+     * 
      * @return array
      */
     public function getBoundModels()
@@ -793,21 +883,26 @@ abstract class Dispatcher implements DispatcherInterface, InjectionAwareInterfac
         if ($modelBinder != null) {
             return $modelBinder->getBoundModels();
         }
+
         return [];
     }
 
-
     /**
-     *
+     * Set empty properties to their defaults (where defaults are available)
      */
     protected function _resolveEmptyProperties()
     {
+        // If the current namespace is null we used the set in this->_defaultNamespace
         if (!$this->_namespaceName) {
             $this->_namespaceName = $this->_defaultNamespace;
         }
+
+        // If the handler is null we use the set in this->_defaultHandler
         if (!$this->_handlerName) {
             $this->_handlerName = $this->_defaultHandler;
         }
+
+        // If the action is null we use the set in this->_defaultAction
         if (!$this->_actionName) {
             $this->_actionName = $this->_defaultAction;
         }

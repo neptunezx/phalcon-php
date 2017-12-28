@@ -60,7 +60,6 @@ class ComplexTest extends UnitTest
                 $robots = $modelsManager->executeQuery(
                     'SELECT r.*, p.* FROM ' . Robots::class . ' r JOIN ' . RobotsParts::class . ' p '
                 );
-
                 expect($robots)->isInstanceOf(Complex::class);
                 expect($robots)->count(3);
                 expect($robots->count())->equals(3);

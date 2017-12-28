@@ -636,12 +636,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             // Check if we need to rename the field
             if (is_array($columnMap)) {
                 if (!isset($columnMap[$attribute])) {
-                    $attributeField = $columnMap[$attribute];
-                    if (Kernel::getGlobals('orm.ignore_unknown_columns')) {
+                    if (!Kernel::getGlobals('orm.ignore_unknown_columns')) {
                         throw new Exception("Column '" . $attribute . "' doesn\'t make part of the column map");
                     } else {
                         continue;
                     }
+                } else {
+                    $attributeField = $columnMap[$attribute];
                 }
             } else {
                 $attributeField = $attribute;

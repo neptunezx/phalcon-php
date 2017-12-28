@@ -73,6 +73,7 @@ $loader->registerNamespaces(
         'Phalcon\Test\Modules\Backend\Controllers'  => $config->get('application')->modulesDir . 'backend/controllers/',
         'Phalcon\Test'                              => TESTS_PATH,
         'Phalcon\Test\Module'                       => TESTS_PATH . '/_support/Module',
+        'Phalcon\Test\Listener'                     => TESTS_PATH . '/_data/listener',
     ]
 );
 

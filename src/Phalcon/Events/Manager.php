@@ -61,24 +61,31 @@ class Manager implements ManagerInterface
      */
     public function attach($eventType, $handler, $priority = 100)
     {
-
-        $priorityQueue = '';
-        if (is_string($eventType) === false || !is_int($priority)) {
+        if (is_string($eventType) === false || is_int($priority) === false) {
             throw new Exception('Invalid parameter type.');
         }
         if (!is_object($handler)) {
             throw new Exception('Event handler must be an Object');
         }
+
+        $priorityQueue = [];
         if (!isset($this->_events[$eventType])) {
             if ($this->_enablePriorities) {
-                $priorityQueue             = new SplPriorityQueue();
+                // Create a SplPriorityQueue to store the events with priorities
+                $priorityQueue = new SplPriorityQueue();
+
+                // Extract only the Data // Set extraction flags
                 $priorityQueue->setExtractFlags(SplPriorityQueue::EXTR_DATA);
+
+                // Append the events to the queue
                 $this->_events[$eventType] = $priorityQueue;
             } else {
                 $priorityQueue = [];
             }
+        } else {
+            $priorityQueue = $this->_events[$eventType];
         }
-        if (isset($priorityQueue) && is_object($priorityQueue)) {
+        if (is_object($priorityQueue)) {
             $priorityQueue->insert($handler, $priority);
         } else {
             $priorityQueue[]           = $handler;
@@ -101,13 +108,16 @@ class Manager implements ManagerInterface
         if (!is_object($handler)) {
             throw new Exception('Event handler must be an Object');
         }
+
         if (isset($this->_events[$eventType])) {
             $priorityQueue = $this->_events[$eventType];
             if (is_object($priorityQueue)) {
                 $newPriorityQueue = new SplPriorityQueue();
                 $newPriorityQueue->setExtractFlags(SplPriorityQueue::EXTR_DATA);
+
                 $priorityQueue->setExtractFlags(SplPriorityQueue::EXTR_BOTH);
                 $priorityQueue->top();
+
                 while ($priorityQueue->valid()) {
                     $data = $priorityQueue->current();
                     $priorityQueue->next();
@@ -115,6 +125,7 @@ class Manager implements ManagerInterface
                         $newPriorityQueue->insert($data['data'], $data['priority']);
                     }
                 }
+
                 $this->_events[$eventType] = $newPriorityQueue;
             } else {
                 $key = array_search($handler, $priorityQueue, true);
@@ -134,11 +145,7 @@ class Manager implements ManagerInterface
      */
     public function enablePriorities($enablePriorities)
     {
-        if (is_bool($enablePriorities) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->_enablePriorities = $enablePriorities;
+        $this->_enablePriorities = (bool) $enablePriorities;
     }
 
     /**
@@ -160,10 +167,7 @@ class Manager implements ManagerInterface
      */
     public function collectResponses($collect)
     {
-        if (is_bool($collect) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->_collect = $collect;
+        $this->_collect = (bool) $collect;
     }
 
     /**
@@ -195,12 +199,12 @@ class Manager implements ManagerInterface
      */
     public function detachAll($type = null)
     {
-        if (is_string($type) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
         if ($type === null) {
             $this->_events = null;
         } else {
+            if (is_string($type) === false) {
+                throw new Exception('Invalid parameter type.');
+            }
             if (isset($this->_events[$type])) {
                 unset($this->_events[$type]);
             }
@@ -222,13 +226,11 @@ class Manager implements ManagerInterface
     /**
      * Internal handler to call a queue of events
      *
-     * @param \SplPriorityQueue|array $queue
-     * @param EventInterface $event
+     * @param \SplPriorityQueue|array queue
+     * @param \Phalcon\Events\Event event
      * @return mixed
-     * @throws Exception
-     * @update EventsInterface to Event
      */
-    public function fireQueue($queue, Event $event)
+    public function fireQueue($queue, EventInterface $event)
     {
         if (!is_array($queue)) {
             if (is_object($queue)) {
@@ -243,6 +245,7 @@ class Manager implements ManagerInterface
                 throw new Exception('The queue is not valid');
             }
         }
+
         $status    = null;
         $arguments = null;
         $eventName = $event->getType();
@@ -282,12 +285,20 @@ class Manager implements ManagerInterface
                             }
                         }
                     } else {
+
+                        // Check if the listener has implemented an event with the same name
                         if (method_exists($handler, $eventName)) {
+
+                            // Call the function in the PHP userland
                             $status = $handler->{$eventName}($event, $source, $data);
+
+                            // Collect the response
                             if ($collect) {
                                 $this->_responses[] = $status;
                             }
+
                             if ($cancelable) {
+                                // Check if the event was stopped by the user
                                 if ($event->isStopped()) {
                                     break;
                                 }
@@ -300,10 +311,15 @@ class Manager implements ManagerInterface
             foreach ($queue as $handler) {
                 if (is_object($handler)) {
                     if ($handler instanceof \Closure) {
+                        // Create the closure arguments
                         if ($arguments === null) {
                             $arguments = [$event, $source, $data];
                         }
+
+                        // Call the function in the PHP userland
                         $status = call_user_func_array($handler, $arguments);
+
+                        // Trace the response
                         if ($collect) {
                             $this->_responses[] = $status;
                         }
@@ -318,7 +334,9 @@ class Manager implements ManagerInterface
                             if ($collect) {
                                 $this->_responses[] = $status;
                             }
+
                             if ($cancelable) {
+                                // Check if the event was stopped by the user
                                 if ($event->isStopped()) {
                                     break;
                                 }
@@ -350,20 +368,25 @@ class Manager implements ManagerInterface
         if (is_string($eventType) === false || is_bool($cancelable) === false) {
             throw new Exception('Invalid parameter type.');
         }
+
         $events = $this->_events;
+
         if (!is_array($events)) {
             return null;
         }
         if (!Text::memstr($eventType, ':')) {
             throw new Exception("Invalid event type " . $eventType);
         }
+
         $eventParts = explode(':', $eventType);
         $type       = $eventParts[0];
         $eventName  = $eventParts[1];
-        $status     = null;
+
+        $status = null;
         if ($this->_collect) {
             $this->_responses = null;
         }
+
         $event = null;
         if (isset($events[$type])) {
             $fireEvents = $events[$type];
@@ -372,15 +395,20 @@ class Manager implements ManagerInterface
                 $status = $this->fireQueue($fireEvents, $event);
             }
         }
+
         if (isset($events[$eventType])) {
             $fireEvents = $events[$eventType];
             if (is_object($fireEvents) || is_array($fireEvents)) {
+                // Create the event if it wasn't created before
                 if ($event === null) {
                     $event = new Event($eventName, $source, $data, $cancelable);
                 }
+
+                // Call the events queue
                 $status = $this->fireQueue($fireEvents, $event);
             }
         }
+
         return $status;
     }
 
@@ -411,6 +439,7 @@ class Manager implements ManagerInterface
         if (is_string($type) === false) {
             throw new Exception('Invalid parameter type.');
         }
+
         $events = $this->_events;
         if (is_array($events)) {
             if (isset($events[$type])) {

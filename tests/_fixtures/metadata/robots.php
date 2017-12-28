@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Fixture for Robots model
  *
@@ -17,7 +18,7 @@
  */
 return [
     'meta-robots-robots' => [
-        0 => [
+        0  => [
             0 => 'id',
             1 => 'name',
             2 => 'type',
@@ -26,10 +27,10 @@ return [
             5 => 'deleted',
             6 => 'text',
         ],
-        1 => [
+        1  => [
             0 => 'id',
         ],
-        2 => [
+        2  => [
             0 => 'name',
             1 => 'type',
             2 => 'year',
@@ -37,7 +38,7 @@ return [
             4 => 'deleted',
             5 => 'text',
         ],
-        3 => [
+        3  => [
             0 => 'id',
             1 => 'name',
             2 => 'type',
@@ -45,21 +46,21 @@ return [
             4 => 'datetime',
             5 => 'text',
         ],
-        4 => [
+        4  => [
             'id'       => 0,
             'name'     => 2,
             'type'     => 2,
             'year'     => 0,
             'datetime' => 4,
-            'deleted' => 4,
+            'deleted'  => 4,
             'text'     => 6,
         ],
-        5 => [
+        5  => [
             'id'   => true,
             'year' => true,
         ],
-        8 => 'id',
-        9 => [
+        8  => 'id',
+        9  => [
             'id'       => 1,
             'name'     => 2,
             'type'     => 2,
@@ -77,7 +78,7 @@ return [
         ],
         13 => [],
     ],
-    'map-robots' => [
+    'map-robots'         => [
         0 => null,
         1 => null,
     ],

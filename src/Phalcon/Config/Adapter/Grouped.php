@@ -78,7 +78,7 @@ class Grouped extends Config
                 $configInstance["adapter"] = $defaultAdapter;
             }
 
-            if (is_array($configInstance["adapter"])) {
+            if ($configInstance["adapter"] === 'array') {
                 if (!isset($configInstance["config"])) {
                     throw new Exception(
                     "To use 'array' adapter you have to specify the 'config' as an array."
