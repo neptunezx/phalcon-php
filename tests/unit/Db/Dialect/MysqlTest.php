@@ -87,7 +87,6 @@ class MysqlTest extends UnitTest
             function ($schema, $column, $expected) {
                 $dialect = new Mysql();
                 $columns = $this->getColumns();
-
                 expect($dialect->addColumn('table', $schema, $columns[$column]))->equals($expected);
             },
             [

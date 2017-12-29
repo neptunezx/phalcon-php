@@ -338,13 +338,9 @@ class Mysql extends PdoAdapter
     public function describeReferences($table, $schema = null)
     {
         $references = [];
-        $dialect    = $this->_dialect;
-
-        //Get the SQL to describe a table
-        $sql = $dialect->describeIndexes($table, $schema);
 
         //Get the describe
-        $describe = $this->fetchAll($sql, Db::FETCH_NUM);
+        $describe = $this->fetchAll($this->_dialect->describeReferences($table, $schema), Db::FETCH_NUM);
 
         foreach ($describe as $reference) {
             $constraintName = $reference[2];

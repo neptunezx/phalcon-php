@@ -61,9 +61,7 @@ abstract class Dialect implements DialectInterface
      */
     public final function escapeSchema($str, $escapeChar = null)
     {
-        //TODO unkown func
-        if (!(isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
-            $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true )) {
+        if (!Kernel::getGlobals("db.escape_identifiers")) {
             return $str;
         }
 
@@ -656,9 +654,9 @@ abstract class Dialect implements DialectInterface
 
     /**
      * Resolve qualified expressions
+     * 
      * @param array       $expression
      * @param string|null $escapeChar
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
@@ -680,6 +678,7 @@ abstract class Dialect implements DialectInterface
 
     /**
      * Resolve binary operations expressions
+     * 
      * @param array        $expression
      * @param string|null  $escapeChar
      * @param string|null         $bindCounts
@@ -696,9 +695,7 @@ abstract class Dialect implements DialectInterface
 
     /**
      * Resolve unary operations expressions
-     */
-
-    /**
+     * 
      * @param array          $expression
      * @param string|null    $escapeChar
      * @param string|null    $bindCounts
@@ -1101,10 +1098,6 @@ abstract class Dialect implements DialectInterface
 
     /**
      * Prepares table for this RDBMS
-     */
-
-    /**
-     * Prepares table for this RDBMS
      * 
      * @param string     $table
      * @param string|null $schema
@@ -1133,7 +1126,7 @@ abstract class Dialect implements DialectInterface
         if ($alias != "") {
             $table = $table . " AS " . $this->escape($alias, $escapeChar);
         }
-        
+
         return $table;
     }
 
