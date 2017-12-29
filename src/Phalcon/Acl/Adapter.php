@@ -68,13 +68,8 @@ abstract class Adapter implements AdapterInterface, EventsAwareInterface
      * @param \Phalcon\Events\ManagerInterface $eventsManager
      * @throws Exception
      */
-    public function setEventsManager($eventsManager)
+    public function setEventsManager(ManagerInterface $eventsManager)
     {
-        if (is_object($eventsManager) === false ||
-            $eventsManager instanceof ManagerInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_eventsManager = $eventsManager;
     }
 
