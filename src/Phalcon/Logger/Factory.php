@@ -1,27 +1,26 @@
 <?php
 
+namespace Phalcon\Logger;
+
 use Phalcon\Factory as BaseFactory;
 use Phalcon\Factory\Exception;
 use Phalcon\Config;
 
 /**
- * Created by PhpStorm.
- * User: gaopu
- * Date: 2017/12/28
- * Time: 下午9:04
+ * Loads Logger Adapter class using 'adapter' option
+ *
+ * <code>
+ * use Phalcon\Logger\Factory;
+ *
+ * $options = [
+ *     "name"    => "log.txt",
+ *     "adapter" => "file",
+ * ];
+ * $logger = Factory::load($options);
+ * </code>
  */
 class Factory extends BaseFactory
 {
-    /**
-     * @param \Phalcon\Config|array config
-     * @return AdapterInterface
-     * @throws Exception
-     * @throws \Phalcon\Exception
-     */
-    public static function load($config)
-    {
-        return self::loadClass("Phalcon\\Logger\\Adapter", $config);
-    }
 
     /**
      * @param $namespace
@@ -41,7 +40,7 @@ class Factory extends BaseFactory
         }
 
         if (isset($config["adapter"])) {
-            $adapter = $config["adapter"];
+            $adapter   = $config["adapter"];
             $className = $namespace . "\\" . \Phalcon\Text::camelize($adapter);
             if ($className != "Phalcon\\Logger\\Adapter\\Firephp") {
                 unset($config["adapter"]);
@@ -58,4 +57,15 @@ class Factory extends BaseFactory
         }
         throw new Exception("You must provide 'adapter' option in factory config parameter.");
     }
+
+    /**
+     * @param \Phalcon\Config|array config
+     * 
+     * @return object
+     */
+    public static function load($config)
+    {
+        return self::loadClass("Phalcon\\Logger\\Adapter", $config);
+    }
+
 }

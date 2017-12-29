@@ -20,7 +20,7 @@ abstract class Formatter implements FormatterInterface
      */
     public function getTypeString($type)
     {
-        switch ($type) {
+        switch ((int) $type) {
 
             case Logger::DEBUG:
                 return "DEBUG";
@@ -64,7 +64,7 @@ abstract class Formatter implements FormatterInterface
      * @return string
      * @throws Exception
      */
-    public function interpolate($message,array $context = null)
+    public function interpolate($message, array $context = null)
     {
         if (!is_string($message)) {
             throw new Exception('Invalid parameter type.');

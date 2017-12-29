@@ -2,10 +2,10 @@
 
 namespace Phalcon\Logger\Adapter;
 
-use \Phalcon\Logger\Adapter;
-use \Phalcon\Logger\AdapterInterface;
-use \Phalcon\Logger\Exception;
-use \Phalcon\Logger\Formatter\Line;
+use Phalcon\Logger\Exception;
+use Phalcon\Logger\Adapter;
+use Phalcon\Logger\FormatterInterface;
+use Phalcon\Logger\Formatter\Line as LineFormatter;
 use Phalcon\Text;
 
 /**
@@ -13,8 +13,18 @@ use Phalcon\Text;
  *
  * Sends logs to a valid PHP stream
  *
+ * <code>
+ * use Phalcon\Logger;
+ * use Phalcon\Logger\Adapter\Stream;
+ *
+ * $logger = new Stream("php://stderr");
+ *
+ * $logger->log("This is a message");
+ * $logger->log(Logger::ERROR, "This is an error");
+ * $logger->error("This is another error");
+ * </code>
  */
-class Stream extends Adapter implements AdapterInterface
+class Stream extends Adapter
 {
 
     /**
@@ -40,11 +50,11 @@ class Stream extends Adapter implements AdapterInterface
 
         if (isset($options["mode"]) === true) {
             $mode = $options["mode"];
-            if(Text::memstr($mode,"r")){
+            if (Text::memstr($mode, "r")) {
                 throw new Exception('Stream must be opened in append or write mode');
             }
         } else {
-            $mode="ab";
+            $mode = "ab";
         }
 
         //We use 'fopen' to respect the open-basedir directive
@@ -64,7 +74,7 @@ class Stream extends Adapter implements AdapterInterface
     public function getFormatter()
     {
         if (is_object($this->_formatter) === false) {
-            $this->_formatter = new Line();
+            $this->_formatter = new LineFormatter();
         }
 
         return $this->_formatter;

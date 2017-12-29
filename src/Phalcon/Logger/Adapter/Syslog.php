@@ -11,8 +11,26 @@ use \Phalcon\Logger\Formatter\Syslog as SyslogFormatter;
  * Phalcon\Logger\Adapter\Syslog
  *
  * Sends logs to the system logger
+ *
+ * <code>
+ * use Phalcon\Logger;
+ * use Phalcon\Logger\Adapter\Syslog;
+ *
+ * // LOG_USER is the only valid log type under Windows operating systems
+ * $logger = new Syslog(
+ *     "ident",
+ *     [
+ *         "option"   => LOG_CONS | LOG_NDELAY | LOG_PID,
+ *         "facility" => LOG_USER,
+ *     ]
+ * );
+ *
+ * $logger->log("This is a message");
+ * $logger->log(Logger::ERROR, "This is an error");
+ * $logger->error("This is another error");
+ * </code>
  */
-class Syslog extends Adapter implements AdapterInterface
+class Syslog extends Adapter
 {
 
     /**
@@ -30,7 +48,7 @@ class Syslog extends Adapter implements AdapterInterface
      * @param array|null $options
      * @throws Exception
      */
-    public function __construct($name,array $options = null)
+    public function __construct($name, array $options = null)
     {
         if (is_string($name) === false) {
             throw new Exception('Invalid parameter type.');
@@ -38,13 +56,13 @@ class Syslog extends Adapter implements AdapterInterface
 
         if (isset($options['option']) === true) {
             $option = $options['option'];
-        }else{
+        } else {
             $option = LOG_ODELAY;
         }
 
         if (isset($options['facility']) === true) {
             $facility = $options['facility'];
-        }else{
+        } else {
             $facility = LOG_USER;
         }
 
@@ -84,7 +102,7 @@ class Syslog extends Adapter implements AdapterInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $appliedFormat = $this->getFormatter()->format($message, $type, $time ,$context);
+        $appliedFormat = $this->getFormatter()->format($message, $type, $time, $context);
         if (is_array($appliedFormat) === false) {
             throw new Exception('The formatted message is not valid');
         }
@@ -96,17 +114,15 @@ class Syslog extends Adapter implements AdapterInterface
     /**
      * Closes the logger
      *
-     * @return null
+     * @return boolean
      */
     public function close()
     {
-        //@note we don't set $this->_opened = false!
-        if ($this->_opened === false) {
-            //@note no return value check
+        if (!$this->_opened) {
             return true;
         }
+
         return closelog();
-        //@note we don't return a boolean
     }
 
 }

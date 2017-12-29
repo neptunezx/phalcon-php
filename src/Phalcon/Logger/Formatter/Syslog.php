@@ -25,7 +25,7 @@ class Syslog extends Formatter
      * @return array
      * @throws Exception
      */
-    public function format($message, $type, $timestamp,$context=null)
+    public function format($message, $type, $timestamp, $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||
@@ -33,9 +33,9 @@ class Syslog extends Formatter
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_array($context)){
-        $message = $this->interpolate($message, $context);
-		}
+        if (is_array($context)) {
+            $message = $this->interpolate($message, $context);
+        }
 
         return array($type, $message);
     }

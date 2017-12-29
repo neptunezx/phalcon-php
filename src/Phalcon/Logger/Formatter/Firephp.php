@@ -76,11 +76,7 @@ class Firephp extends Formatter
      */
     public function setShowBacktrace($show = null)
     {
-        if (is_bool($show) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->_showBacktrace = $show;
+        $this->_showBacktrace = (boolean) $show;
     }
 
     /**
@@ -91,7 +87,7 @@ class Firephp extends Formatter
      */
     public function enableLabels($isEnable = null)
     {
-        $isEnable = (boolean)$isEnable;
+        $isEnable            = (boolean) $isEnable;
         $this->_enableLabels = $isEnable;
         return $this;
     }
@@ -105,7 +101,6 @@ class Firephp extends Formatter
     {
         return $this->_enableLabels;
     }
-
 
     /**
      * Applies a format to a message before sending it to the log
@@ -132,6 +127,7 @@ class Firephp extends Formatter
         if ($this->_showBacktrace === true) {
             $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS);
         }
+
         $meta = array("Type" => $this->getTypeString($type));
 
         if (isset($backtrace) === true) {
@@ -216,7 +212,7 @@ class Firephp extends Formatter
         }
 
         $encoded = json_encode(array($meta, $body));
-        $len = strlen($encoded);
+        $len     = strlen($encoded);
 
         return $len . "|" . $encoded . "|";
     }

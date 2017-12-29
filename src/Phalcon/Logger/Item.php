@@ -2,7 +2,6 @@
 
 namespace Phalcon\Logger;
 
-
 /**
  * Phalcon\Logger\Item
  *
@@ -53,9 +52,9 @@ class Item
      * @param $context array|null
      * @throws Exception
      */
-    public function __construct($message, $type, $time = null ,array $context=null)
+    public function __construct($message, $type, $time = null, $context = null)
     {
-        if (is_string($message) === false || is_int($type) === false ){
+        if (is_string($message) === false || is_int($type) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -68,7 +67,8 @@ class Item
         $this->_message = $message;
         $this->_type    = $type;
         $this->_time    = $time;
-        if(is_array($context)){
+
+        if (is_array($context)) {
             $this->_context = $context;
         }
     }

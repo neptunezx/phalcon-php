@@ -9,13 +9,14 @@ namespace Phalcon\Logger;
  */
 interface AdapterInterface
 {
+
     /**
      * Sets the message formatter
      *
      * @param \Phalcon\Logger\FormatterInterface $formatter
      * @return \Phalcon\Logger\AdapterInterface
      */
-    public function setFormatter($formatter);
+    public function setFormatter(FormatterInterface $formatter);
 
     /**
      * Returns the internal formatter
@@ -136,5 +137,5 @@ interface AdapterInterface
      * @param array|null $context
      * @return mixed
      */
-    public function emergency($message, array $context=null);
+    public function emergency($message, array $context = null);
 }

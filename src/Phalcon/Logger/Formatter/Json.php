@@ -25,7 +25,7 @@ class Json extends Formatter
      * @return string
      * @throws Exception
      */
-    public function format($message, $type, $timestamp,array $context = null)
+    public function format($message, $type, $timestamp, array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||
@@ -40,8 +40,8 @@ class Json extends Formatter
         //@note no exception handeling
         return json_encode(
             array(
-                'type' => $this->getTypeString($type),
-                'message' => $message,
+                'type'      => $this->getTypeString($type),
+                'message'   => $message,
                 'timestamp' => $timestamp
             )
         );

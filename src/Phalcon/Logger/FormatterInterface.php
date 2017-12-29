@@ -13,11 +13,11 @@ interface FormatterInterface
     /**
      * Applies a format to a message before sent it to the internal log
      *
-     * @param string message
-     * @param int type
-     * @param int timestamp
+     * @param string $message
+     * @param int $type
+     * @param int $timestamp
      * @param array $context
      * @return string|array
      */
-    public function format($message, $type, $timestamp,array $context = null);
+    public function format($message, $type, $timestamp, array $context = null);
 }

@@ -55,7 +55,6 @@ class Line extends Formatter
                 $this->_dateFormat = $dateFormat;
             }
         }
-
     }
 
     /**
@@ -118,7 +117,7 @@ class Line extends Formatter
      * @return string
      * @throws Exception
      */
-    public function format($message, $type, $timestamp,array $context = null)
+    public function format($message, $type, $timestamp, array $context = null)
     {
         /* Type check */
         if (is_string($message) === false ||
