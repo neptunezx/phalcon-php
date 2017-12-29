@@ -2,14 +2,13 @@
 
 namespace Phalcon\Db;
 
+use Phalcon\Kernel;
 
 /**
  * Phalcon\Db\Dialect
  *
  * This is the base class to each database dialect. This implements
- * common methods to transform intermediate code into its RDBM related syntax
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/dialect.c
+ * common methods to transform intermediate code into its RDBMS related syntax
  */
 abstract class Dialect implements DialectInterface
 {
@@ -22,7 +21,6 @@ abstract class Dialect implements DialectInterface
      */
     protected $_escapeChar;
 
-
     /**
      * customFunctions
      *
@@ -31,31 +29,32 @@ abstract class Dialect implements DialectInterface
      */
     protected $_customFunctions;
 
-
     /**
      * Registers custom SQL functions
+     * 
      * @param          $name
      * @param callable $customFunction
      * @return $this
      */
     public function registerCustomFunction($name, callable $customFunction)
-	{
-		$this->_customFunctions[$name] = $customFunction;
-		return $this;
-	}
+    {
+        $this->_customFunctions[$name] = $customFunction;
+        return $this;
+    }
 
     /**
      * Returns registered functions
+     * 
      * @return array
      */
     public function getCustomFunctions()
-	{
-		return $this->_customFunctions;
-	}
-
+    {
+        return $this->_customFunctions;
+    }
 
     /**
      * Escape Schema
+     * 
      * @param string     $str
      * @param string|null $escapeChar
      * @return string
@@ -75,28 +74,21 @@ abstract class Dialect implements DialectInterface
         return $escapeChar . trim($str, $escapeChar) . $escapeChar;
     }
 
-
-    /**
-     *
-     */
-
     /**
      * Escape identifiers
+     * 
      * @param string      $str
      * @param string|null $escapeChar
      * @return string
      */
     public final function escape($str, $escapeChar = null)
-	{
-
-
-        if (!(isset($GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS']) === true &&
-            $GLOBALS['_PHALCON_DB_ESCAPE_IDENTIFIERS'] === true )) {
+    {
+        if (!Kernel::getGlobals("db.escape_identifiers")) {
             return $str;
         }
 
         if ($escapeChar == "") {
-            $escapeChar = (string)$this->_escapeChar;
+            $escapeChar = (string) $this->_escapeChar;
         }
 
         if (!strpos($str, ".")) {
@@ -112,17 +104,17 @@ abstract class Dialect implements DialectInterface
 
         $parts = (array) explode(".", trim($str, $escapeChar));
 
-		$newParts = $parts;
+        $newParts = $parts;
 
-		foreach ($parts as $key => $part) {
+        foreach ($parts as $key => $part) {
             if ($escapeChar == "" || $part == "" || $part == "*") {
                 continue;
             }
             $newParts[$key] = $escapeChar . str_replace($escapeChar, $escapeChar . $escapeChar, $part) . $escapeChar;
         }
 
-		return implode(".", $newParts);
-	}
+        return implode(".", $newParts);
+    }
 
     /**
      * Generates the SQL for LIMIT clause
@@ -145,10 +137,10 @@ abstract class Dialect implements DialectInterface
         if (is_array($number)) {
             $sqlQuery .= " LIMIT " . $number[0];
 
-			if (isset($number[1]) && strlen($number[1])) {
+            if (isset($number[1]) && strlen($number[1])) {
                 $sqlQuery .= " OFFSET " . $number[1];
-			}
-			return $sqlQuery;
+            }
+            return $sqlQuery;
         }
         if (is_numeric($number) === true) {
             return $sqlQuery . ' LIMIT ' . (int) $number;
@@ -210,13 +202,9 @@ abstract class Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function getColumnList($columnList, $escapeChar = null ,$bindCounts = null )
+    public function getColumnList(array $columnList, $escapeChar = null, $bindCounts = null)
     {
-        if (is_array($columnList) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $strList    = array();
+        $strList = array();
         foreach ($columnList as $column) {
             //$strList[] = $escapeChar . $column . $escapeChar;
             $strList[] = $this->getSqlColumn($column, $escapeChar, $bindCounts);
@@ -225,9 +213,9 @@ abstract class Dialect implements DialectInterface
         return implode(', ', $strList);
     }
 
-
     /**
      * Resolve Column expressions
+     * 
      * @param $column
      * @param string $escapeChar
      * @param $bindCounts
@@ -235,29 +223,29 @@ abstract class Dialect implements DialectInterface
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    public final function getSqlColumn($column, $escapeChar = null , $bindCounts = null )
+    public final function getSqlColumn($column, $escapeChar = null, $bindCounts = null)
     {
-        if (is_array($column)) {
+        if (!is_array($column)) {
             return $this->prepareQualified($column, null, $escapeChar);
         }
 
         if (!isset($column["type"])) {
             $columnField = $column[0];
-			if (is_array($columnField)) {
+            if (is_array($columnField)) {
                 $columnExpression = [
                     "type"  => "scalar",
-					"value" => $columnField
-				];
-			} elseif ($columnField == "*") {
+                    "value" => $columnField
+                ];
+            } elseif ($columnField == "*") {
                 $columnExpression = [
-                    "type"=> "all"
-				];
-			} else {
+                    "type" => "all"
+                ];
+            } else {
                 $columnExpression = [
-                    "type" =>"qualified",
-					"name" => $columnField
-				];
-			}
+                    "type" => "qualified",
+                    "name" => $columnField
+                ];
+            }
             /**
              * The index "1" is the domain column
              */
@@ -266,14 +254,14 @@ abstract class Dialect implements DialectInterface
                 $columnExpression["domain"] = $columnDomain;
             }
 
-			/**
+            /**
              * The index "2" is the column alias
              */
             $columnAlias = isset($column[2]) ? $column[2] : null;
             if ($columnAlias != "") {
                 $columnExpression["sqlAlias"] = $columnAlias;
             }
-        }else{
+        } else {
             $columnExpression = $column;
         }
 
@@ -282,13 +270,10 @@ abstract class Dialect implements DialectInterface
         /**
          * Escape alias and concatenate to value SQL
          */
-        $columnAlias = isset($columnExpression["sqlAlias"])
-            ? $columnExpression["sqlAlias"]
-            : (isset($columnExpression["alias"]) ? $columnExpression["alias"]
-                : null);
+        $columnAlias = isset($columnExpression["sqlAlias"]) ? $columnExpression["sqlAlias"] : (isset($columnExpression["alias"]) ? $columnExpression["alias"] : null);
         if ($columnAlias) {
             return $this->prepareColumnAlias($column, $columnAlias, $escapeChar);
-		}
+        }
 
         return $this->prepareColumnAlias($column, null, $escapeChar);
     }
@@ -302,14 +287,8 @@ abstract class Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function getSqlExpression($expression, $escapeChar = null, $bindCounts =null)
+    public function getSqlExpression(array $expression, $escapeChar = null, $bindCounts = null)
     {
-
-
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid SQL expression');
-        }
-
         if (isset($expression['type']) === false) {
             throw new Exception('Invalid SQL expression');
         }
@@ -345,8 +324,8 @@ abstract class Dialect implements DialectInterface
                 $times = isset($expression['times']) ? $expression['times'] : null;
                 if ($times) {
                     $placeholders = [];
-                    $rawValue = $expression["rawValue"];
-                    $value = $expression["value"];
+                    $rawValue     = $expression["rawValue"];
+                    $value        = $expression["value"];
                     if (isset($bindCounts[$rawValue])) {
                         $times = $bindCounts[$rawValue];
                     }
@@ -438,13 +417,12 @@ abstract class Dialect implements DialectInterface
              */
             $schemaName = isset($table[1]) ? $table[1] : null;
 
-			/**
+            /**
              * The index "2" is the table alias
              */
-			 $aliasName = isset($table[2]) ? $table[2] : null;
+            $aliasName = isset($table[2]) ? $table[2] : null;
 
             return $this->prepareTable($tableName, $schemaName, $aliasName, $escapeChar);
-
         } elseif (is_string($table) === true) {
 
             return $this->escape($table, $escapeChar);
@@ -468,92 +446,90 @@ abstract class Dialect implements DialectInterface
 
         if (isset($definition['tables']) === false) {
             throw new Exception("The index 'tables' is required in the definition array");
-        }else{
+        } else {
             $tables = $definition['tables'];
         }
 
         if (isset($definition['columns']) === false) {
             throw new Exception("The index 'columns' is required in the definition array");
-        }else{
+        } else {
             $columns = $definition['columns'];
         }
 
         if (isset($definition["distinct"])) {
             if ($definition["distinct"]) {
                 $sql = "SELECT DISTINCT";
-            }else{
+            } else {
                 $sql = "SELECT ALL";
             }
-        }else{
+        } else {
             $sql = "SELECT";
         }
 
         $bindCounts = isset($definition["bindCounts"]) ? $definition["bindCounts"] : null;
 
-		$escapeChar = $this->_escapeChar;
+        $escapeChar = $this->_escapeChar;
 
         /**
          * Resolve COLUMNS
          */
         $sql .= " " . $this->getColumnList($columns, $escapeChar, $bindCounts);
 
-		/**
+        /**
          * Resolve FROM
          */
-		$sql .= " " . $this->getSqlExpressionFrom($tables, $escapeChar);
+        $sql .= " " . $this->getSqlExpressionFrom($tables, $escapeChar);
 
-		/**
+        /**
          * Resolve JOINs
          */
-		if (isset($definition["joins"]) && $definition["joins"])  {
+        if (isset($definition["joins"]) && $definition["joins"]) {
             $sql .= " " . $this->getSqlExpressionJoins($definition["joins"], $escapeChar, $bindCounts);
-		}
+        }
 
-		/**
+        /**
          * Resolve WHERE
          */
-		if (isset($definition["where"]) && $definition["where"]) {
-        $sql .= " " . $this->getSqlExpressionWhere($definition["where"], $escapeChar, $bindCounts);
-		}
+        if (isset($definition["where"]) && $definition["where"]) {
+            $sql .= " " . $this->getSqlExpressionWhere($definition["where"], $escapeChar, $bindCounts);
+        }
 
-		/**
+        /**
          * Resolve GROUP BY
          */
-		if (isset($definition["group"]) && $definition["group"]) {
-        $sql .= " " . $this->getSqlExpressionGroupBy($definition["group"], $escapeChar);
-		}
+        if (isset($definition["group"]) && $definition["group"]) {
+            $sql .= " " . $this->getSqlExpressionGroupBy($definition["group"], $escapeChar);
+        }
 
-		/**
+        /**
          * Resolve HAVING
          */
-		if (isset($definition["having"]) && $definition["having"]) {
-        $sql .= " " . $this->getSqlExpressionHaving($definition["having"], $escapeChar, $bindCounts);
-		}
+        if (isset($definition["having"]) && $definition["having"]) {
+            $sql .= " " . $this->getSqlExpressionHaving($definition["having"], $escapeChar, $bindCounts);
+        }
 
-		/**
+        /**
          * Resolve ORDER BY
          */
-		if (isset($definition["order"]) && $definition["order"]) {
-        $sql .= " " . $this->getSqlExpressionOrderBy($definition["order"], $escapeChar, $bindCounts);
-		}
+        if (isset($definition["order"]) && $definition["order"]) {
+            $sql .= " " . $this->getSqlExpressionOrderBy($definition["order"], $escapeChar, $bindCounts);
+        }
 
-		/**
+        /**
          * Resolve LIMIT
          */
-		if (isset($definition["limit"]) && $definition["limit"]) {
-        $sql = $this->getSqlExpressionLimit(["sql" => $sql, "value" => $definition["limit"] ], $escapeChar, $bindCounts);
-		}
+        if (isset($definition["limit"]) && $definition["limit"]) {
+            $sql = $this->getSqlExpressionLimit(["sql" => $sql, "value" => $definition["limit"]], $escapeChar, $bindCounts);
+        }
 
-		/**
+        /**
          * Resolve FOR UPDATE
          */
-		if (isset($definition["forUpdate"]) && $definition["forUpdate"]) {
-        $sql .= " FOR UPDATE";
-		}
+        if (isset($definition["forUpdate"]) && $definition["forUpdate"]) {
+            $sql .= " FOR UPDATE";
+        }
 
-		return $sql;
-
-
+        return $sql;
     }
 
     /**
@@ -624,16 +600,12 @@ abstract class Dialect implements DialectInterface
         return 'ROLLBACK TO SAVEPOINT ' . $name;
     }
 
-
-    /**
-     *
-     */
     /**
      * Resolve Column expressions
+     * 
      * @param array        $expression
      * @param string|null  $escapeChar
      * @param string|null  $bindCounts
-     *
      * @return null|string
      * @throws \Phalcon\Db\Exception
      */
@@ -658,39 +630,29 @@ abstract class Dialect implements DialectInterface
         return $value;
     }
 
-
     /**
      * Resolve object expressions
-     */
-
-    /**
+     * 
      * @param array     $expression
      * @param string|null $escapeChar
      * @param string|null $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionObject( $expression, $escapeChar = null, $bindCounts = null)
-	{
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+    protected final function getSqlExpressionObject(array $expression, $escapeChar = null, $bindCounts = null)
+    {
+        $objectExpression = [
+            "type" => "all"
+        ];
 
-		$objectExpression = [
-			"type" => "all"
-		];
-
-        $domain = isset($expression["column"])
-            ? $expression["column"] :
+        $domain = isset($expression["column"]) ? $expression["column"] :
             (isset($expression["domain"]) ? $expression["domain"] : null);
         if ($domain != "") {
-			$objectExpression["domain"] = $domain;
-		}
+            $objectExpression["domain"] = $domain;
+        }
 
         return $this->getSqlExpression($objectExpression, $escapeChar, $bindCounts);
-	}
-
+    }
 
     /**
      * Resolve qualified expressions
@@ -700,72 +662,58 @@ abstract class Dialect implements DialectInterface
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionQualified($expression, $escapeChar = null)
-	{
-	    if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+    protected final function getSqlExpressionQualified(array $expression, $escapeChar = null)
+    {
+        $column = $expression["name"];
 
-		$column = $expression["name"];
-
-		/**
+        /**
          * A domain could be a table/schema
          */
         $domain = isset($expression["domain"]) ? $expression["domain"] : null;
 
         if (!$domain) {
-			$domain = null;
-		}
+            $domain = null;
+        }
 
         return $this->prepareQualified($column, $domain, $escapeChar);
-	}
-
+    }
 
     /**
      * Resolve binary operations expressions
      * @param array        $expression
      * @param string|null  $escapeChar
      * @param string|null         $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionBinaryOperations($expression, $escapeChar = null, $bindCounts = null)
-	{
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-		$left  = $this->getSqlExpression($expression["left"], $escapeChar, $bindCounts);
-		$right = $this->getSqlExpression($expression["right"], $escapeChar, $bindCounts);
+    protected final function getSqlExpressionBinaryOperations(array $expression, $escapeChar = null, $bindCounts = null)
+    {
+        $left  = $this->getSqlExpression($expression["left"], $escapeChar, $bindCounts);
+        $right = $this->getSqlExpression($expression["right"], $escapeChar, $bindCounts);
 
-		return $left . " " . $expression["op"] . " " . $right;
-	}
+        return $left . " " . $expression["op"] . " " . $right;
+    }
 
     /**
      * Resolve unary operations expressions
      */
+
     /**
      * @param array          $expression
      * @param string|null    $escapeChar
      * @param string|null    $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionUnaryOperations($expression, $escapeChar = null, $bindCounts = null)
-	{
-	    if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-
-		/**
+    protected final function getSqlExpressionUnaryOperations(array $expression, $escapeChar = null, $bindCounts = null)
+    {
+        /**
          * Some unary operators use the left operand...
          */
         $left = isset($expression["left"]) ? $expression["left"] : null;
         if ($left) {
-			return $this->getSqlExpression($left, $escapeChar, $bindCounts) . " " . $expression["op"];
-		}
+            return $this->getSqlExpression($left, $escapeChar, $bindCounts) . " " . $expression["op"];
+        }
 
         /**
          * ...Others use the right operand
@@ -775,72 +723,61 @@ abstract class Dialect implements DialectInterface
             return $this->getSqlExpression($right, $escapeChar, $bindCounts) . " " . $expression["op"];
         }
 
-		throw new Exception("Invalid SQL-unary expression");
-	}
+        throw new Exception("Invalid SQL-unary expression");
+    }
 
     /**
      * Resolve function calls
-     */
-    /**
+     * 
      * @param array      $expression
      * @param null $escapeChar
      * @param      $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionFunctionCall($expression, $escapeChar = null, $bindCounts)
-	{
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
+    protected final function getSqlExpressionFunctionCall(array $expression, $escapeChar = null, $bindCounts)
+    {
+        $name = $expression["name"];
+
+        if (isset($this->_customFunctions[$name])) {
+            return $this->_customFunctions[$name]($this, $expression, $escapeChar);
         }
 
-		$name = $expression["name"];
-
-		if(isset($this->_customFunctions[$name])) {
-			return $this->_customFunctions[$name]($this, $expression, $escapeChar);
-		}
-
-		if(isset($expression["arguments"])&& is_array($expression["arguments"]))  {
+        if (isset($expression["arguments"]) && is_array($expression["arguments"])) {
             $arguments = $this->getSqlExpression([
-                        "type"        => "list",
-                        "parentheses" => false,
-                        "value"       => $expression["arguments"]
-                    ], $escapeChar, $bindCounts);
+                "type"        => "list",
+                "parentheses" => false,
+                "value"       => $expression["arguments"]
+                ], $escapeChar, $bindCounts);
 
-			if (isset($expression["distinct"]) && $expression["distinct"]) {
+            if (isset($expression["distinct"]) && $expression["distinct"]) {
                 return $name . "(DISTINCT " . $arguments . ")";
             }
 
-			return $name . "(" . $arguments . ")";
-		}
+            return $name . "(" . $arguments . ")";
+        }
 
-		return $name . "()";
-	}
-
+        return $name . "()";
+    }
 
     /**
+     * Resolve Lists
+     * 
      * @param array         $expression
      * @param string|null   $escapeChar
      * @param string|null   $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionList($expression, $escapeChar = null, $bindCounts = null)
+    protected final function getSqlExpressionList(array $expression, $escapeChar = null, $bindCounts = null)
     {
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $items = [];
+        $items     = [];
         $separator = ", ";
 
         if (isset($expression["separator"])) {
             $separator = $expression["separator"];
         }
-        $values = isset($expression[0]) ? $expression[0]
-            : isset($expression['value']) ? $expression['value'] : null;
+        $values = isset($expression[0]) ? $expression[0] : isset($expression['value']) ? $expression['value'] : null;
         if (is_array($values)) {
             foreach ($values as $item) {
                 $items[] = $this->getSqlExpression(
@@ -848,7 +785,7 @@ abstract class Dialect implements DialectInterface
                 );
             }
 
-            if ( isset($expression["parentheses"]) && $expression["parentheses"] === false ) {
+            if (isset($expression["parentheses"]) && $expression["parentheses"] === false) {
                 return join($separator, $items);
             }
 
@@ -858,48 +795,40 @@ abstract class Dialect implements DialectInterface
         throw new Exception("Invalid SQL-list expression");
     }
 
-
     /**
      * Resolve *
-     */
-    /**
+     * 
      * @param      $expression
      * @param null $escapeChar
-     *
      * @return mixed
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionAll($expression, $escapeChar = null)
-	{
-	    if (is_array($expression) === false) {
+    protected final function getSqlExpressionAll(array $expression, $escapeChar = null)
+    {
+        if (is_array($expression) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-		$domain = isset($expression["domain"]) ? $expression["domain"] : null;
+        $domain = isset($expression["domain"]) ? $expression["domain"] : null;
 
-		return $this->prepareQualified("*", $domain, $escapeChar);
-	}
-
+        return $this->prepareQualified("*", $domain, $escapeChar);
+    }
 
     /**
      * Resolve CAST of values
      * @param array $expression
      * @param string|null $escapeChar
      * @param string|null $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionCastValue($expression, $escapeChar = null, $bindCounts = null)
-	{
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-		$left  = $this->getSqlExpression($expression["left"], $escapeChar, $bindCounts);
-		$right = $this->getSqlExpression($expression["right"], $escapeChar, $bindCounts);
+    protected final function getSqlExpressionCastValue(array $expression, $escapeChar = null, $bindCounts = null)
+    {
+        $left  = $this->getSqlExpression($expression["left"], $escapeChar, $bindCounts);
+        $right = $this->getSqlExpression($expression["right"], $escapeChar, $bindCounts);
 
-		return "CAST(" . $left . " AS " . $right . ")";
-	}
+        return "CAST(" . $left . " AS " . $right . ")";
+    }
 
     /**
      * Resolve CONVERT of values encodings
@@ -909,34 +838,25 @@ abstract class Dialect implements DialectInterface
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionConvertValue($expression, $escapeChar = null, $bindCounts = null)
-	{
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+    protected final function getSqlExpressionConvertValue(array $expression, $escapeChar = null, $bindCounts = null)
+    {
+        $left  = $this->getSqlExpression($expression["left"], $escapeChar, $bindCounts);
+        $right = $this->getSqlExpression($expression["right"], $escapeChar, $bindCounts);
 
-		$left  = $this->getSqlExpression($expression["left"], $escapeChar, $bindCounts);
-		$right = $this->getSqlExpression($expression["right"], $escapeChar, $bindCounts);
-
-		return "CONVERT(" . $left . " USING " . $right . ")";
-	}
-
+        return "CONVERT(" . $left . " USING " . $right . ")";
+    }
 
     /**
      * Resolve CASE expressions
      * @param array      $expression
      * @param string|null $escapeChar
      * @param string|null $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionCase($expression, $escapeChar = null, $bindCounts = null)
+    protected final function getSqlExpressionCase(array $expression, $escapeChar = null, $bindCounts = null)
     {
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-		$sql = "CASE " . $this->getSqlExpression($expression["expr"], $escapeChar, $bindCounts);
+        $sql = "CASE " . $this->getSqlExpression($expression["expr"], $escapeChar, $bindCounts);
 
         foreach ($expression["when-clauses"] as $whenClause) {
             if ($whenClause["type"] == "when") {
@@ -953,97 +873,94 @@ abstract class Dialect implements DialectInterface
     }
 
     /**
+     * Resolve a FROM clause
+     * 
      * @param array|string  $expression
      * @param string|null   $escapeChar
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
     protected final function getSqlExpressionFrom($expression, $escapeChar = null)
-	{
+    {
+        if (is_array($expression)) {
 
-		if (is_array($expression)) {
-
-			$tables = [];
+            $tables = [];
             foreach ($expression as $table) {
                 $tables[] = $this->getSqlTable($table, $escapeChar);
             }
             $tables = join(", ", $tables);
-
-		} else {
+        } else {
             $tables = $expression;
-		}
+        }
 
-		return "FROM " . $tables;
-	}
+        return "FROM " . $tables;
+    }
 
     /**
      * Resolve a JOINs clause
      */
 
     /**
+     * Resolve a JOINs clause
+     * 
      * @param array     $expression
      * @param string|null $escapeChar
      * @param string|null $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
     protected final function getSqlExpressionJoins($expression, $escapeChar = null, $bindCounts = null)
     {
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
         $sql = "";
         foreach ($expression as $join) {
             if (!empty($join["conditions"])) {
                 if (!isset($join['conditions'][0])) {
                     $joinCondition = $this->getSqlExpression($join["conditions"], $escapeChar, $bindCounts);
-                }else{
+                } else {
                     $joinCondition = [];
                     foreach ($join['conditions'] as $condition) {
                         $joinCondition[] = $this->getSqlExpression($condition, $escapeChar, $bindCounts);
                     }
                     $joinCondition = join(" AND ", $joinCondition);
                 }
-            }else{
+            } else {
                 $joinCondition = 1;
             }
             $joinType = isset($join['type']) ? $join['type'] : "";
-            if($joinType) {
+            if ($joinType) {
                 $joinType .= " ";
-			}
+            }
 
             $joinTable = $this->getSqlTable($join["source"], $escapeChar);
 
-			$sql .= " " . $joinType . "JOIN " . $joinTable . " ON " . $joinCondition;
+            $sql .= " " . $joinType . "JOIN " . $joinTable . " ON " . $joinCondition;
         }
 
         return $sql;
-
-	}
+    }
 
     /**
      * Resolve a WHERE clause
+     * 
      * @param      $expression
      * @param string|null $escapeChar
      * @param string|null $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
     protected final function getSqlExpressionWhere($expression, $escapeChar = null, $bindCounts = null)
-	{
-		if(is_array($expression)) {
-			$whereSql = $this->getSqlExpression($expression, $escapeChar, $bindCounts);
-		} else {
+    {
+        if (is_array($expression)) {
+            $whereSql = $this->getSqlExpression($expression, $escapeChar, $bindCounts);
+        } else {
             $whereSql = $expression;
-		}
+        }
         return "WHERE " . $whereSql;
     }
 
     /**
      * Resolve a GROUP BY clause
+     * 
      * @param      $expression
      * @param null $escapeChar
      * @param null $bindCounts
@@ -1051,53 +968,50 @@ abstract class Dialect implements DialectInterface
      * @throws \Phalcon\Db\Exception
      */
     protected final function getSqlExpressionGroupBy($expression, $escapeChar = null, $bindCounts = null)
-	{
+    {
 
-		if(is_array($expression)) {
+        if (is_array($expression)) {
 
-			$fields = [];
+            $fields = [];
             foreach ($expression as $field) {
                 if (!is_array($field)) {
                     throw new Exception("Invalid SQL-GROUP-BY expression");
                 }
                 $fields[] = $this->getSqlExpression($field, $escapeChar, $bindCounts);
-
             }
-			$fields = join(", ", $fields);
-		} else {
+            $fields = join(", ", $fields);
+        } else {
             $fields = $expression;
-		}
+        }
 
-		return "GROUP BY " . $fields;
-	}
-
+        return "GROUP BY " . $fields;
+    }
 
     /**
+     * Resolve a HAVING clause
+     * 
      * @param array       $expression
      * @param string|null $escapeChar
      * @param null        $bindCounts
      * @return string
      * @throws  \Phalcon\Db\Exception
      */
-    protected final function getSqlExpressionHaving($expression, $escapeChar = null, $bindCounts = null)
-	{
-        if (is_array($expression) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-		return "HAVING " . $this->getSqlExpression($expression, $escapeChar, $bindCounts);
-	}
+    protected final function getSqlExpressionHaving(array $expression, $escapeChar = null, $bindCounts = null)
+    {
+        return "HAVING " . $this->getSqlExpression($expression, $escapeChar, $bindCounts);
+    }
 
     /**
      * Resolve an ORDER BY clause
+     * 
      * @param             $expression
      * @param string|null $escapeChar
      * @param null        $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
     protected final function getSqlExpressionOrderBy($expression, $escapeChar = null, $bindCounts = null)
-	{
+    {
         if (is_array($expression)) {
             $fields = [];
             foreach ($expression as $field) {
@@ -1111,31 +1025,30 @@ abstract class Dialect implements DialectInterface
                  */
                 if (isset($field[1]) && $field[1] != "") {
                     $fieldSql .= " " . $field[1];
-				}
+                }
                 $fields[] = $fieldSql;
             }
             $fields = join(", ", $fields);
-        }else{
+        } else {
             $fields = $expression;
         }
         return "ORDER BY " . $fields;
-	}
-
+    }
 
     /**
      * Resolve a LIMIT clause
+     * 
      * @param array       $expression
      * @param string|null $escapeChar
      * @param null        $bindCounts
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
     protected final function getSqlExpressionLimit($expression, $escapeChar = null, $bindCounts = null)
     {
-        $sql = "";
+        $sql    = "";
         $offset = null;
-        $value = $expression["value"];
+        $value  = $expression["value"];
 
         if (isset($expression["sql"])) {
             $sql = $expression["sql"];
@@ -1159,7 +1072,6 @@ abstract class Dialect implements DialectInterface
                     $offset, $escapeChar, $bindCounts
                 );
             }
-
         } else {
             $limit = $value;
         }
@@ -1167,19 +1079,17 @@ abstract class Dialect implements DialectInterface
         return $this->limit($sql, [$limit, $offset]);
     }
 
-
-
     /**
      * Prepares column for this RDBMS
+     * 
      * @param string       $qualified
      * @param string|null $alias
      * @param string|null $escapeChar
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
     protected function prepareColumnAlias($qualified, $alias = null, $escapeChar = null)
-	{
+    {
         if (is_string($qualified) === false) {
             throw new Exception('Invalid parameter type.');
         }
@@ -1192,57 +1102,61 @@ abstract class Dialect implements DialectInterface
     /**
      * Prepares table for this RDBMS
      */
+
     /**
+     * Prepares table for this RDBMS
+     * 
      * @param string     $table
      * @param string|null $schema
      * @param string|null $alias
      * @param string|null $escapeChar
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
     protected function prepareTable($table, $schema = null, $alias = null, $escapeChar = null)
-	{
+    {
         if (is_string($table) === false) {
             throw new Exception('Invalid parameter type.');
         }
         $table = $this->escape($table, $escapeChar);
 
-		/**
+        /**
          * Schema
          */
         if ($schema != "") {
             $table = $this->escapeSchema($schema, $escapeChar) . "." . $table;
         }
 
-		/**
+        /**
          * Alias
          */
-		if ($alias != "") {
+        if ($alias != "") {
             $table = $table . " AS " . $this->escape($alias, $escapeChar);
-		}
-		return $table;
-	}
+        }
+        
+        return $table;
+    }
 
     /**
      * Prepares qualified for this RDBMS
+     * 
      * @param string      $column
      * @param string|null $domain
      * @param string|null $escapeChar
-     *
      * @return string
      * @throws \Phalcon\Db\Exception
      */
-	protected function prepareQualified($column, $domain = null, $escapeChar = null)
-	{
+    protected function prepareQualified($column, $domain = null, $escapeChar = null)
+    {
         if (is_string($column) === false) {
             throw new Exception('Invalid parameter type.');
         }
-        if( $domain != "") {
+
+        if ($domain != "") {
             return $this->escape($domain . "." . $column, $escapeChar);
-		}
+        }
 
         return $this->escape($column, $escapeChar);
-	}
+    }
 
 }

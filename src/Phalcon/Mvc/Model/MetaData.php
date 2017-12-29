@@ -222,16 +222,16 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
 
                     //Store the meta-data locally
                     $this->_metaData[$key] = $modelMetadata;
-
                     //Store the meta-data in the adapter
                     $this->write($prefixKey, $modelMetadata);
                 }
             }
         }
 
-        //Check for a column map, store in _columnMap in order and reversed order
-        if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === false ||
-            $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === false) {
+        /**
+         * Check for a column map, store in _columnMap in order and reversed order
+         */
+        if (!\Phalcon\Kernel::getGlobals("orm.column_renaming")) {
             return null;
         }
 
@@ -246,9 +246,8 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
 
         //Create the map key name
         $prefixKey = 'map-' . $keyName;
-
         //Check if the meta-data is already in the adapter
-        $data = $this->read($prefixKey);
+        $data      = $this->read($prefixKey);
         if (is_null($data) === false) {
             $this->_columnMap[$keyName] = $data;
             return null;
@@ -332,11 +331,6 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
      */
     public function readMetaData(ModelInterface $model)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false) {
-            throw new Exception('A model instance is required to retrieve the meta-data');
-        }
-
         $table  = $model->getSource();
         $schema = $model->getSchema();
 
@@ -798,7 +792,10 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
     public function getColumnMap(ModelInterface $model)
     {
         $data = $this->readColumnMapIndex($model, self::MODELS_COLUMN_MAP);
-        if (is_null($data) === false && is_array($data) === false) {
+        if (is_null($data)) {
+            $data = [];
+        }
+        if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
 

@@ -1,7 +1,7 @@
 <?php
 
 // Here you can initialize variables that will be available to your tests
-require_once(PROJECT_PATH . '/vendor/autoload.php');
+require_once(PROJECT_PATH . './vendor/autoload.php');
 require_once(PROJECT_PATH . '/test/phalcon-php/BaseTest.php');
 
 $files = array(
@@ -16,7 +16,12 @@ foreach ($files as $file) {
     require_once(PROJECT_PATH . '/src/Phalcon/' . $file);
 }
 
-$loader = new \Phalcon\Loader();
+if (class_exists('\Phalcon\LoaderFallback')) {
+    $loader = new \Phalcon\LoaderFallback();
+} else {
+    $loader = new \Phalcon\Loader();
+}
+
 $loader->registerNamespaces(array(
     'Phalcon' => PROJECT_PATH . '/src/Phalcon/'
 ));
@@ -68,6 +73,7 @@ $loader->registerNamespaces(
         'Phalcon\Test\Modules\Backend\Controllers'  => $config->get('application')->modulesDir . 'backend/controllers/',
         'Phalcon\Test'                              => TESTS_PATH,
         'Phalcon\Test\Module'                       => TESTS_PATH . '/_support/Module',
+        'Phalcon\Test\Listener'                     => TESTS_PATH . '/_data/listener',
     ]
 );
 

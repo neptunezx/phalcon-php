@@ -465,14 +465,15 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
      * @return \Phalcon\Mvc\Model\CriteriaInterface
      * @throws Exception
      */
-    public function inWhere($expr, $values)
+    public function inWhere($expr, array $values)
     {
         if (is_string($expr) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_array($values) === false) {
-            throw new Exception('Values must be an array');
+        if (!count($values)) {
+            $this->andWhere($expr . " != " . $expr);
+            return $this;
         }
 
         $hiddenParam = $this->_hiddenParamNumber;
@@ -638,11 +639,14 @@ class Criteria implements CriteriaInterface, InjectionAwareInterface
     public function limit($limit, $offset = null)
     {
         $limit = abs((int) $limit);
+        if ($limit == 0) {
+            return $this;
+        }
         if (is_numeric($offset)) {
             $offset                 = abs((int) $offset);
-            $this->_params['limit'] = array('number' => (int) $limit, 'offset' => $offset);
+            $this->_params['limit'] = array('number' => $limit, 'offset' => $offset);
         } else {
-            $this->_params['limit'] = (int) $limit;
+            $this->_params['limit'] = $limit;
         }
 
         return $this;

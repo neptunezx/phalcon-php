@@ -174,7 +174,6 @@ class Service implements ServiceInterface
             is_null($parameters) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
         /* Shared instance */
         if ($this->_shared === true) {
             if (is_null($this->_sharedInstance) === false) {
@@ -183,24 +182,16 @@ class Service implements ServiceInterface
         }
 
         $found = true;
-
         if (is_string($this->_definition) === true) {
+
             //String definitions can be class names without implicit parameters
             if (class_exists($this->_definition) === true) {
                 if (is_array($parameters) === true && count($parameters) > 0) {
                     //Create new instance
-                    try {
-                        $mirror   = new ReflectionClass($this->_definition);
-                        $instance = $mirror->newInstanceArgs($parameters);
-                    } catch (\Exception $e) {
-                        return null;
-                    }
+                    $mirror   = new ReflectionClass($this->_definition);
+                    $instance = $mirror->newInstanceArgs($parameters);
                 } else {
-                    try {
-                        $instance = new $this->_definition();
-                    } catch (\Exception $e) {
-                        return null;
-                    }
+                    $instance = new $this->_definition();
                 }
             } else {
                 $found = false;

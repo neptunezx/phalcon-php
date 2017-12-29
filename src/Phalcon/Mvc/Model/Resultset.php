@@ -1,15 +1,5 @@
 <?php
 
-/**
- * Resultset
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
- */
-
 namespace Phalcon\Mvc\Model;
 
 use Phalcon\Db;
@@ -88,12 +78,12 @@ abstract class Resultset implements ResultsetInterface, \Iterator, \SeekableIter
      * @param \Phalcon\Db\ResultInterface|false result
      * @param \Phalcon\Cache\BackendInterface cache
      */
-    public function __construct(ResultInterface $result, BackendInterface $cache = null)
+    public function __construct($result, BackendInterface $cache = null)
     {
         /**
          * 'false' is given as result for empty result-sets
          */
-        if ($result) {
+        if (!$result instanceof ResultInterface) {
             $this->_count = 0;
             $this->_rows  = [];
             return;

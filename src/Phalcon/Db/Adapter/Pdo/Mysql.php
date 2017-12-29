@@ -10,6 +10,7 @@ use \Phalcon\Db\IndexInterface;
 use \Phalcon\Db\Adapter\Pdo as PdoAdapter;
 use \Phalcon\Application\Exception;
 use \Phalcon\Db\ReferenceInterface;
+use Phalcon\Text;
 
 /**
  * Phalcon\Db\Adapter\Pdo\Mysql
@@ -66,177 +67,198 @@ class Mysql extends PdoAdapter
      */
     public function describeColumns($table, $schema = null)
     {
-        if (is_string($table) === false ||
-            (is_string($schema) === false &&
-            is_null($schema) === false)) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $dialect = $this->_dialect;
-
-        //Get the SQL to describe a table
-        $sql = $dialect->describeColumns($table, $schema);
-
-        //Get the describe
-        $describe  = $this->fetchAll($sql, DB::FETCH_NUM);
-        $oldColumn = null;
+        $oldColumn   = null;
         $sizePattern = "#\\(([0-9]+)(?:,\\s*([0-9]+))*\\)#";
-        $columns   = array();
 
-        //Field Indexes: 0 - Name, 1 - Type, 2 - Not Null, 3 - Key, 4 - Default, 5 - Extra
-        foreach ($describe as $field) {
-            //By default the bind type is two
-            $definition = array('bindType' => Column::BIND_PARAM_STR);
+        $columns = [];
 
-            //By checking every column type we convert it to a Phalcon\Db\Column
+        /**
+         * Get the SQL to describe a table
+         * We're using FETCH_NUM to fetch the columns
+         * Get the describe
+         * Field Indexes: 0:name, 1:type, 2:not null, 3:key, 4:default, 5:extra
+         */
+        foreach ($this->fetchAll($this->_dialect->describeColumns($table, $schema), Db::FETCH_NUM) as $field) {
+
+            /**
+             * By default the bind types is two
+             */
+            $definition = ["bindType" => Column::BIND_PARAM_STR];
+
+            /**
+             * By checking every column type we convert it to a Phalcon\Db\Column
+             */
             $columnType = $field[1];
 
-            //Check the column type to get the current Phalcon type
-            while (true) {
-                //Point are varchars
-                if (strpos($columnType, 'point') !== false) {
-                    $definition['type'] = 2;
-                    break;
-                }
-
-                //Enum are treated as char
-                if (strpos($columnType, 'enum') !== false) {
-                    $definition['type'] = 5;
-                    break;
-                }
-
-                //Tinyint(1) is boolean
-                if (strpos($columnType, 'tinyint(1)') !== false) {
-                    $definition['type']     = 8;
-                    $definition['bindType'] = 5;
-                    $columnType             = 'boolean';
-                    break;
-                }
-
-                //Smallint/Bigint/Integer/Int are int
-                if (strpos($columnType, 'int') !== false) {
-                    $definition['type']      = 0;
-                    $definition['isNumeric'] = true;
-                    $definition['bindType']  = Column::BIND_PARAM_INT;
-                    break;
-                }
-
-                //Varchar are varchars
-                if (strpos($columnType, 'varchar') !== false) {
-                    $definition['type'] = 2;
-                    break;
-                }
-
-                //Special type for datetime
-                if (strpos($columnType, 'datetime') !== false) {
-                    $definition['type'] = 4;
-                    break;
-                }
-
-                //Decimals are floats
-                if (strpos($columnType, 'decimal') !== false) {
-                    $definition['type']      = 3;
-                    $definition['isNumeric'] = true;
-                    $definition['bindType']  = 32;
-                    break;
-                }
-
-                //Chars are chars
-                if (strpos($columnType, 'char') !== false) {
-                    $definition['type'] = 5;
-                    break;
-                }
-
-                //Date/Datetime are varchars
-                if (strpos($columnType, 'date') !== false) {
-                    $definition['type'] = 1;
-                    break;
-                }
-
-                //Timestamp as date
-                if (strpos($columnType, 'timstamp') !== false) {
-                    $definition['type'] = 1;
-                    break;
-                }
-
-                //Text are varchars
-                if (strpos($columnType, 'text') !== false) {
-                    $definition['type'] = 6;
-                    break;
-                }
-
-                //Floats/Smallfloats/Decimals are float
-                if (strpos($columnType, 'float') !== false) {
-                    $definition['type']      = 7;
-                    $definition['isNumeric'] = true;
-                    $definition['bindType']  = 32;
-                    break;
-                }
-
-                //Doubles are floats
-                if (strpos($columnType, 'double') !== false) {
-                    $definition['type']      = 9;
-                    $definition['isNumeric'] = true;
-                    $definition['bindType']  = 32;
-                    break;
-                }
-
-                //By default: String
-                $definition['type'] = 2;
-                break;
-            }
-
-            //If the column type has a parentheses we try to get the column size from it
-            if (strpos($columnType, '(') !== false) {
-                $matches = null;
-                $pos     = preg_match($sizePattern, $columnType, $matches);
-                if ($pos == true) {
-                    if (isset($matches[1]) === true) {
-                        $definition['size'] = (int) $matches[1];
-                    }
-
-                    if (isset($matches[2]) === true) {
-                        $definition['scale'] = (int) $matches[2];
-                    }
-                }
-            }
-
-            //Check if the column is unsigned, only MySQL supports this
-            if (strpos($columnType, 'unsigned') !== false) {
-                $definition['unsigned'] = true;
-            }
-
-            //Positions
-            if ($oldColumn == null ) {
-                $definition['first'] = true;
+            if (Text::memstr($columnType, "enum")) {
+                /**
+                 * Enum are treated as char
+                 */
+                $definition["type"] = Column::TYPE_CHAR;
+            } elseif (Text::memstr($columnType, "bigint")) {
+                /**
+                 * Smallint/Bigint/Integers/Int are int
+                 */
+                $definition["type"]      = Column::TYPE_BIGINTEGER;
+                $definition["isNumeric"] = true;
+                $definition["bindType"]  = Column::BIND_PARAM_INT;
+            } elseif (Text::memstr($columnType, "int")) {
+                /**
+                 * Smallint/Bigint/Integers/Int are int
+                 */
+                $definition["type"]      = Column::TYPE_INTEGER;
+                $definition["isNumeric"] = true;
+                $definition["bindType"]  = Column::BIND_PARAM_INT;
+            } elseif (Text::memstr($columnType, "varchar")) {
+                /**
+                 * Varchar are varchars
+                 */
+                $definition["type"] = Column::TYPE_VARCHAR;
+            } elseif (Text::memstr($columnType, "datetime")) {
+                /**
+                 * Special type for datetime
+                 */
+                $definition["type"] = Column::TYPE_DATETIME;
+            } elseif (Text::memstr($columnType, "char")) {
+                /**
+                 * Chars are chars
+                 */
+                $definition["type"] = Column::TYPE_CHAR;
+            } elseif (Text::memstr($columnType, "date")) {
+                /**
+                 * Date are dates
+                 */
+                $definition["type"] = Column::TYPE_DATE;
+            } elseif (Text::memstr($columnType, "timestamp")) {
+                /**
+                 * Timestamp are dates
+                 */
+                $definition["type"] = Column::TYPE_TIMESTAMP;
+            } elseif (Text::memstr($columnType, "text")) {
+                /**
+                 * Text are varchars
+                 */
+                $definition["type"] = Column::TYPE_TEXT;
+            } elseif (Text::memstr($columnType, "decimal")) {
+                /**
+                 * Decimals are floats
+                 */
+                $definition["type"]      = Column::TYPE_DECIMAL;
+                $definition["isNumeric"] = true;
+                $definition["bindType"]  = Column::BIND_PARAM_DECIMAL;
+            } elseif (Text::memstr($columnType, "double")) {
+                /**
+                 * Doubles
+                 */
+                $definition["type"]      = Column::TYPE_DOUBLE;
+                $definition["isNumeric"] = true;
+                $definition["bindType"]  = Column::BIND_PARAM_DECIMAL;
+            } elseif (Text::memstr($columnType, "float")) {
+                /**
+                 * Float/Smallfloats/Decimals are float
+                 */
+                $definition["type"]      = Column::TYPE_FLOAT;
+                $definition["isNumeric"] = true;
+                $definition["bindType"]  = Column::BIND_PARAM_DECIMAL;
+            } elseif (Text::memstr($columnType, "bit")) {
+                /**
+                 * Boolean
+                 */
+                $definition["type"]     = Column::TYPE_BOOLEAN;
+                $definition["bindType"] = Column::BIND_PARAM_BOOL;
+            } elseif (Text::memstr($columnType, "tinyblob")) {
+                /**
+                 * Tinyblob
+                 */
+                $definition["type"]     = Column::TYPE_TINYBLOB;
+                $definition["bindType"] = Column::BIND_PARAM_BOOL;
+            } elseif (Text::memstr($columnType, "mediumblob")) {
+                /**
+                 * Mediumblob
+                 */
+                $definition["type"] = Column::TYPE_MEDIUMBLOB;
+            } elseif (Text::memstr($columnType, "longblob")) {
+                /**
+                 * Longblob
+                 */
+                $definition["type"] = Column::TYPE_LONGBLOB;
+            } elseif (Text::memstr($columnType, "blob")) {
+                /**
+                 * Blob
+                 */
+                $definition["type"] = Column::TYPE_BLOB;
             } else {
-                $definition['after'] = $oldColumn;
+                /**
+                 * By default is string
+                 */
+                $definition["type"] = Column::TYPE_VARCHAR;
             }
 
-            //Check if the field is primary key
-            if ($field[3] === 'PRI') {
-                $definition['primary'] = true;
+            /**
+             * If the column type has a parentheses we try to get the column size from it
+             */
+            if (Text::memstr($columnType, "(")) {
+                $matches = null;
+                if (preg_match($sizePattern, $columnType, $matches)) {
+                    if (!empty($matches[1])) {
+                        $definition["size"] = (int) $matches[1];
+                    }
+                    if (!empty($matches[2])) {
+                        $definition["scale"] = (int) $matches[2];
+                    }
+                }
             }
 
-            //Check if the column allows null values
-            if ($field[2] == 'NO') {
-                $definition['notNull'] = true;
+            /**
+             * Check if the column is unsigned, only MySQL support this
+             */
+            if (Text::memstr($columnType, "unsigned")) {
+                $definition["unsigned"] = true;
             }
 
-
-            //Check if the column is auto increment
-            if ($field[5] === 'auto_increment') {
-                $definition['autoIncrement'] = true;
+            /**
+             * Positions
+             */
+            if ($oldColumn == null) {
+                $definition["first"] = true;
+            } else {
+                $definition["after"] = $oldColumn;
             }
 
-            if ($field[4] === null) {
-                $definition['default'] = $field[4];
+            /**
+             * Check if the field is primary key
+             */
+            if ($field[3] == "PRI") {
+                $definition["primary"] = true;
             }
 
+            /**
+             * Check if the column allows null values
+             */
+            if ($field[2] == "NO") {
+                $definition["notNull"] = true;
+            }
 
-            $column    = new Column($field[0], $definition);
-            $columns[] = $column;
-            $oldColumn = $field[0];
+            /**
+             * Check if the column is auto increment
+             */
+            if ($field[5] == "auto_increment") {
+                $definition["autoIncrement"] = true;
+            }
+
+            /**
+             * Check if the column is default values
+             */
+            if ($field[4] !== null) {
+                $definition["default"] = $field[4];
+            }
+
+            /**
+             * Every route is stored as a Phalcon\Db\Column
+             */
+            $columnName = $field[0];
+            $columns[]  = new Column($columnName, $definition);
+            $oldColumn  = $columnName;
         }
 
         return $columns;
@@ -256,17 +278,17 @@ class Mysql extends PdoAdapter
      * @return \Phalcon\Db\Index[]
      * @throws \Phalcon\Db\Exception
      */
-    public function describeIndexes( $table, $schema = null )
-	{
+    public function describeIndexes($table, $schema = null)
+    {
 
-		$indexes = [];
+        $indexes = [];
         $dialect = $this->_dialect;
 
         //Get the SQL to describe a table
         $sql = $dialect->describeIndexes($table, $schema);
 
         //Get the describe
-        $describe  = $this->fetchAll($sql, Db::FETCH_ASSOC);
+        $describe = $this->fetchAll($sql, Db::FETCH_ASSOC);
         foreach ($describe as $index) {
             $keyName   = $index["Key_name"];
             $indexType = $index["Index_type"];
@@ -277,34 +299,33 @@ class Mysql extends PdoAdapter
 
             if (!isset($indexes[$keyName]["columns"])) {
                 $columns = [];
-			} else {
+            } else {
                 $columns = $indexes[$keyName]["columns"];
-			}
+            }
 
-            $columns[] = $index["Column_name"];
-			$indexes[$keyName]["columns"] = $columns;
+            $columns[]                    = $index["Column_name"];
+            $indexes[$keyName]["columns"] = $columns;
             if ($keyName == "PRIMARY") {
                 $indexes[$keyName]["type"] = "PRIMARY";
-			} elseif ($indexType == "FULLTEXT") {
+            } elseif ($indexType == "FULLTEXT") {
                 $indexes[$keyName]["type"] = "FULLTEXT";
-			} elseif ($index["Non_unique"] == 0) {
+            } elseif ($index["Non_unique"] == 0) {
                 $indexes[$keyName]["type"] = "UNIQUE";
-			} else {
+            } else {
                 $indexes[$keyName]["type"] = null;
-			}
-
+            }
         }
         $indexObjects = [];
         foreach ($indexes as $name => $value) {
             $indexObjects[$name] = new Index($name, $value["columns"], $value["type"]);
-		}
-		return $indexObjects;
-	}
+        }
+        return $indexObjects;
+    }
 
     /**
      * Lists table references
      *
-     *<code>
+     * <code>
      * print_r(
      *     $connection->describeReferences("robots_parts")
      * );
@@ -314,68 +335,62 @@ class Mysql extends PdoAdapter
      * @return \Phalcon\Db\Reference[]
      * @throws \Phalcon\Db\Exception
      */
-	public function describeReferences($table,$schema = null)
+    public function describeReferences($table, $schema = null)
     {
         $references = [];
-        $dialect = $this->_dialect;
+        $dialect    = $this->_dialect;
 
         //Get the SQL to describe a table
         $sql = $dialect->describeIndexes($table, $schema);
 
         //Get the describe
-        $describe  = $this->fetchAll($sql, Db::FETCH_NUM);
+        $describe = $this->fetchAll($sql, Db::FETCH_NUM);
 
         foreach ($describe as $reference) {
             $constraintName = $reference[2];
 
-            if (!isset ($references[$constraintName])) {
+            if (!isset($references[$constraintName])) {
                 $referencedSchema  = $reference[3];
-				$referencedTable   = $reference[4];
-				$referenceUpdate   = $reference[6];
-				$referenceDelete   = $reference[7];
-				$columns           = [];
-				$referencedColumns = [];
-
-			} else {
+                $referencedTable   = $reference[4];
+                $referenceUpdate   = $reference[6];
+                $referenceDelete   = $reference[7];
+                $columns           = [];
+                $referencedColumns = [];
+            } else {
                 $referencedSchema  = $references[$constraintName]["referencedSchema"];
-				$referencedTable   = $references[$constraintName]["referencedTable"];
-				$columns           = $references[$constraintName]["columns"];
-				$referencedColumns = $references[$constraintName]["referencedColumns"];
-				$referenceUpdate   = $references[$constraintName]["onUpdate"];
-				$referenceDelete   = $references[$constraintName]["onDelete"];
-			}
+                $referencedTable   = $references[$constraintName]["referencedTable"];
+                $columns           = $references[$constraintName]["columns"];
+                $referencedColumns = $references[$constraintName]["referencedColumns"];
+                $referenceUpdate   = $references[$constraintName]["onUpdate"];
+                $referenceDelete   = $references[$constraintName]["onDelete"];
+            }
 
-            $columns[] = $reference[1];
-            $referencedColumns[] = $reference[5];
+            $columns[]                   = $reference[1];
+            $referencedColumns[]         = $reference[5];
             $references[$constraintName] = [
                 "referencedSchema"  => $referencedSchema,
-				"referencedTable"   => $referencedTable,
-				"columns"           => $columns,
-				"referencedColumns" => $referencedColumns,
-				"onUpdate"          => $referenceUpdate,
-				"onDelete"          => $referenceDelete
-			];
+                "referencedTable"   => $referencedTable,
+                "columns"           => $columns,
+                "referencedColumns" => $referencedColumns,
+                "onUpdate"          => $referenceUpdate,
+                "onDelete"          => $referenceDelete
+            ];
         }
 
         $referenceObjects = [];
-		foreach ($references as $name => $arrayReference)  {
+        foreach ($references as $name => $arrayReference) {
             $referenceObjects[$name] = new Reference($name, [
                 "referencedSchema"  => $arrayReference["referencedSchema"],
-				"referencedTable"   => $arrayReference["referencedTable"],
-				"columns"           => $arrayReference["columns"],
-				"referencedColumns" => $arrayReference["referencedColumns"],
-				"onUpdate"          => $arrayReference["onUpdate"],
-				"onDelete"          => $arrayReference["onDelete"]
-			]);
-		}
+                "referencedTable"   => $arrayReference["referencedTable"],
+                "columns"           => $arrayReference["columns"],
+                "referencedColumns" => $arrayReference["referencedColumns"],
+                "onUpdate"          => $arrayReference["onUpdate"],
+                "onDelete"          => $arrayReference["onDelete"]
+            ]);
+        }
 
-		return $referenceObjects;
-
-
+        return $referenceObjects;
     }
-
-
-
 
     /**
      * Adds a foreign key to a table
@@ -390,15 +405,15 @@ class Mysql extends PdoAdapter
      * @throws \Exception
      */
     public function addForeignKey($tableName, $schemaName, $reference)
-	{
+    {
 
 
-		$foreignKeyCheck = $this->prepare($this->_dialect->getForeignKeyChecks());
-		if (!$foreignKeyCheck->execute()) {
-			throw new Exception("DATABASE PARAMETER 'FOREIGN_KEY_CHECKS' HAS TO BE 1");
-		}
+        $foreignKeyCheck = $this->prepare($this->_dialect->getForeignKeyChecks());
+        if (!$foreignKeyCheck->execute()) {
+            throw new Exception("DATABASE PARAMETER 'FOREIGN_KEY_CHECKS' HAS TO BE 1");
+        }
 
-		return $this->execute($this->_dialect->addForeignKey($tableName, $schemaName, $reference));
-	}
+        return $this->execute($this->_dialect->addForeignKey($tableName, $schemaName, $reference));
+    }
 
 }

@@ -3,9 +3,9 @@
 namespace Phalcon\Db;
 
 /**
- * Phalcon\Db\AdapterInterface initializer
+ * Phalcon\Db\AdapterInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/adapterinterface.c
+ * Interface for Phalcon\Db adapters
  */
 interface AdapterInterface
 {

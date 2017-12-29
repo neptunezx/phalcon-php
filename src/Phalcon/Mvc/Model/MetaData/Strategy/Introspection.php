@@ -1,29 +1,20 @@
 <?php
 
-/**
- * Introspection
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
- */
-
 namespace Phalcon\Mvc\Model\MetaData\Strategy;
 
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
-use \Phalcon\DiInterface;
+use Phalcon\DiInterface;
+use Phalcon\Db\Column;
+use Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\MetaData;
+use Phalcon\Mvc\Model\MetaData\StrategyInterface;
 
 /**
- * Phalcon\Mvc\Model\MetaData\Strategy\Instrospection
+ * Phalcon\Mvc\Model\MetaData\Strategy\Introspection
  *
- * Queries the table meta-data in order to instrospect the model's metadata
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/metadata/strategy/introspection.c
+ * Queries the table meta-data in order to introspect the model's metadata
  */
-class Introspection
+class Introspection implements StrategyInterface
 {
 
     /**
@@ -34,15 +25,8 @@ class Introspection
      * @return array
      * @throws Exception
      */
-    public function getMetaData($model, $dependencyInjector)
+    public function getMetaData(ModelInterface $model, DiInterface $dependencyInjector)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_object($dependencyInjector) === false ||
-            $dependencyInjector instanceof DiInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $className      = get_class($model);
         $schema         = $model->getSchema();
         $table          = $model->getSource();
@@ -61,15 +45,17 @@ class Introspection
         }
 
         //Initialize meta-data
-        $attributes       = array();
-        $primaryKeys      = array();
-        $nonPrimaryKeys   = array();
-        $numericTyped     = array();
-        $notNull          = array();
-        $fieldTypes       = array();
-        $fieldBindTypes   = array();
-        $automaticDefault = array();
-        $identityField    = false;
+        $attributes        = [];
+        $primaryKeys       = [];
+        $nonPrimaryKeys    = [];
+        $numericTyped      = [];
+        $notNull           = [];
+        $fieldTypes        = [];
+        $fieldBindTypes    = [];
+        $automaticDefault  = [];
+        $identityField     = false;
+        $defaultValues     = [];
+        $emptyStringValues = [];
 
         foreach ($columns as $column) {
             $fieldName    = $column->getName();
@@ -102,10 +88,34 @@ class Introspection
 
             //Mark how fields must be escaped
             $fieldBindTypes[$fieldName] = $column->getBindType();
+            /**
+             * If column has default value or column is nullable and default value is null
+             */
+            $defaultValue               = $column->getDefault();
+            if ($defaultValue !== null || $column->isNotNull() === false) {
+                if (!$column->isAutoIncrement()) {
+                    $defaultValues[$fieldName] = $defaultValue;
+                }
+            }
         }
 
-        return array(0  => $attributes, 1  => $primaryKeys, 2  => $nonPrimaryKeys, 3  => $notNull, 4  => $fieldTypes,
-            5  => $numericTyped, 8  => $identityField, 9  => $fieldBindTypes, 10 => $automaticDefault, 11 => $automaticDefault);
+        /**
+         * Create an array using the MODELS_* constants as indexes
+         */
+        return [
+            MetaData::MODELS_ATTRIBUTES               => $attributes,
+            MetaData::MODELS_PRIMARY_KEY              => $primaryKeys,
+            MetaData::MODELS_NON_PRIMARY_KEY          => $nonPrimaryKeys,
+            MetaData::MODELS_NOT_NULL                 => $notNull,
+            MetaData::MODELS_DATA_TYPES               => $fieldTypes,
+            MetaData::MODELS_DATA_TYPES_NUMERIC       => $numericTyped,
+            MetaData::MODELS_IDENTITY_COLUMN          => $identityField,
+            MetaData::MODELS_DATA_TYPES_BIND          => $fieldBindTypes,
+            MetaData::MODELS_AUTOMATIC_DEFAULT_INSERT => $automaticDefault,
+            MetaData::MODELS_AUTOMATIC_DEFAULT_UPDATE => $automaticDefault,
+            MetaData::MODELS_DEFAULT_VALUES           => $defaultValues,
+            MetaData::MODELS_EMPTY_STRING_VALUES      => $emptyStringValues
+        ];
     }
 
     /**
@@ -116,7 +126,7 @@ class Introspection
      * @return array
      * @throws Exception
      */
-    public function getColumnMaps($model, $dependencyInjector)
+    public function getColumnMaps(ModelInterface $model, \Phalcon\DiInterface $dependencyInjector)
     {
         if (is_object($model) === false ||
             $model instanceof ModelInterface === false ||
@@ -135,7 +145,7 @@ class Introspection
                 throw new Exception('columnMap() not returned an array');
             }
 
-            $reversedColumnMap = array();
+            $reversedColumnMap = [];
             $orderedColumnMap  = $userColumnMap;
 
             foreach ($userColumnMap as $name => $userName) {
@@ -144,7 +154,7 @@ class Introspection
         }
 
         //Store the column map
-        return array($orderedColumnMap, $reversedColumnMap);
+        return [$orderedColumnMap, $reversedColumnMap];
     }
 
 }

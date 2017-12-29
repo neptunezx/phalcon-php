@@ -78,10 +78,12 @@ class Csv extends Adapter implements \ArrayAccess
      * @param $placeholders mixed|null
      * @return string
      */
-    public function query($index, $placeholders = null)
+    public function query($index,array $placeholders = null)
     {
         if (!isset($this->_translate[$index])) {
             $translation = $index;
+        }else{
+            $translation=$this->_translate[$index];
         }
 
         return $this->replacePlaceholders($translation, $placeholders);

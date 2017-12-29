@@ -1,28 +1,28 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: gaopu
  * Date: 2017/12/22
  * Time: 下午12:22
  */
-
 /*
- +------------------------------------------------------------------------+
- | Phalcon Framework                                                      |
- +------------------------------------------------------------------------+
- | Copyright (c) 2011-2017 Phalcon Team (http://www.phalconphp.com)       |
- +------------------------------------------------------------------------+
- | This source file is subject to the New BSD License that is bundled     |
- | with this package in the file LICENSE.txt.                             |
- |                                                                        |
- | If you did not receive a copy of the license and are unable to         |
- | obtain it through the world-wide-web, please send an email             |
- | to license@phalconphp.com so we can send you a copy immediately.       |
- +------------------------------------------------------------------------+
- | Authors: Andres Gutierrez <andres@phalconphp.com>                      |
- |          Eduar Carvajal <eduar@phalconphp.com>                         |
- |          Dmitry Korolev <chameleonweb2012@gmail.com>                   |
- +------------------------------------------------------------------------+
+  +------------------------------------------------------------------------+
+  | Phalcon Framework                                                      |
+  +------------------------------------------------------------------------+
+  | Copyright (c) 2011-2017 Phalcon Team (http://www.phalconphp.com)       |
+  +------------------------------------------------------------------------+
+  | This source file is subject to the New BSD License that is bundled     |
+  | with this package in the file LICENSE.txt.                             |
+  |                                                                        |
+  | If you did not receive a copy of the license and are unable to         |
+  | obtain it through the world-wide-web, please send an email             |
+  | to license@phalconphp.com so we can send you a copy immediately.       |
+  +------------------------------------------------------------------------+
+  | Authors: Andres Gutierrez <andres@phalconphp.com>                      |
+  |          Eduar Carvajal <eduar@phalconphp.com>                         |
+  |          Dmitry Korolev <chameleonweb2012@gmail.com>                   |
+  +------------------------------------------------------------------------+
  */
 
 namespace Phalcon\Queue;
@@ -51,6 +51,7 @@ use Phalcon\Queue\Beanstalk\Exception;
  */
 class Beanstalk
 {
+
     /**
      * Seconds to wait before putting the job in the ready queue.
      * The job will be in the "delayed" state during this time.
@@ -120,7 +121,7 @@ class Beanstalk
             $parameters["port"] = self::DEFAULT_PORT;
         }
 
-        if (!isset ($parameters["persistent"])) {
+        if (!isset($parameters["persistent"])) {
             $parameters["persistent"] = false;
         }
 
@@ -197,16 +198,16 @@ class Beanstalk
         /**
          * Create the command
          */
-        $length = strlen($serialized);
+        $length   = strlen($serialized);
         $this->write("put " . $priority . " " . $delay . " " . $ttr . " " . $length . "\r\n" . $serialized);
         $response = $this->readStatus();
-        $status = $response[0];
+        $status   = $response[0];
 
         if ($status != "INSERTED" && $status != "BURIED") {
             return false;
         }
 
-        return (int)response[1];
+        return (int) response[1];
     }
 
     /**
@@ -265,7 +266,6 @@ class Beanstalk
     {
         if (!is_string($tube)) {
             throw new Exception('Invalid parameter type.');
-
         }
         $this->write("watch " . $tube);
         $response = $this->readStatus();
@@ -273,7 +273,7 @@ class Beanstalk
             return false;
         }
 
-        return (int)$response[1];
+        return (int) $response[1];
     }
 
     /**
@@ -289,7 +289,7 @@ class Beanstalk
             return false;
         }
 
-        return (int)$response[1];
+        return (int) $response[1];
     }
 
     /**
@@ -303,7 +303,6 @@ class Beanstalk
     {
         if (!is_string($tube) && !is_int($delay)) {
             throw new Exception('Invalid parameter type.');
-
         }
         $this->write("pause-tube " . $tube . " " . $delay);
 
@@ -325,7 +324,6 @@ class Beanstalk
     {
         if (!is_int($bound)) {
             throw new Exception('Invalid parameter type.');
-
         }
         $this->write("kick " . $bound);
 
@@ -334,7 +332,7 @@ class Beanstalk
             return false;
         }
 
-        return (int)$response[1];
+        return (int) $response[1];
     }
 
     /**
@@ -377,7 +375,6 @@ class Beanstalk
      *
      * @return bool|array
      */
-
     public function listTubes()
     {
         $this->write("list-tubes");
@@ -512,11 +509,11 @@ class Beanstalk
     final public function readYaml()
     {
         $response = $this->readStatus();
-        $status = $response[0];
+        $status   = $response[0];
         if (count($response) > 1) {
             $umberOfBytes = $response[1];
-            $response = $this->read();
-            $data = yaml_parse($response);
+            $response     = $this->read();
+            $data         = yaml_parse($response);
         } else {
             $numberOfBytes = 0;
 
@@ -553,7 +550,7 @@ class Beanstalk
                 return false;
             }
             $data = rtrim(stream_get_line($connection, $length + 2), "\r\n");
-            if ((stream_get_meta_data($connection))["timed_out"]) {
+            if ((stream_get_meta_data($connection)["timed_out"])) {
                 throw new Exception("Connection timed out");
             }
         } else {
@@ -625,10 +622,11 @@ class Beanstalk
      * @return bool
      */
     public function quit()
-	{
+    {
         $this->write("quit");
-		$this->disconnect();
+        $this->disconnect();
 
-		return !is_resource($this->_connection);
-	}
+        return !is_resource($this->_connection);
+    }
+
 }

@@ -1,15 +1,5 @@
 <?php
 
-/**
- * Session Adapter
- *
- * @author Andres Gutierrez <andres@phalconphp.com>
- * @author Eduar Carvajal <eduar@phalconphp.com>
- * @author Wenzel Pünter <wenzel@phelix.me>
- * @version 1.2.6
- * @package Phalcon
- */
-
 namespace Phalcon\Mvc\Model\MetaData;
 
 use Phalcon\Mvc\Model\MetaData;
@@ -93,8 +83,8 @@ class Session extends MetaData
 
         $prefixKey = '$PMM$' . $this->_prefix;
 
-        if (is_array($_SESSION[$prefixKey]) === false) {
-            $_SESSION[$prefixKey] = array();
+        if (!isset($_SESSION[$prefixKey])) {
+            $_SESSION[$prefixKey] = [];
         }
 
         $_SESSION[$prefixKey][$key] = $data;

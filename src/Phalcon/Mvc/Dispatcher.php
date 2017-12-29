@@ -34,7 +34,7 @@ use \Phalcon\Mvc\Dispatcher\Exception;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/dispatcher.c
  */
-class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, InjectionAwareInterface, DispatcherInterface, PhalconDispatcherInterface
+class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, InjectionAwareInterface, DispatcherInterface
 {
 
     /**

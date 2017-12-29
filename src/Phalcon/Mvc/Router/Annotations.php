@@ -84,6 +84,7 @@ class Annotations extends Router
      */
 	public function handle($uri = null)
 	{
+        $namespaceName = '';
         if(!is_string($uri) && !is_null($uri)) {
             throw new Exception('Invalid parameter type.');
         }

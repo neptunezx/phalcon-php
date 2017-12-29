@@ -6,6 +6,10 @@ use \Phalcon\Mvc\RouterInterface;
 use \Phalcon\Mvc\Router\Exception;
 use \Phalcon\Mvc\Router\Route;
 use \Phalcon\Mvc\Router\Group;
+use \Phalcon\Text;
+use \Phalcon\Mvc\Router\RouteInterface;
+use \Phalcon\Events\ManagerInterface;
+use \Phalcon\Mvc\Router\GroupInterface;
 use \Phalcon\Di\InjectionAwareInterface;
 use \Phalcon\DiInterface;
 
@@ -53,6 +57,10 @@ class Router implements RouterInterface, InjectionAwareInterface
      */
     const URI_SOURCE_SERVER_REQUEST_URI = 1;
 
+    const POSITION_FIRST = 0;
+
+    const POSITION_LAST = 1;
+
     /**
      * Dependency Injector
      *
@@ -60,6 +68,8 @@ class Router implements RouterInterface, InjectionAwareInterface
      * @access protected
      */
     protected $_dependencyInjector;
+
+    protected $_eventsManager;
 
     /**
      * URI source
@@ -75,7 +85,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * @var null|string
      * @access protected
      */
-    protected $_namespace;
+    protected $_namespace = null;
 
     /**
      * Module
@@ -83,7 +93,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * @var null|string
      * @access protected
      */
-    protected $_module;
+    protected $_module = null;
 
     /**
      * Controller
@@ -91,7 +101,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * @var null|string
      * @access protected
      */
-    protected $_controller;
+    protected $_controller = null;
 
     /**
      * Action
@@ -99,7 +109,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * @var null|string
      * @access protected
      */
-    protected $_action;
+    protected $_action = null;
 
     /**
      * Params
@@ -107,7 +117,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * @var null|array
      * @access protected
      */
-    protected $_params;
+    protected $_params = [];
 
     /**
      * Routes
@@ -179,7 +189,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * @var null|array
      * @access protected
      */
-    protected $_defaultParams;
+    protected $_defaultParams = [];
 
     /**
      * Remove extra slashes?
@@ -198,43 +208,35 @@ class Router implements RouterInterface, InjectionAwareInterface
     protected $_notFoundPaths;
 
     /**
-     * Is exact controller name?
-     *
-     * @var boolean
-     * @access protected
-     */
-    protected $_isExactControllerName = false;
-
-    /**
      * \Phalcon\Mvc\Router constructor
      *
-     * @param boolean|null $defaultRoutes
+     * @param boolean $defaultRoutes
      * @throws Exception
      */
-    public function __construct($defaultRoutes = null)
+    public function __construct($defaultRoutes = true)
     {
-        $this->_defaultParams = array();
-
-        if (is_null($defaultRoutes) === true) {
-            $defaultRoutes = true;
-        } elseif (is_bool($defaultRoutes) === false) {
+        if (is_bool($defaultRoutes) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $routes = array();
+        $routes = [];
 
-        if ($defaultRoutes === true) {
-            /*
-             * Two routes are added by default to match /:controller/:action and
-             * /:controller/:action/:params
-             */
-            $routes[] = new Route('#^/([a-zA-Z0-9\\_\\-]+)[/]{0,1}$#', array('controller' => 1));
-            $routes[] = new Route(
-                '#^/([a-zA-Z0-9\\_\\-]+)/([a-zA-Z0-9\\.\\_]+)(/.*)*$#', array('controller' => 1, 'action' => 2, 'params' => 3)
-            );
-        }
+        if ($defaultRoutes) {
 
-        $this->_params = array();
+            // Two routes are added by default to match /:controller/:action and
+            // /:controller/:action/:params
+
+            $routes[] = new Route("#^/([\\w0-9\\_\\-]+)[/]{0,1}$#u", [
+                "controller" => 1
+			]);
+
+			$routes[] = new Route("#^/([\\w0-9\\_\\-]+)/([\\w0-9\\.\\_]+)(/.*)*$#u", [
+                "controller" => 1,
+				"action" => 2,
+				"params" => 3
+			]);
+		}
+
         $this->_routes = $routes;
     }
 
@@ -246,11 +248,6 @@ class Router implements RouterInterface, InjectionAwareInterface
      */
     public function setDI($dependencyInjector)
     {
-        if (is_object($dependencyInjector) === false ||
-            $dependencyInjector instanceof DiInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_dependencyInjector = $dependencyInjector;
     }
 
@@ -262,6 +259,34 @@ class Router implements RouterInterface, InjectionAwareInterface
     public function getDI()
     {
         return $this->_dependencyInjector;
+    }
+
+    /**
+     * Sets the event manager
+     *
+     * @param \Phalcon\Events\ManagerInterface $eventsManager
+     *
+     * @throws Exception
+     */
+    public function setEventsManager(ManagerInterface $eventsManager)
+    {
+        if ( is_object($eventsManager) === false
+             || $eventsManager instanceof ManagerInterface === false
+        ) {
+            throw new Exception('Invalid parameter type.');
+        }
+
+        $this->_eventsManager = $eventsManager;
+    }
+
+    /**
+     * Returns the internal event manager
+     *
+     * @return \Phalcon\Events\ManagerInterface|null
+     */
+    public function getEventsManager()
+    {
+        return $this->_eventsManager;
     }
 
     /**
@@ -300,18 +325,13 @@ class Router implements RouterInterface, InjectionAwareInterface
      *  $router->setUriSource(Router::URI_SOURCE_SERVER_REQUEST_URI);
      * </code>
      *
-     * @param int $uriSource
+     * @param $uriSource
      * @return \Phalcon\Mvc\Router
      * @throws Exception
      */
     public function setUriSource($uriSource)
     {
-        if (is_int($uriSource) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_uriSource = $uriSource;
-
         return $this;
     }
 
@@ -417,7 +437,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * </code>
      *
      * @param array $defaults
-     * @return \Phalcon\Mvc\Router
+     * @return RouterInterface
      * @throws Exception
      */
     public function setDefaults($defaults)
@@ -455,20 +475,20 @@ class Router implements RouterInterface, InjectionAwareInterface
     }
 
     /**
-     * Removes slashes at the end of a string
+     * Returns an array of default parameters
+     *
+     * @return array
      */
-    private static function phalconRemoveExtraSlashes($str)
-    {
-        if (is_string($str) === false) {
-            return '';
-        }
-
-        if ($str === '/') {
-            return $str;
-        }
-
-        return rtrim($str, '/');
-    }
+    public function getDefaults()
+	{
+        return [
+            "namespace"  => $this->_defaultNamespace,
+            "module"     => $this->_defaultModule,
+            "controller" => $this->_defaultController,
+            "action"     => $this->_defaultAction,
+            "params"     => $this->_defaultParams,
+        ];
+	}
 
     /**
      * Handles routing information received from the rewrite engine
@@ -486,262 +506,423 @@ class Router implements RouterInterface, InjectionAwareInterface
      */
     public function handle($uri = null)
     {
-        if (is_null($uri) === true) {
-            $uri = $this->getRewriteUri();
-        } elseif (is_string($uri) === false) {
-            throw new Exception('Invalid parameter type.');
+//        if ( is_string($uri) === false ) {
+//            throw new Exception('Invalid parameter type.');
+//        }
+
+        if ( !$uri ) {
+            /**
+             * If 'uri' isn't passed as parameter it reads _GET["_url"]
+             */
+            $realUri = $this->getRewriteUri();
+        } else {
+            $realUri = $uri;
         }
 
-        //Remove extra slashes in the route
-        if ($this->_removeExtraSlashes === true) {
-            $uri = self::phalconRemoveExtraSlashes($uri);
+        /**
+         * Remove extra slashes in the route
+         */
+        if ( $this->_removeExtraSlashes && $realUri != "/" ) {
+            $handledUri = rtrim($realUri, "/");
+        } else {
+            $handledUri = $realUri;
         }
 
-        //Runtime variables
-        $request         = null;
-        $currentHostName = null;
-        $routeFound      = false;
-        $matches         = null;
-        $parts           = array();
-        $params          = array();
-
-        //Set status properties
+        $request             = null;
+        $currentHostName     = null;
+        $routeFound          = false;
+        $parts               = [];
+        $params              = [];
+        $matches             = null;
         $this->_wasMatched   = false;
         $this->_matchedRoute = null;
 
-        $routes = (is_array($this->_routes) === true ? $this->_routes : array());
+        $eventsManager = $this->_eventsManager;
 
-        //Routes are traversed in reversed order
-        foreach ($routes as $route) {
-            //Look for HTTP method constraints
+        if ( is_object($eventsManager) ) {
+            $eventsManager->fire("router:beforeCheckRoutes", $this);
+        }
+
+        /**
+         * Routes are traversed in reversed order
+         */
+        foreach ( array_reverse($this->_routes) as $route ) {
+
+            $params  = [];
+            $matches = null;
+
+            /**
+             * Look for HTTP method constraints
+             */
             $methods = $route->getHttpMethods();
-            if (is_null($methods) === false) {
-                //Retrieve the request service from the container
-                if (is_null($request) === true) {
-                    if (is_object($this->_dependencyInjector) === false) {
-                        throw new Exception("A dependency injection container is required to access the 'request' service");
+            if ( $methods !== null ) {
+
+                /**
+                 * Retrieve the request service from the container
+                 */
+                if ( $request === null ) {
+
+                    $dependencyInjector = $this->_dependencyInjector;
+                    if ( !is_object($dependencyInjector) ) {
+                        throw new Exception(
+                            "A dependency injection container is required to access the 'request' service"
+                        );
                     }
 
-                    $request = $this->_dependencyInjector->getShared('request');
-                    //@note no interface or object validation
+                    $request = $dependencyInjector->getShared("request");
                 }
 
-                //Check if the current method is allowed by the route
-                if ($request->isMethod($methods) === false) {
+                /**
+                 * Check if the current method is allowed by the route
+                 */
+                if ( $request->isMethod($methods, true) === false ) {
                     continue;
                 }
             }
 
-            //Look for hostname constraints
-            $hostname = $route->getHostname();
-            if (is_null($hostname) === false) {
-                //Retrieve the request service from the container
-                if (is_null($request) === true) {
-                    if (is_object($this->_dependencyInjector) === false) {
-                        throw new Exception("A dependency injection container is required to access the 'request' service");
+            /**
+             * Look for hostname constraints
+             */
+            $hostname = $route->getHostName();
+            if ( $hostname !== null ) {
+
+                /**
+                 * Retrieve the request service from the container
+                 */
+                if ( $request === null ) {
+
+                    $dependencyInjector = $this->_dependencyInjector;
+                    if ( !is_object($dependencyInjector) ) {
+                        throw new Exception(
+                            "A dependency injection container is required to access the 'request' service"
+                        );
                     }
 
-                    $request = $this->_dependencyInjector->getShared('request');
+                    $request = $dependencyInjector->getShared("request");
                 }
 
-                //Check if the current hostname is the same as the route
-                if (is_null($currentHostName) === true) {
+                /**
+                 * Check if the current hostname is the same as the route
+                 */
+                if ( is_null($currentHostName) ) {
                     $currentHostName = $request->getHttpHost();
                 }
 
-                //No HTTP_HOST, maybe in CLI mode?
-                if (is_null($currentHostName) === true) {
+                /**
+                 * No HTTP_HOST, maybe in CLI mode?
+                 */
+                if ( !$currentHostName ) {
                     continue;
                 }
 
-                //Check if the hostname restriction is the same as the current in the route
-                if (strpos($hostname, '(') !== false) {
-                    if (strpos($hostname, '#') === false) {
-                        $hostname = '#^' . $hostname . '$#';
+                /**
+                 * Check if the hostname restriction is the same as the current in the route
+                 */
+                if ( Text::memstr($hostname, "(") ) {
+                    if ( !Text::memstr($hostname, "#") ) {
+                        $regexHostName = "#^".$hostname;
+                        if ( !Text::memstr($hostname, ":") ) {
+                            $regexHostName .= "(:[[:digit:]]+)?";
+                        }
+                        $regexHostName .= "$#i";
+                    } else {
+                        $regexHostName = $hostname;
                     }
-
-                    $matched = (preg_match($hostname, $currentHostName) == 0 ? false : true);
+                    $matched = preg_match($regexHostName, $currentHostName);
                 } else {
-                    $matched = ($currentHostName === $hostname ? true : false);
+                    $matched = $currentHostName == $hostname;
                 }
 
-                if ($matched === false) {
+                if ( !$matched ) {
                     continue;
                 }
             }
 
-            //If the route has parentheses use preg_match
-            $pattern = $route->getCompiledPattern();
-            if (strpos($pattern, '^') !== false) {
-                $routeFound = (preg_match($pattern, $uri, $matches) == 0 ? false : true);
-            } else {
-                $routeFound = ($pattern === $uri ? true : false);
+            if ( is_object($eventsManager) ) {
+                $eventsManager->fire("router:beforeCheckRoute", $this, $route);
             }
 
-            //Check for beforeMatch conditions
-            if ($routeFound === true) {
+            /**
+             * If the route has parentheses use preg_match
+             */
+            $pattern = $route->getCompiledPattern();
+
+            if ( Text::memstr($pattern, "^") ) {
+                $routeFound = preg_match($pattern, $handledUri, $matches);
+            } else {
+                $routeFound = $pattern == $handledUri;
+            }
+
+            /**
+             * Check for beforeMatch conditions
+             */
+            if ( $routeFound ) {
+
+                if ( is_object($eventsManager) ) {
+                    $eventsManager->fire("router:matchedRoute", $this, $route);
+                }
+
                 $beforeMatch = $route->getBeforeMatch();
-                if (is_null($beforeMatch) === false) {
-                    //Check first if the callback is callable
-                    if (is_callable($beforeMatch) === false) {
-                        throw new Exception('Before-Match callback is not callable in matched route');
+                if ( $beforeMatch !== null ) {
+
+                    /**
+                     * Check first if the callback is callable
+                     */
+                    if ( !is_callable($beforeMatch) ) {
+                        throw new Exception(
+                            "Before-Match callback is not callable in matched route"
+                        );
                     }
 
-                    //Call the function
-                    $routeFound = call_user_func_array($beforeMatch, array($uri, $route, $this));
+                    /**
+                     * Check first if the callback is callable
+                     */
+                    $routeFound = call_user_func_array(
+                        $beforeMatch,
+                        [ $handledUri, $route, $this ]
+                    );
+                }
+
+            } else {
+                if ( is_object($eventsManager) ) {
+                    $routeFound = $eventsManager->fire(
+                        "router:notMatchedRoute",
+                        $this,
+                        $route
+                    );
                 }
             }
 
-            //Apply converters
-            if ($routeFound === true) {
-                //Start from the default paths
+            if ( $routeFound ) {
+
+                /**
+                 * Start from the default paths
+                 */
                 $paths = $route->getPaths();
                 $parts = $paths;
 
-                //Check if the matches has variables
-                if (is_array($matches) === true) {
-                    //Get the route converters if any
-                    $converters = $route->getConverters();
-                    foreach ($paths as $part => $position) {
-                        if (is_string($part) === false || $part[0] !== chr(0)) {
-                            if (isset($matches[$position]) === true) {
-                                $matchPosition = $matches[$position];
+				/**
+                 * Check if the matches has variables
+                 */
+				if ( is_array($matches) ) {
 
-                                //Check if the part has a converter
-                                if (isset($converters[$part]) === true) {
+                    /**
+                     * Get the route converters if any
+                     */
+                    $converters = $route->getConverters();
+
+                    foreach ( $paths as $part => $position ) {
+
+                        if ( !is_string($part) ) {
+                            throw new Exception("Wrong key in paths: ".$part);
+                        }
+
+                        if ( !is_string($position) && !is_integer($position) ) {
+                            continue;
+                        }
+
+                        if ( isset($matches[$position]) ) {
+                            $matchPosition = $matches[$position];
+                            /**
+                             * Check if the part has a converter
+                             */
+                            if ( is_array($converters) ) {
+                                if ( isset($converters[$part]) ) {
                                     $converter    = $converters[$part];
-                                    $parts[$part] = call_user_func_array($converter, $matchPosition);
+                                    $parts[$part] = call_user_func_array(
+                                        $converter,
+                                        [ $matchPosition ]
+                                    );
                                     continue;
                                 }
+                            }
 
-                                //Update the parts if there is no coverter
-                                $parts[$part] = $matchPosition;
-                            } else {
-                                //Apply the converters anyway
-                                if (isset($converters[$part]) === true) {
+                            /**
+                             * Update the parts if there is no converter
+                             */
+                            $parts[$part] = $matchPosition;
+                        } else {
+
+                            /**
+                             * Apply the converters anyway
+                             */
+                            if ( is_array($converters) ) {
+                                if ( isset($converters[$part]) ) {
                                     $converter    = $converters[$part];
-                                    $parts[$part] = call_user_func_array($converter, array($position));
+                                    $parts[$part] = call_user_func_array(
+                                        $converter,
+                                        [ $position ]
+                                    );
+                                }
+                            } else {
+
+                                /**
+                                 * Remove the path if the parameter was not matched
+                                 */
+                                if ( is_integer($position) ) {
+                                    unset ($parts[$part]);
                                 }
                             }
                         }
                     }
 
-                    //Update the matches generated by preg_match
+                    /**
+                     * Update the matches generated by preg_match
+                     */
                     $this->_matches = $matches;
                 }
-                $this->_matchedRoute = $route;
-                break;
-            }
+
+				$this->_matchedRoute = $route;
+				break;
+			}
         }
 
-        //Update the wasMatched property indicating if the route was matched
-        $this->_wasMatched = ($routeFound === true ? true : false);
+        /**
+         * Update the wasMatched property indicating if the route was matched
+         */
+        if ( $routeFound ) {
+            $this->_wasMatched = true;
+        } else {
+            $this->_wasMatched = false;
+        }
 
-        //The route wasn't found, try to use the not-found paths
-        if ($routeFound !== true) {
-            if (is_null($this->_notFoundPaths) === false) {
-                $parts      = $this->_notFoundPaths;
+        /**
+         * The route wasn't found, try to use the not-found paths
+         */
+        if ( !$routeFound ) {
+            $notFoundPaths = $this->_notFoundPaths;
+            if ( $notFoundPaths !== null ) {
+                $parts      = Route::getRoutePaths($notFoundPaths);
                 $routeFound = true;
             }
         }
 
-        //Check route
-        if ($routeFound === true) {
-            //Check for a namespace
-            if (isset($parts['namespace']) === true) {
-                if (is_numeric($parts['namespace']) === false) {
-                    $this->_namespace = $parts['namespace'];
+        /**
+         * Use default values before we overwrite them if the route is matched
+         */
+        $this->_namespace  = $this->_defaultNamespace;
+        $this->_module     = $this->_defaultModule;
+        $this->_controller = $this->_defaultController;
+        $this->_action     = $this->_defaultAction;
+        $this->_params     = $this->_defaultParams;
+
+        if ( $routeFound ) {
+
+            /**
+             * Check for a namespace
+             */
+            if ( isset($parts["namespace"]) ) {
+                $vnamespace = $parts["namespace"];
+                if ( !is_numeric($vnamespace) ) {
+                    $this->_namespace = $vnamespace;
                 }
-                unset($parts['namespace']);
-            } else {
-                $this->_namespace = $this->_defaultNamespace;
+                unset ($parts["namespace"]);
             }
 
-            //Check for a module
-            if (isset($parts['module']) === true) {
-                if (is_numeric($parts['module']) === false) {
-                    $this->_module = $parts['module'];
-                    unset($parts['module']);
-                } else {
-                    $this->_module = $this->_defaultModule;
+            /**
+             * Check for a module
+             */
+            if ( isset($parts["module"]) ) {
+                $module = $parts["module"];
+                if ( !is_numeric($module) ) {
+                    $this->_module = $module;
                 }
+                unset ($parts["module"]);
             }
 
-            //Check for exact controller name
-            $exactStrIdentifer = chr(0) . 'exact';
-            if (isset($parts[$exactStrIdentifer]) === true) {
-                $this->_isExactControllerName = $parts[$exactStrIdentifer];
-                unset($parts[$exactStrIdentifer]);
-            } else {
-                $this->_isExactControllerName = false;
-            }
-
-            //Check for a controller
-            if (isset($parts['controller']) === true) {
-                if (is_numeric($parts['controller']) === false) {
-                    $this->_controller = $parts['controller'];
+            /**
+             * Check for a controller
+             */
+            if ( isset($parts["controller"]) ) {
+                $controller = $parts["controller"];
+                if ( !is_numeric($controller) ) {
+                    $this->_controller = $controller;
                 }
-                unset($parts['controller']);
-            } else {
-                $this->_controller = $this->_defaultController;
+                unset ($parts["controller"]);
             }
 
-            //Check for an action
-            if (isset($parts['action']) === true) {
-                if (is_numeric($parts['action']) === false) {
-                    $this->_action = $parts['action'];
+            /**
+             * Check for an action
+             */
+            if ( isset($parts["action"]) ) {
+                $action = $parts["action"];
+                if ( !is_numeric($action) ) {
+                    $this->_action = $action;
                 }
-                unset($parts['action']);
-            } else {
-                $this->_action = $this->_defaultAction;
+                unset ($parts["action"]);
             }
 
-            //Check for parameters
-            $params = array();
-            if (isset($parts['params']) === true) {
-                $paramStr = (string) substr($parts['params'], 1, 0);
-                if (empty($paramStr) === false) {
-                    $params = explode($paramStr, '/');
+            /**
+             * Check for parameters
+             */
+            if ( isset($parts["params"]) ) {
+                $paramsStr = $parts["params"];
+                if ( is_string($paramsStr) ) {
+                    $strParams = trim($paramsStr, "/");
+                    if ( $strParams !== "" ) {
+                        $params = explode("/", $strParams);
+                    }
                 }
 
-                unset($parts['params']);
+                unset ($parts["params"]);
             }
 
-            if (empty($params) === false) {
-                $params = array_merge($params, $parts);
+            if ( count($params) ) {
+                $this->_params = array_merge($params, $parts);
             } else {
-                $params = $parts;
+                $this->_params = $parts;
             }
-
-            $this->_params = $params;
-        } else {
-            //Use default values if the route hasn't matched
-            $this->_namespace  = $this->_defaultNamespace;
-            $this->_module     = $this->_defaultModule;
-            $this->_controller = $this->_defaultController;
-            $this->_action     = $this->_defaultAction;
-            $this->_params     = $this->_defaultParams;
         }
+
+        if ( is_object($eventsManager) ) {
+            $eventsManager->fire("router:afterCheckRoutes", $this);
+        }
+
+
     }
 
     /**
      * Adds a route to the router without any HTTP constraint
      *
-     * <code>
-     * $router->add('/about', 'About::index');
-     * </code>
+     *<code>
+     * use Phalcon\Mvc\Router;
+     *
+     * $router->add("/about", "About::index");
+     * $router->add("/about", "About::index", ["GET", "POST"]);
+     * $router->add("/about", "About::index", ["GET", "POST"], Router::POSITION_FIRST);
+     *</code>
      *
      * @param string $pattern
-     * @param string|array|null $paths
-     * @param string|null $httpMethods
-     * @return \Phalcon\Mvc\Router\Route
+     * @param $paths
+     * @param $httpMethods
+     * @param $position
+     * @return RouteInterface
      */
-    public function add($pattern, $paths = null, $httpMethods = null)
+    public function add($pattern, $paths = null, $httpMethods = null, $position = Router::POSITION_LAST )
     {
-        //Every route is internally stored as a Phalcon\Mvc\Router\Route
+        if(! is_string($pattern)) {
+            throw new Exception("Invalid paramter");
+        }
+
+        /**
+         * Every route is internally stored as a Phalcon\Mvc\Router\Route
+         */
         $route = new Route($pattern, $paths, $httpMethods);
 
-        $this->_routes[] = $route;
+        switch ($position) {
+
+            case self::POSITION_LAST:
+                $this->_routes[] = $route;
+                break;
+
+            case self::POSITION_FIRST:
+                $this->_routes = array_merge([ $route ], $this->_routes);
+                break;
+
+            default:
+                throw new Exception("Invalid route position");
+        }
+
         return $route;
     }
 
@@ -750,11 +931,11 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @param string $pattern
      * @param string|array|null $paths
-     * @return \Phalcon\Mvc\Router\Route
+     * @return RouteInterface
      */
-    public function addGet($pattern, $paths = null)
+    public function addGet($pattern, $paths = null, $position = Router::POSITION_LAST)
     {
-        return $this->add($pattern, $paths, 'GET');
+        return $this->add($pattern, $paths, 'GET',$position);
     }
 
     /**
@@ -762,11 +943,11 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @param string $pattern
      * @param string|array|null $paths
-     * @return \Phalcon\Mvc\Router\Route
+     * @return RouteInterface
      */
-    public function addPost($pattern, $paths = null)
+    public function addPost($pattern, $paths = null, $position = Router::POSITION_LAST)
     {
-        return $this->add($pattern, $paths, 'POST');
+        return $this->add($pattern, $paths, 'POST',$position);
     }
 
     /**
@@ -774,11 +955,11 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @param string $pattern
      * @param string|array|null $paths
-     * @return \Phalcon\Mvc\Router\Route
+     * @return RouteInterface
      */
-    public function addPut($pattern, $paths = null)
+    public function addPut($pattern, $paths = null, $position = Router::POSITION_LAST)
     {
-        return $this->add($pattern, $paths, 'PUT');
+        return $this->add($pattern, $paths, 'PUT',$position);
     }
 
     /**
@@ -786,11 +967,11 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @param string $pattern
      * @param string|array|null $paths
-     * @return \Phalcon\Mvc\Router\Route
+     * @return RouteInterface
      */
-    public function addPatch($pattern, $paths = null)
+    public function addPatch($pattern, $paths = null, $position = Router::POSITION_LAST)
     {
-        return $this->add($pattern, $paths, 'PATCH');
+        return $this->add($pattern, $paths, 'PATCH',$position);
     }
 
     /**
@@ -798,11 +979,11 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @param string $pattern
      * @param string|array|null $paths
-     * @return \Phalcon\Mvc\Router\Route
+     * @return RouteInterface
      */
-    public function addDelete($pattern, $paths = null)
+    public function addDelete($pattern, $paths = null, $position = Router::POSITION_LAST)
     {
-        return $this->add($pattern, $paths, 'DELETE');
+        return $this->add($pattern, $paths, 'DELETE',$position);
     }
 
     /**
@@ -810,11 +991,11 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @param string $pattern
      * @param string|null|array $paths
-     * @return \Phalcon\Mvc\Router\Route
+     * @return RouteInterface
      */
-    public function addOptions($pattern, $paths = null)
+    public function addOptions($pattern, $paths = null, $position = Router::POSITION_LAST)
     {
-        return $this->add($pattern, $paths, 'OPTIONS');
+        return $this->add($pattern, $paths, 'OPTIONS',$position);
     }
 
     /**
@@ -822,18 +1003,54 @@ class Router implements RouterInterface, InjectionAwareInterface
      *
      * @param string $pattern
      * @param string|array|null $paths
-     * @return \Phalcon\Mvc\Router\Route
+     * @return RouteInterface
      */
-    public function addHead($pattern, $paths = null)
+    public function addHead($pattern, $paths = null, $position = Router::POSITION_LAST)
     {
-        return $this->add($pattern, $paths, 'HEAD');
+        return $this->add($pattern, $paths, 'HEAD',$position);
+    }
+
+    /**
+     * Adds a route to the router that only match if the HTTP method is HEAD
+     *
+     * @param string $pattern
+     * @param string|array|null $paths
+     * @return RouteInterface
+     */
+    public function addPurge($pattern, $paths = null, $position = Router::POSITION_LAST)
+    {
+        return $this->add($pattern, $paths, 'PURGE',$position);
+    }
+
+    /**
+     * Adds a route to the router that only match if the HTTP method is HEAD
+     *
+     * @param string $pattern
+     * @param string|array|null $paths
+     * @return RouteInterface
+     */
+    public function addTrace($pattern, $paths = null, $position = Router::POSITION_LAST)
+    {
+        return $this->add($pattern, $paths, 'TRACE',$position);
+    }
+
+    /**
+     * Adds a route to the router that only match if the HTTP method is HEAD
+     *
+     * @param string $pattern
+     * @param string|array|null $paths
+     * @return RouteInterface
+     */
+    public function addConnect($pattern, $paths = null, $position = Router::POSITION_LAST)
+    {
+        return $this->add($pattern, $paths, 'CONNECT',$position);
     }
 
     /**
      * Mounts a group of routes in the router
      *
      * @param \Phalcon\Mvc\Router\Group $group
-     * @return \Phalcon\Mvc\Router
+     * @return RouterInterface
      * @throws Exception
      */
     public function mount($group)
@@ -878,7 +1095,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * Set a group of paths to be returned when none of the defined routes are matched
      *
      * @param array|string $paths
-     * @return \Phalcon\Mvc\Router
+     * @return RouterInterface
      * @throws Exception
      */
     public function notFound($paths)
@@ -953,7 +1170,7 @@ class Router implements RouterInterface, InjectionAwareInterface
     /**
      * Returns the route that matchs the handled URI
      *
-     * @return \Phalcon\Mvc\Router\Route|null
+     * @return RouteInterface
      */
     public function getMatchedRoute()
     {
@@ -963,7 +1180,7 @@ class Router implements RouterInterface, InjectionAwareInterface
     /**
      * Returns the sub expressions in the regular expression matched
      *
-     * @return array|null
+     * @return array
      */
     public function getMatches()
     {
@@ -983,7 +1200,7 @@ class Router implements RouterInterface, InjectionAwareInterface
     /**
      * Returns all the routes defined in the router
      *
-     * @return \Phalcon\Mvc\Router\Route[]|null
+     * @return RouteInterface[]
      */
     public function getRoutes()
     {
@@ -994,7 +1211,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * Returns a route object by its id
      *
      * @param int $id
-     * @return \Phalcon\Mvc\Router\Route|boolean
+     * @return RouteInterface|boolean
      * @throws Exception
      */
     public function getRouteById($id)
@@ -1016,7 +1233,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      * Returns a route object by its name
      *
      * @param string $name
-     * @return \Phalcon\Mvc\Router\Route
+     * @return RouteInterface|boolean
      * @throws Exception
      */
     public function getRouteByName($name)
@@ -1041,7 +1258,7 @@ class Router implements RouterInterface, InjectionAwareInterface
      */
     public function isExactControllerName()
     {
-        return $this->_isExactControllerName;
+        return true;
     }
 
 }

@@ -153,7 +153,7 @@ interface CriteriaInterface
      * @param array $values
      * @return \Phalcon\Mvc\Model\Query\Builder
      */
-    public function inWhere($expr, $values);
+    public function inWhere($expr, array $values);
 
     /**
      * Appends a NOT IN condition to the current conditions

@@ -130,4 +130,11 @@ interface AdapterInterface
      * @return \Phalcon\Logger\AdapterInterface
      */
     public function alert($message, array $context = null);
+
+    /**
+     * @param string $message
+     * @param array|null $context
+     * @return mixed
+     */
+    public function emergency($message, array $context=null);
 }

@@ -151,6 +151,7 @@ class Multiple
      *
      * @param $message string
      * @param $context array|null
+     * @throws Exception
      */
     public function critical($message, array $context = null)
     {

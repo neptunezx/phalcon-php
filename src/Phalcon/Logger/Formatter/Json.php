@@ -11,9 +11,8 @@ use \Phalcon\Logger\Exception;
  *
  * Formats messages using JSON encoding
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/formatter/json.c
  */
-class Json extends Formatter implements FormatterInterface
+class Json extends Formatter
 {
 
     /**
@@ -22,10 +21,11 @@ class Json extends Formatter implements FormatterInterface
      * @param string $message
      * @param int $type
      * @param int $timestamp
+     * @param array $context
      * @return string
      * @throws Exception
      */
-    public function format($message, $type, $timestamp)
+    public function format($message, $type, $timestamp,array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||
@@ -33,12 +33,15 @@ class Json extends Formatter implements FormatterInterface
             throw new Exception('Invalid parameter type.');
         }
 
+        if (is_array($context)) {
+            $message = $this->interpolate($message, $context);
+        }
 
         //@note no exception handeling
         return json_encode(
             array(
-                'type'      => $this->getTypeString($type),
-                'message'   => $message,
+                'type' => $this->getTypeString($type),
+                'message' => $message,
                 'timestamp' => $timestamp
             )
         );

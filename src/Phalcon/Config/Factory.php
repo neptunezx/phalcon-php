@@ -5,6 +5,7 @@ namespace Phalcon\Config;
 use Phalcon\Factory as BaseFactory;
 use Phalcon\Factory\Exception;
 use Phalcon\Config;
+use Phalcon\Text;
 
 /**
  * Loads Config Adapter class using 'adapter' option, if no extension is provided it will be added to filePath
@@ -44,9 +45,10 @@ class Factory extends BaseFactory
             throw new Exception("You must provide 'filePath' option in factory config parameter.");
         }
 
+        $filePath = $config["filePath"];
         if (isset($config["adapter"])) {
             $adapter   = $config["adapter"];
-            $className = $namespace . "\\" . camelize($adapter);
+            $className = $namespace . "\\" . Text::camelize($adapter);
             if (!strpos($filePath, ".")) {
                 $filePath = $filePath . "." . lcfirst($adapter);
             }

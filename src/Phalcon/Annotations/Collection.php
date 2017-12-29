@@ -35,7 +35,7 @@ class Collection implements Iterator, Countable
     public function __construct($reflectionData = null)
     {
         if (is_array($reflectionData) === false && $reflectionData !== null) {
-            throw new Exception('Reflection data must be an array');
+//            throw new Exception('Reflection data must be an array');
         }
         $annotations = [];
         if (is_array($reflectionData)) {
@@ -181,7 +181,7 @@ class Collection implements Iterator, Countable
         $annotations = $this->_annotations;
         if (is_array($annotations)) {
             foreach ($annotations as $annotation) {
-                if ($name == $annotation->geName()) {
+                if ($name == $annotation->getName()) {
                     return true;
                 }
             }

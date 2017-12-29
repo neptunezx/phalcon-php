@@ -3,9 +3,9 @@
 namespace Phalcon;
 
 /**
- * Phalcon\DispatcherInterface initializer
+ * Phalcon\DispatcherInterface
  *
- * @see https://github.com/phalcon/cphalcon/1.2.6/master/ext/dispatcher.c
+ * Interface for Phalcon\Dispatcher
  */
 interface DispatcherInterface
 {
@@ -16,6 +16,11 @@ interface DispatcherInterface
      * @param string $actionSuffix
      */
     public function setActionSuffix($actionSuffix);
+
+    /**
+     * Gets the default action suffix
+     */
+    public function getActionSuffix();
 
     /**
      * Sets the default namespace
@@ -30,6 +35,20 @@ interface DispatcherInterface
      * @param string $actionName
      */
     public function setDefaultAction($actionName);
+
+    /**
+     * Sets the namespace which the controller belongs to
+     * 
+     * @param string $namespace
+     */
+    public function setNamespaceName($namespaceName);
+
+    /**
+     * Sets the module name which the application belongs to
+     * 
+     * @param string $moduleName
+     */
+    public function setModuleName($moduleName);
 
     /**
      * Sets the action name to be dispatched
@@ -50,7 +69,7 @@ interface DispatcherInterface
      *
      * @param array $params
      */
-    public function setParams($params);
+    public function setParams(array $params);
 
     /**
      * Gets action params
@@ -102,5 +121,5 @@ interface DispatcherInterface
      *
      * @param array $forward
      */
-    public function forward($forward);
+    public function forward(array $forward);
 }
