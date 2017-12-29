@@ -1,86 +1,112 @@
 <?php
 
+/**
+ * Created by PhpStorm.
+ * User: flyfish
+ * Date: 2017/12/22
+ * Time: 11:06
+ */
+
 namespace Phalcon;
 
-use \Phalcon\Di\Injectable;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Validation\Exception as ValidationException;
-use \Phalcon\Validation\Message\Group;
-use \Phalcon\FilterInterface;
+use Phalcon\Di\Injectable;
+use Phalcon\Validation\Exception;
+use Phalcon\Validation\Message\Group;
+use Phalcon\Validation\MessageInterface;
+use Phalcon\Validation\ValidatorInterface;
+use Phalcon\Validation\CombinedFieldsValidator;
 
 /**
- * Phalcon\Validation
+ * Phalcon\ValidationInterface
  *
- * Allows to validate data using validators
+ * Interface for the Phalcon\Validation component
  */
-class Validation extends Injectable implements EventsAwareInterface, InjectionAwareInterface
+class Validation extends Injectable implements ValidationInterface
 {
 
     /**
      * Data
-     *
-     * @var null|array|object
      * @access protected
      */
-    protected $_data = null;
+    protected $_data;
 
     /**
      * Entity
-     *
-     * @var null|object
      * @access protected
      */
-    protected $_entity = null;
+    protected $_entity;
 
     /**
      * Validators
-     *
-     * @var null|array
+     * @var array
      * @access protected
      */
-    protected $_validators = null;
+    protected $_validators = array();
+
+    /**
+     * CombinedFieldsValidators
+     * @var array
+     * @access protected
+     */
+    protected $_combinedFieldsValidators = array();
 
     /**
      * Filters
-     *
-     * @var null|array
+     * @var array
      * @access protected
      */
-    protected $_filters = null;
+    protected $_filters = array();
 
     /**
-     * Messages
-     *
-     * @var null|\Phalcon\Validation\Message\Group
+     * Message
      * @access protected
      */
-    protected $_messages = null;
+    protected $_messages;
+
+    /**
+     * DefaultMessages
+     * @access protected
+     */
+    protected $_defaultMessages;
+
+    /**
+     * Labels
+     * @var array
+     * @access protected
+     */
+    protected $_labels = array();
 
     /**
      * Values
-     *
-     * @var null
+     * @var array
      * @access protected
      */
-    protected $_values = null;
+    protected $_values;
 
     /**
-     * \Phalcon\Validation constructor
+     * Phalcon\Validation constructor
      *
-     * @param array|null $validators
-     * @throws ValidationException
+     * @param array $validators
+     * @throws Exception
      */
-    public function __construct($validators = null)
+    public function __construct(array $validators = null)
     {
-        if (is_null($validators) === false && is_array($validators) === false) {
-            throw new ValidationException('Validators must be an array');
+        if (count($validators)) {
+            $this->_validators = array_filter($validators, function ($element) {
+                return !is_array($element[0]) || !($element[1] instanceof CombinedFieldsValidator);
+            });
+            $this->_combinedFieldsValidators = array_filter($validators, function ($element) {
+                return is_array($element[0]) && $element[1] instanceof CombinedFieldsValidator;
+            });
         }
 
-        $this->_validators = $validators;
+        $this->setDefaultMessages();
 
-        if (method_exists($this, 'initialize') === true) {
-            $this->initialize();
+        /**
+         * Check for an 'initialize' method
+         */
+        if (method_exists($this, "initialize")) {
+            $this->{"initialize"}();
         }
     }
 
@@ -89,53 +115,119 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
      *
      * @param array|object|null $data
      * @param object|null $entity
-     * @return \Phalcon\Validation\Message\Group|boolean|null
-     * @throws ValidationException
+     * @return \Phalcon\Validation\Message\Group|bool
+     * @throws \Phalcon\Validation\Exception
      */
     public function validate($data = null, $entity = null)
     {
-        if (is_array($this->_validators) === false) {
-            throw new ValidationException('There are no validators to validate');
+        if (!is_object($data) && !is_array($data) && !is_null($data)) {
+            throw new Exception('Invalid parameter type.');
         }
 
-        //Clear pre-calculated values
+        $validators               = $this->_validators;
+        $combinedFieldsValidators = $this->_combinedFieldsValidators;
+
+        if (is_array($validators)) {
+            throw new Exception("There are no validators to validate");
+        }
+
+        /**
+         * Clear pre-calculated values
+         */
         $this->_values = null;
 
-        //Implicity creates a Phalcon\Validation\Message\Group object
+        /**
+         * Implicitly creates a Phalcon\Validation\Message\Group object
+         */
         $messages = new Group();
 
-        //Validation classes can implement the 'beforeValidation' callback
-        if (method_exists($this, 'beforeValidation') === true) {
-            if ($this->beforeValidation($data, $entity, $messages) === false) {
-                return false;
+        if ($entity !== null) {
+            $this->setEntity($entity);
+        }
+
+        /**
+         * Validation classes can implement the 'beforeValidation' callback
+         */
+        if (method_exists($this, "beforeValidation")) {
+            $status = $this->{"beforeValidation"}($data, $entity, $messages);
+            if ($status === false) {
+                return $status;
             }
         }
 
         $this->_messages = $messages;
-        if (is_array($data) === true || is_object($data) === true) {
-            $this->_data = $data;
+
+        if ($data !== null) {
+            if (is_array($data) || is_object($data)) {
+                $this->_data = $data;
+            } else {
+                throw new Exception("Invalid data to validate");
+            }
         }
 
-        //Validate
-        foreach ($this->_validators as $scope) {
-            if (is_array($scope) === false) {
-                throw new ValidationException('The validator scope is not valid');
+        foreach ($validators as $scope) {
+
+            if (!is_array($scope)) {
+                throw new Exception("The validator scope is not valid");
+            }
+            $field     = $scope[0];
+            $validator = $scope[1];
+
+            if (!is_object($validator)) {
+                throw new Exception("One of the validators is not valid");
             }
 
-            if (is_object($scope[1]) === false) {
-                throw new ValidationException('One of the validators is not valid');
+            /**
+             * Call internal validations, if it returns true, then skip the current validator
+             */
+            if ($this->preChecking($field, $validator)) {
+                continue;
             }
 
-            if ($scope[1]->validate($this, $scope[0]) === false) {
-                if ($scope[1]->getOption('cancelOnFail') === true) {
+            /**
+             * Check if the validation must be canceled if this validator fails
+             */
+            if ($validator->validate($this, $field) === false) {
+                if ($validator->getOption("cancelOnFail")) {
                     break;
                 }
             }
         }
 
-        //Get the messages generated by the validators
-        if (method_exists($this, 'afterValidation') === true) {
-            $this->afterValidation($data, $entity, $this->_messages);
+        foreach ($combinedFieldsValidators as $scope) {
+            if (!is_array($scope)) {
+                throw new Exception("The validator scope is not valid");
+            }
+
+            $field     = $scope[0];
+            $validator = $scope[1];
+
+            if (!is_object($validator)) {
+                throw new Exception("One of the validators is not valid");
+            }
+
+            /**
+             * Call internal validations, if it returns true, then skip the current validator
+             */
+            if ($this->preChecking($field, $validator)) {
+                continue;
+            }
+
+            /**
+             * Check if the validation must be canceled if this validator fails
+             */
+            if ($validator->validate($this, $field) === false) {
+                if ($validator->getOption("cancelOnFail")) {
+                    break;
+                }
+            }
+        }
+
+        /**
+         * Get the messages generated by the validators
+         */
+        if (method_exists($this, "afterValidation")) {
+            $this->{"afterValidation"}($data, $entity, $this->_messages);
         }
 
         return $this->_messages;
@@ -144,74 +236,116 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
     /**
      * Adds a validator to a field
      *
-     * @param string $attribute
+     * @param string $field
      * @param \Phalcon\Validation\ValidatorInterface
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
-    public function add($attribute, $validator)
+    public function add($field, ValidatorInterface $validator)
     {
-        if (is_string($attribute) === false) {
-            throw new ValidationException('The attribute must be a string');
+        if (is_array($field)) {
+            // Uniqueness validator for combination of fields is handled differently
+            if ($validator instanceof CombinedFieldsValidator) {
+                $this->_combinedFieldsValidators[] = [$field, $validator];
+            } else {
+                foreach ($field as $singleField) {
+                    $this->_validators[] = [$singleField, $validator];
+                }
+            }
+        } elseif (is_string($field)) {
+            $this->_validators[] = [$field, $validator];
+        } else {
+            throw new Exception("Field must be passed as array of fields or string");
         }
+        return $this;
+    }
 
-        if (is_object($validator) === false) {
-            throw new ValidationException('The validator must be an object');
+    /**
+     * Adds the validators to a field
+     * 
+     * @param string $field
+     * @param \Phalcon\Validation\ValidatorInterface
+     * @return \Phalcon\Validation
+     * @throws \Phalcon\Exception
+     */
+    public function rule($field, ValidatorInterface $validator)
+    {
+        return $this->add($field, $validator);
+    }
+
+    /**
+     * Adds the validators to a field
+     * @param string $field
+     * @param array $validators
+     * @return \Phalcon\Validation
+     * @throws \Phalcon\Exception
+     */
+    public function rules($field, array $validators)
+    {
+        foreach ($validators as $validator) {
+            if ($validator instanceof ValidatorInterface) {
+                $this->add($field, $validator);
+            }
         }
-
-        if (is_array($this->_validators) === false) {
-            $this->_validators = array();
-        }
-
-        $this->_validators[] = array($attribute, $validator);
-
         return $this;
     }
 
     /**
      * Adds filters to the field
      *
-     * @param string $attribute
+     * @param array|string $field
      * @param array|string $filters
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
-    public function setFilters($attribute, $filters)
+    public function setFilters($field, $filters)
     {
-        if (is_string($attribute) === false) {
-            throw new ValidationException('Invalid parameter type.');
+        if (is_array($field)) {
+            foreach ($field as $singleField) {
+                $this->_filters[$singleField] = $filters;
+            }
+        } elseif (is_string($field)) {
+            $this->_filters[$field] = $filters;
+        } else {
+            throw new Exception("Field must be passed as array of fields or string.");
         }
-
-        if (is_array($attribute) === false && is_string($attribute) === false) {
-            throw new ValidationException('Invalid parameter type.');
-        }
-
-        $this->_filters[$attribute] = $filters;
+        return $this;
     }
 
     /**
      * Returns all the filters or a specific one
      *
-     * @param string|null $attribute
-     * @return null|array|string
+     * @param string $field
+     * @return mixed
+     * @throws \Phalcon\Exception
      */
-    public function getFilters($attribute = null)
+    public function getFilters($field = null)
     {
-        if (is_string($attribute) === true) {
-            if (isset($this->_filters[$attribute]) === true) {
-                return $this->_filters[$attribute];
-            }
-
+        if (!is_null($field) && !is_string($field)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        $filters = $this->_filters;
+        if ($field === null || $field === "") {
+            return $filters;
+        }
+        if (!isset($filters[$field])) {
             return null;
         }
+        return $filters[$field];
+    }
 
-        return $this->_filters;
+    /**
+     * Sets the validators added to the validation
+     * @param \Phalcon\Validation
+     * @throws \Phalcon\Exception
+     */
+    public function setValidators($validators)
+    {
+        $this->_validators = $validators;
     }
 
     /**
      * Returns the validators added to the validation
-     *
-     * @return array|null
      */
     public function getValidators()
     {
@@ -219,9 +353,23 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
     }
 
     /**
+     * Sets the bound entity
+     *
+     * @param object $entity
+     * @throws \Phalcon\Exception
+     */
+    public function setEntity($entity)
+    {
+        if (!is_object($entity)) {
+            throw new Exception("Entity must be an object");
+        }
+        $this->_entity = $entity;
+    }
+
+    /**
      * Returns the bound entity
      *
-     * @return object|null
+     * @return object
      */
     public function getEntity()
     {
@@ -229,9 +377,79 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
     }
 
     /**
-     * Returns the registered validators
+     * Returns the data
      *
-     * @return \Phalcon\Validation\Message\Group|null
+     * @return object
+     */
+    public function getData()
+    {
+        return $this->_data;
+    }
+
+    /**
+     * Adds default messages to validators
+     * @param array $messages
+     * @return array
+     * @throws \Phalcon\Exception
+     */
+    public function setDefaultMessages(array $messages = [])
+    {
+        $defaultMessages = array(
+            "Alnum"             => "Field :field must contain only letters and numbers",
+            "Alpha"             => "Field :field must contain only letters",
+            "Between"           => "Field :field must be within the range of :min to :max",
+            "Confirmation"      => "Field :field must be the same as :with",
+            "Digit"             => "Field :field must be numeric",
+            "Email"             => "Field :field must be an email address",
+            "ExclusionIn"       => "Field :field must not be a part of list: :domain",
+            "FileEmpty"         => "Field :field must not be empty",
+            "FileIniSize"       => "File :field exceeds the maximum file size",
+            "FileMaxResolution" => "File :field must not exceed :max resolution",
+            "FileMinResolution" => "File :field must be at least :min resolution",
+            "FileSize"          => "File :field exceeds the size of :max",
+            "FileType"          => "File :field must be of type: :types",
+            "FileValid"         => "Field :field is not valid",
+            "Identical"         => "Field :field does not have the expected value",
+            "InclusionIn"       => "Field :field must be a part of list: :domain",
+            "Numericality"      => "Field :field does not have a valid numeric format",
+            "PresenceOf"        => "Field :field is required",
+            "Regex"             => "Field :field does not match the required format",
+            "TooLong"           => "Field :field must not exceed :max characters long",
+            "TooShort"          => "Field :field must be at least :min characters long",
+            "Uniqueness"        => "Field :field must be unique",
+            "Url"               => "Field :field must be a url",
+            "CreditCard"        => "Field :field is not valid for a credit card number",
+            "Date"              => "Field :field is not a valid date"
+        );
+
+        if ($messages) {
+            $this->_defaultMessages = array_merge($defaultMessages, $messages);
+        }
+        return $this->_defaultMessages;
+    }
+
+    /**
+     * Get default message for validator type
+     *
+     * @param string $type
+     * @return string
+     * @throws \Phalcon\Exception
+     */
+    public function getDefaultMessage($type)
+    {
+        if (is_string($type) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        $defaultMessage = isset($this->_defaultMessages[$type]) ? $this->_defaultMessages[$type] : null;
+        if (!is_null($defaultMessage)) {
+            return $defaultMessage;
+        }
+        return "";
+    }
+
+    /**
+     * Returns the registered validators
+     * @return \Phalcon\Validation\Message\Group
      */
     public function getMessages()
     {
@@ -239,18 +457,53 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
     }
 
     /**
-     * Appends a message to the messages list
-     *
-     * @param \Phalcon\Validation\MessageInterface $message
-     * @return \Phalcon\Validation
+     * Adds labels for fields
+     * @param array $labels
+     * @throws \Phalcon\Exception
      */
-    public function appendMessage($message)
+    public function setLabels(array $labels)
     {
-        //@note the type check is not implemented in the original source code
-        if (is_null($this->_messages) === false) {
-            $this->_messages->appendMessage($message);
-        }
+        $this->_labels = $labels;
+    }
 
+    /**
+     * Get label for field
+     *
+     * @param string $field
+     * @return string
+     * @throws \Phalcon\Exception
+     */
+    public function getLabel($field)
+    {
+        if (is_string($field) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        $labels = $this->_labels;
+
+        if (is_array($field)) {
+            return join(", ", $field);
+        }
+        $value = isset($labels[$field]) ? $labels[$field] : null;
+        if (!is_null($value)) {
+            return $value;
+        }
+        return $field;
+    }
+
+    /**
+     * Appends a message to the messages list
+     * @param MessageInterface $message
+     * @return Validation
+     * @throws \Phalcon\Exception
+     */
+    public function appendMessage(MessageInterface $message)
+    {
+        $messages = $this->_messages;
+        if (is_object($messages)) {
+            $messages = new Group();
+        }
+        $messages->appendMessage($message);
+        $this->_messages = $messages;
         return $this;
     }
 
@@ -259,93 +512,176 @@ class Validation extends Injectable implements EventsAwareInterface, InjectionAw
      * The entity is used to obtain the validation values
      *
      * @param object $entity
-     * @param object|array $data
+     * @param array|object $data
      * @return \Phalcon\Validation
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
     public function bind($entity, $data)
     {
-        if (is_object($entity) === false) {
-            throw new ValidationException('The entity must be an object');
+        if (!is_object($entity)) {
+            throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($data) === false && is_object($data) === false) {
-            throw new ValidationException('The data to validate must be an array or object');
+        if (!is_array($data) && !!is_object($data)) {
+            throw new Exception('Invalid parameter type.');
         }
-
         $this->_entity = $entity;
         $this->_data   = $data;
-
         return $this;
     }
 
     /**
      * Gets the a value to validate in the array/object data source
      *
-     * @param string $attribute
+     * @param string $field
      * @return mixed
-     * @throws ValidationException
+     * @throws \Phalcon\Exception
      */
-    public function getValue($attribute)
+    public function getValue($field)
     {
-        $method = 'get' . $attribute;
-        if (is_object($this->_entity) === true) {
-            if (method_exists($this->_entity, $method) === true) {
-                return call_user_method($method, $this->_entity);
-            } elseif (method_exists($this->_entity, 'readattribute') === true) {
-                return $this->_entity->readattribute($attribute);
-            } elseif (property_exists($this->_entity, $attribute) === true) {
-                return $this->_entity->$attribute;
+        if (!is_string($field)) {
+            throw new Exception('Invalid parameter type.');
+        }
+        $camelizedField = null;
+        $entity         = $this->_entity;
+
+        //  If the entity is an object use it to retrieve the values
+        if (is_object($entity)) {
+            $camelizedField = Text::camelize($field);
+            $method         = "get" . $camelizedField;
+            if (method_exists($entity, $method)) {
+                $value = $entity->{$method}();
             } else {
-                return null;
-            }
-        }
-
-        $value = null;
-
-        //Check if there is a calculated value
-        if (isset($this->_values[$attribute]) === true) {
-            return $this->_values[$attribute];
-        }
-
-        if (is_array($this->_data) === true) {
-            if (isset($this->_data[$attribute]) === true) {
-                $value = $this->_data[$attribute];
-            }
-        } elseif (is_object($this->_data) === true) {
-            if (property_exists($this->_data, $attribute) === true) {
-                $value = $this->_data->$attribute;
-            }
-        } else {
-            throw new ValidationException('There is no data to validate');
-        }
-
-        if (is_null($value) === false) {
-            if (is_array($this->_filters) === true && isset($this->_filters[$attribute])) {
-                if (isset($this->_filters[$attribute]) === true) {
-                    $dependencyInjector = $this->getDi();
-                    if (is_object($dependencyInjector) === false) {
-                        $dependencyInjector = \Phalcon\Di::getDefault();
-                        if (is_object($dependencyInjector) === false) {
-                            throw new ValidationException('A dependency injector is required to obtain the \'filter\' service');
-                        }
+                if (method_exists($entity, "readAttribute")) {
+                    $value = $entity->readAttribute($field);
+                } else {
+                    if (isset($entity->{$field})) {
+                        $value = $entity->{$field};
+                    } else {
+                        $value = null;
                     }
-
-                    $filterService = $dependencyInjector->getShared('filter');
-                    if (is_object($filterService) === false || $filterService instanceof FilterInterface === false) {
-                        throw new ValidationException('Returned \'filter\' service is invalid');
-                    }
-
-                    return $filterService->sanitize($value, $this->_filters[$attribute]);
                 }
             }
+        } else {
+            $data = $this->_data;
 
-            //Cache the calculated value
-            $this->_values[$attribute] = $value;
-            return $value;
+            if ((!is_array($data)) && !is_object($data)) {
+                throw new Exception("There is no data to validate");
+            }
+
+            // Check if there is a calculated value
+            $values = $this->_values;
+            $value  = isset($values[$field]) ? $values[$field] : null;
+            if (!is_null($value)) {
+                return $value;
+            }
+
+            $value = null;
+            if (is_array($data)) {
+                if (isset($data[$field])) {
+                    $value = $data[$field];
+                }
+            } else {
+                if ($data == "object") {
+                    if (isset($data->{$field})) {
+                        $value = $data->{$field};
+                    }
+                }
+            }
         }
 
-        return null;
+        if (is_null($value)) {
+            return null;
+        }
+
+        $filters      = $this->_filters;
+        $fieldFilters = isset($filters[$field]) ? $filters[$field] : null;
+        if (!is_null($fieldFilters)) {
+            if ($fieldFilters) {
+                $dependencyInjector = $this->getDI();
+                if (is_object($dependencyInjector)) {
+                    $dependencyInjector = Di::getDefault();
+                    if (is_object($dependencyInjector)) {
+                        throw new Exception("A dependency injector is required to obtain the 'filter' service");
+                    }
+                }
+
+                $filterService = $dependencyInjector->getShared("filter");
+                if (!is_object($filterService)) {
+                    throw new Exception("Returned 'filter' service is invalid");
+                }
+
+                $value = $filterService->sanitize($value, $fieldFilters);
+
+                /**
+                 * Set filtered value in $entity
+                 */
+                if (is_object($entity)) {
+                    $method = "set" . $camelizedField;
+                    if (method_exists($entity, $method)) {
+                        $entity->{$method}($value);
+                    } else {
+                        if (method_exists($entity, "writeAttribute")) {
+                            $entity->writeAttribute($field, $value);
+                        } else {
+                            if (property_exists($entity, $field)) {
+                                $entity->{$field} = $value;
+                            }
+                        }
+                    }
+                }
+
+                return $value;
+            }
+        }
+
+        // Cache the calculated value only if it's not $entity
+        if (!is_object($entity)) {
+            $this->_values[$field] = $value;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Internal validations, if it returns true, then skip the current validator
+     * 
+     * @param \Phalcon\Validation\ValidatorInterface $validator
+     * @param mixed $field
+     * @return boolean
+     * @throws \Phalcon\Exception
+     */
+    protected function preChecking($field, ValidatorInterface $validator)
+    {
+        if (!is_object($validator) || !($validator instanceof ValidatorInterface)) {
+            throw new Exception('Invalid parameter type.');
+        }
+
+        if (is_array($field)) {
+            foreach ($field as $singleField) {
+                $result = $this->preChecking($singleField, $validator);
+                if ($result) {
+                    return $result;
+                }
+            }
+        } else {
+            $allowEmpty = $validator->getOption("allowEmpty", false);
+            if ($allowEmpty) {
+                if (method_exists($validator, "isAllowEmpty")) {
+                    return $validator->isAllowEmpty($this, $field);
+                }
+                $value = $this->getValue($field);
+                if (is_array($allowEmpty)) {
+                    foreach ($allowEmpty as $emptyValue) {
+                        if ($emptyValue === $value) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                return empty($value);
+            }
+        }
+        return false;
     }
 
 }

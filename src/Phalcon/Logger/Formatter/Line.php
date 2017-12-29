@@ -5,15 +5,15 @@ namespace Phalcon\Logger\Formatter;
 use \Phalcon\Logger\Formatter;
 use \Phalcon\Logger\FormatterInterface;
 use \Phalcon\Logger\Exception;
+use Phalcon\Text;
 
 /**
  * Phalcon\Logger\Formatter\Line
  *
  * Formats messages using an one-line string
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/formatter/line.c
  */
-class Line extends Formatter implements FormatterInterface
+class Line extends Formatter
 {
 
     /**
@@ -41,10 +41,19 @@ class Line extends Formatter implements FormatterInterface
      */
     public function __construct($format = null, $dateFormat = null)
     {
-        if (is_string($format) === true) {
-            $this->_format = $format;
-        } elseif (is_null($format) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (!is_null($format)) {
+            if (is_string($format) === false) {
+                throw new Exception('Invalid parameter type.');
+            } else {
+                $this->_format = $format;
+            }
+        }
+        if (!is_null($dateFormat)) {
+            if (is_string($dateFormat) === false) {
+                throw new Exception('Invalid parameter type.');
+            } else {
+                $this->_dateFormat = $dateFormat;
+            }
         }
     }
 
@@ -104,10 +113,11 @@ class Line extends Formatter implements FormatterInterface
      * @param string $message
      * @param int $type
      * @param int $timestamp
+     * @param array $context
      * @return string
      * @throws Exception
      */
-    public function format($message, $type, $timestamp)
+    public function format($message, $type, $timestamp, array $context = null)
     {
         /* Type check */
         if (is_string($message) === false ||
@@ -119,17 +129,18 @@ class Line extends Formatter implements FormatterInterface
         /* Format */
         $format = $this->_format;
 
-        if (strpos($format, '%date%') !== false) {
+        if (Text::memstr($format, '%date%') !== false) {
             $format = str_replace(
-                '%date%', date($this->_dateFormat, $timestamp), $format
+                '%date%', $this->getTypeString($type), $timestamp, $format
             );
         }
+        $format = str_replace("%message%", $message, $format) . PHP_EOL;
 
-        if (strpos($format, '%type%') !== false) {
-            $format = str_replace('%type%', $this->getTypeString($type), $format);
+        if (is_array($context) === true) {
+            return $this->interpolate($format, $context);
         }
 
-        return str_replace('%message%', $message, $format) . \PHP_EOL;
+        return $format;
     }
 
 }

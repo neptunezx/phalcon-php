@@ -56,21 +56,19 @@ class Group implements Countable, ArrayAccess, Iterator
      * print_r($messages[0]);
      * </code>
      *
-     * @param scalar $index
-     * @return \Phalcon\Validation\Message|null
+     * @param int $index
+     * @return \Phalcon\Validation\Message|bool
      * @throws Exception
      */
     public function offsetGet($index)
     {
         if (is_scalar($index) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.**');
         }
-
         if (isset($this->_messages[$index]) === true) {
             return $this->_messages[$index];
         }
-
-        return null;
+        return false;
     }
 
     /**
@@ -80,14 +78,14 @@ class Group implements Countable, ArrayAccess, Iterator
      * $messages[0] = new \Phalcon\Validation\Message('This is a message');
      * </code>
      *
-     * @param scalar $index
+     * @param int $index
      * @param \Phalcon\Validation\Message $message
      * @throws Exception
      */
     public function offsetSet($index, $message)
     {
         if (is_scalar($index) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.***');
         }
 
         if (is_object($message) === false &&
@@ -105,14 +103,14 @@ class Group implements Countable, ArrayAccess, Iterator
      * var_dump(isset($message['database']));
      * </code>
      *
-     * @param scalar $index
+     * @param string $index
      * @return boolean
      * @throws Exception
      */
     public function offsetExists($index)
     {
-        if (is_scalar($index) === false) {
-            throw new Exception('Invalid parameter type.');
+        if (is_string($index) === false) {
+            throw new Exception('Invalid parameter type.****');
         }
 
         return isset($this->_messages[$index]);
@@ -125,16 +123,17 @@ class Group implements Countable, ArrayAccess, Iterator
      * unset($message['database']);
      * </code>
      *
-     * @param scalar $index
+     * @param int $index
      * @throws Exception
      */
     public function offsetUnset($index)
     {
         if (is_scalar($index) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.*****');
         }
-
-        unset($this->_messages[$index]);
+        if (isset ($this->_messages[$index])) {
+            array_splice($this->_messages, $index, 1);
+        }
     }
 
     /**
@@ -164,27 +163,42 @@ class Group implements Countable, ArrayAccess, Iterator
      * $messages->appendMessages($messagesArray);
      * </code>
      *
-     * @param \Phalcon\Validation\MessageInterface[]|array $messages
+     * @param \Phalcon\Validation\Message\Group|array $messages
      * @throws Exception
      */
     public function appendMessages($messages)
     {
         if (is_array($messages) === false) {
-            if (is_object($messages) === false ||
-                $messages instanceof MessageInterface === false) {
+            if (is_object($messages) === false) {
                 throw new Exception('The message must be array or object');
             }
         }
+        $currentMessages = $this->_messages;
+        if (is_array($messages)) {
 
-        if (is_array($messages) === true) {
-            //An array of messages is simply merged into the current one
-            $this->_messages = array_merge($this->_messages, $messages);
+            /**
+             * An array of messages is simply merged into the current one
+             */
+            if (is_array($currentMessages)) {
+                $finalMessages = array_merge($currentMessages, $messages);
+            } else {
+                $finalMessages = $messages;
+            }
+            $this->_messages = $finalMessages;
+
         } else {
-            //A group of messages is iterated and appended one-by-one to the current list
-            $messages->rewind();
 
-            while ($messages->valid() !== false) {
-                $this->appendMessage($messages->current());
+            /**
+             * A group of messages is iterated and appended one-by-one to the current list
+             */
+            //for message in iterator(messages) {
+            //	this->appendMessage(message);
+            //}
+
+            $messages->rewind();
+            while ($messages->valid()) {
+                $message = $messages->current();
+                $this->appendMessage($message);
                 $messages->next();
             }
         }
@@ -200,21 +214,26 @@ class Group implements Countable, ArrayAccess, Iterator
     public function filter($fieldName)
     {
         if (is_string($fieldName) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.******');
         }
 
         $filtered = array();
-
-        if (empty($this->_messages) === false) {
-            foreach ($this->_messages as $message) {
-                if (method_exists($message, 'getField') === true) {
-                    if ($fieldName === $message->getField()) {
-                        $filtered[] = $message;
+        $messages = $this->_messages;
+        if (is_array($messages)) {
+            /**
+             * A group of messages is iterated and appended one-by-one to the current list
+             */
+            foreach ($messages as $message) {
+                /**
+                 * Get the field name
+                 */
+                if (method_exists($message, "getField")) {
+                    if ($fieldName == $message->getField()) {
+                        array_push($filtered, $message);
                     }
                 }
             }
         }
-
         return $filtered;
     }
 
@@ -246,7 +265,6 @@ class Group implements Countable, ArrayAccess, Iterator
         if (isset($this->_messages[$this->_position]) === true) {
             return $this->_messages[$this->_position];
         }
-
         return null;
     }
 
@@ -282,13 +300,13 @@ class Group implements Countable, ArrayAccess, Iterator
      * Magic __set_state helps to re-build messages variable when exporting
      *
      * @param array $group
-     * @return \Phalcon\Mvc\Model\Message\Group
+     * @return \Phalcon\Validation\Message\Group
      * @throws Exception
      */
     public static function __set_state($group)
     {
         if (is_array($group) === false) {
-            throw new Exception('Invalid parameter type.');
+            throw new Exception('Invalid parameter type.*******');
         }
 
         return new Group($group['_messages']);

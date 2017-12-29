@@ -52,39 +52,24 @@ class Security implements InjectionAwareInterface
      * @var int
      * @access protected
      */
-    protected $_numberBytes = 16;
-
-    protected $_tokenKeySessionID = '$PHALCON/CSRF/KEY$';
-
+    protected $_numberBytes         = 16;
+    protected $_tokenKeySessionID   = '$PHALCON/CSRF/KEY$';
     protected $_tokenValueSessionID = '$PHALCON/CSRF$';
-
     protected $_token;
-
     protected $_tokenKey;
-
     protected $_random;
-
     protected $_defaultHash;
 
-    const CRYPT_DEFAULT	   =	0;
-
-    const CRYPT_STD_DES	   =	1;
-
-    const CRYPT_EXT_DES	   =	2;
-
-    const CRYPT_MD5		   =	3;
-
-    const CRYPT_BLOWFISH       =	4;
-
-    const CRYPT_BLOWFISH_A     =    5;
-
-    const CRYPT_BLOWFISH_X     =	6;
-
-    const CRYPT_BLOWFISH_Y     =	7;
-
-    const CRYPT_SHA256	   =	8;
-
-    const CRYPT_SHA512	   =	9;
+    const CRYPT_DEFAULT    = 0;
+    const CRYPT_STD_DES    = 1;
+    const CRYPT_EXT_DES    = 2;
+    const CRYPT_MD5        = 3;
+    const CRYPT_BLOWFISH   = 4;
+    const CRYPT_BLOWFISH_A = 5;
+    const CRYPT_BLOWFISH_X = 6;
+    const CRYPT_BLOWFISH_Y = 7;
+    const CRYPT_SHA256     = 8;
+    const CRYPT_SHA512     = 9;
 
     /**
      * Phalcon\Security constructor
@@ -92,7 +77,7 @@ class Security implements InjectionAwareInterface
     public function __construct()
     {
         $this->_random = new Random();
-	}
+    }
 
     /**
      * Sets the dependency injector
@@ -149,9 +134,9 @@ class Security implements InjectionAwareInterface
      * @return object
      */
     public function getRandom()
-	{
-		return $this->_random;
-	}
+    {
+        return $this->_random;
+    }
 
     /**
      * Generate a >22-length pseudo random string to be used as salt for passwords
@@ -159,21 +144,21 @@ class Security implements InjectionAwareInterface
      * @return string
      */
     public function getSaltBytes($numberBytes = 0)
-	{
+    {
         $safeBytes = null;
-	    if( !isset($numberBytes) ){
-			$numberBytes = (int) $this->_numberBytes;
-		}
+        if (!isset($numberBytes)) {
+            $numberBytes = (int) $this->_numberBytes;
+        }
 
-		while(true){
+        while (true) {
             $safeBytes = $this->_random->base64Safe($numberBytes);
-            if( empty($safeBytes) || (strlen($safeBytes) < $numberBytes) ){
+            if (empty($safeBytes) || (strlen($safeBytes) < $numberBytes)) {
                 continue;
             }
             break;
         }
         return $safeBytes;
-	}
+    }
 
     /**
      * Creates a password hash using bcrypt with a pseudo random salt
@@ -183,52 +168,52 @@ class Security implements InjectionAwareInterface
      * @throws
      */
     public function hash($password, $workFactor = 0)
-	{
-		if ( $workFactor ) {
-			$workFactor = (int)($this->_workFactor);
-		}
+    {
+        if ($workFactor) {
+            $workFactor = (int) ($this->_workFactor);
+        }
 
-		$hash = (int)($this->_defaultHash);
-        switch ($hash){
+        $hash = (int) ($this->_defaultHash);
+        switch ($hash) {
             case self::CRYPT_BLOWFISH_A:
                 $variant = "a";
-				break;
+                break;
 
             case self::CRYPT_BLOWFISH_X:
                 $variant = "x";
-				break;
+                break;
 
             case self::CRYPT_BLOWFISH_Y:
                 $variant = "y";
-				break;
+                break;
 
             case self::CRYPT_MD5:
                 $variant = "1";
-				break;
+                break;
 
             case self::CRYPT_SHA256:
                 $variant = "5";
-				break;
+                break;
 
             case self::CRYPT_SHA512:
                 $variant = "6";
-				break;
+                break;
 
             case self::CRYPT_DEFAULT:
             default:
                 $variant = "y";
-				break;
+                break;
         }
 
-		switch ($hash){
+        switch ($hash) {
             case self::CRYPT_STD_DES:
             case self::CRYPT_EXT_DES:
                 if ($hash == self::CRYPT_EXT_DES) {
-                    $saltBytes = "_".$this->getSaltBytes(8);
-				} else {
+                    $saltBytes = "_" . $this->getSaltBytes(8);
+                } else {
                     $saltBytes = $this->getSaltBytes(2);
-				}
-                if( is_string($saltBytes) === false){
+                }
+                if (is_string($saltBytes) === false) {
                     throw new Exception("Unable to get random bytes for the salt");
                 }
                 return crypt($password, $saltBytes);
@@ -236,32 +221,32 @@ class Security implements InjectionAwareInterface
             case self::CRYPT_SHA256:
             case self::CRYPT_SHA512:
                 $saltBytes = $this->getSaltBytes($hash == self::CRYPT_MD5 ? 12 : 16);
-				if ( is_string($saltBytes) === false ) {
+                if (is_string($saltBytes) === false) {
                     throw new Exception("Unable to get random bytes for the salt");
                 }
-				return crypt($password, "$" . $variant . "$"  . $saltBytes . "$");
+                return crypt($password, "$" . $variant . "$" . $saltBytes . "$");
             case self::CRYPT_DEFAULT:
             case self::CRYPT_BLOWFISH:
             case self::CRYPT_BLOWFISH_X:
             case self::CRYPT_BLOWFISH_Y:
             default:
                 $saltBytes = $this->getSaltBytes(22);
-                if ( is_string($saltBytes) === false ) {
+                if (is_string($saltBytes) === false) {
                     throw new Exception("Unable to get random bytes for the salt");
                 }
 
-				if( $workFactor < 4 ){
+                if ($workFactor < 4) {
                     $workFactor = 4;
-				} else {
-                    if( $workFactor > 31 ){
+                } else {
+                    if ($workFactor > 31) {
                         $workFactor = 31;
-					}
+                    }
                 }
 
-				return crypt($password, "$2" . $variant . "$" . sprintf("%02s", $workFactor) . "$" . $saltBytes . "$");
-            }
-		return "";
-	}
+                return crypt($password, "$2" . $variant . "$" . sprintf("%02s", $workFactor) . "$" . $saltBytes . "$");
+        }
+        return "";
+    }
 
     /**
      * Checks a plain text password and its hash version to check if the password matches
@@ -270,27 +255,27 @@ class Security implements InjectionAwareInterface
      * @param $maxPassLength int
      * @return boolean
      */
-    public function checkHash(string $password, string $passwordHash, int $maxPassLength = 0)
+    public function checkHash($password, $passwordHash, $maxPassLength = 0)
     {
-		if( $maxPassLength) {
-			if( $maxPassLength > 0 && (strlen($password) > $maxPassLength) ){
-				return false;
-			}
+        if ($maxPassLength) {
+            if ($maxPassLength > 0 && (strlen($password) > $maxPassLength)) {
+                return false;
+            }
         }
 
-        $cryptedHash = (string)(crypt($password, $passwordHash));
+        $cryptedHash = (string) (crypt($password, $passwordHash));
 
-		$cryptedLength = strlen($cryptedHash);
+        $cryptedLength  = strlen($cryptedHash);
         $passwordLength = strlen($passwordHash);
-        $cryptedHash .= $passwordHash;
+        $cryptedHash    .= $passwordHash;
 
-		$sum = $cryptedLength - $passwordLength;
-		for($i = 0; $i < strlen($passwordHash);$i++){
-		    $ch = ord($passwordHash[$i]);
+        $sum = $cryptedLength - $passwordLength;
+        for ($i = 0; $i < strlen($passwordHash); $i++) {
+            $ch  = ord($passwordHash[$i]);
             $sum = $sum | ( ord($cryptedHash[$i]) ^ $ch);
         }
-		return 0 === $sum;
-	}
+        return 0 === $sum;
+    }
 
     /**
      * Checks if a password hash is a valid bcrypt's hash
@@ -298,9 +283,9 @@ class Security implements InjectionAwareInterface
      * @return boolean
      */
     public function isLegacyHash($passwordHash)
-	{
-		return starts_with($passwordHash, "$2a$");
-	}
+    {
+        return starts_with($passwordHash, "$2a$");
+    }
 
     /**
      * Generates a pseudo random token key to be used as input's name in a CSRF check
@@ -308,19 +293,19 @@ class Security implements InjectionAwareInterface
      * @throws
      */
     public function getTokenKey()
-	{
-		if( null === $this->_tokenKey ){
-			$dependencyInjector = $this->_dependencyInjector;
-			if( !is_object($dependencyInjector)){
+    {
+        if (null === $this->_tokenKey) {
+            $dependencyInjector = $this->_dependencyInjector;
+            if (!is_object($dependencyInjector)) {
                 throw new Exception("A dependency injection container is required to access the 'session' service");
             }
 
             $this->_tokenKey = $this->_random->base64Safe($this->_numberBytes);
-			$session = $dependencyInjector->getShared("session");
-			$session->set($this->_tokenKeySessionID, $this->_tokenKey);
-		}
-		return $this->_tokenKey;
-	}
+            $session         = $dependencyInjector->getShared("session");
+            $session->set($this->_tokenKeySessionID, $this->_tokenKey);
+        }
+        return $this->_tokenKey;
+    }
 
     /**
      * Generates a pseudo random token value to be used as input's value in a CSRF check
@@ -328,22 +313,22 @@ class Security implements InjectionAwareInterface
      * @throws
      */
     public function getToken()
-	{
-		if( null === $this->_token ){
-			$this->_token = $this->_random->base64Safe($this->_numberBytes);
+    {
+        if (null === $this->_token) {
+            $this->_token = $this->_random->base64Safe($this->_numberBytes);
 
-			$dependencyInjector = $this->_dependencyInjector;
+            $dependencyInjector = $this->_dependencyInjector;
 
-			if (!is_object($dependencyInjector)){
-				throw new Exception("A dependency injection container is required to access the 'session' service");
-			}
+            if (!is_object($dependencyInjector)) {
+                throw new Exception("A dependency injection container is required to access the 'session' service");
+            }
 
             $session = $dependencyInjector->getShared("session");
-			$session->set($this->_tokenValueSessionID, $this->_token);
-		}
+            $session->set($this->_tokenValueSessionID, $this->_token);
+        }
 
-		return $this->_token;
-	}
+        return $this->_token;
+    }
 
     /**
      * Check if the CSRF token sent in the request is the same that the current in session
@@ -353,38 +338,38 @@ class Security implements InjectionAwareInterface
      * @return boolean
      * @throws
      */
-    public function checkToken($tokenKey = null,$tokenValue = null, $destroyIfValid = true)
-	{
-		$dependencyInjector = $this->_dependencyInjector;
+    public function checkToken($tokenKey = null, $tokenValue = null, $destroyIfValid = true)
+    {
+        $dependencyInjector = $this->_dependencyInjector;
 
-		if (!is_object($dependencyInjector)){
+        if (!is_object($dependencyInjector)) {
             throw new Exception("A dependency injection container is required to access the 'session' service");
         }
 
         $session = $dependencyInjector->getShared("session");
 
-		if( !$tokenKey ){
+        if (!$tokenKey) {
             $tokenKey = $session->get($this->_tokenKeySessionID);
-		}
+        }
 
-		if( !$tokenKey ){
+        if (!$tokenKey) {
             return false;
         }
 
-		if( !$tokenValue) {
-            $request = $dependencyInjector->getShared("request");
-			$userToken = $request->getPost($tokenKey);
-		} else {
+        if (!$tokenValue) {
+            $request   = $dependencyInjector->getShared("request");
+            $userToken = $request->getPost($tokenKey);
+        } else {
             $userToken = $tokenValue;
-		}
-		$knownToken = $session->get($this->_tokenValueSessionID);
-		$equals = hash_equals($knownToken, isset($userToken) ? $userToken : "");
+        }
+        $knownToken = $session->get($this->_tokenValueSessionID);
+        $equals     = hash_equals($knownToken, isset($userToken) ? $userToken : "");
 
-		if( $equals && $destroyIfValid ){
+        if ($equals && $destroyIfValid) {
             $this->destroyToken();
-		}
-		return $equals;
-	}
+        }
+        return $equals;
+    }
 
     /**
      * Returns the value of the CSRF token in session
@@ -392,15 +377,15 @@ class Security implements InjectionAwareInterface
      * @throws
      */
     public function getSessionToken()
-	{
-		$dependencyInjector = $this->_dependencyInjector;
+    {
+        $dependencyInjector = $this->_dependencyInjector;
 
-		if( !is_object($dependencyInjector)){
-			throw new Exception("A dependency injection container is required to access the 'session' service");
-		}
+        if (!is_object($dependencyInjector)) {
+            throw new Exception("A dependency injection container is required to access the 'session' service");
+        }
         $session = $dependencyInjector->getShared("session");
-		return $session->get($this->_tokenValueSessionID);
-	}
+        return $session->get($this->_tokenValueSessionID);
+    }
 
     /**
      * Removes the value of the CSRF token and key from session
@@ -408,18 +393,18 @@ class Security implements InjectionAwareInterface
      * @throws
      */
     public function destroyToken()
-	{
-		$dependencyInjector = $this->_dependencyInjector;
-		if( !is_object($dependencyInjector) ){
-			throw new Exception("A dependency injection container is required to access the 'session' service");
-		}
-        $session = $dependencyInjector->getShared("session");
-		$session->remove($this->_tokenKeySessionID);
-		$session->remove($this->_tokenValueSessionID);
-		$this->_token = null;
-		$this->_tokenKey = null;
-		return $this;
-	}
+    {
+        $dependencyInjector = $this->_dependencyInjector;
+        if (!is_object($dependencyInjector)) {
+            throw new Exception("A dependency injection container is required to access the 'session' service");
+        }
+        $session         = $dependencyInjector->getShared("session");
+        $session->remove($this->_tokenKeySessionID);
+        $session->remove($this->_tokenValueSessionID);
+        $this->_token    = null;
+        $this->_tokenKey = null;
+        return $this;
+    }
 
     /**
      * Computes a HMAC
@@ -431,12 +416,12 @@ class Security implements InjectionAwareInterface
      * @throws
      */
     public function computeHmac($data, $key, $algo, $raw = false)
-	{
-		$hmac = hash_hmac($algo, $data, $key, $raw);
-		if( !$hmac ){
-			throw new Exception("Unknown hashing algorithm: %s" . algo);
-		}
-		return $hmac;
+    {
+        $hmac = hash_hmac($algo, $data, $key, $raw);
+        if (!$hmac) {
+            throw new Exception("Unknown hashing algorithm: %s" . algo);
+        }
+        return $hmac;
     }
 
     /**
@@ -445,19 +430,19 @@ class Security implements InjectionAwareInterface
      * @return object
      */
     public function setDefaultHash($defaultHash)
-	{
-		$this->_defaultHash = $defaultHash;
-		return $this;
-	}
+    {
+        $this->_defaultHash = $defaultHash;
+        return $this;
+    }
 
     /**
      * Returns the default hash
      * @return int|null
      */
     public function getDefaultHash()
-	{
-		return $this->_defaultHash;
-	}
+    {
+        return $this->_defaultHash;
+    }
 
     /**
      * Testing for LibreSSL
@@ -466,10 +451,10 @@ class Security implements InjectionAwareInterface
      * @return bool
      */
     public function hasLibreSsl()
-	{
-		if( !defined("OPENSSL_VERSION_TEXT") ){
-			return false;
-		}
+    {
+        if (!defined("OPENSSL_VERSION_TEXT")) {
+            return false;
+        }
         return strpos(OPENSSL_VERSION_TEXT, "LibreSSL") === 0;
     }
 
@@ -491,24 +476,25 @@ class Security implements InjectionAwareInterface
      * @throws
      */
     public function getSslVersionNumber()
-	{
-		if( !defined("OPENSSL_VERSION_TEXT") ){
-			return 0;
-		}
-
-        preg_match("#(?:Libre|Open)SSL ([\d]+)\.([\d]+)(?:\.([\d]+))?#", OPENSSL_VERSION_TEXT, $matches);
-
-        if( !isset( $matches[2] )){
+    {
+        if (!defined("OPENSSL_VERSION_TEXT")) {
             return 0;
         }
 
-        $major = (int)($matches[1]);
-        $minor = (int)($matches[2]);
+        preg_match("#(?:Libre|Open)SSL ([\d]+)\.([\d]+)(?:\.([\d]+))?#", OPENSSL_VERSION_TEXT, $matches);
 
-		if( isset($matches[3]) ){
-            $patch = (int)($matches[3]);
-		}
+        if (!isset($matches[2])) {
+            return 0;
+        }
 
-		return 10000 * $major + 100 * $minor + $patch;
-	}
+        $major = (int) ($matches[1]);
+        $minor = (int) ($matches[2]);
+
+        if (isset($matches[3])) {
+            $patch = (int) ($matches[3]);
+        }
+
+        return 10000 * $major + 100 * $minor + $patch;
+    }
+
 }

@@ -7,42 +7,42 @@ use Phalcon\Validation\Validator;
 use Phalcon\Validation\Message;
 
 /**
- * Phalcon\Validation\Validator\PresenceOf
+ * Phalcon\Validation\Validator\Alnum
  *
- * Validates that a value is not null or empty string
+ * Check for alphanumeric character(s)
  *
  * <code>
  * use Phalcon\Validation;
- * use Phalcon\Validation\Validator\PresenceOf;
+ * use Phalcon\Validation\Validator\Alnum as AlnumValidator;
  *
  * $validator = new Validation();
  *
  * $validator->add(
- *     "name",
- *     new PresenceOf(
+ *     "username",
+ *     new AlnumValidator(
  *         [
- *             "message" => "The name is required",
+ *             "message" => ":field must contain only alphanumeric characters",
  *         ]
  *     )
  * );
  *
  * $validator->add(
  *     [
+ *         "username",
  *         "name",
- *         "email",
  *     ],
- *     new PresenceOf(
+ *     new AlnumValidator(
  *         [
  *             "message" => [
- *                 "name"  => "The name is required",
- *                 "email" => "The email is required",
+ *                 "username" => "username must contain only alphanumeric characters",
+ *                 "name"     => "name must contain only alphanumeric characters",
  *             ],
  *         ]
  *     )
  * );
  * </code>
  */
-class PresenceOf extends Validator
+class Alnum extends Validator
 {
     /**
      * Executes the validation
@@ -62,18 +62,16 @@ class PresenceOf extends Validator
             throw new Exception('Invalid parameter type.');
         }
         $value = $validation->getValue($field);
-        if ($value === null || $value === "") {
+        if (!ctype_alnum($value)) {
             $label = $this->prepareLabel($validation, $field);
-            $message = $this->prepareMessage($validation, $field, "PresenceOf");
+            $message = $this->prepareMessage($validation, $field, "Alnum");
             $code = $this->prepareCode($field);
-
-            $replacePairs = array(':field' => $label);
-
+            $replacePairs[':field'] = $label;
             $validation->appendMessage(
                 new Message(
                     strtr($message, $replacePairs),
                     $field,
-                    "PresenceOf",
+                    "Alnum",
                     $code
                 )
             );

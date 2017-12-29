@@ -2,10 +2,11 @@
 
 namespace Phalcon\Logger\Adapter;
 
-use \Phalcon\Logger\Adapter;
-use \Phalcon\Logger\AdapterInterface;
-use \Phalcon\Logger\Exception;
-use \Phalcon\Logger\Formatter\Line;
+use Phalcon\Logger\Exception;
+use Phalcon\Logger\Adapter;
+use Phalcon\Logger\FormatterInterface;
+use Phalcon\Logger\Formatter\Line as LineFormatter;
+use Phalcon\Text;
 
 /**
  * Phalcon\Logger\Adapter\Stream
@@ -13,15 +14,17 @@ use \Phalcon\Logger\Formatter\Line;
  * Sends logs to a valid PHP stream
  *
  * <code>
- *  $logger = new \Phalcon\Logger\Adapter\Stream("php://stderr");
- *  $logger->log("This is a message");
- *  $logger->log("This is an error", \Phalcon\Logger::ERROR);
- *  $logger->error("This is another error");
- * </code>
+ * use Phalcon\Logger;
+ * use Phalcon\Logger\Adapter\Stream;
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/stream.c
+ * $logger = new Stream("php://stderr");
+ *
+ * $logger->log("This is a message");
+ * $logger->log(Logger::ERROR, "This is an error");
+ * $logger->error("This is another error");
+ * </code>
  */
-class Stream extends Adapter implements AdapterInterface
+class Stream extends Adapter
 {
 
     /**
@@ -45,15 +48,13 @@ class Stream extends Adapter implements AdapterInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_null($options) === true) {
-            $mode = 'ab';
-        } elseif (is_array($options) === true) {
-            $mode = $options['mode'];
-            if (strpos($mode, 'r') === true) {
+        if (isset($options["mode"]) === true) {
+            $mode = $options["mode"];
+            if (Text::memstr($mode, "r")) {
                 throw new Exception('Stream must be opened in append or write mode');
             }
         } else {
-            throw new Exception('Invalid parameter type.');
+            $mode = "ab";
         }
 
         //We use 'fopen' to respect the open-basedir directive
@@ -73,7 +74,7 @@ class Stream extends Adapter implements AdapterInterface
     public function getFormatter()
     {
         if (is_object($this->_formatter) === false) {
-            $this->_formatter = new Line();
+            $this->_formatter = new LineFormatter();
         }
 
         return $this->_formatter;
@@ -85,9 +86,10 @@ class Stream extends Adapter implements AdapterInterface
      * @param string $message
      * @param int $type
      * @param int $time
+     * @param array $context
      * @throws Exception
      */
-    public function logInternal($message, $type, $time)
+    public function logInternal($message, $type, $time, array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||

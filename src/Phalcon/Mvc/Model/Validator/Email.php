@@ -2,51 +2,57 @@
 
 namespace Phalcon\Mvc\Model\Validator;
 
-use \Phalcon\Mvc\Model\Validator;
-use \Phalcon\Mvc\Model\ValidatorInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\EntityInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\Validator;
 
 /**
  * Phalcon\Mvc\Model\Validator\Email
  *
  * Allows to validate if email fields has correct values
  *
- * <code>
- *  use Phalcon\Mvc\Model\Validator\Email as EmailValidator;
+ * This validator is only for use with Phalcon\Mvc\Collection. If you are using
+ * Phalcon\Mvc\Model, please use the validators provided by Phalcon\Validation.
  *
- *  class Subscriptors extends Phalcon\Mvc\Model
- *  {
+ *<code>
+ * use Phalcon\Mvc\Model\Validator\Email as EmailValidator;
  *
- *      public function validation()
- *      {
- *          $this->validate(new EmailValidator(array(
- *              'field' => 'electronic_mail'
- *          )));
- *          if ($this->validationHasFailed() == true) {
- *              return false;
- *          }
- *      }
+ * class Subscriptors extends \Phalcon\Mvc\Collection
+ * {
+ *     public function validation()
+ *     {
+ *         $this->validate(
+ *             new EmailValidator(
+ *                 [
+ *                     "field" => "electronic_mail",
+ *                 ]
+ *             )
+ *         );
  *
- *  }
- * </code>
+ *         if ($this->validationHasFailed() === true) {
+ *             return false;
+ *         }
+ *     }
+ * }
+ *</code>
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/email.c
+ * @deprecated 3.1.0
+ * @see Phalcon\Validation\Validator\Email
  */
-class Email extends Validator implements ValidatorInterface
+class Email extends Validator
 {
 
     /**
      * Executes the validator
      *
-     * @param \Phalcon\Mvc\ModelInterface $record
+     * @param \Phalcon\Mvc\EntityInterface $record
      * @return boolean
      * @throws Exception
      */
     public function validate($record)
     {
         if (is_object($record) === false &&
-            $record instanceof ModelInterface === false) {
+            $record instanceof EntityInterface === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -57,25 +63,19 @@ class Email extends Validator implements ValidatorInterface
 
         $value = $record->readAttribute($fieldName);
 
-        $regs = null;
-
-        //We check if the email has a valid format using a regular expression
-        $matchPattern = preg_match('/^([^\\x00-\\x20\\x22\\x28\\x29\\x2c\\x2e\\x3a-\\x3c\\x3e\\x40\\x5b-\\x5d\\x7f-\\xff]+|\\x22([^\\x0d\\x22\\x5c\\x80-\\xff]|\\x5c[\\x00-\\x7f])*\\x22)(\\x2e([^\\x00-\\x20\\x22\\x28\\x29\\x2c\\x2e\\x3a-\\x3c\\x3e\\x40\\x5b-\\x5d\\x7f-\\xff]+|\\x22([^\\x0d\\x22\\x5c\\x80-\\xff]|\\x5c[\\x00-\\x7f])*\\x22))*\\x40([^\\x00-\\x20\\x22\\x28\\x29\\x2c\\x2e\\x3a-\\x3c\\x3e\\x40\\x5b-\\x5d\\x7f-\\xff]+|\\x5b([^\\x0d\\x5b-\\x5d\\x80-\\xff]|\\x5c[\\x00-\\x7f])*\\x5d)(\\x2e([^\\x00-\\x20\\x22\\x28\\x29\\x2c\\x2e\\x3a-\\x3c\\x3e\\x40\\x5b-\\x5d\\x7f-\\xff]+|\\x5b([^\\x0d\\x5b-\\x5d\\x80-\\xff]|\\x5c[\\x00-\\x7f])*\\x5d))*$/', $value, $regs);
-
-        if ($matchPattern == true) {
-            $invalid = ($regs[0] !== $value ? true : false);
-        } else {
-            $invalid = false;
+        if ($this->isSetOption("allowEmpty") && empty($value)) {
+            return true;
         }
-
-        if ($invalid === true) {
-            //Check if the developer has defined a custom message
-            $message = $this->getOption('message');
-            if (isset($message) === false) {
-                $message = "Value of field '" . $fieldName . "' must have a valid e-mail format";
+        /**
+         * Filters the format using FILTER_VALIDATE_EMAIL
+         */
+        if (!filter_var($value, $FILTER_VALIDATE_EMAIL)) {
+            $message = $this->getOption("message");
+            if (empty($message)) {
+                $message = "Value of field ':field' must have a valid e-mail format";
             }
 
-            $this->appendMessage($message, $fieldName, 'Email');
+            $this->appendMessage(strtr($message, ':field', $field), $field, "Email");
             return false;
         }
 

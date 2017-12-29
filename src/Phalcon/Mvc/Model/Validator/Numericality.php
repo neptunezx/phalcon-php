@@ -2,51 +2,57 @@
 
 namespace Phalcon\Mvc\Model\Validator;
 
-use \Phalcon\Mvc\Model\Validator;
-use \Phalcon\Mvc\Model\ValidatorInterface;
-use \Phalcon\Mvc\Model\Exception;
-use \Phalcon\Mvc\ModelInterface;
+use Phalcon\Mvc\EntityInterface;
+use Phalcon\Mvc\Model\Exception;
+use Phalcon\Mvc\Model\Validator;
 
 /**
  * Phalcon\Mvc\Model\Validator\Numericality
  *
  * Allows to validate if a field has a valid numeric format
  *
- * <code>
+ * This validator is only for use with Phalcon\Mvc\Collection. If you are using
+ * Phalcon\Mvc\Model, please use the validators provided by Phalcon\Validation.
+ *
+ *<code>
  * use Phalcon\Mvc\Model\Validator\Numericality as NumericalityValidator;
  *
- * class Products extends Phalcon\Mvc\Model
+ * class Products extends \Phalcon\Mvc\Collection
  * {
+ *     public function validation()
+ *     {
+ *         $this->validate(
+ *             new NumericalityValidator(
+ *                 [
+ *                     "field" => "price",
+ *                 ]
+ *             )
+ *         );
  *
- *  public function validation()
- *  {
- *      $this->validate(new NumericalityValidator(array(
- *          'field' => 'price'
- *      )));
- *      if ($this->validationHasFailed() == true) {
- *          return false;
- *      }
- *  }
- *
+ *         if ($this->validationHasFailed() === true) {
+ *             return false;
+ *         }
+ *     }
  * }
- * </code>
+ *</code>
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model/validator/numericality.c
+ * @deprecated 3.1.0
+ * @see Phalcon\Validation\Validator\Numericality
  */
-class Numericality extends Validator implements ValidatorInterface
+class Numericality extends Validator
 {
 
     /**
      * Executes the validator
      *
-     * @param \Phalcon\Mvc\ModelInterface $record
+     * @param \Phalcon\Mvc\EntityInterface $record
      * @return boolean
      * @throws Exception
      */
     public function validate($record)
     {
         if (is_object($record) === false ||
-            $record instanceof ModelInterface === false) {
+            $record instanceof EntityInterface === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -57,15 +63,24 @@ class Numericality extends Validator implements ValidatorInterface
 
         $value = $record->readAttribute($field);
 
-        //Check if the value is numeric using is_numeric
+        if (($this->isSetOption("allowEmpty")) && empty($value)) {
+            return true;
+        }
+
+        /**
+         * Check if the value is numeric using is_numeric in the PHP userland
+         */
+
         if (is_null($value) === false) {
-            //Check if the developer has defined a custom message
+            /**
+             * Check if the developer has defined a custom message
+             */
             $message = $this->getOption('message');
             if (isset($message) === false) {
                 $message = "Value of field '" . $field . "' must be numeric";
             }
 
-            $this->appendMessage($message, $field, 'Numericality');
+            $this->appendMessage(strtr($message, ':field', $field), $field, 'Numericality');
 
             return false;
         }

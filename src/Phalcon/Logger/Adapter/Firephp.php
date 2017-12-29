@@ -2,10 +2,10 @@
 
 namespace Phalcon\Logger\Adapter;
 
-use \Phalcon\Logger\Adapter;
-use \Phalcon\Logger\AdapterInterface;
-use \Phalcon\Logger\Exception;
-use \Phalcon\Logger\Formatter\Firephp as FirephpFormatter;
+use Phalcon\Logger\Adapter;
+use Phalcon\Logger\Exception;
+use Phalcon\Logger\FormatterInterface;
+use Phalcon\Logger\Formatter\Firephp as FirePhpFormatter;
 
 /**
  * Phalcon\Logger\Adapter\Firephp
@@ -13,15 +13,16 @@ use \Phalcon\Logger\Formatter\Firephp as FirephpFormatter;
  * Sends logs to FirePHP
  *
  * <code>
- *  $logger = new \Phalcon\Logger\Adapter\Firephp("");
- *  $logger->log("This is a message");
- *  $logger->log("This is an error", \Phalcon\Logger::ERROR);
- *  $logger->error("This is another error");
- * </code>
+ * use Phalcon\Logger\Adapter\Firephp;
+ * use Phalcon\Logger;
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/firephp.c
+ * $logger = new Firephp();
+ *
+ * $logger->log(Logger::ERROR, "This is an error");
+ * $logger->error("This is another error");
+ * </code>
  */
-class Firephp extends Adapter implements AdapterInterface
+class Firephp extends Adapter
 {
 
     /**
@@ -30,7 +31,7 @@ class Firephp extends Adapter implements AdapterInterface
      * @var boolean
      * @access private
      */
-    private static $_initialized = false;
+    private $_initialized = false;
 
     /**
      * Index
@@ -38,7 +39,7 @@ class Firephp extends Adapter implements AdapterInterface
      * @var int
      * @access private
      */
-    private static $_index = 1;
+    private $_index = 1;
 
     /**
      * Returns the internal formatter
@@ -61,10 +62,9 @@ class Firephp extends Adapter implements AdapterInterface
      * @param string $message
      * @param int $type
      * @param int $time
-     * @see http://www.firephp.org/Wiki/Reference/Protocol
      * @throws Exception
      */
-    public function logInternal($message, $type, $time)
+    public function logInternal($message, $type, $time, array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||
@@ -72,55 +72,31 @@ class Firephp extends Adapter implements AdapterInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (headers_sent() === true) {
-            throw new Exception('Headers have already been sent.');
-        }
-
-        if (self::$_initialized === false) {
-            if (ob_get_level() > 0) {
-                ob_end_clean();
-            }
-
-            //Send the required initialization headers.
+        if (!$this->_initialized) {
             header("X-Wf-Protocol-1: http://meta.wildfirehq.org/Protocol/JsonStream/0.2");
             header("X-Wf-1-Plugin-1: http://meta.firephp.org/Wildfire/Plugin/FirePHP/Library-FirePHPCore/0.3");
-            header("X-Wf-1-Structure-1: http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1");
+            header("X-Wf-Structure-1: http://meta.firephp.org/Wildfire/Structure/FirePHP/FirebugConsole/0.1");
 
-            self::$_initialized = true;
+            $this->_initialized = true;
         }
 
-        $appliedFormat = $this->getFormatter()->format($message, $type, $time);
-        if (is_string($appliedFormat) === false) {
-            throw new Exception('The formatted message is not valid');
-        }
+        $format = $this->getFormatter()->format($message, $type, $time, $context);
+        $chunk  = str_split($format, 4500);
+        $index  = $this->_index;
 
-        $index  = self::$_index;
-        $size   = strlen($appliedFormat);
-        $offset = 0;
+        foreach ($chunk as $key => $chString) {
+            $content = "X-Wf-1-1-1-" . (string) $index . ": " . $chString;
 
-        //We need to send the data in chunks not exceeding 5,000 bytes.
-        while ($size > 0) {
-            $str      = 'X-Wf-1-1-1-' . $index . ': ';
-            $numBytes = ($size > 4500 ? 4500 : $size);
-
-            if ($offset !== 0) {
-                $str .= '|';
+            if (isset($chunk[$key + 1])) {
+                $content .= "|\\";
             }
 
-            $str .= substr($appliedFormat, $offset, $offset + 4500);
+            header($content);
 
-            $size   -= $numBytes;
-            $offset += $numBytes;
-
-            if ($size > 0) {
-                $str .= "|\\";
-            }
-
-            header($str);
             $index++;
         }
 
-        self::$_index = $index;
+        $this->_index = $index;
     }
 
     /**

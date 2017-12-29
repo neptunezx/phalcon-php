@@ -2,7 +2,6 @@
 
 namespace Phalcon\Mvc\Model;
 
-use Phalcon\Mvc\Model\Message;
 
 /**
  * Phalcon\Mvc\Model\Validator
@@ -13,7 +12,7 @@ use Phalcon\Mvc\Model\Message;
  * Otherwise please use the validators provided by Phalcon\Validation.
  *
  * @deprecated 3.1.0
- * @see Phalcon\Validation\Validator
+ * @see \Phalcon\Validation\Validator
  */
 abstract class Validator
 {
@@ -69,15 +68,9 @@ abstract class Validator
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_null($field) === true) {
-            $type = str_replace('Validator', '', __CLASS__);
-        } elseif (is_string($field) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_array($this->_messages) === false) {
-            $this->_messages = array();
-        }
+        if (!$type) {
+            $type = str_replace("Validator", "", get_class($this));
+		}
         $this->_messages[] = new Message($message, $field, $type);
     }
 
@@ -105,20 +98,19 @@ abstract class Validator
      * Returns an option
      *
      * @param string $option
+     * @param mixed $defaultValue
      * @return mixed
      * @throws Exception
      */
-    protected function getOption($option)
+    protected function getOption($option,$defaultValue = "")
     {
         if (is_string($option) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
         if (isset($this->_options[$option]) === true) {
             return $this->_options[$option];
         }
-
-        return;
+        return $defaultValue;
     }
 
     /**

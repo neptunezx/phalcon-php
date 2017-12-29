@@ -50,7 +50,7 @@ use Phalcon\Di\ServiceProviderInterface;
  * $request = $di->getRequest();
  * </code>
  */
-class DI implements DiInterface
+class Di implements DiInterface
 {
 
     /**

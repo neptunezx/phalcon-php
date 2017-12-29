@@ -2,10 +2,11 @@
 
 namespace Phalcon\Logger\Adapter;
 
-use \Phalcon\Logger\Adapter;
-use \Phalcon\Logger\AdapterInterface;
-use \Phalcon\Logger\Exception;
-use \Phalcon\Logger\Formatter\Line;
+use Phalcon\Logger\Adapter;
+use Phalcon\Logger\Exception;
+use Phalcon\Logger\FormatterInterface;
+use Phalcon\Logger\Formatter\Line as LineFormatter;
+use Phalcon\Text;
 
 /**
  * Phalcon\Logger\Adapter\File
@@ -13,16 +14,16 @@ use \Phalcon\Logger\Formatter\Line;
  * Adapter to store logs in plain text files
  *
  * <code>
- *  $logger = new \Phalcon\Logger\Adapter\File("app/logs/test.log");
- *  $logger->log("This is a message");
- *  $logger->log("This is an error", \Phalcon\Logger::ERROR);
- *  $logger->error("This is another error");
- *  $logger->close();
- * </code>
+ * $logger = new \Phalcon\Logger\Adapter\File("app/logs/test.log");
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/file.c
+ * $logger->log("This is a message");
+ * $logger->log(\Phalcon\Logger::ERROR, "This is an error");
+ * $logger->error("This is another error");
+ *
+ * $logger->close();
+ * </code>
  */
-class File extends Adapter implements AdapterInterface
+class File extends Adapter
 {
 
     /**
@@ -36,7 +37,7 @@ class File extends Adapter implements AdapterInterface
     /**
      * Path
      *
-     * @var null|string
+     * @var string
      * @access protected
      */
     protected $_path;
@@ -69,6 +70,7 @@ class File extends Adapter implements AdapterInterface
         }
 
         if (isset($options['mode']) === true) {
+            $mode = $options['mode'];
             if (strpos($options['mode'], 'r') === true) {
                 throw new Exception('Logger must be opened in append or write mode');
             }
@@ -95,7 +97,7 @@ class File extends Adapter implements AdapterInterface
     public function getFormatter()
     {
         if (is_object($this->_formatter) === false) {
-            $this->_formatter = new Line();
+            $this->_formatter = new LineFormatter();
         }
 
         return $this->_formatter;
@@ -109,7 +111,7 @@ class File extends Adapter implements AdapterInterface
      * @param int $time
      * @throws Exception
      */
-    public function logInternal($message, $type, $time)
+    public function logInternal($message, $type, $time, array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||
@@ -122,7 +124,7 @@ class File extends Adapter implements AdapterInterface
         }
 
         $formatter = $this->getFormatter();
-        fwrite($this->_fileHandler, $formatter->format($message, $type, $time));
+        fwrite($this->_fileHandler, $formatter->format($message, $type, $time, $context));
     }
 
     /**
@@ -155,8 +157,20 @@ class File extends Adapter implements AdapterInterface
             $mode = 'ab';
         }
 
+        if (Text::memstr($mode, "r")) {
+            throw new Exception("Logger must be opened in append or write mode");
+        }
+
         //Re-open the file handler if the logger was serialized
         $this->_fileHandler = fopen($this->_path, $mode);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPath()
+    {
+        return $this->_path;
     }
 
 }

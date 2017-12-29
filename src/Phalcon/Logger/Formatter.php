@@ -20,7 +20,7 @@ abstract class Formatter implements FormatterInterface
      */
     public function getTypeString($type)
     {
-        switch ($type) {
+        switch ((int) $type) {
 
             case Logger::DEBUG:
                 return "DEBUG";
@@ -59,18 +59,18 @@ abstract class Formatter implements FormatterInterface
     /**
      * Interpolates context values into the message placeholders
      *
-     * @see http://www.php-fig.org/psr/psr-3/ Section 1.2 Message
      * @param string $message
      * @param array $context
      * @return string
+     * @throws Exception
      */
-    public function interpolate($message, $context = null)
+    public function interpolate($message, array $context = null)
     {
         if (!is_string($message)) {
             throw new Exception('Invalid parameter type.');
         }
         if (is_array($context) && count($context) > 0) {
-            $replace = [];
+            $replace = array();
             foreach ($context as $key => $value) {
                 $replace['{' . $key . '}'] = $value;
             }

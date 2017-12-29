@@ -30,7 +30,7 @@ abstract class Adapter implements AdapterInterface
      * @var array
      * @access protected
      */
-    protected $_queue = array();
+    protected $_queue = [];
 
     /**
      * Formatter
@@ -57,11 +57,7 @@ abstract class Adapter implements AdapterInterface
      */
     public function setLogLevel($level)
     {
-        if (is_int($level) === false) {
-            throw new Exception('The log level is not valid');
-        }
-
-        $this->_logLevel = $level;
+        $this->_logLevel = (int) $level;
 
         return $this;
     }
@@ -83,14 +79,8 @@ abstract class Adapter implements AdapterInterface
      * @return \Phalcon\Logger\AdapterInterface
      * @throws Exception
      */
-    public function setFormatter($formatter)
+    public function setFormatter(FormatterInterface $formatter)
     {
-
-        if (is_object($formatter) === false ||
-            $formatter instanceof FormatterInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_formatter = $formatter;
 
         return $this;
@@ -126,17 +116,14 @@ abstract class Adapter implements AdapterInterface
         /* Log queue data */
         if (is_array($this->_queue) === true) {
             foreach ($this->_queue as $message) {
-                //@note no interface validation
-                $messageStr = $message->getMessage();
-                $type = $message->getType();
-                $time = $message->getTime();
-                $context = $message->getContext();
-                $this->logInternal($messageStr, $type, $time, $context);
+                $this->{"logInternal"}(
+                    $message->getMessage(), $message->getType(), $message->getTime(), $message->getContext()
+                );
             }
         }
 
-        /* Unset queue */
-        $this->_queue = array();
+        // clear logger queue at commit
+        $this->_queue = [];
 
         return $this;
     }
@@ -154,13 +141,14 @@ abstract class Adapter implements AdapterInterface
         }
 
         $this->_transaction = false;
-        $this->_queue = array();
+        $this->_queue       = array();
 
         return $this;
     }
 
     /**
      * Returns the whether the logger is currently in an active transaction or not
+     * 
      * @return boollean
      */
     public function isTransaction()
@@ -170,43 +158,32 @@ abstract class Adapter implements AdapterInterface
 
     /**
      * Sends/Writes a critical message to the log
+     * 
      * @param $message string
      * @param $context array|null
      * @throws Exception
      * @return \Phalcon\Logger\AdapterInterface
      */
-    public function critical($message, $context = null)
+    public function critical($message, array $context = null)
     {
-        if (!is_string($message)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        if (!isEmpty($context) && !is_array($context)) {
-            throw new Exception('Invalid parameter type.');
-        }
         return $this->log(Logger::CRITICAL, $message, $context);
     }
 
     /**
      * Sends/Writes an emergence message to the log
+     * 
      * @param $message string
      * @throws Exception
      * @return \Phalcon\Logger\AdapterInterface
      */
-    public function emergence($message, $context = null)
+    public function emergency($message, array $context = null)
     {
-        if (!is_string($message)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        if (!isEmpty($context) && !is_array($context)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->log($message, Logger::EMERGENCE);
-
-        return $this;
+        return $this->log(Logger::EMERGENCE, $message, $context);
     }
 
     /**
      * Sends/Writes a debug message to the log
+     * 
      * @param $message string
      * @param $context array|null
      * @throws Exception
@@ -214,19 +191,12 @@ abstract class Adapter implements AdapterInterface
      */
     public function debug($message, array $context = null)
     {
-        if (!is_string($message)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        if (!isEmpty($context) && !is_array($context)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->log($message, Logger::DEBUG);
-
-        return $this;
+        return $this->log(Logger::DEBUG, $message, $context);
     }
 
     /**
      * Sends/Writes an error message to the log
+     * 
      * @param $message string
      * @param $context array|null
      * @throws Exception
@@ -234,19 +204,12 @@ abstract class Adapter implements AdapterInterface
      */
     public function error($message, array $context = null)
     {
-        if (!is_string($message)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        if (!isEmpty($context) && !is_array($context)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->log($message, Logger::ERROR);
-
-        return $this;
+        return $this->log(Logger::ERROR, $message, $context);
     }
 
     /**
      * Sends/Writes an info message to the log
+     * 
      * @param $message string
      * @param $context array|null
      * @throws Exception
@@ -254,19 +217,12 @@ abstract class Adapter implements AdapterInterface
      */
     public function info($message, array $context = null)
     {
-        if (!is_string($message)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        if (!isEmpty($context) && !is_array($context)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->log($message, Logger::INFO);
-
-        return $this;
+        return $this->log(Logger::INFO, $message, $context);
     }
 
     /**
      * Sends/Writes a notice message to the log
+     * 
      * @param $message string
      * @param $context array|null
      * @throws Exception
@@ -274,19 +230,12 @@ abstract class Adapter implements AdapterInterface
      */
     public function notice($message, array $context = null)
     {
-        if (!is_string($message)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        if (!isEmpty($context) && !is_array($context)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->log($message, Logger::NOTICE);
-
-        return $this;
+        return $this->log(Logger::NOTICE, $message, $context);
     }
 
     /**
      * Sends/Writes a warning message to the log
+     * 
      * @param $message string
      * @param $context array|null
      * @throws Exception
@@ -294,19 +243,12 @@ abstract class Adapter implements AdapterInterface
      */
     public function warning($message, array $context = null)
     {
-        if (!is_string($message)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        if (!isEmpty($context) && !is_array($context)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->log($message, Logger::WARNING);
-
-        return $this;
+        return $this->log(Logger::WARNING, $message, $context);
     }
 
     /**
      * Sends/Writes an alert message to the log
+     * 
      * @param $message string
      * @param $context array|null
      * @throws Exception
@@ -314,19 +256,12 @@ abstract class Adapter implements AdapterInterface
      */
     public function alert($message, array $context = null)
     {
-        if (!is_string($message)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        if (!isEmpty($context) && !is_array($context)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->log($message, Logger::ALERT);
-
-        return $this;
+        return $this->log(Logger::ALERT, $message, $context);
     }
 
     /**
      * Logs messages to the internal logger. Appends messages to the log
+     * 
      * @param $type
      * @param $message string|null
      * @param $context array|null
@@ -336,27 +271,27 @@ abstract class Adapter implements AdapterInterface
     public function log($type, $message = null, array $context = null)
     {
         if (is_string($type) && is_integer($message)) {
-            $toggledMessage = type;
-            $toggledType = message;
-        } else if (is_string($type) && isEmpty($message)) {
-            $toggledMessage = type;
-            $toggledType = message;
+            $toggledMessage = $type;
+            $toggledType    = $message;
+        } else if (is_string($type) && empty($message)) {
+            $toggledMessage = $type;
+            $toggledType    = $message;
         } else {
-            $toggledMessage = message;
-            $toggledType = type;
+            $toggledMessage = $message;
+            $toggledType    = $type;
         }
-        if (isEmpty(toggledType)) {
+
+        if (empty($toggledType)) {
             $toggledType = Logger::DEBUG;
         }
 
         /**
          * Checks if the log is valid respecting the current log level
          */
-
         if ($this->_logLevel >= $toggledType) {
             $timestamp = time();
             if ($this->_transaction) {
-                $this->_queue[] = new Item(toggledMessage, toggledType, timestamp, context);
+                $this->_queue[] = new Item($toggledMessage, $toggledType, $timestamp, $context);
             } else {
                 $this->logInternal($toggledMessage, $toggledType, $timestamp, $context);
             }

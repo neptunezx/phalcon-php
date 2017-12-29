@@ -9,13 +9,14 @@ namespace Phalcon\Logger;
  */
 interface AdapterInterface
 {
+
     /**
      * Sets the message formatter
      *
      * @param \Phalcon\Logger\FormatterInterface $formatter
      * @return \Phalcon\Logger\AdapterInterface
      */
-    public function setFormatter($formatter);
+    public function setFormatter(FormatterInterface $formatter);
 
     /**
      * Returns the internal formatter
@@ -42,9 +43,9 @@ interface AdapterInterface
     /**
      * Sends/Writes messages to the file log
      *
-     * @param  $message
-     * @param  $type
-     * @parm   $context array
+     * @param string $message
+     * @param int $type
+     * @param array $context 
      * @return \Phalcon\Logger\AdapterInterface
      */
     public function log($type, $message = null, array $context = null);
@@ -130,4 +131,11 @@ interface AdapterInterface
      * @return \Phalcon\Logger\AdapterInterface
      */
     public function alert($message, array $context = null);
+
+    /**
+     * @param string $message
+     * @param array|null $context
+     * @return mixed
+     */
+    public function emergency($message, array $context = null);
 }

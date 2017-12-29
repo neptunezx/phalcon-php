@@ -8,12 +8,6 @@ phpunit.phar
 composer.lock
 vendor/
 /nbproject/
-
-<<<<<<< HEAD
-tests/
-test/
-=======
-# gaopu
 tests/_bootstrap.php
 tests/unit.suite.yml
->>>>>>> 8df38a0781a5cf88997f379a872764b4641c5014
+

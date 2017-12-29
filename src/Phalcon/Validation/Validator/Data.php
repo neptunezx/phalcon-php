@@ -8,53 +8,47 @@ use Phalcon\Validation\Validator;
 use Phalcon\Validation\Exception;
 
 /**
- * Phalcon\Validation\Validator\Between
+ * Phalcon\Validation\Validator\Date
  *
- * Validates that a value is between an inclusive range of two values.
- * For a value x, the test is passed if minimum<=x<=maximum.
+ * Checks if a value is a valid date
  *
  * <code>
  * use Phalcon\Validation;
- * use Phalcon\Validation\Validator\Between;
+ * use Phalcon\Validation\Validator\Date as DateValidator;
  *
  * $validator = new Validation();
  *
  * $validator->add(
- *     "price",
- *     new Between(
+ *     "date",
+ *     new DateValidator(
  *         [
- *             "minimum" => 0,
- *             "maximum" => 100,
- *             "message" => "The price must be between 0 and 100",
+ *             "format"  => "d-m-Y",
+ *             "message" => "The date is invalid",
  *         ]
  *     )
  * );
  *
  * $validator->add(
  *     [
- *         "price",
- *         "amount",
+ *         "date",
+ *         "anotherDate",
  *     ],
- *     new Between(
+ *     new DateValidator(
  *         [
- *             "minimum" => [
- *                 "price"  => 0,
- *                 "amount" => 0,
- *             ],
- *             "maximum" => [
- *                 "price"  => 100,
- *                 "amount" => 50,
+ *             "format" => [
+ *                 "date"        => "d-m-Y",
+ *                 "anotherDate" => "Y-m-d",
  *             ],
  *             "message" => [
- *                 "price"  => "The price must be between 0 and 100",
- *                 "amount" => "The amount must be between 0 and 50",
+ *                 "date"        => "The date is invalid",
+ *                 "anotherDate" => "The another date is invalid",
  *             ],
  *         ]
  *     )
  * );
  * </code>
  */
-class Between extends Validator
+class Data extends Validator
 {
 
     /**
@@ -76,29 +70,28 @@ class Between extends Validator
         }
 
         $value = $validation->getValue($field);
-        $minimum = $this->getOption('minimum');
-        $maximum = $this->getOption('maximum');
-        if (is_array($minimum)) {
-            $minimum = $minimum[$field];
+        $format = $this->getOption("format");
+
+        if (is_array($format)) {
+            $format = $format[$field];
         }
 
-        if (is_array($maximum)) {
-            $maximum = $maximum[$field];
+        if (empty($format)) {
+            $format = "Y-m-d";
         }
 
-        if ($value <= $minimum || $value >= $maximum) {
+        if (!$this->checkDate($value, $format)) {
             $label = $this->prepareLabel($validation, $field);
-            $message = $this->prepareMessage($validation, $field, "Between");
-            $code = $this->prepareCode($field);
+            $message = $this->prepareMessage($validation, $field, "Date");
+            $this->prepareCode($field);
+
             $replacePairs[':field'] = $label;
-            $replacePairs[":min"] = $minimum;
-            $replacePairs[":max"] = $maximum;
+
             $validation->appendMessage(
                 new Message(
                     strtr($message, $replacePairs),
                     $field,
-                    "Between",
-                    $code
+                    "Date"
                 )
             );
 
@@ -107,5 +100,25 @@ class Between extends Validator
 
         return true;
     }
+
+    /**
+     * @param $value
+     * @param $format
+     * @return boolean
+     */
+    private function checkDate($value, $format)
+    {
+        if (!is_string($value)) {
+            return false;
+        }
+        \DateTime::createFromFormat($format, $value);
+        $errors = \DateTime::getLastErrors();
+        if ($errors["warning_count"] > 0 || $errors["error_count"] > 0) {
+            return false;
+        }
+
+        return true;
+    }
+
 
 }

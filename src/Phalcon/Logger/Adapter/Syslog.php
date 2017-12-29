@@ -13,18 +13,24 @@ use \Phalcon\Logger\Formatter\Syslog as SyslogFormatter;
  * Sends logs to the system logger
  *
  * <code>
- *  $logger = new \Phalcon\Logger\Adapter\Syslog("ident", array(
- *      'option' => LOG_NDELAY,
- *      'facility' => LOG_MAIL
- *  ));
- *  $logger->log("This is a message");
- *  $logger->log("This is an error", \Phalcon\Logger::ERROR);
- *  $logger->error("This is another error");
- * </code>
+ * use Phalcon\Logger;
+ * use Phalcon\Logger\Adapter\Syslog;
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/syslog.c
+ * // LOG_USER is the only valid log type under Windows operating systems
+ * $logger = new Syslog(
+ *     "ident",
+ *     [
+ *         "option"   => LOG_CONS | LOG_NDELAY | LOG_PID,
+ *         "facility" => LOG_USER,
+ *     ]
+ * );
+ *
+ * $logger->log("This is a message");
+ * $logger->log(Logger::ERROR, "This is an error");
+ * $logger->error("This is another error");
+ * </code>
  */
-class Syslog extends Adapter implements AdapterInterface
+class Syslog extends Adapter
 {
 
     /**
@@ -40,36 +46,35 @@ class Syslog extends Adapter implements AdapterInterface
      *
      * @param string $name
      * @param array|null $options
+     * @throws Exception
      */
-    public function __construct($name, $options = null)
+    public function __construct($name, array $options = null)
     {
-        if (is_string($name) === true) {
-            //Open the log in LOG_ODELAY mode
-            $option = 4;
-
-            //By default the facility is LOG_USER
-            $facility = 8;
-
-            if (is_array($options) === true) {
-                if (isset($options['option']) === true) {
-                    $option = $options['option'];
-                }
-
-                if (isset($options['facility']) === true) {
-                    $facility = $options['facility'];
-                }
-            }
-
-            //@note no return value check
-            openlog($name, $option, $facility);
-            $this->_opened = true;
+        if (is_string($name) === false) {
+            throw new Exception('Invalid parameter type.');
         }
+
+        if (isset($options['option']) === true) {
+            $option = $options['option'];
+        } else {
+            $option = LOG_ODELAY;
+        }
+
+        if (isset($options['facility']) === true) {
+            $facility = $options['facility'];
+        } else {
+            $facility = LOG_USER;
+        }
+
+        //@note no return value check
+        openlog($name, $option, $facility);
+        $this->_opened = true;
     }
 
     /**
      * Returns the internal formatter
      *
-     * @return \Phalcon\Logger\FormatterInterface
+     * @return SyslogFormatter
      */
     public function getFormatter()
     {
@@ -86,9 +91,10 @@ class Syslog extends Adapter implements AdapterInterface
      * @param string $message
      * @param int $type
      * @param int $time
+     * @param array $context
      * @throws Exception
      */
-    public function logInternal($message, $type, $time)
+    public function logInternal($message, $type, $time, array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||
@@ -96,7 +102,7 @@ class Syslog extends Adapter implements AdapterInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        $appliedFormat = $this->getFormatter()->format($message, $type, $time);
+        $appliedFormat = $this->getFormatter()->format($message, $type, $time, $context);
         if (is_array($appliedFormat) === false) {
             throw new Exception('The formatted message is not valid');
         }
@@ -108,17 +114,15 @@ class Syslog extends Adapter implements AdapterInterface
     /**
      * Closes the logger
      *
-     * @return null
+     * @return boolean
      */
     public function close()
     {
-        //@note we don't set $this->_opened = false!
-        if ($this->_opened === true) {
-            //@note no return value check
-            closelog();
+        if (!$this->_opened) {
+            return true;
         }
 
-        //@note we don't return a boolean
+        return closelog();
     }
 
 }
