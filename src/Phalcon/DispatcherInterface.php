@@ -39,7 +39,7 @@ interface DispatcherInterface
     /**
      * Sets the namespace which the controller belongs to
      * 
-     * @param string $namespace
+     * @param string $namespaceName
      */
     public function setNamespaceName($namespaceName);
 
