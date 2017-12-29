@@ -1,14 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: flyfish
- * Date: 2017/12/22
- * Time: 11:06
- */
 
 namespace Phalcon;
 
+use Phalcon\Di\Injectable;
+use Phalcon\Validation\Exception;
 use Phalcon\Validation\MessageInterface;
+use Phalcon\Validation\Message\Group;
+use Phalcon\Validation\ValidatorInterface;
 
 /**
  * Phalcon\ValidationInterface
@@ -26,7 +24,6 @@ interface ValidationInterface
      * @return \Phalcon\Validation\Message\Group|boolean|null
      * @throws \Phalcon\Exception
      */
-
     public function validate($data = null, $entity = null);
 
     /**
@@ -37,7 +34,7 @@ interface ValidationInterface
      * @return \Phalcon\Validation
      * @throws \Phalcon\Exception
      */
-	public function add($field, $validator);
+    public function add($field, ValidatorInterface $validator);
 
     /**
      * Adds the validators to a field
@@ -46,16 +43,16 @@ interface ValidationInterface
      * @return \Phalcon\Validation
      * @throws \Phalcon\Exception
      */
-    public function rule($field, $validator);
+    public function rule($field, ValidatorInterface $validator);
 
-	/**
+    /**
      * Adds the validators to a field
      * @param string $field
      * @param array $validators
      * @return \Phalcon\Validation
      * @throws \Phalcon\Exception
      */
-	public function rules($field, $validators);
+    public function rules($field, array $validators);
 
     /**
      * Adds filters to the field
@@ -65,68 +62,68 @@ interface ValidationInterface
      * @return \Phalcon\Validation
      * @throws \Phalcon\Exception
      */
-	public function setFilters($field, $filters);
+    public function setFilters($field, $filters);
 
-	/**
+    /**
      * Returns all the filters or a specific one
      *
      * @param string $field
      * @return mixed
      */
-	public function getFilters($field = null);
+    public function getFilters($field = null);
 
-	/**
+    /**
      * Returns the validators added to the validation
      */
-	public function getValidators();
+    public function getValidators();
 
-	/**
+    /**
      * Returns the bound entity
      *
      * @return object
      */
-	public function getEntity();
+    public function getEntity();
 
-	/**
+    /**
      * Adds default messages to validators
      * @param array $messages
      */
-	public function setDefaultMessages($messages = null);
+    public function setDefaultMessages(array $messages = []);
 
-	/**
+    /**
      * Get default message for validator type
      *
      * @param string $type
      */
-	public function getDefaultMessage($type);
+    public function getDefaultMessage($type);
 
-	/**
+    /**
      * Returns the registered validators
      * @return \Phalcon\Validation\Message\Group
      */
-	public function getMessages();
+    public function getMessages();
 
-	/**
+    /**
      * Adds labels for fields
      * @param array $labels
      */
-	public function setLabels($labels);
+    public function setLabels(array $labels);
 
-	/**
+    /**
      * Get label for field
      *
      * @param string $field
      *
      */
-	public function getLabel($field);
+    public function getLabel($field);
 
-	/**
+    /**
      * Appends a message to the messages list
      * @param MessageInterface $message
      */
-	public function appendMessage($message);
+    public function appendMessage(MessageInterface $message);
 
-	/**
+    /**
      * Assigns the data to an entity
      * The entity is used to obtain the validation values
      *
@@ -134,13 +131,13 @@ interface ValidationInterface
      * @param array|object $data
      * @return \Phalcon\Validation
      */
-	public function bind($entity, $data);
+    public function bind($entity, $data);
 
-	/**
+    /**
      * Gets the a value to validate in the array/object data source
      *
      * @param string $field
      * @return mixed
      */
-	public function getValue($field);
+    public function getValue($field);
 }

@@ -11,8 +11,6 @@ use \Phalcon\Version;
  * Phalcon\Debug
  *
  * Provides debug capabilities to Phalcon applications
- *
- * @see https://github.com/phalcon/cphalcon/1.2.6/master/ext/debug.c
  */
 class Debug
 {
@@ -122,11 +120,7 @@ class Debug
      */
     public function setShowFiles($showFiles)
     {
-        if (is_bool($showFiles) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->_showFiles = $showFiles;
+        $this->_showFiles = (bool) $showFiles;
         return $this;
     }
 
@@ -211,7 +205,6 @@ class Debug
         throw new Exception("Halted request");
     }
 
-
     /**
      * Adds a variable to the debug output
      *
@@ -259,7 +252,7 @@ class Debug
             return htmlentities(str_replace('\n', '\\n', $value), 2, 'utf-8');
         }
 
-        return (string)$value;
+        return (string) $value;
     }
 
     /**
@@ -392,7 +385,7 @@ class Debug
     public function getMajorVersion()
     {
         $parts = explode(' ', Version::get());
-        return (string)$parts[0];
+        return (string) $parts[0];
     }
 
     /**
@@ -400,13 +393,12 @@ class Debug
      * @todo 确定Tag::linkTo(link);
      * @return string
      */
-
     public function getVersion()
     {
         $link = [
             "action" => "https://docs.phalconphp.com/en/" . Version::getPart(Version::VERSION_MAJOR) . ".0.0/",
-            "text" => Version::get(),
-            "local" => false,
+            "text"   => Version::get(),
+            "local"  => false,
             "target" => "_new"
         ];
 
@@ -420,7 +412,7 @@ class Debug
      */
     public function getCssSources()
     {
-        $uri = $this->_uri;
+        $uri     = $this->_uri;
         $sources = "<link href=\"" . $uri . "bower_components/jquery-ui/themes/ui-lightness/jquery-ui.min.css\" type=\"text/css\" rel=\"stylesheet\" />";
         $sources .= "<link href=\"" . $uri . "bower_components/jquery-ui/themes/ui-lightness/theme.css\" type=\"text/css\" rel=\"stylesheet\" />";
         $sources .= "<link href=\"" . $uri . "themes/default/style.css\" type=\"text/css\" rel=\"stylesheet\" />";
@@ -434,7 +426,7 @@ class Debug
      */
     public function getJsSources()
     {
-        $uri = $this->_uri;
+        $uri     = $this->_uri;
         $sources = "<script type=\"text/javascript\" src=\"" . $uri . "bower_components/jquery/dist/jquery.min.js\"></script>";
         $sources .= "<script type=\"text/javascript\" src=\"" . $uri . "bower_components/jquery-ui/jquery-ui.min.js\"></script>";
         $sources .= "<script type=\"text/javascript\" src=\"" . $uri . "bower_components/jquery.scrollTo/jquery.scrollTo.min.js\"></script>";
@@ -458,7 +450,7 @@ class Debug
         if (!is_int($n) || is_array($trace)) {
             throw new Exception('Invalid parameter type.');
         }
-        $html = "<tr><td align=\"right\" valign=\"top\" class=\"error-number\">#" . $n . "</td><td>";
+        $html      = "<tr><td align=\"right\" valign=\"top\" class=\"error-number\">#" . $n . "</td><td>";
         $className = isset($trace['class']) ? $trace['class'] : null;
         if (!is_null($className)) {
             /**
@@ -560,7 +552,7 @@ class Debug
         $filez = isset($trace["file"]) ? $trace["file"] : null;
         if (!is_null($filez)) {
 
-            $line = (string)$trace["line"];
+            $line = (string) $trace["line"];
 
             /**
              * Realpath to the file and its line using a special header
@@ -579,7 +571,7 @@ class Debug
                  */
                 $lines = file($filez);
 
-                $numberLines = count($lines);
+                $numberLines      = count($lines);
                 $showFileFragment = $this->_showFileFragment;
 
                 /**
@@ -618,8 +610,8 @@ class Debug
                     $html .= "<pre class=\"prettyprint highlight:" . $firstLine . ":" . $line . " linenums:" . $firstLine . "\">";
                 } else {
                     $firstLine = 1;
-                    $lastLine = $numberLines;
-                    $html .= "<pre class=\"prettyprint highlight:" . $firstLine . ":" . $line . " linenums error-scroll\">";
+                    $lastLine  = $numberLines;
+                    $html      .= "<pre class=\"prettyprint highlight:" . $firstLine . ":" . $line . " linenums error-scroll\">";
                 }
 
                 $i = $firstLine;
@@ -670,7 +662,6 @@ class Debug
         return $html;
     }
 
-
     /**
      * Throws an exception when a notice or warning is raised
      * @throws Exception
@@ -681,7 +672,6 @@ class Debug
             throw new \ErrorException($message, 0, $severity, $file, $line);
         }
     }
-
 
     /**
      * Handles uncaught exceptions
@@ -712,7 +702,7 @@ class Debug
         /**
          * Globally block the debug component to avoid other exceptions to be shown
          */
-        $self::_isActive = true;
+        $self::$_isActive = true;
 
         $className = get_class($exception);
 
@@ -845,7 +835,7 @@ class Debug
         /**
          * Unlock the exception renderer
          */
-        $self::_isActive = false;
+        $self::$_isActive = false;
 
         return true;
     }

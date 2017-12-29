@@ -194,10 +194,6 @@ class Message implements MessageInterface
      */
     public static function __set_state(array $message)
     {
-        if (is_array($message) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         return new Message($message['_message'], $message['_field'], $message['_type']);
     }
 
