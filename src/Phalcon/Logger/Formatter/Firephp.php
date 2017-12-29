@@ -2,8 +2,8 @@
 
 namespace Phalcon\Logger\Formatter;
 
-use \Phalcon\Logger\Formatter;
-use \Phalcon\Logger;
+use Phalcon\Logger;
+use Phalcon\Logger\Formatter;
 
 /**
  * Phalcon\Logger\Formatter\Firephp
@@ -124,54 +124,10 @@ class Firephp extends Formatter
             $message = $this->interpolate($message, $context);
         }
 
-        if ($this->_showBacktrace === true) {
-            $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS);
-        }
+        $meta = ["Type" => $this->getTypeString($type)];
 
-        $meta = array("Type" => $this->getTypeString($type));
-
-        if (isset($backtrace) === true) {
-            foreach ($backtrace as $key => $value) {
-                if (is_array($value) === true) {
-                    if (isset($value['file']) === false) {
-                        /**
-                         * Here we need to skip the latest calls into Phalcon's core.
-                         * Calls to Zend internal functions will have "file" index not set.
-                         * We remove these entries from the array.
-                         */
-                        unset($backtrace[$key]);
-                    } else {
-                        /*
-                         * Remove args and object indices. They usually give
-                         * too much information; this is not suitable to send
-                         * in the HTTP headers
-                         */
-                        unset($value['args']);
-                        unset($value['object']);
-                    }
-                }
-            }
-
-            /*
-             * Now we need to renumber the hash table because we removed several
-             * heading elements. If we don't do this, json_encode() will convert
-             * this array to a JavaScript object which is an unwanted side effect
-             */
-            $backtrace = array_values($backtrace);
-        }
-
-        /**
-         * The result will looks like this:
-         *
-         * array(
-         *     array('Type' => 'message type', 'Label' => 'message'),
-         *     array('backtrace' => array(backtrace goes here)
-         * )
-         */
-        $meta = array('Type' => $this->getTypeString($type), 'Label' => $message);
         if ($this->_showBacktrace) {
-            $param = DEBUG_BACKTRACE_IGNORE_ARGS;
-
+            $param     = DEBUG_BACKTRACE_IGNORE_ARGS;
             $backtrace = debug_backtrace($param);
             $lastTrace = end($backtrace);
 
@@ -197,10 +153,10 @@ class Firephp extends Formatter
 
         if (!$this->_enableLabels && !$this->_showBacktrace) {
             $body = $message;
-        } else if ($this->_enableLabels && !$this->_showBacktrace) {
+        } elseif ($this->_enableLabels && !$this->_showBacktrace) {
             $body = "";
         } else {
-            $body = array();
+            $body = [];
 
             if ($this->_showBacktrace) {
                 $body["backtrace"] = $backtrace;
@@ -211,9 +167,9 @@ class Firephp extends Formatter
             }
         }
 
-        $encoded = json_encode(array($meta, $body));
+        $encoded = json_encode([$meta, $body]);
         $len     = strlen($encoded);
-
+        codecept_debug('$this->_showBacktrace'.$this->_showBacktrace);
         return $len . "|" . $encoded . "|";
     }
 

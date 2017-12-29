@@ -71,13 +71,8 @@ class Multiple
      * @param $formatter \Phalcon\Logger\FormatterInterface
      * @throws Exception
      */
-    public function setFormatter($formatter)
+    public function setFormatter(FormatterInterface $formatter)
     {
-        if (is_object($formatter) === false ||
-            $formatter instanceof FormatterInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         if (is_array($this->_loggers) === true) {
             foreach ($this->_loggers as $logger) {
                 $logger->setFormatter($formatter);
@@ -98,6 +93,7 @@ class Multiple
         if (is_int($level) === false) {
             throw new Exception('Invalid parameter type.');
         }
+
         $loggers = $this->_loggers;
         if (is_array($loggers)) {
             foreach ($loggers as $logger) {
@@ -125,14 +121,9 @@ class Multiple
      * @param $context array|null
      * @throws Exception
      */
-    public function log($type, $message, array $context = null)
+    public function log($type, $message = null, array $context = null)
     {
-        $loggers = $this->_loggers;
-        if (is_int($type) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_array($this->_loggers) === true) {
+        if (is_array($this->_loggers)) {
             foreach ($this->_loggers as $logger) {
                 $logger->log($message, $type);
             }

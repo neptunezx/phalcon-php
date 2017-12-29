@@ -48,12 +48,11 @@ class Firephp extends Adapter
      */
     public function getFormatter()
     {
-        $formatter = $this->_formatter;
-        if (is_object($formatter) === false) {
-            $formatter = new FirephpFormatter();
+        if (is_object($this->_formatter) === false) {
+            $this->_formatter = new FirePhpFormatter();
         }
 
-        return $formatter;
+        return $this->_formatter;
     }
 
     /**

@@ -71,7 +71,7 @@ class File extends Adapter
 
         if (isset($options['mode']) === true) {
             $mode = $options['mode'];
-            if (strpos($options['mode'], 'r') === true) {
+            if (Text::memstr($mode, "r")) {
                 throw new Exception('Logger must be opened in append or write mode');
             }
         } else {
@@ -124,6 +124,8 @@ class File extends Adapter
         }
 
         $formatter = $this->getFormatter();
+        codecept_debug('*** logInternal: ' . $message);
+        codecept_debug('*** formatter: ' . $formatter->format($message, $type, $time, $context));
         fwrite($this->_fileHandler, $formatter->format($message, $type, $time, $context));
     }
 
