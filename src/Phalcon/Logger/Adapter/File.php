@@ -20,7 +20,6 @@ use \Phalcon\Logger\Formatter\Line;
  *  $logger->close();
  * </code>
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/logger/adapter/file.c
  */
 class File extends Adapter implements AdapterInterface
 {
@@ -36,7 +35,7 @@ class File extends Adapter implements AdapterInterface
     /**
      * Path
      *
-     * @var null|string
+     * @var string
      * @access protected
      */
     protected $_path;
@@ -69,6 +68,7 @@ class File extends Adapter implements AdapterInterface
         }
 
         if (isset($options['mode']) === true) {
+            $mode = $options['mode'];
             if (strpos($options['mode'], 'r') === true) {
                 throw new Exception('Logger must be opened in append or write mode');
             }
@@ -159,4 +159,21 @@ class File extends Adapter implements AdapterInterface
         $this->_fileHandler = fopen($this->_path, $mode);
     }
 
+    /**
+     * @return string
+     */
+    public function getPath(){
+        return $this->_path;
+    }
+
+
+    /**
+     * @param string $message
+     * @param array|null $context
+     * @return mixed
+     */
+    public function emergency($message, array $context = null)
+    {
+        // TODO: Implement emergency() method.
+    }
 }
