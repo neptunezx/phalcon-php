@@ -4,6 +4,7 @@ namespace Phalcon;
 
 use Phalcon\Factory\Exception;
 use Phalcon\Config;
+use Phalcon\FactoryInterface;
 
 abstract class Factory implements FactoryInterface
 {
