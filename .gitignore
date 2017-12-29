@@ -1,0 +1,13 @@
+# Documentation
+docs/
+.directory
+phpunit.phar
+.idea/
+
+# Composer
+composer.lock
+vendor/
+/nbproject/
+tests/_bootstrap.php
+tests/unit.suite.yml
+

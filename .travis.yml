@@ -1,0 +1,40 @@
+language: php
+
+php:
+  - 5.5
+  - 5.6
+  - 7.0
+
+matrix:
+  allow_failures:
+    - php: 7.0
+
+services:
+  - mongodb
+  - memcached
+
+before_install:
+  - echo "extension = mongo.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - echo "extension = memcache.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - ./test/ci/setup_beanstalkd.sh
+  - ./test/ci/setup_memcached.sh
+  - ./test/ci/setup_mongo.sh
+  - wget http://getcomposer.org/composer.phar
+  - php composer.phar install --dev --no-interaction
+
+before_script:
+  - ./test/ci/setup_mysql.sh
+  - ./test/ci/setup_pgsql.sh
+  - ./test/ci/setup_sqlite.sh
+  - mkdir -p build/logs
+  - export COVERALLS_SERVICE_NAME=travis-ci
+
+script:
+  - phpunit --configuration ./test/phpunit.xml --coverage-clover build/logs/clover.xml --debug
+  - ./test/ci/execute_phploc.sh
+
+after_script:
+  - php vendor/bin/coveralls -v
+
+notifications:
+  email: "wenzel@phelix.me"
