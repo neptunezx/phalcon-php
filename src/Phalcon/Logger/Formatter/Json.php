@@ -2,9 +2,7 @@
 
 namespace Phalcon\Logger\Formatter;
 
-use \Phalcon\Logger\Formatter;
-use \Phalcon\Logger\FormatterInterface;
-use \Phalcon\Logger\Exception;
+use Phalcon\Logger\Formatter;
 
 /**
  * Phalcon\Logger\Formatter\Json
@@ -39,12 +37,12 @@ class Json extends Formatter
 
         //@note no exception handeling
         return json_encode(
-            array(
-                'type'      => $this->getTypeString($type),
-                'message'   => $message,
-                'timestamp' => $timestamp
-            )
-        );
+                array(
+                    'type'      => $this->getTypeString($type),
+                    'message'   => $message,
+                    'timestamp' => $timestamp
+                )
+            ) . PHP_EOL;
     }
 
 }

@@ -87,7 +87,7 @@ class FileTest extends UnitTest
                 $logger = new File($this->logPath . $fileName, $params);
                 $logger->log('New Contents');
                 $logger->close();
-
+                codecept_debug($this->logPath . $fileName."::::".file_get_contents($this->logPath . $fileName));
                 $I->amInPath($this->logPath);
                 $I->openFile($fileName);
                 $I->seeInThisFile('New Contents');

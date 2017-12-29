@@ -2,9 +2,7 @@
 
 namespace Phalcon\Logger\Formatter;
 
-use \Phalcon\Logger\Formatter;
-use \Phalcon\Logger\FormatterInterface;
-use \Phalcon\Logger\Exception;
+use Phalcon\Logger\Formatter;
 use Phalcon\Text;
 
 /**
@@ -58,10 +56,13 @@ class Line extends Formatter
     }
 
     /**
-     * Set the log format
+     * Applies a format to a message before sent it to the internal log
      *
-     * @param string $format
-     * @throws Exception
+     * @param string $message
+     * @param int $type
+     * @param int $timestamp
+     * @param array $context
+     * @return string
      */
     public function setFormat($format)
     {
@@ -129,11 +130,20 @@ class Line extends Formatter
         /* Format */
         $format = $this->_format;
 
-        if (Text::memstr($format, '%date%') !== false) {
-            $format = str_replace(
-                '%date%', $this->getTypeString($type), $timestamp, $format
-            );
+        /**
+         * Check if the format has the %date% placeholder
+         */
+        if (Text::memstr($format, "%date%")) {
+            $format = str_replace("%date%", date($this->_dateFormat, $timestamp), $format);
         }
+
+        /**
+         * Check if the format has the %type% placeholder
+         */
+        if (Text::memstr($format, "%type%")) {
+            $format = str_replace("%type%", $this->getTypeString($type), $format);
+        }
+
         $format = str_replace("%message%", $message, $format) . PHP_EOL;
 
         if (is_array($context) === true) {

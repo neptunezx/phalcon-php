@@ -2,7 +2,6 @@
 
 namespace Phalcon\Db\Dialect;
 
-use function GuzzleHttp\Psr7\uri_for;
 use \Phalcon\Db\Dialect;
 use \Phalcon\Db\DialectInterface;
 use \Phalcon\Db\ColumnInterface;
@@ -10,6 +9,7 @@ use \Phalcon\Db\IndexInterface;
 use \Phalcon\Db\ReferenceInterface;
 use \Phalcon\Db\Exception;
 use Phalcon\Db\Column;
+use Phalcon\Text;
 
 /**
  * Phalcon\Db\Dialect\Mysql
@@ -285,7 +285,7 @@ class Mysql extends Dialect implements DialectInterface
 
         if ($column->hasDefault()) {
             $defaultValue = $column->getDefault();
-            if (strpos(strtoupper($defaultValue), "CURRENT_TIMESTAMP")) {
+            if (Text::memstr(strtoupper($defaultValue), "CURRENT_TIMESTAMP")) {
                 $sql .= " DEFAULT CURRENT_TIMESTAMP";
             } else {
                 $sql .= " DEFAULT \"" . addcslashes($defaultValue, "\"") . "\"";
@@ -304,8 +304,9 @@ class Mysql extends Dialect implements DialectInterface
             $sql .= ' FIRST';
         } else {
             $afterPosition = $column->getAfterPosition();
+
             if ($afterPosition == true) {
-                $sql .= ' AFTER ' . $afterPosition;
+                $sql .= " AFTER `" . $afterPosition . "`";
             }
         }
 
@@ -332,7 +333,7 @@ class Mysql extends Dialect implements DialectInterface
 
         if ($column->hasDefault()) {
             $defaultValue = $column->getDefault();
-            if (strpos(strtoupper($defaultValue), "CURRENT_TIMESTAMP")) {
+            if (Text::memstr(strtoupper($defaultValue), "CURRENT_TIMESTAMP")) {
                 $sql .= " DEFAULT CURRENT_TIMESTAMP";
             } else {
                 $sql .= " DEFAULT \"" . addcslashes($defaultValue, "\"") . "\"";
@@ -351,8 +352,8 @@ class Mysql extends Dialect implements DialectInterface
             $sql .= ' FIRST';
         } else {
             $afterPosition = $column->getAfterPosition();
-            if ($afterPosition == true) {
-                $sql .= ' AFTER ' . $afterPosition;
+            if ($afterPosition) {
+                $sql .= " AFTER `" . $afterPosition . "`";
             }
         }
 
@@ -612,7 +613,7 @@ class Mysql extends Dialect implements DialectInterface
             $columnLine = "`" . $column->getName() . "` " . $this->getColumnDefinition($column);
             if ($column->hasDefault()) {
                 $defaultValue = $column->getDefault();
-                if (strpos(strtoupper($defaultValue), "CURRENT_TIMESTAMP")) {
+                if (Text::memstr(strtoupper($defaultValue), "CURRENT_TIMESTAMP")) {
                     $columnLine .= " DEFAULT CURRENT_TIMESTAMP";
                 } else {
                     $columnLine .= " DEFAULT \"" . addcslashes($defaultValue, "\"") . "\"";
@@ -893,11 +894,13 @@ class Mysql extends Dialect implements DialectInterface
      */
     public function listViews($schemaName = null)
     {
-        if (is_string($schemaName)) {
+        if ($schemaName != null && !is_string($schemaName)) {
+            throw new Exception('Invalid parameter type');
+        }
+        if ($schemaName) {
             return "SELECT `TABLE_NAME` AS view_name FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_SCHEMA` = '" . $schemaName . "' ORDER BY view_name";
         }
-
-        return 'SELECT `TABLE_NAME` AS view_name FROM `INFORMATION_SCHEMA`.`VIEWS` ORDER BY view_name';
+        return "SELECT `TABLE_NAME` AS view_name FROM `INFORMATION_SCHEMA`.`VIEWS` WHERE `TABLE_SCHEMA` = DATABASE() ORDER BY view_name";
     }
 
     /**

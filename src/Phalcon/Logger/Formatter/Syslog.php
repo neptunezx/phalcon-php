@@ -2,15 +2,12 @@
 
 namespace Phalcon\Logger\Formatter;
 
-use \Phalcon\Logger\Formatter;
-use \Phalcon\Logger\FormatterInterface;
-use \Phalcon\Logger\Exception;
+use Phalcon\Logger\Formatter;
 
 /**
  * Phalcon\Logger\Formatter\Syslog
  *
  * Prepares a message to be used in a Syslog backend
- *
  */
 class Syslog extends Formatter
 {
@@ -37,7 +34,7 @@ class Syslog extends Formatter
             $message = $this->interpolate($message, $context);
         }
 
-        return array($type, $message);
+        return [$type, $message];
     }
 
 }
