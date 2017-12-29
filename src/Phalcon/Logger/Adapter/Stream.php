@@ -89,7 +89,7 @@ class Stream extends Adapter
      * @param array $context
      * @throws Exception
      */
-    public function logInternal($message, $type, $time, array $context)
+    public function logInternal($message, $type, $time, array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||

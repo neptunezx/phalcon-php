@@ -2,6 +2,7 @@
 
 namespace Phalcon\Logger\Adapter;
 
+use Phalcon\Logger\Adapter;
 use Phalcon\Logger\Exception;
 use Phalcon\Logger\FormatterInterface;
 use Phalcon\Logger\Formatter\Line as LineFormatter;
@@ -110,7 +111,7 @@ class File extends Adapter
      * @param int $time
      * @throws Exception
      */
-    public function logInternal($message, $type, $time, array $context)
+    public function logInternal($message, $type, $time, array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||

@@ -64,7 +64,7 @@ class Firephp extends Adapter
      * @param int $time
      * @throws Exception
      */
-    public function logInternal($message, $type, $time, array $context)
+    public function logInternal($message, $type, $time, array $context = null)
     {
         if (is_string($message) === false ||
             is_int($type) === false ||

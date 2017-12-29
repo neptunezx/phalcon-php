@@ -43,9 +43,9 @@ interface AdapterInterface
     /**
      * Sends/Writes messages to the file log
      *
-     * @param  $message
-     * @param  $type
-     * @parm   $context array
+     * @param string $message
+     * @param int $type
+     * @param array $context 
      * @return \Phalcon\Logger\AdapterInterface
      */
     public function log($type, $message = null, array $context = null);
