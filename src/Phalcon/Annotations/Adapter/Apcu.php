@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: hanxinyu
- * Date: 2017/12/21
- * Time: 上午11:01
- */
 
 namespace Phalcon\Annotations\Adapter;
 
