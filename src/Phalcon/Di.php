@@ -12,6 +12,7 @@ use Phalcon\Di\ServiceInterface;
 use Phalcon\Events\ManagerInterface;
 use Phalcon\Di\InjectionAwareInterface;
 use Phalcon\Di\ServiceProviderInterface;
+use Phalcon\Text;
 
 /**
  * Phalcon\Di
@@ -484,9 +485,8 @@ class Di implements DiInterface
      */
     public function __call($method, $arguments = null)
     {
-        if (strpos($method, 'get') === 0) {
-            $serviceName = substr($method, 3);
-
+        if (Text::startsWith($method, 'get')) {
+            $serviceName     = substr($method, 3);
             $possibleService = lcfirst($serviceName);
             if (isset($this->_services[$possibleService]) === true) {
                 if (empty($arguments) === false) {
@@ -496,10 +496,9 @@ class Di implements DiInterface
             }
         }
 
-        if (strpos($method, 'set') === 0) {
+        if (Text::startsWith($method, 'set')) {
             if (isset($arguments[0]) === true) {
                 $serviceName = substr($method, 3);
-
                 $this->set(lcfirst($serviceName), $arguments[0]);
                 return null;
             }

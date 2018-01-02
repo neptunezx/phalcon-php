@@ -28,6 +28,7 @@ use Phalcon\Test\Models\Some\Products as SomeProducts;
  */
 class QueryTest extends UnitTest
 {
+
     /**
      * @var DiInterface
      */
@@ -38,1241 +39,1240 @@ class QueryTest extends UnitTest
         parent::_before();
 
         /** @var \Phalcon\Mvc\Application $app */
-        $app = $this->tester->getApplication();
+        $app      = $this->tester->getApplication();
         $this->di = $app->getDI();
+        $this->di->set('strategy', function () {
+            return new \Phalcon\Mvc\Model\MetaData\Strategy\Introspection();
+        }, true);
     }
 
     public function testSelectParsing()
     {
         $this->specify(
-            "SELECT PHQL queries don't work as expected",
-            function ($phql, $expected) {
-                $query = new Query($phql);
+            "SELECT PHQL queries don't work as expected", function ($phql, $expected) {
+            $query = new Query($phql);
 
-                $query->setDI($this->di);
+            $query->setDI($this->di);
+            codecept_debug('phql: ' . json_encode($phql));
+            $parsed = $query->parse();
 
-                $parsed = $query->parse();
-               
-                try {
-                    expect($parsed)->equals($expected);
-                } catch (\PHPUnit_Framework_ExpectationFailedException $ex) {
-                    codecept_debug('------error------');
-                    codecept_debug('phql: '.json_encode($phql));
-                    codecept_debug('actual: '.json_encode($parsed));
-                    codecept_debug('expect: '.json_encode($expected));
-                    throw $ex;
-                }
-            },
-            ["examples" => require PATH_FIXTURES . 'query/select_parsing.php']
+            try {
+                expect($parsed)->equals($expected);
+            } catch (\Exception $ex) {
+                codecept_debug('------error------');
+                codecept_debug('phql: ' . json_encode($phql));
+                codecept_debug('actual: ' . json_encode($parsed));
+                codecept_debug('expect: ' . json_encode($expected));
+                throw $ex;
+            }
+        }, ["examples" => require PATH_FIXTURES . 'query/select_parsing.php']
         );
     }
 
     public function testInsertParsing()
     {
         $this->specify(
-            "INSERT PHQL queries don't work as expected",
-            function () {
-                $expected = array(
-                    'model' => Robots::class,
-                    'table' => 'robots',
-                    'values' => array(
-                        array(
-                            'type' => 322,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'NULL',
-                            ),
-                        ),
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some robot',
-                            ),
-                        ),
-                        array(
-                            'type' => 258,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => '1945',
-                            ),
+            "INSERT PHQL queries don't work as expected", function () {
+            $expected = array(
+                'model'  => Robots::class,
+                'table'  => 'robots',
+                'values' => array(
+                    array(
+                        'type'  => 322,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'NULL',
                         ),
                     ),
-                );
-                $query = new Query('INSERT INTO ' . Robots::class . ' VALUES (NULL, \'some robot\', 1945)');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                $expected = array(
-                    'model' => strtolower(Robots::class),
-                    'table' => 'robots',
-                    'values' => array(
-                        array(
-                            'type' => 322,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'NULL',
-                            ),
-                        ),
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some robot',
-                            ),
-                        ),
-                        array(
-                            'type' => 258,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => '1945',
-                            ),
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some robot',
                         ),
                     ),
-                );
-                $query = new Query('insert into ' . strtolower(Robots::class) . ' values (null, \'some robot\', 1945)');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                $expected = array(
-                    'model' => SomeProducts::class,
-                    'table' => 'le_products',
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'Some name',
-                            ),
-                        ),
-                        array(
-                            'type' => 259,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => '100.15',
-                            ),
-                        ),
-                        array(
-                            'type' => 350,
-                            'value' => array(
-                                'type' => 'functionCall',
-                                'name' => 'current_date',
-                            ),
-                        ),
-                        array(
-                            'type' => 350,
-                            'value' => array(
-                                'type' => 'functionCall',
-                                'name' => 'now',
-                            ),
+                    array(
+                        'type'  => 258,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => '1945',
                         ),
                     ),
-                );
-                $query = new Query('INSERT INTO ' . SomeProducts::class . ' VALUES ("Some name", 100.15, current_date(), now())');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('INSERT INTO ' . Robots::class . ' VALUES (NULL, \'some robot\', 1945)');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'model' => Robots::class,
-                    'table' => 'robots',
-                    'values' => array(
-                        array(
-                            'type' => 356,
-                            'value' => array(
-                                'type' => 'parentheses',
-                                'left' => array(
-                                    'type' => 'binary-op',
-                                    'op' => '*',
-                                    'left' => array(
-                                        'type' => 'binary-op',
-                                        'op' => '+',
-                                        'left' => array(
-                                            'type' => 'literal',
-                                            'value' => '1',
-                                        ),
-                                        'right' => array(
-                                            'type' => 'literal',
-                                            'value' => '1000',
-                                        ),
+            $expected = array(
+                'model'  => strtolower(Robots::class),
+                'table'  => 'robots',
+                'values' => array(
+                    array(
+                        'type'  => 322,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'NULL',
+                        ),
+                    ),
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some robot',
+                        ),
+                    ),
+                    array(
+                        'type'  => 258,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => '1945',
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('insert into ' . strtolower(Robots::class) . ' values (null, \'some robot\', 1945)');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            $expected = array(
+                'model'  => SomeProducts::class,
+                'table'  => 'le_products',
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'Some name',
+                        ),
+                    ),
+                    array(
+                        'type'  => 259,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => '100.15',
+                        ),
+                    ),
+                    array(
+                        'type'  => 350,
+                        'value' => array(
+                            'type' => 'functionCall',
+                            'name' => 'current_date',
+                        ),
+                    ),
+                    array(
+                        'type'  => 350,
+                        'value' => array(
+                            'type' => 'functionCall',
+                            'name' => 'now',
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('INSERT INTO ' . SomeProducts::class . ' VALUES ("Some name", 100.15, current_date(), now())');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            $expected = array(
+                'model'  => Robots::class,
+                'table'  => 'robots',
+                'values' => array(
+                    array(
+                        'type'  => 356,
+                        'value' => array(
+                            'type' => 'parentheses',
+                            'left' => array(
+                                'type'  => 'binary-op',
+                                'op'    => '*',
+                                'left'  => array(
+                                    'type'  => 'binary-op',
+                                    'op'    => '+',
+                                    'left'  => array(
+                                        'type'  => 'literal',
+                                        'value' => '1',
                                     ),
                                     'right' => array(
-                                        'type' => 'placeholder',
-                                        'value' => ':le_id',
+                                        'type'  => 'literal',
+                                        'value' => '1000',
                                     ),
+                                ),
+                                'right' => array(
+                                    'type'  => 'placeholder',
+                                    'value' => ':le_id',
                                 ),
                             ),
                         ),
-                        array(
-                            'type' => 350,
-                            'value' => array(
-                                'type' => 'functionCall',
-                                'name' => 'CONCAT',
-                                'arguments' => array(
-                                    array(
-                                        'type' => 'literal',
-                                        'value' => '\'some\'',
-                                    ),
-                                    array(
-                                        'type' => 'literal',
-                                        'value' => '\'robot\'',
-                                    ),
+                    ),
+                    array(
+                        'type'  => 350,
+                        'value' => array(
+                            'type'      => 'functionCall',
+                            'name'      => 'CONCAT',
+                            'arguments' => array(
+                                array(
+                                    'type'  => 'literal',
+                                    'value' => '\'some\'',
+                                ),
+                                array(
+                                    'type'  => 'literal',
+                                    'value' => '\'robot\'',
                                 ),
                             ),
                         ),
-                        array(
-                            'type' => 258,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => '2011',
-                            ),
+                    ),
+                    array(
+                        'type'  => 258,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => '2011',
                         ),
                     ),
-                );
-                $query = new Query('INSERT INTO ' . Robots::class . ' VALUES ((1+1000*:le_id:), CONCAT(\'some\', \'robot\'), 2011)');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('INSERT INTO ' . Robots::class . ' VALUES ((1+1000*:le_id:), CONCAT(\'some\', \'robot\'), 2011)');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'model' => Robots::class,
-                    'table' => 'robots',
-                    'fields' => array(
-                        'name',
-                        'type',
-                        'year',
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'a name',
-                            ),
-                        ),
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'virtual',
-                            ),
-                        ),
-                        array(
-                            'type' => 273,
-                            'value' => array(
-                                'type' => 'placeholder',
-                                'value' => ':0',
-                            ),
+            $expected = array(
+                'model'  => Robots::class,
+                'table'  => 'robots',
+                'fields' => array(
+                    'name',
+                    'type',
+                    'year',
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'a name',
                         ),
                     ),
-                );
-                $query = new Query('INSERT INTO ' . Robots::class . ' (name, type, year) VALUES (\'a name\', \'virtual\', ?0)');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'virtual',
+                        ),
+                    ),
+                    array(
+                        'type'  => 273,
+                        'value' => array(
+                            'type'  => 'placeholder',
+                            'value' => ':0',
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('INSERT INTO ' . Robots::class . ' (name, type, year) VALUES (\'a name\', \'virtual\', ?0)');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'model' => Robotters::class,
-                    'table' => 'robots',
-                    'values' => array(
-                        array(
-                            'type' => 322,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'NULL',
-                            ),
-                        ),
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some robot',
-                            ),
-                        ),
-                        array(
-                            'type' => 258,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => '1945',
-                            ),
+            $expected = array(
+                'model'  => Robotters::class,
+                'table'  => 'robots',
+                'values' => array(
+                    array(
+                        'type'  => 322,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'NULL',
                         ),
                     ),
-                );
-                $query = new Query('INSERT INTO ' . Robotters::class . ' VALUES (NULL, \'some robot\', 1945)');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                $expected = array(
-                    'model' => strtolower(Robotters::class),
-                    'table' => 'robots',
-                    'values' => array(
-                        array(
-                            'type' => 322,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'NULL',
-                            ),
-                        ),
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some robot',
-                            ),
-                        ),
-                        array(
-                            'type' => 258,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => '1945',
-                            ),
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some robot',
                         ),
                     ),
-                );
-                $query = new Query('insert into ' . strtolower(Robotters::class) . ' values (null, \'some robot\', 1945)');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                    array(
+                        'type'  => 258,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => '1945',
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('INSERT INTO ' . Robotters::class . ' VALUES (NULL, \'some robot\', 1945)');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'model' => Robotters::class,
-                    'table' => 'robots',
-                    'values' => array(
-                        array(
-                            'type' => 356,
-                            'value' => array(
-                                'type' => 'parentheses',
-                                'left' => array(
-                                    'type' => 'binary-op',
-                                    'op' => '*',
-                                    'left' => array(
-                                        'type' => 'binary-op',
-                                        'op' => '+',
-                                        'left' => array(
-                                            'type' => 'literal',
-                                            'value' => '1',
-                                        ),
-                                        'right' => array(
-                                            'type' => 'literal',
-                                            'value' => '1000',
-                                        ),
+            $expected = array(
+                'model'  => strtolower(Robotters::class),
+                'table'  => 'robots',
+                'values' => array(
+                    array(
+                        'type'  => 322,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'NULL',
+                        ),
+                    ),
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some robot',
+                        ),
+                    ),
+                    array(
+                        'type'  => 258,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => '1945',
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('insert into ' . strtolower(Robotters::class) . ' values (null, \'some robot\', 1945)');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            $expected = array(
+                'model'  => Robotters::class,
+                'table'  => 'robots',
+                'values' => array(
+                    array(
+                        'type'  => 356,
+                        'value' => array(
+                            'type' => 'parentheses',
+                            'left' => array(
+                                'type'  => 'binary-op',
+                                'op'    => '*',
+                                'left'  => array(
+                                    'type'  => 'binary-op',
+                                    'op'    => '+',
+                                    'left'  => array(
+                                        'type'  => 'literal',
+                                        'value' => '1',
                                     ),
                                     'right' => array(
-                                        'type' => 'placeholder',
-                                        'value' => ':le_id',
+                                        'type'  => 'literal',
+                                        'value' => '1000',
                                     ),
                                 ),
-                            ),
-                        ),
-                        array(
-                            'type' => 350,
-                            'value' => array(
-                                'type' => 'functionCall',
-                                'name' => 'CONCAT',
-                                'arguments' => array(
-                                    array(
-                                        'type' => 'literal',
-                                        'value' => '\'some\'',
-                                    ),
-                                    array(
-                                        'type' => 'literal',
-                                        'value' => '\'robot\'',
-                                    ),
+                                'right' => array(
+                                    'type'  => 'placeholder',
+                                    'value' => ':le_id',
                                 ),
-                            ),
-                        ),
-                        array(
-                            'type' => 258,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => '2011',
                             ),
                         ),
                     ),
-                );
-                $query = new Query('INSERT INTO ' . Robotters::class . ' VALUES ((1+1000*:le_id:), CONCAT(\'some\', \'robot\'), 2011)');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                    array(
+                        'type'  => 350,
+                        'value' => array(
+                            'type'      => 'functionCall',
+                            'name'      => 'CONCAT',
+                            'arguments' => array(
+                                array(
+                                    'type'  => 'literal',
+                                    'value' => '\'some\'',
+                                ),
+                                array(
+                                    'type'  => 'literal',
+                                    'value' => '\'robot\'',
+                                ),
+                            ),
+                        ),
+                    ),
+                    array(
+                        'type'  => 258,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => '2011',
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('INSERT INTO ' . Robotters::class . ' VALUES ((1+1000*:le_id:), CONCAT(\'some\', \'robot\'), 2011)');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'model' => Robotters::class,
-                    'table' => 'robots',
-                    'fields' => array(
-                        'theName',
-                        'theType',
-                        'theYear',
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'a name',
-                            ),
-                        ),
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'virtual',
-                            ),
-                        ),
-                        array(
-                            'type' => 273,
-                            'value' => array(
-                                'type' => 'placeholder',
-                                'value' => ':0',
-                            ),
+            $expected = array(
+                'model'  => Robotters::class,
+                'table'  => 'robots',
+                'fields' => array(
+                    'theName',
+                    'theType',
+                    'theYear',
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'a name',
                         ),
                     ),
-                );
-                $query = new Query('INSERT INTO ' . Robotters::class . ' (theName, theType, theYear) VALUES (\'a name\', \'virtual\', ?0)');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-            }
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'virtual',
+                        ),
+                    ),
+                    array(
+                        'type'  => 273,
+                        'value' => array(
+                            'type'  => 'placeholder',
+                            'value' => ':0',
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('INSERT INTO ' . Robotters::class . ' (theName, theType, theYear) VALUES (\'a name\', \'virtual\', ?0)');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+        }
         );
     }
 
     public function testUpdateParsing()
     {
         $this->specify(
-            "UPDATE PHQL queries don't work as expected",
-            function () {
-                $expected = array(
-                    'tables' => array(
-                        'robots',
+            "UPDATE PHQL queries don't work as expected", function () {
+            $expected = array(
+                'tables' => array(
+                    'robots',
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'robots',
+                        'name'   => 'name',
+                        'balias' => 'name',
                     ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'robots',
-                            'name' => 'name',
-                            'balias' => 'name',
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
                         ),
                     ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' SET name = \'some name\'');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' SET name = \'some name\'');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        'robots',
+            $expected = array(
+                'tables' => array(
+                    'robots',
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'robots',
+                        'name'   => 'name',
+                        'balias' => 'name',
                     ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'robots',
-                            'name' => 'name',
-                            'balias' => 'name',
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
                         ),
                     ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' SET ' . Robots::class . '.name = \'some name\'');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' SET ' . Robots::class . '.name = \'some name\'');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
+            $expected = array(
+                'tables' => array(
+                    'le_products',
+                ),
+                'models' => array(
+                    SomeProducts::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'le_products',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('UPDATE ' . SomeProducts::class . ' SET ' . SomeProducts::class . '.name = "some name"');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            $expected = array(
+                'tables' => array(
+                    array(
                         'le_products',
+                        null,
+                        'p',
                     ),
-                    'models' => array(
-                        SomeProducts::class,
+                ),
+                'models' => array(
+                    SomeProducts::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'p',
+                        'name'   => 'name',
+                        'balias' => 'name',
                     ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'le_products',
-                            'name' => 'name',
-                            'balias' => 'name',
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
                         ),
                     ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . SomeProducts::class . ' SET ' . SomeProducts::class . '.name = "some name"');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('UPDATE ' . SomeProducts::class . ' p SET p.name = "some name"');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'le_products',
-                            null,
-                            'p',
+            $expected = array(
+                'tables' => array(
+                    'robots',
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'robots',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'robots',
+                        'name'   => 'year',
+                        'balias' => 'year',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
                         ),
                     ),
-                    'models' => array(
-                        SomeProducts::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'p',
-                            'name' => 'name',
-                            'balias' => 'name',
+                    array(
+                        'type'  => 258,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => '1990',
                         ),
                     ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . SomeProducts::class . ' p SET p.name = "some name"');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' SET ' . Robots::class . '.name = \'some name\', ' . Robots::class . '.year = 1990');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        'robots',
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'le_products',
+                        null,
+                        'p',
                     ),
-                    'models' => array(
-                        Robots::class,
+                ),
+                'models' => array(
+                    SomeProducts::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'p',
+                        'name'   => 'name',
+                        'balias' => 'name',
                     ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'robots',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'robots',
-                            'name' => 'year',
-                            'balias' => 'year',
-                        ),
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'p',
+                        'name'   => 'year',
+                        'balias' => 'year',
                     ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                        array(
-                            'type' => 258,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => '1990',
-                            ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
                         ),
                     ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' SET ' . Robots::class . '.name = \'some name\', ' . Robots::class . '.year = 1990');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                    array(
+                        'type'  => 258,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => '1990',
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('UPDATE ' . SomeProducts::class . ' p SET p.name = "some name", p.year = 1990');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'le_products',
-                            null,
-                            'p',
+            $expected = array(
+                'tables' => array(
+                    'robots',
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'robots',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'robots',
+                        'name'   => 'year',
+                        'balias' => 'year',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
                         ),
                     ),
-                    'models' => array(
-                        SomeProducts::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'p',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'p',
-                            'name' => 'year',
-                            'balias' => 'year',
-                        ),
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                        array(
-                            'type' => 258,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => '1990',
-                            ),
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . SomeProducts::class . ' p SET p.name = "some name", p.year = 1990');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                $expected = array(
-                    'tables' => array(
-                        'robots',
-                    ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'robots',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'robots',
-                            'name' => 'year',
-                            'balias' => 'year',
-                        ),
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                        array(
-                            'type' => 43,
-                            'value' => array(
-                                'type' => 'binary-op',
-                                'op' => '+',
-                                'left' => array(
-                                    'type' => 'functionCall',
-                                    'name' => 'YEAR',
-                                    'arguments' => array(
-                                        array(
-                                            'type' => 'functionCall',
-                                            'name' => 'current_date',
-                                        ),
+                    array(
+                        'type'  => 43,
+                        'value' => array(
+                            'type'  => 'binary-op',
+                            'op'    => '+',
+                            'left'  => array(
+                                'type'      => 'functionCall',
+                                'name'      => 'YEAR',
+                                'arguments' => array(
+                                    array(
+                                        'type' => 'functionCall',
+                                        'name' => 'current_date',
                                     ),
                                 ),
-                                'right' => array(
-                                    'type' => 'qualified',
-                                    'domain' => 'robots',
-                                    'name' => 'year',
-                                    'balias' => 'year',
-                                ),
-                            ),
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' SET ' . Robots::class . '.name = \'some name\', ' . Robots::class . '.year = YEAR(current_date()) + ' . Robots::class . '.year');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
-                    ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'year',
-                            'balias' => 'year',
-                        ),
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                        array(
-                            'type' => 43,
-                            'value' => array(
-                                'type' => 'binary-op',
-                                'op' => '+',
-                                'left' => array(
-                                    'type' => 'functionCall',
-                                    'name' => 'YEAR',
-                                    'arguments' => array(
-                                        array(
-                                            'type' => 'functionCall',
-                                            'name' => 'current_date',
-                                        ),
-                                    ),
-                                ),
-                                'right' => array(
-                                    'type' => 'qualified',
-                                    'domain' => 'r',
-                                    'name' => 'year',
-                                    'balias' => 'year',
-                                ),
-                            ),
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' AS r SET r.name = \'some name\', r.year = YEAR(current_date()) + r.year');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
-                    ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                    ),
-                    'where' => array(
-                        'type' => 'binary-op',
-                        'op' => '>',
-                        'left' => array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'id',
-                            'balias' => 'id',
-                        ),
-                        'right' => array(
-                            'type' => 'literal',
-                            'value' => '100',
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' AS r SET r.name = \'some name\' WHERE r.id > 100');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
-                    ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'year',
-                            'balias' => 'year',
-                        ),
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                        array(
-                            'type' => 42,
-                            'value' => array(
-                                'type' => 'binary-op',
-                                'op' => '*',
-                                'left' => array(
-                                    'type' => 'qualified',
-                                    'domain' => 'r',
-                                    'name' => 'year',
-                                    'balias' => 'year',
-                                ),
-                                'right' => array(
-                                    'type' => 'literal',
-                                    'value' => '2',
-                                ),
-                            ),
-                        ),
-                    ),
-                    'where' => array(
-                        'type' => 'binary-op',
-                        'op' => '<=',
-                        'left' => array(
-                            'type' => 'binary-op',
-                            'op' => '>',
-                            'left' => array(
-                                'type' => 'qualified',
-                                'domain' => 'r',
-                                'name' => 'id',
-                                'balias' => 'id',
                             ),
                             'right' => array(
-                                'type' => 'binary-op',
-                                'op' => 'AND',
-                                'left' => array(
-                                    'type' => 'literal',
-                                    'value' => '100',
+                                'type'   => 'qualified',
+                                'domain' => 'robots',
+                                'name'   => 'year',
+                                'balias' => 'year',
+                            ),
+                        ),
+                    ),
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' SET ' . Robots::class . '.name = \'some name\', ' . Robots::class . '.year = YEAR(current_date()) + ' . Robots::class . '.year');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
+                    ),
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'year',
+                        'balias' => 'year',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
+                        ),
+                    ),
+                    array(
+                        'type'  => 43,
+                        'value' => array(
+                            'type'  => 'binary-op',
+                            'op'    => '+',
+                            'left'  => array(
+                                'type'      => 'functionCall',
+                                'name'      => 'YEAR',
+                                'arguments' => array(
+                                    array(
+                                        'type' => 'functionCall',
+                                        'name' => 'current_date',
+                                    ),
                                 ),
-                                'right' => array(
-                                    'type' => 'qualified',
-                                    'domain' => 'r',
-                                    'name' => 'id',
-                                    'balias' => 'id',
-                                ),
+                            ),
+                            'right' => array(
+                                'type'   => 'qualified',
+                                'domain' => 'r',
+                                'name'   => 'year',
+                                'balias' => 'year',
                             ),
                         ),
-                        'right' => array(
-                            'type' => 'literal',
-                            'value' => '200',
-                        ),
                     ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' as r set r.name = \'some name\', r.year = r.year*2 where r.id > 100 and r.id <= 200');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' AS r SET r.name = \'some name\', r.year = YEAR(current_date()) + r.year');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
+                    ),
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
                         ),
                     ),
-                    'models' => array(
-                        strtolower(Robots::class),
+                ),
+                'where'  => array(
+                    'type'  => 'binary-op',
+                    'op'    => '>',
+                    'left'  => array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'id',
+                        'balias' => 'id',
                     ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
+                    'right' => array(
+                        'type'  => 'literal',
+                        'value' => '100',
                     ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                    ),
-                    'limit' => array(
-                        'number' => array(
-                            'type' => 'literal',
-                            'value' => '10',
-                        ),
-                    ),
-                );
-                $query = new Query('update ' . strtolower(Robots::class) . ' as r set r.name = \'some name\' LIMIT 10');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' AS r SET r.name = \'some name\' WHERE r.id > 100');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
+                    ),
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'year',
+                        'balias' => 'year',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
                         ),
                     ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
+                    array(
+                        'type'  => 42,
+                        'value' => array(
+                            'type'  => 'binary-op',
+                            'op'    => '*',
+                            'left'  => array(
+                                'type'   => 'qualified',
+                                'domain' => 'r',
+                                'name'   => 'year',
+                                'balias' => 'year',
+                            ),
+                            'right' => array(
+                                'type'  => 'literal',
+                                'value' => '2',
                             ),
                         ),
                     ),
-                    'limit' => array(
-                        'number' => array(
-                            'type' => 'literal',
-                            'value' => '10',
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' r SET r.name = \'some name\' LIMIT 10');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
-                    ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
+                ),
+                'where'  => array(
+                    'type'  => 'binary-op',
+                    'op'    => '<=',
+                    'left'  => array(
+                        'type'  => 'binary-op',
+                        'op'    => '>',
+                        'left'  => array(
+                            'type'   => 'qualified',
                             'domain' => 'r',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
-                            ),
-                        ),
-                    ),
-                    'where' => array(
-                        'type' => 'binary-op',
-                        'op' => '>',
-                        'left' => array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'id',
+                            'name'   => 'id',
                             'balias' => 'id',
                         ),
                         'right' => array(
-                            'type' => 'literal',
-                            'value' => '100',
-                        ),
-                    ),
-                    'limit' => array(
-                        'number' => array(
-                            'type' => 'literal',
-                            'value' => '10',
-                        ),
-                    ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' AS r SET r.name = \'some name\' WHERE r.id > 100 LIMIT 10');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                // Issue 1011
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
-                    ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'fields' => array(
-                        array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'name',
-                            'balias' => 'name',
-                        ),
-                    ),
-                    'values' => array(
-                        array(
-                            'type' => 260,
-                            'value' => array(
-                                'type' => 'literal',
-                                'value' => 'some name',
+                            'type'  => 'binary-op',
+                            'op'    => 'AND',
+                            'left'  => array(
+                                'type'  => 'literal',
+                                'value' => '100',
+                            ),
+                            'right' => array(
+                                'type'   => 'qualified',
+                                'domain' => 'r',
+                                'name'   => 'id',
+                                'balias' => 'id',
                             ),
                         ),
                     ),
-                    'limit' => array(
-                        'number' => array(
-                            'type' => 'placeholder',
-                            'value' => ':1',
+                    'right' => array(
+                        'type'  => 'literal',
+                        'value' => '200',
+                    ),
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' as r set r.name = \'some name\', r.year = r.year*2 where r.id > 100 and r.id <= 200');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
+                    ),
+                ),
+                'models' => array(
+                    strtolower(Robots::class),
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
                         ),
                     ),
-                );
-                $query = new Query('UPDATE ' . Robots::class . ' r SET r.name = \'some name\' LIMIT ?1');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-            }
+                ),
+                'limit'  => array(
+                    'number' => array(
+                        'type'  => 'literal',
+                        'value' => '10',
+                    ),
+                ),
+            );
+            $query    = new Query('update ' . strtolower(Robots::class) . ' as r set r.name = \'some name\' LIMIT 10');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
+                    ),
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
+                        ),
+                    ),
+                ),
+                'limit'  => array(
+                    'number' => array(
+                        'type'  => 'literal',
+                        'value' => '10',
+                    ),
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' r SET r.name = \'some name\' LIMIT 10');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
+                    ),
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
+                        ),
+                    ),
+                ),
+                'where'  => array(
+                    'type'  => 'binary-op',
+                    'op'    => '>',
+                    'left'  => array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'id',
+                        'balias' => 'id',
+                    ),
+                    'right' => array(
+                        'type'  => 'literal',
+                        'value' => '100',
+                    ),
+                ),
+                'limit'  => array(
+                    'number' => array(
+                        'type'  => 'literal',
+                        'value' => '10',
+                    ),
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' AS r SET r.name = \'some name\' WHERE r.id > 100 LIMIT 10');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            // Issue 1011
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
+                    ),
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'fields' => array(
+                    array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'name',
+                        'balias' => 'name',
+                    ),
+                ),
+                'values' => array(
+                    array(
+                        'type'  => 260,
+                        'value' => array(
+                            'type'  => 'literal',
+                            'value' => 'some name',
+                        ),
+                    ),
+                ),
+                'limit'  => array(
+                    'number' => array(
+                        'type'  => 'placeholder',
+                        'value' => ':1',
+                    ),
+                ),
+            );
+            $query    = new Query('UPDATE ' . Robots::class . ' r SET r.name = \'some name\' LIMIT ?1');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+        }
         );
     }
 
     public function testDeleteParsing()
     {
         $this->specify(
-            "DELETE PHQL queries don't work as expected",
-            function () {
-                $expected = array(
-                    'tables' => array(
+            "DELETE PHQL queries don't work as expected", function () {
+            $expected = array(
+                'tables' => array(
+                    'robots',
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+            );
+            $query    = new Query('DELETE FROM ' . Robots::class);
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+
+            $expected = array(
+                'tables' => array(
+                    array(
                         'robots',
+                        null,
+                        'r',
                     ),
-                    'models' => array(
-                        Robots::class,
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'where'  => array(
+                    'type'  => 'binary-op',
+                    'op'    => '>',
+                    'left'  => array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'id',
+                        'balias' => 'id',
                     ),
-                );
-                $query = new Query('DELETE FROM ' . Robots::class);
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                    'right' => array(
+                        'type'  => 'literal',
+                        'value' => '100',
+                    ),
+                ),
+            );
+            $query    = new Query('DELETE FROM ' . Robots::class . ' AS r WHERE r.id > 100');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
                     ),
-                    'models' => array(
-                        Robots::class,
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'where'  => array(
+                    'type'  => 'binary-op',
+                    'op'    => '>',
+                    'left'  => array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'id',
+                        'balias' => 'id',
                     ),
-                    'where' => array(
-                        'type' => 'binary-op',
-                        'op' => '>',
-                        'left' => array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'id',
-                            'balias' => 'id',
-                        ),
-                        'right' => array(
-                            'type' => 'literal',
-                            'value' => '100',
-                        ),
+                    'right' => array(
+                        'type'  => 'literal',
+                        'value' => '100',
                     ),
-                );
-                $query = new Query('DELETE FROM ' . Robots::class . ' AS r WHERE r.id > 100');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('DELETE FROM ' . Robots::class . ' r WHERE r.id > 100');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
                     ),
-                    'models' => array(
-                        Robots::class,
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'where'  => array(
+                    'type'  => 'binary-op',
+                    'op'    => '>',
+                    'left'  => array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'id',
+                        'balias' => 'id',
                     ),
-                    'where' => array(
-                        'type' => 'binary-op',
-                        'op' => '>',
-                        'left' => array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'id',
-                            'balias' => 'id',
-                        ),
-                        'right' => array(
-                            'type' => 'literal',
-                            'value' => '100',
-                        ),
+                    'right' => array(
+                        'type'  => 'literal',
+                        'value' => '100',
                     ),
-                );
-                $query = new Query('DELETE FROM ' . Robots::class . ' r WHERE r.id > 100');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('DELETE FROM ' . Robots::class . ' as r WHERE r.id > 100');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
                     ),
-                    'models' => array(
-                        Robots::class,
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'limit'  => array(
+                    'number' => array(
+                        'type'  => 'literal',
+                        'value' => '10',
                     ),
-                    'where' => array(
-                        'type' => 'binary-op',
-                        'op' => '>',
-                        'left' => array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'id',
-                            'balias' => 'id',
-                        ),
-                        'right' => array(
-                            'type' => 'literal',
-                            'value' => '100',
-                        ),
-                    ),
-                );
-                $query = new Query('DELETE FROM ' . Robots::class . ' as r WHERE r.id > 100');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+            );
+            $query    = new Query('DELETE FROM ' . Robots::class . ' r LIMIT 10');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
                     ),
-                    'models' => array(
-                        Robots::class,
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'where'  => array(
+                    'type'  => 'binary-op',
+                    'op'    => '>',
+                    'left'  => array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'id',
+                        'balias' => 'id',
                     ),
-                    'limit' => array(
-                        'number' => array(
-                            'type' => 'literal',
-                            'value' => '10',
-                        ),
+                    'right' => array(
+                        'type'  => 'literal',
+                        'value' => '100',
                     ),
-                );
-                $query = new Query('DELETE FROM ' . Robots::class . ' r LIMIT 10');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
+                ),
+                'limit'  => array(
+                    'number' => array(
+                        'type'  => 'literal',
+                        'value' => '10',
+                    ),
+                ),
+            );
+            $query    = new Query('DELETE FROM ' . Robots::class . ' r WHERE r.id > 100 LIMIT 10');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
 
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
+            // Issue 1011
+            $expected = array(
+                'tables' => array(
+                    array(
+                        'robots',
+                        null,
+                        'r',
                     ),
-                    'models' => array(
-                        Robots::class,
+                ),
+                'models' => array(
+                    Robots::class,
+                ),
+                'where'  => array(
+                    'type'  => 'binary-op',
+                    'op'    => '>',
+                    'left'  => array(
+                        'type'   => 'qualified',
+                        'domain' => 'r',
+                        'name'   => 'id',
+                        'balias' => 'id',
                     ),
-                    'where' => array(
-                        'type' => 'binary-op',
-                        'op' => '>',
-                        'left' => array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'id',
-                            'balias' => 'id',
-                        ),
-                        'right' => array(
-                            'type' => 'literal',
-                            'value' => '100',
-                        ),
+                    'right' => array(
+                        'type'  => 'literal',
+                        'value' => '100',
                     ),
-                    'limit' => array(
-                        'number' => array(
-                            'type' => 'literal',
-                            'value' => '10',
-                        ),
+                ),
+                'limit'  => array(
+                    'number' => array(
+                        'type'  => 'placeholder',
+                        'value' => ':limit',
                     ),
-                );
-                $query = new Query('DELETE FROM ' . Robots::class . ' r WHERE r.id > 100 LIMIT 10');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-
-                // Issue 1011
-                $expected = array(
-                    'tables' => array(
-                        array(
-                            'robots',
-                            null,
-                            'r',
-                        ),
-                    ),
-                    'models' => array(
-                        Robots::class,
-                    ),
-                    'where' => array(
-                        'type' => 'binary-op',
-                        'op' => '>',
-                        'left' => array(
-                            'type' => 'qualified',
-                            'domain' => 'r',
-                            'name' => 'id',
-                            'balias' => 'id',
-                        ),
-                        'right' => array(
-                            'type' => 'literal',
-                            'value' => '100',
-                        ),
-                    ),
-                    'limit' => array(
-                        'number' => array(
-                            'type' => 'placeholder',
-                            'value' => ':limit',
-                        ),
-                    ),
-                );
-                $query = new Query('DELETE FROM ' . Robots::class . ' r WHERE r.id > 100 LIMIT :limit:');
-                $query->setDI($this->di);
-                expect($query->parse())->equals($expected);
-            }
+                ),
+            );
+            $query    = new Query('DELETE FROM ' . Robots::class . ' r WHERE r.id > 100 LIMIT :limit:');
+            $query->setDI($this->di);
+            expect($query->parse())->equals($expected);
+        }
         );
     }
+
 }

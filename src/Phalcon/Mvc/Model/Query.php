@@ -192,7 +192,7 @@ class Query implements QueryInterface, InjectionAwareInterface
     /**
      * Cache
      *
-     * @var null|\Phalcon\Cache\BackendInterface
+     * @var \Phalcon\Cache\BackendInterface|null
      * @access protected
      */
     protected $_cache;
@@ -357,7 +357,6 @@ class Query implements QueryInterface, InjectionAwareInterface
     {
         $columnName       = $expr['name'];
         $sqlColumnAliases = $this->_sqlColumnAliases;
-
         //Check if the qualified name is a column alias
         if (isset($sqlColumnAliases[$columnName]) && (!isset($expr["domain"]) || empty($expr["domain"]))) {
             return array('type' => 'qualified', 'name' => $columnName);
@@ -403,13 +402,13 @@ class Query implements QueryInterface, InjectionAwareInterface
                 $realColumnName = $columnName;
             }
         } else {
-            $number   = 0;
-            $hasModel = false;
-
+            $number          = 0;
+            $hasModel        = false;
             $modelsInstances = $this->_modelsInstances;
+
             foreach ($modelsInstances as $model) {
                 //Check if the attribute belongs to the current model
-                if ($metaData->hasAttribute($model, $columnName) === true) {
+                if ($metaData->hasAttribute($model, $columnName)) {
                     $number++;
                     if ($number > 1) {
                         throw new Exception("The column '" . $columnName . "' is ambiguous, when preparing: " . $this->_phql);

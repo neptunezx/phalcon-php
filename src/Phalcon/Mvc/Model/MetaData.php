@@ -8,6 +8,7 @@ use Phalcon\Mvc\Model\Exception;
 use Phalcon\Di\InjectionAwareInterface;
 use Phalcon\Mvc\Model\MetaData\Strategy\Introspection;
 use Phalcon\Mvc\Model\MetaData\StrategyInterface;
+use Phalcon\Kernel;
 
 /**
  * Phalcon\Mvc\Model\MetaData
@@ -214,8 +215,7 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
                         }
                     } else {
                         //Get the meta-data extraction strategy
-                        $strategy = $this->getStrategy();
-
+                        $strategy      = $this->getStrategy();
                         //Get the meta-data
                         $modelMetadata = $strategy->getMetaData($model, $this->_dependencyInjector);
                     }
@@ -363,13 +363,11 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
 
         $table  = $model->getSource();
         $schema = $model->getSchema();
-
         //Unique key for meta-data is created using class-name-schema-table
-        $key = strtolower(get_class($model)) . '-' . $schema . $table;
+        $key    = strtolower(get_class($model)) . '-' . $schema . $table;
         if (isset($this->_metaData[$key]) === false) {
             $this->_initialize($model, $key, $table, $schema);
         }
-
         return $this->_metaData[$key][$index];
     }
 
@@ -445,8 +443,7 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
         }
 
         //Check for a column map, store in _columnMap in order and reversed order
-        if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === false ||
-            $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === false) {
+        if (!Kernel::getGlobals("orm.column_renaming")) {
             return null;
         }
 
@@ -475,21 +472,19 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
         if (is_int($index) === false) {
             throw new Exception('Index must be a valid integer constant');
         }
-
-        //Check for a column map, store in _columnMap in order and reversed order
-        if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === false ||
-            $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === false) {
+        if (!Kernel::getGlobals("orm.column_renaming")) {
             return null;
         }
 
         $keyName = strtolower(get_class($model));
 
-        $map = null;
         if (isset($this->_columnMap[$keyName]) === false) {
             $this->_initialize($model, null, null, null);
-            $map = isset($this->_columnMap[$keyName][$index]) ? $this->_columnMap[$keyName][$index] : null;
         }
 
+        $columnMapModel = $this->_columnMap[$keyName];
+
+        $map = isset($columnMapModel[$index]) ? $columnMapModel[$index] : null;
         return $map;
     }
 
@@ -842,7 +837,6 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
         if (is_null($data) === false && is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
-
         return $data;
     }
 
