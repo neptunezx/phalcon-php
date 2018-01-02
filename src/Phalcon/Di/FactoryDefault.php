@@ -41,6 +41,7 @@ class FactoryDefault extends Di implements DiInterface
             "sessionBag"         => new Service("sessionBag", "Phalcon\\Session\\Bag"),
             "eventsManager"      => new Service("eventsManager", "Phalcon\\Events\\Manager", true),
             "transactionManager" => new Service("transactionManager", "Phalcon\\Mvc\\Model\\Transaction\\Manager", true),
+            "strategy"           => new Service("strategy", "Phalcon\\Mvc\Model\\MetaData\\Strategy\\Introspection", true),
         ];
     }
 
