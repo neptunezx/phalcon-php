@@ -2,12 +2,13 @@
 
 namespace Phalcon\Mvc\Collection;
 
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Mvc\Collection\Exception;
-use \Phalcon\DiInterface;
-use \Phalcon\Events\ManagerInterface;
-use \Phalcon\Mvc\CollectionInterface;
+use Phalcon\DiInterface;
+use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Events\EventsAwareInterface;
+use Phalcon\Events\ManagerInterface;
+use Phalcon\Mvc\CollectionInterface;
+use Phalcon\Mvc\Collection\BehaviorInterface;
+use Phalcon\Mvc\Collection\ManagerInterface;
 
 /**
  * Phalcon\Mvc\Collection\Manager
@@ -18,18 +19,19 @@ use \Phalcon\Mvc\CollectionInterface;
  * A CollectionManager is injected to a model via a Dependency Injector Container such as Phalcon\Di.
  *
  * <code>
- * $di = new Phalcon\Di();
+ * $di = new \Phalcon\Di();
  *
- * $di->set('collectionManager', function(){
- *      return new Phalcon\Mvc\Collection\Manager();
- * });
+ * $di->set(
+ *     "collectionManager",
+ *     function () {
+ *         return new \Phalcon\Mvc\Collection\Manager();
+ *     }
+ * );
  *
  * $robot = new Robots($di);
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/collection/manager.c
  */
-class Manager implements InjectionAwareInterface, EventsAwareInterface
+class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareInterface
 {
 
     /**
@@ -87,9 +89,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      * @access protected
      */
     protected $_implicitObjectsIds;
-
     protected $_behaviors;
-
     protected $_serviceName = 'mongo';
 
     /**
@@ -150,7 +150,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      * @param \Phalcon\Mvc\CollectionInterface $model
      * @param \Phalcon\Events\ManagerInterface $eventsManager
      */
-    public function setCustomEventsManager(CollectionInterface $model,ManagerInterface $eventsManager)
+    public function setCustomEventsManager(CollectionInterface $model, ManagerInterface $eventsManager)
     {
         $this->_customEventsManager[strtolower(get_class($model))] = $eventsManager;
     }
@@ -167,7 +167,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
         $customEventsManager = $this->_customEventsManager;
         if (is_array($customEventsManager)) {
             $className = strtolower(get_class($model));
-            if( isset($customEventsManager[$className])) {
+            if (isset($customEventsManager[$className])) {
                 return $customEventsManager[$className];
             }
         }
@@ -182,7 +182,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      */
     public function initialize(CollectionInterface $model)
     {
-        $className = strtolower(get_class($model));
+        $className   = strtolower(get_class($model));
         $initialized = $this->_initialized;
 
         /**
@@ -194,20 +194,20 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
              * Call the 'initialize' method if it's implemented
              */
             if (method_exists($model, "initialize")) {
-               $model->{"initialize"}();
+                $model->{"initialize"}();
             }
 
             /**
              * If an EventsManager is available we pass to it every initialized model
              */
             $eventsManager = $this->_eventsManager;
-			if (is_object($eventsManager)) {
+            if (is_object($eventsManager)) {
                 $eventsManager->fire("collectionManager:afterInitialize", $model);
-			}
+            }
 
-			$this->_initialized[$className] = $model;
-            $this->_lastInitialized = $model;
-		}
+            $this->_initialized[$className] = $model;
+            $this->_lastInitialized         = $model;
+        }
     }
 
     /**
@@ -256,12 +256,12 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      * Gets a connection service for a specific model
      */
     public function getConnectionService(CollectionInterface $model)
-	{
-		$service = $this->_serviceName;
-		$entityName = get_class($model);
-		if (isset($this->_connectionServices[$entityName])) {
-			$service = $this->_connectionServices[$entityName];
-		}
+    {
+        $service    = $this->_serviceName;
+        $entityName = get_class($model);
+        if (isset($this->_connectionServices[$entityName])) {
+            $service = $this->_connectionServices[$entityName];
+        }
         return $service;
     }
 
@@ -274,11 +274,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      */
     public function useImplicitObjectIds(CollectionInterface $model, $useImplicitObjectIds)
     {
-        if (is_bool($useImplicitObjectIds) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $this->_implicitObjectsIds[strtolower(get_class($model))] = $useImplicitObjectIds;
+        $this->_implicitObjectsIds[strtolower(get_class($model))] = (bool) $useImplicitObjectIds;
     }
 
     /**
@@ -310,33 +306,33 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      */
     public function getConnection(CollectionInterface $model)
     {
-        $service = $this->_serviceName;
-		$connectionService = $this->_connectionServices;
-		if (isset($connectionService)) {
+        $service           = $this->_serviceName;
+        $connectionService = $this->_connectionServices;
+        if (isset($connectionService)) {
             $entityName = get_class($model);
 
-			/**
+            /**
              * Check if the model has a custom connection service
              */
-			if (isset($connectionService[$entityName])) {
+            if (isset($connectionService[$entityName])) {
                 $service = $connectionService[$entityName];
-			}
-		}
+            }
+        }
 
-		$dependencyInjector = $this->_dependencyInjector;
-		if (! is_object($dependencyInjector)) {
+        $dependencyInjector = $this->_dependencyInjector;
+        if (!is_object($dependencyInjector)) {
             throw new Exception("A dependency injector container is required to obtain the services related to the ORM");
         }
 
-		/**
+        /**
          * Request the connection service from the DI
          */
-		$connection = $dependencyInjector->getShared($service);
-		if (!is_object($connection)) {
+        $connection = $dependencyInjector->getShared($service);
+        if (!is_object($connection)) {
             throw new Exception("Invalid injected connection service");
         }
 
-		return $connection;
+        return $connection;
     }
 
     /**
@@ -348,43 +344,43 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      * @return mixed
      * @throws Exception
      */
-    public function notifyEvent($eventName,CollectionInterface $model)
+    public function notifyEvent($eventName, CollectionInterface $model)
     {
         if (is_string($eventName) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        $status = null;
+        $status    = null;
         $behaviors = $this->_behaviors;
-		if (is_array($behaviors)) {
-		    $className = strtolower(get_class($model));
-		    if(isset($behaviors[$className])) {
-		        $modelsBehaviors = $behaviors[$className];
-		        foreach ($modelsBehaviors as $behavior) {
+        if (is_array($behaviors)) {
+            $className = strtolower(get_class($model));
+            if (isset($behaviors[$className])) {
+                $modelsBehaviors = $behaviors[$className];
+                foreach ($modelsBehaviors as $behavior) {
                     $status = $behavior->notify($eventName, $model);
-					if ($status === false) {
+                    if ($status === false) {
                         return false;
                     }
                 }
             }
-		}
+        }
 
-		/**
+        /**
          * Dispatch events to the global events manager
          */
-		$eventsManager = $this->_eventsManager;
-		if (is_object($eventsManager)) {
-            $status = $eventsManager->fire( "collection:". $eventName, $model);
-			if (!$status) {
+        $eventsManager = $this->_eventsManager;
+        if (is_object($eventsManager)) {
+            $status = $eventsManager->fire("collection:" . $eventName, $model);
+            if (!$status) {
                 return $status;
             }
-		}
+        }
 
-		/**
+        /**
          * A model can has a specific events manager for it
          */
-		$customEventsManager = $this->_customEventsManager;
-		if (is_array($customEventsManager)) {
+        $customEventsManager = $this->_customEventsManager;
+        if (is_array($customEventsManager)) {
             if (isset($customEventsManager[strtolower(get_class($model))])) {
                 $status = $customEventsManager->fire("collection:" . $eventName, $model);
                 if (!$status) {
@@ -392,7 +388,7 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
                 }
             }
         }
-		return $status;
+        return $status;
     }
 
     /**
@@ -401,26 +397,26 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
      * meaning that at least one was implemented
      */
     public function missingMethod(CollectionInterface $model, $eventName, $data)
-	{
-        if(!is_string($eventName)) {
+    {
+        if (!is_string($eventName)) {
             throw new Exception('Invalid parameter type.');
         }
 
-		/**
+        /**
          * Dispatch events to the global events manager
          */
-		$behaviors = $this->_behaviors;
-		if (is_array($behaviors)) {
+        $behaviors = $this->_behaviors;
+        if (is_array($behaviors)) {
             $className = strtolower(get_class($model));
-            if(isset($behaviors[$className])) {
-		        $modelsBehaviors = $behaviors[$className];
+            if (isset($behaviors[$className])) {
+                $modelsBehaviors = $behaviors[$className];
 
                 /**
                  * Notify all the events on the behavior
                  */
                 foreach ($modelsBehaviors as $behavior) {
                     $result = $behavior->missingMethod($model, $eventName, $data);
-					if ($result !== null) {
+                    if ($result !== null) {
                         return $result;
                     }
                 }
@@ -431,27 +427,26 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
          * Dispatch events to the global events manager
          */
         $eventsManager = $this->_eventsManager;
-		if (is_object($eventsManager)) {
+        if (is_object($eventsManager)) {
             return $eventsManager->fire("model:" . $eventName, $model, $data);
-		}
+        }
 
-		return false;
-	}
+        return false;
+    }
 
     /**
      * Binds a behavior to a model
      */
     public function addBehavior(CollectionInterface $model, BehaviorInterface $behavior)
-	{
-		$entityName = strtolower(get_class($model));
+    {
+        $entityName = strtolower(get_class($model));
 
-		/**
+        /**
          * Get the current behaviors
          */
-		if(!isset($this->_behaviors[$entityName])) {
+        if (!isset($this->_behaviors[$entityName])) {
             $modelsBehaviors = [];
-        }
-        else {
+        } else {
             $modelsBehaviors = $this->_behaviors[$entityName];
         }
 
@@ -460,23 +455,29 @@ class Manager implements InjectionAwareInterface, EventsAwareInterface
          */
         $modelsBehaviors[] = $behavior;
 
-		/**
+        /**
          * Update the behaviors list
          */
-		$this->_behaviors[$entityName] = $modelsBehaviors;
-	}
+        $this->_behaviors[$entityName] = $modelsBehaviors;
+    }
 
     /**
+     * get service name
+     * 
      * @param $serviceName
      */
-    public function setServiceName($serviceName) {
+    public function setServiceName($serviceName)
+    {
         $this->_serviceName = $serviceName;
     }
 
     /**
+     * set service name
+     * 
      * @return string
      */
-    public function getServiceName() {
+    public function getServiceName()
+    {
         return $this->_serviceName;
     }
 

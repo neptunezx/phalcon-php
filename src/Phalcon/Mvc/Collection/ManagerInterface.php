@@ -1,86 +1,89 @@
 <?php
 
-
 namespace Phalcon\Mvc\Collection;
 
+use Phalcon\Db\AdapterInterface;
 use Phalcon\Mvc\CollectionInterface;
+use Phalcon\Mvc\Collection\BehaviorInterface;
+use Phalcon\Events\ManagerInterface as EventsManagerInterface;
 
 /**
- * Phalcon\Mvc\Collection\Behavior
+ * Phalcon\Mvc\Collection\Manager
  *
- * This is an optional base class for ORM behaviors
+ * This components controls the initialization of models, keeping record of relations
+ * between the different models of the application.
+ *
+ * A CollectionManager is injected to a model via a Dependency Injector Container such as Phalcon\Di.
+ *
+ * <code>
+ * $di = new \Phalcon\Di();
+ *
+ * $di->set(
+ *     "collectionManager",
+ *     function() {
+ *         return new \Phalcon\Mvc\Collection\Manager();
+ *     }
+ * );
+ *
+ * $robot = new Robots(di);
+ * </code>
  */
-abstract class Behavior implements BehaviorInterface
+interface ManagerInterface
 {
-    protected $_options;
-
-        /**
-         * Phalcon\Mvc\Collection\Behavior
-         *
-         * @param array $options
-         */
-        public function __construct($options = null)
-        {
-            $this->_options = $options;
-        }
-
-        /**
-         * Checks whether the behavior must take action on certain event
-         */
-        protected function mustTakeAction($eventName)
-        {
-            if(!is_string($eventName)) {
-                throw new Exception('Invalid parameter type.');
-            }
-            return isset($this->_options[$eventName]);
-        }
 
     /**
-     * Returns the behavior options related to an event
-     *
-     * @param string $eventName
-     * @return array
+     * Sets a custom events manager for a specific model
      */
-    protected function getOptions($eventName = null)
-	{
-        if(!is_string($eventName) && !is_null($eventName)) {
-            throw new Exception('Invalid parameter type.');
-        }
-		$options = $this->_options;
-		if ($eventName !== null) {
-		    if(isset($options[$eventName])) {
-                $eventOptions = $options[$eventName];
-                return $eventOptions;
-            }
-			return null;
-		}
-		return $options;
-	}
+    public function setCustomEventsManager(CollectionInterface $model, EventsManagerInterface $eventsManager);
 
-	/**
-     * This method receives the notifications from the EventsManager
-     *
-     * @param string $type
+    /**
+     * Returns a custom events manager related to a model
      */
-	public function notify($type, CollectionInterface $model)
-	{
-        if(!is_string($type)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        return null;
-    }
+    public function getCustomEventsManager(CollectionInterface $model);
 
-	/**
-     * Acts as fallbacks when a missing method is called on the collection
-     *
-     * @param string $method
+    /**
+     * Initializes a model in the models manager
      */
-	public function missingMethod(CollectionInterface $model, $method, $arguments = null)
-	{
-        if(!is_string($method)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        return null;
-    }
+    public function initialize(CollectionInterface $model);
 
+    /**
+     * Check whether a model is already initialized
+     */
+    public function isInitialized($modelName);
+
+    /**
+     * Get the latest initialized model
+     */
+    public function getLastInitialized();
+
+    /**
+     * Sets a connection service for a specific model
+     */
+    public function setConnectionService(CollectionInterface $model, $connectionService);
+
+    /**
+     * Sets if a model must use implicit objects ids
+     */
+    public function useImplicitObjectIds(CollectionInterface $model, $useImplicitObjectIds);
+
+    /**
+     * Checks if a model is using implicit object ids
+     */
+    public function isUsingImplicitObjectIds(CollectionInterface $model);
+
+    /**
+     * Returns the connection related to a model
+     */
+    public function getConnection(CollectionInterface $model);
+
+    /**
+     * Receives events generated in the models and dispatches them to an events-manager if available
+     * Notify the behaviors that are listening in the model
+     */
+    public function notifyEvent($eventName, CollectionInterface $model);
+
+    /**
+     * Binds a behavior to a collection
+     */
+    public function addBehavior(CollectionInterface $model, BehaviorInterface $behavior);
 }

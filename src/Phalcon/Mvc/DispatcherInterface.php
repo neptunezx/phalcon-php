@@ -2,12 +2,15 @@
 
 namespace Phalcon\Mvc;
 
+use Phalcon\Mvc\ControllerInterface;
+use Phalcon\DispatcherInterface as DispatcherInterfaceBase;
+
 /**
- * Phalcon\Mvc\DispatcherInterface initializer
+ * Phalcon\Mvc\DispatcherInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/dispatcherinterface.c
+ * Interface for Phalcon\Mvc\Dispatcher
  */
-interface DispatcherInterface extends \Phalcon\DispatcherInterface
+interface DispatcherInterface extends DispatcherInterfaceBase
 {
 
     /**

@@ -3,17 +3,15 @@
 namespace Phalcon\Mvc\Micro;
 
 /**
- * Phalcon\Mvc\Micro\MiddlewareInterface initializer
+ * Phalcon\Mvc\Micro\MiddlewareInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/micro/middlewareinterface.c
+ * Allows to implement Phalcon\Mvc\Micro middleware in classes
  */
 interface MiddlewareInterface
 {
 
     /**
      * Calls the middleware
-     *
-     * @param \Phalcon\Mvc\Micro $application
      */
     public function call(\Phalcon\Mvc\Micro $application);
 }

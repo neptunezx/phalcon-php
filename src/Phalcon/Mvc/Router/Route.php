@@ -7,9 +7,8 @@ use \Phalcon\Kernel;
 
 /**
  * Phalcon\Mvc\Router\Route
- * This class represents every route added to the router
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/router/route.c
+ * This class represents every route added to the router
  */
 class Route implements RouteInterface
 {
@@ -85,9 +84,7 @@ class Route implements RouteInterface
      * @access protected
      */
     protected $_beforeMatch;
-
     protected $_match;
-
     protected $_group;
 
     /**
@@ -109,8 +106,7 @@ class Route implements RouteInterface
      */
     public function __construct($pattern, $paths = null, $httpMethods = null)
     {
-        /* Type check */
-        if ( is_string($pattern) === false ) {
+        if (is_string($pattern) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -122,7 +118,7 @@ class Route implements RouteInterface
 
         //Get the unique Id from the static member _uniqueId
         $uniqueId = self::$_uniqueId;
-        if ( is_null($uniqueId) === true ) {
+        if (is_null($uniqueId) === true) {
             $uniqueId = 0;
         }
 
@@ -141,57 +137,56 @@ class Route implements RouteInterface
      */
     public function compilePattern($pattern)
     {
-        if ( is_string($pattern) === false ) {
+        if (is_string($pattern) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
 
         //If a pattern contains ':', maybe there are placeholders to replace
-        if ( Text::memstr($pattern, ':') !== false ) {
+        if (Text::memstr($pattern, ':') !== false) {
 
             // This is a pattern for valid identifiers
             $idPattern = "/([\\w0-9\\_\\-]+)";
 
             // Replace the module part
-            if ( Text::memstr($pattern, "/:module") ) {
+            if (Text::memstr($pattern, "/:module")) {
                 $pattern = str_replace("/:module", $idPattern, $pattern);
             }
 
             // Replace the controller placeholder
-            if ( Text::memstr($pattern, "/:controller") ) {
+            if (Text::memstr($pattern, "/:controller")) {
                 $pattern = str_replace("/:controller", $idPattern, $pattern);
             }
 
             // Replace the namespace placeholder
-            if ( Text::memstr($pattern, "/:namespace") ) {
+            if (Text::memstr($pattern, "/:namespace")) {
                 $pattern = str_replace("/:namespace", $idPattern, $pattern);
             }
 
             // Replace the action placeholder
-            if ( Text::memstr($pattern, "/:action") ) {
+            if (Text::memstr($pattern, "/:action")) {
                 $pattern = str_replace("/:action", $idPattern, $pattern);
             }
 
             // Replace the params placeholder
-            if ( Text::memstr($pattern, "/:params") ) {
+            if (Text::memstr($pattern, "/:params")) {
                 $pattern = str_replace("/:params", "(/.*)*", $pattern);
             }
 
             // Replace the int placeholder
-            if ( Text::memstr($pattern, "/:int") ) {
+            if (Text::memstr($pattern, "/:int")) {
                 $pattern = str_replace("/:int", "/([0-9]+)", $pattern);
             }
-
         }
 
         // Check if the pattern has parentheses in order to add the regex delimiters
-        if ( Text::memstr($pattern, "(") ) {
-            return "#^".$pattern."$#u";
+        if (Text::memstr($pattern, "(")) {
+            return "#^" . $pattern . "$#u";
         }
 
         // Square brackets are also checked
-        if ( Text::memstr($pattern, "[") ) {
-            return "#^".$pattern."$#u";
+        if (Text::memstr($pattern, "[")) {
+            return "#^" . $pattern . "$#u";
         }
 
         return $pattern;
@@ -223,7 +218,7 @@ class Route implements RouteInterface
      */
     public function extractNamedParams($pattern)
     {
-        if ( !is_string($pattern) ) {
+        if (!is_string($pattern)) {
             throw new Exception("Invalid parameter type.");
         }
         $prevCh           = '\0';
@@ -234,7 +229,7 @@ class Route implements RouteInterface
         $intermediate     = 0;
         $numberMatches    = 0;
 
-        if ( strlen($pattern) <= 0 ) {
+        if (strlen($pattern) <= 0) {
             return false;
         }
 
@@ -242,65 +237,49 @@ class Route implements RouteInterface
         $route   = "";
 
         $count = strlen($pattern);
-        for ( $cursor = 0; $cursor < $count; ++$cursor ) {
+        for ($cursor = 0; $cursor < $count; ++$cursor) {
             $ch = $pattern[$cursor];
 
-            if ( $parenthesesCount == 0 ) {
-                if ( $ch == '{' ) {
-                    if ( $bracketCount == 0 ) {
+            if ($parenthesesCount == 0) {
+                if ($ch == '{') {
+                    if ($bracketCount == 0) {
                         $marker       = $cursor + 1;
                         $intermediate = 0;
                         $notValid     = false;
                     }
                     $bracketCount++;
                 } else {
-                    if ( $ch == '}' ) {
+                    if ($ch == '}') {
                         $bracketCount--;
-                        if ( $intermediate > 0 ) {
-                            if ( $bracketCount == 0 ) {
+                        if ($intermediate > 0) {
+                            if ($bracketCount == 0) {
                                 $numberMatches++;
                                 $variable = null;
                                 $regexp   = null;
                                 $item     = substr(
-                                    $pattern,
-                                    $marker,
-                                    $cursor - $marker
+                                    $pattern, $marker, $cursor - $marker
                                 );
 
-                                for ( $cursorVar = 0;
-                                    $cursorVar < strlen($item); ++$cursorVar ) {
+                                for ($cursorVar = 0; $cursorVar < strlen($item); ++$cursorVar) {
                                     $ch = $item[$cursorVar];
-                                    if ( $ch == '\0' ) {
+                                    if ($ch == '\0') {
                                         break;
                                     }
 
-                                    if ( $cursorVar == 0
-                                         && !(($ch >= 'a'
-                                               && $ch <= 'z')
-                                              || ($ch >= 'A'
-                                                  && $ch <= 'Z'))
+                                    if ($cursorVar == 0 && !(($ch >= 'a' && $ch <= 'z') || ($ch >= 'A' && $ch <= 'Z'))
                                     ) {
                                         $notValid = true;
                                         break;
                                     }
 
-                                    if ( ($ch >= 'a' && $ch <= 'z')
-                                         || ($ch >= 'A'
-                                             && $ch <= 'Z')
-                                         || ($ch >= '0' && $ch <= '9')
-                                         || $ch == '-'
-                                         || $ch == '_'
-                                         || $ch == ':'
+                                    if (($ch >= 'a' && $ch <= 'z') || ($ch >= 'A' && $ch <= 'Z') || ($ch >= '0' && $ch <= '9') || $ch == '-' || $ch == '_' || $ch == ':'
                                     ) {
-                                        if ( $ch == ':' ) {
+                                        if ($ch == ':') {
                                             $variable = (string) substr(
-                                                $item,
-                                                0,
-                                                $cursorVar
+                                                    $item, 0, $cursorVar
                                             );
                                             $regexp   = (string) substr(
-                                                $item,
-                                                $cursorVar + 1
+                                                    $item, $cursorVar + 1
                                             );
                                             break;
                                         }
@@ -310,32 +289,31 @@ class Route implements RouteInterface
                                     }
                                 }
 
-                                if ( !$notValid ) {
+                                if (!$notValid) {
                                     $tmp = $numberMatches;
 
-                                    if ( $variable && $regexp ) {
+                                    if ($variable && $regexp) {
                                         $foundPattern = 0;
-                                        for ( $i = 0; $i < strlen($regexp);
-                                            ++$i ) {
+                                        for ($i = 0; $i < strlen($regexp); ++$i) {
                                             $ch = $regexp[$i];
 
-                                            if ( $ch == '\0' ) {
+                                            if ($ch == '\0') {
                                                 break;
                                             }
-                                            if ( !$foundPattern ) {
-                                                if ( $ch == '(' ) {
+                                            if (!$foundPattern) {
+                                                if ($ch == '(') {
                                                     $foundPattern = 1;
                                                 }
                                             } else {
-                                                if ( $ch == ')' ) {
+                                                if ($ch == ')') {
                                                     $foundPattern = 2;
                                                     break;
                                                 }
                                             }
                                         }
 
-                                        if ( $foundPattern != 2 ) {
-                                            $route .= "(".$regexp.")";
+                                        if ($foundPattern != 2) {
+                                            $route .= "(" . $regexp . ")";
                                         } else {
                                             $route .= $regexp;
                                         }
@@ -345,7 +323,7 @@ class Route implements RouteInterface
                                         $matches[$item] = $tmp;
                                     }
                                 } else {
-                                    $route .= "{".$item."}";
+                                    $route .= "{" . $item . "}";
                                 }
                                 continue;
                             }
@@ -354,25 +332,24 @@ class Route implements RouteInterface
                 }
             }
 
-            if ( $bracketCount == 0 ) {
-                if ( $ch == '(' ) {
+            if ($bracketCount == 0) {
+                if ($ch == '(') {
                     $parenthesesCount++;
                 } else {
-                    if ( $ch == ')' ) {
+                    if ($ch == ')') {
                         $parenthesesCount--;
-                        if ( $parenthesesCount == 0 ) {
+                        if ($parenthesesCount == 0) {
                             $numberMatches++;
                         }
                     }
                 }
             }
 
-            if ( $bracketCount > 0 ) {
+            if ($bracketCount > 0) {
                 $intermediate++;
             } else {
-                if ( $parenthesesCount == 0 && $prevCh != '\\' ) {
-                    if ( $ch == '.' || $ch == '+' || $ch == '|'
-                         || $ch == '#'
+                if ($parenthesesCount == 0 && $prevCh != '\\') {
+                    if ($ch == '.' || $ch == '+' || $ch == '|' || $ch == '#'
                     ) {
                         $route .= '\\';
                     }
@@ -381,7 +358,7 @@ class Route implements RouteInterface
                 $prevCh = $ch;
             }
         }
-        return [ $route, $matches ];
+        return [$route, $matches];
     }
 
     /**
@@ -394,7 +371,7 @@ class Route implements RouteInterface
      */
     public function reConfigure($pattern, $paths = null)
     {
-        if ( is_string($pattern) === false ) {
+        if (is_string($pattern) === false) {
             throw new Exception('The pattern must be string');
         }
 
@@ -403,9 +380,9 @@ class Route implements RouteInterface
         /**
          * If the route starts with '#' we assume that it is a regular expression
          */
-        if ( !Text::startsWith($pattern, "#") ) {
+        if (!Text::startsWith($pattern, "#")) {
 
-            if ( Text::memstr($pattern, "{") ) {
+            if (Text::memstr($pattern, "{")) {
                 /**
                  * The route has named parameters so we need to extract them
                  */
@@ -447,8 +424,8 @@ class Route implements RouteInterface
      */
     public static function getRoutePaths($paths = null)
     {
-        if ( $paths !== null ) {
-            if ( is_string($paths) ) {
+        if ($paths !== null) {
+            if (is_string($paths)) {
 
                 $moduleName     = null;
                 $controllerName = null;
@@ -479,32 +456,31 @@ class Route implements RouteInterface
                 $routePaths = [];
 
                 // Process module name
-                if ( $moduleName !== null ) {
+                if ($moduleName !== null) {
                     $routePaths["module"] = $moduleName;
                 }
 
                 // Process controller name
-                if ( $controllerName !== null ) {
+                if ($controllerName !== null) {
 
                     // Check if we need to obtain the namespace
-                    if ( Text::memstr($controllerName, "\\") ) {
+                    if (Text::memstr($controllerName, "\\")) {
 
                         // Extract the real class name from the namespaced class
                         $realClassName = Kernel::getClassNameFromClass(
-                            $controllerName
+                                $controllerName
                         );
 
                         // Extract the namespace from the namespaced class
                         $namespaceName = Kernel::getNamespaceFromClass(
-                            $controllerName
+                                $controllerName
                         );
 
                         // Update the namespace
-                        if ( $namespaceName ) {
+                        if ($namespaceName) {
                             $routePaths["namespace"] = $namespaceName;
                         }
-                    }
-                    else {
+                    } else {
                         $realClassName = $controllerName;
                     }
                     // Always pass the controller to lowercase
@@ -513,7 +489,7 @@ class Route implements RouteInterface
 
 
                 // Process action name
-                if ( $actionName !== null ) {
+                if ($actionName !== null) {
                     $routePaths["action"] = $actionName;
                 }
             } else {
@@ -523,11 +499,11 @@ class Route implements RouteInterface
             $routePaths = [];
         }
 
-        if ( !is_array($routePaths) ) {
+        if (!is_array($routePaths)) {
             throw new Exception("The route contains invalid paths");
         }
         return $routePaths;
-	}
+    }
 
     /**
      * Returns the route's name
@@ -554,7 +530,7 @@ class Route implements RouteInterface
      */
     public function setName($name)
     {
-        if ( is_string($name) === false ) {
+        if (is_string($name) === false) {
             throw new Exception('Invalid parameter type.');
         }
         $this->_name = $name;
@@ -591,7 +567,7 @@ class Route implements RouteInterface
     /**
      * Allows to set a callback to handle the request directly in the route
      *
-     *<code>
+     * <code>
      * $router->add(
      *     "/help",
      *     []
@@ -600,13 +576,13 @@ class Route implements RouteInterface
      *         return $this->getResponse()->redirect("https://support.google.com/", true);
      *     }
      * );
-     *</code>
+     * </code>
      */
     public function match($callback)
-	{
-		$this->_match = $callback;
-		return $this;
-	}
+    {
+        $this->_match = $callback;
+        return $this;
+    }
 
     /**
      * Returns the 'match' callback if any
@@ -614,9 +590,9 @@ class Route implements RouteInterface
      * @return
      */
     public function getMatch()
-	{
-		return $this->_match;
-	}
+    {
+        return $this->_match;
+    }
 
     /**
      * Returns the route's id
@@ -666,7 +642,7 @@ class Route implements RouteInterface
     public function getReversedPaths()
     {
         $reversed = [];
-        foreach ( $this->_paths as $path => $position ) {
+        foreach ($this->_paths as $path => $position) {
             $reversed[$position] = $path;
         }
 
@@ -714,7 +690,7 @@ class Route implements RouteInterface
      */
     public function setHostname($hostname)
     {
-        if ( is_string($hostname) === false ) {
+        if (is_string($hostname) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -739,10 +715,10 @@ class Route implements RouteInterface
      * @return Route
      */
     public function setGroup($group)
-	{
-		$this->_group = $group;
-		return $this;
-	}
+    {
+        $this->_group = $group;
+        return $this;
+    }
 
     /**
      * Returns the group associated with the route
@@ -750,9 +726,9 @@ class Route implements RouteInterface
      * @return GroupInterface|null
      */
     public function getGroup()
-	{
-		return $this->_group;
-	}
+    {
+        return $this->_group;
+    }
 
     /**
      * Adds a converter to perform an additional transformation for certain parameter
@@ -765,7 +741,7 @@ class Route implements RouteInterface
      */
     public function convert($name, $converter)
     {
-        if ( is_string($name) === false || is_callable($converter) === false ) {
+        if (is_string($name) === false || is_callable($converter) === false) {
             throw new Exception('Invalid parameter type.');
         }
         $this->_converters[$name] = $converter;

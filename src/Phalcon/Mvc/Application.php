@@ -3,8 +3,15 @@
 namespace Phalcon\Mvc;
 
 use Phalcon\Application as BaseApplication;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\ViewInterface;
+use Phalcon\Mvc\RouterInterface;
 use Phalcon\Http\ResponseInterface;
+use Phalcon\Events\ManagerInterface;
+use Phalcon\Mvc\DispatcherInterface;
 use Phalcon\Mvc\Application\Exception;
+use Phalcon\Mvc\Router\RouteInterface;
+use Phalcon\Mvc\ModuleDefinitionInterface;
 
 /**
  * Phalcon\Mvc\Application
@@ -47,334 +54,329 @@ use Phalcon\Mvc\Application\Exception;
  *  $application->main();
  *
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/application.c
  */
 class Application extends BaseApplication
 {
 
-	protected $_implicitView = true;
+    protected $_implicitView = true;
 
-	/**
-	 * By default. The view is implicitly buffering all the output
-	 * You can full disable the view component using this method
-	 * @param Application $implicitView
-	 * @return Application
-	 */
-	public function useImplicitView($implicitView)
-	{
-		$this->_implicitView = $implicitView;
-		return $this;
-	}
+    /**
+     * By default. The view is implicitly buffering all the output
+     * You can full disable the view component using this method
+     * @param Application $implicitView
+     * @return Application
+     */
+    public function useImplicitView($implicitView)
+    {
+        $this->_implicitView = $implicitView;
+        return $this;
+    }
 
-	/**
-	 * Handles a MVC request
-	 * @param string $uri
-	 * @return ResponseInterface|boolean
-	 * @throws \Exception
-	 */
-	public function handle($uri = null)
-	{
+    /**
+     * Handles a MVC request
+     * @param string $uri
+     * @return ResponseInterface|boolean
+     * @throws \Exception
+     */
+    public function handle($uri = null)
+    {
+        $dependencyInjector = $this->_dependencyInjector;
+        if (!is_object($dependencyInjector)) {
+            throw new Exception("A dependency injection object is required to access internal services");
+        }
 
-		$dependencyInjector = $this->_dependencyInjector;
+        $eventsManager = $this->_eventsManager;
+        /**
+         * Call boot event, this allow the developer to perform initialization actions
+         */
+        if (is_object($eventsManager)) {
+            if ($eventsManager->fire("application:boot", $this) === false) {
+                return false;
+            }
+        }
 
-		if (!is_object($dependencyInjector)) {
-			throw new Exception("A dependency injection object is required to access internal services");
-		}
+        $router = $dependencyInjector->getShared("router");
 
-		$eventsManager = $this->_eventsManager;
+        /**
+         * Handle the URI pattern (if any)
+         */
+        $router->handle($uri);
 
-		/**
-		 * Call boot event, this allow the developer to perform initialization actions
-		 */
-		if (is_object($eventsManager)) {
-			if ($eventsManager->fire("application:boot", $this) === false) {
-				return false;
-			}
-		}
+        /**
+         * If a 'match' callback was defined in the matched route
+         * The whole dispatcher+view behavior can be overridden by the developer
+         */
+        $matchedRoute = $router->getMatchedRoute();
+        if (is_object($matchedRoute)) {
+            $match = $matchedRoute->getMatch();
+            if ($match !== null) {
+                if ($match instanceof \Closure) {
+                    $match = \Closure::bind($match, $dependencyInjector);
+                }
 
-		$router = $dependencyInjector->getShared("router");
+                /**
+                 * Directly call the match callback
+                 */
+                $possibleResponse = call_user_func_array($match, $router->getParams());
 
-		/**
-		 * Handle the URI pattern (if any)
-		 */
-		$router->handle($uri);
+                /**
+                 * If the returned value is a string return it as body
+                 */
+                if (is_string($possibleResponse)) {
+                    $response = $dependencyInjector->getShared("response");
+                    $response->setContent($possibleResponse);
+                    return $response;
+                }
 
-		/**
-		 * If a 'match' callback was defined in the matched route
-		 * The whole dispatcher+view behavior can be overridden by the developer
-		 */
-		$matchedRoute = $router->getMatchedRoute();
-		if (is_object($matchedRoute)) {
-			$match = $matchedRoute->getMatch();
-			if ($match !== null) {
+                /**
+                 * If the returned string is a ResponseInterface use it as response
+                 */
+                if (is_object($possibleResponse)) {
+                    if ($possibleResponse instanceof ResponseInterface) {
+                        $possibleResponse->sendHeaders();
+                        $possibleResponse->sendCookies();
+                        return $possibleResponse;
+                    }
+                }
+            }
+        }
 
-				if ($match instanceof \Closure) {
-					$match = \Closure::bind($match, $dependencyInjector);
-				}
+        /**
+         * If the router doesn't return a valid module we use the default module
+         */
+        $moduleName = $router->getModuleName();
+        if (!$moduleName) {
+            $moduleName = $this->_defaultModule;
+        }
 
-				/**
-				 * Directly call the match callback
-				 */
-				$possibleResponse = call_user_func_array($match, $router->getParams());
+        $moduleObject = null;
 
-				/**
-				 * If the returned value is a string return it as body
-				 */
-				if (is_string($possibleResponse)) {
-					$response = $dependencyInjector->getShared("response");
-					$response->setContent($possibleResponse);
-					return $response;
-				}
+        /**
+         * Process the module definition
+         */
+        if ($moduleName) {
 
-				/**
-				 * If the returned string is a ResponseInterface use it as response
-				 */
-				if (is_object($possibleResponse)) {
-					if ($possibleResponse instanceof ResponseInterface) {
-						$possibleResponse->sendHeaders();
-						$possibleResponse->sendCookies();
-						return $possibleResponse;
-					}
-				}
-			}
-		}
+            if (is_object($eventsManager)) {
+                if ($eventsManager->fire("application:beforeStartModule", $this, $moduleName) === false) {
+                    return false;
+                }
+            }
 
-		/**
-		 * If the router doesn't return a valid module we use the default module
-		 */
-		$moduleName = $router->getModuleName();
-		if (!$moduleName) {
-			$moduleName = $this->_defaultModule;
-		}
+            /**
+             * Gets the module definition
+             */
+            $module = $this->getModule($moduleName);
 
-		$moduleObject = null;
+            /**
+             * A module definition must ne an array or an object
+             */
+            if (!is_array($module) && !is_object($module)) {
+                throw new Exception("Invalid module definition");
+            }
 
-		/**
-		 * Process the module definition
-		 */
-		if ($moduleName) {
+            /**
+             * An array module definition contains a path to a module definition class
+             */
+            if (is_array($module)) {
 
-			if (is_object($eventsManager)) {
-				if ($eventsManager->fire("application:beforeStartModule", $this, $moduleName) === false) {
-					return false;
-				}
-			}
+                /**
+                 * Class name used to load the module definition
+                 */
+                $className = $module["className"];
 
-			/**
-			 * Gets the module definition
-			 */
-			$module = $this->getModule($moduleName);
+                if (!$className) {
+                    $className = "Module";
+                }
 
-			/**
-			 * A module definition must ne an array or an object
-			 */
-			if (!is_array($module) && !is_object($module)) {
-				throw new Exception("Invalid module definition");
-			}
+                /**
+                 * If developer specify a path try to include the file
+                 */
+                $path = $module["path"];
 
-			/**
-			 * An array module definition contains a path to a module definition class
-			 */
-			if (is_array($module)) {
+                if ($path) {
+                    if (!class_exists($className, false)) {
+                        if (!file_exists($path)) {
+                            throw new Exception("Module definition path '" . $path . "' doesn't exist");
+                        }
 
-				/**
-				 * Class name used to load the module definition
-				 */
-				$className = $module["className"];
+                        require $path;
+                    }
+                }
 
-				if (!$className) {
-					$className = "Module";
-				}
+                $moduleObject = $dependencyInjector->get($className);
 
-				/**
-				 * If developer specify a path try to include the file
-				 */
-				$path = $module["path"];
+                /**
+                 * 'registerAutoloaders' and 'registerServices' are automatically called
+                 */
+                $moduleObject->registerAutoloaders($dependencyInjector);
+                $moduleObject->registerServices($dependencyInjector);
+            } else {
+                /**
+                 * A module definition object, can be a Closure instance
+                 */
+                if (!$module instanceof \Closure) {
+                    throw new Exception("Invalid module definition");
+                }
 
-				if ($path) {
-					if (!class_exists($className, false)) {
-						if (!file_exists($path)) {
-							throw new Exception("Module definition path '" . $path . "' doesn't exist");
-						}
+                $moduleObject = call_user_func_array($module, array($dependencyInjector));
+            }
 
-						require $path;
-					}
-				}
+            /**
+             * Calling afterStartModule event
+             */
+            if (is_object($eventsManager)) {
+                $eventsManager->fire("application:afterStartModule", $this, $moduleObject);
+            }
+        }
 
-				$moduleObject = $dependencyInjector->get($className);
+        /**
+         * Check whether use implicit views or not
+         */
+        $implicitView = $this->_implicitView;
 
-				/**
-				 * 'registerAutoloaders' and 'registerServices' are automatically called
-				 */
-				$moduleObject->registerAutoloaders($dependencyInjector);
-				$moduleObject->registerServices($dependencyInjector);
+        if ($implicitView === true) {
+            $view = $dependencyInjector->getShared("view");
+        }
 
-			} else {
-				/**
-				 * A module definition object, can be a Closure instance
-				 */
-				if (!$module instanceof \Closure) {
-					throw new Exception("Invalid module definition");
-				}
+        /**
+         * We get the parameters from the router and assign them to the dispatcher
+         * Assign the values passed from the router
+         */
+        $dispatcher = $dependencyInjector->getShared("dispatcher");
+        if (!$dispatcher instanceof DispatcherInterface) {
+            throw new Exception("Wrong service 'dispatcher' type");
+        }
+        $dispatcher->setModuleName($router->getModuleName());
+        $dispatcher->setNamespaceName($router->getNamespaceName());
+        $dispatcher->setControllerName($router->getControllerName());
+        $dispatcher->setActionName($router->getActionName());
+        $dispatcher->setParams($router->getParams());
 
-				$moduleObject = call_user_func_array($module, array($dependencyInjector));
-			}
+        /**
+         * Start the view component (start output buffering)
+         */
+        if ($implicitView === true) {
+            $view->start();
+        }
 
-			/**
-			 * Calling afterStartModule event
-			 */
-			if (is_object($eventsManager)) {
-				$eventsManager->fire("application:afterStartModule", $this, $moduleObject);
-			}
-		}
+        /**
+         * Calling beforeHandleRequest
+         */
+        if (is_object($eventsManager)) {
+            if ($eventsManager->fire("application:beforeHandleRequest", $this, $dispatcher) === false) {
+                return false;
+            }
+        }
 
-		/**
-		 * Check whether use implicit views or not
-		 */
-		$implicitView = $this->_implicitView;
+        /**
+         * The dispatcher must return an object
+         */
+        $controller = $dispatcher->dispatch();
 
-		if ($implicitView === true) {
-			$view = $dependencyInjector->getShared("view");
-		}
+        /**
+         * Get the latest value returned by an action
+         */
+        $possibleResponse = $dispatcher->getReturnedValue();
 
-		/**
-		 * We get the parameters from the router and assign them to the dispatcher
-		 * Assign the values passed from the router
-		 */
-		$dispatcher = $dependencyInjector->getShared("dispatcher");
-		$dispatcher->setModuleName($router->getModuleName());
-		$dispatcher->setNamespaceName($router->getNamespaceName());
-		$dispatcher->setControllerName($router->getControllerName());
-		$dispatcher->setActionName($router->getActionName());
-		$dispatcher->setParams($router->getParams());
+        /**
+         * Returning false from an action cancels the view
+         */
+        if (is_bool($possibleResponse) && $possibleResponse === false) {
+            $response = $dependencyInjector->getShared("response");
+        } else {
 
-		/**
-		 * Start the view component (start output buffering)
-		 */
-		if ($implicitView === true) {
-			$view->start();
-		}
+            /**
+             * Returning a string makes use it as the body of the response
+             */
+            if (is_string($possibleResponse)) {
+                $response = $dependencyInjector->getShared("response");
+                $response->setContent($possibleResponse);
+            } else {
 
-		/**
-		 * Calling beforeHandleRequest
-		 */
-		if (is_object($eventsManager)) {
-			if ($eventsManager->fire("application:beforeHandleRequest", $this, $dispatcher) === false) {
-				return false;
-			}
-		}
+                /**
+                 * Check if the returned object is already a response
+                 */
+                $returnedResponse = ((is_object($possibleResponse)) && ($possibleResponse instanceof ResponseInterface));
 
-		/**
-		 * The dispatcher must return an object
-		 */
-		$controller = $dispatcher->dispatch();
+                /**
+                 * Calling afterHandleRequest
+                 */
+                if (is_object($eventsManager)) {
+                    $eventsManager->fire("application:afterHandleRequest", $this, $controller);
+                }
 
-		/**
-		 * Get the latest value returned by an action
-		 */
-		$possibleResponse = $dispatcher->getReturnedValue();
+                /**
+                 * If the dispatcher returns an object we try to render the view in auto-rendering mode
+                 */
+                if ($returnedResponse === false && $implicitView === true) {
+                    if (is_object($controller)) {
+                        $renderStatus = true;
 
-		/**
-		 * Returning false from an action cancels the view
-		 */
-		if (is_bool($possibleResponse) && $possibleResponse === false) {
-			$response = $dependencyInjector->getShared("response");
-		} else {
+                        /**
+                         * This allows to make a custom view render
+                         */
+                        if (is_object($eventsManager)) {
+                            $renderStatus = $eventsManager->fire("application:viewRender", $this, $view);
+                        }
 
-			/**
-			 * Returning a string makes use it as the body of the response
-			 */
-			if (is_string($possibleResponse)) {
-				$response = $dependencyInjector->getShared("response");
-				$response->setContent($possibleResponse);
-			} else {
+                        /**
+                         * Check if the view process has been treated by the developer
+                         */
+                        if ($renderStatus !== false) {
 
-				/**
-				 * Check if the returned object is already a response
-				 */
-				$returnedResponse = ((is_object($possibleResponse)) && ($possibleResponse instanceof ResponseInterface));
+                            /**
+                             * Automatic render based on the latest controller executed
+                             */
+                            $view->render(
+                                $dispatcher->getControllerName(), $dispatcher->getActionName()
+                            );
+                        }
+                    }
+                }
 
-				/**
-				 * Calling afterHandleRequest
-				 */
-				if (is_object($eventsManager)) {
-					$eventsManager->fire("application:afterHandleRequest", $this, $controller);
-				}
+                /**
+                 * Finish the view component (stop output buffering)
+                 */
+                if ($implicitView === true) {
+                    $view->finish();
+                }
 
-				/**
-				 * If the dispatcher returns an object we try to render the view in auto-rendering mode
-				 */
-				if ($returnedResponse === false && $implicitView === true) {
-					if (is_object($controller)) {
-						$renderStatus = true;
+                if ($returnedResponse === true) {
 
-						/**
-						 * This allows to make a custom view render
-						 */
-						if (is_object($eventsManager)) {
-							$renderStatus = $eventsManager->fire("application:viewRender", $this, $view);
-						}
+                    /**
+                     * We don't need to create a response because there is one already created
+                     */
+                    $response = $possibleResponse;
+                } else {
 
-						/**
-						 * Check if the view process has been treated by the developer
-						 */
-						if ($renderStatus !== false) {
+                    $response = $dependencyInjector->getShared("response");
+                    if ($implicitView === true) {
+                        /**
+                         * The content returned by the view is passed to the response service
+                         */
+                        $response->setContent($view->getContent());
+                    }
+                }
+            }
+        }
 
-							/**
-							 * Automatic render based on the latest controller executed
-							 */
-							$view->render(
-								$dispatcher->getControllerName(),
-								$dispatcher->getActionName()
-							);
-						}
-					}
-				}
+        /**
+         * Calling beforeSendResponse
+         */
+        if (is_object($eventsManager)) {
+            $eventsManager->fire("application:beforeSendResponse", $this, $response);
+        }
 
-				/**
-				 * Finish the view component (stop output buffering)
-				 */
-				if ($implicitView === true) {
-					$view->finish();
-				}
+        /**
+         * Headers and Cookies are automatically sent
+         */
+        $response->sendHeaders();
+        $response->sendCookies();
 
-				if ($returnedResponse === true) {
-
-					/**
-					 * We don't need to create a response because there is one already created
-					 */
-					$response = $possibleResponse;
-				} else {
-
-					$response = $dependencyInjector->getShared("response");
-					if ($implicitView === true) {
-						/**
-						 * The content returned by the view is passed to the response service
-						 */
-						$response->setContent($view->getContent());
-					}
-				}
-			}
-		}
-
-		/**
-		 * Calling beforeSendResponse
-		 */
-		if (is_object($eventsManager)) {
-			$eventsManager->fire("application:beforeSendResponse", $this, $response);
-		}
-
-		/**
-		 * Headers and Cookies are automatically sent
-		 */
-		$response->sendHeaders();
-		$response->sendCookies();
-
-		/**
-		 * Return the response
-		 */
-		return $response;
-	}
+        /**
+         * Return the response
+         */
+        return $response;
+    }
 
 }

@@ -2,16 +2,20 @@
 
 namespace Phalcon\Mvc;
 
-use \Phalcon\Di\Injectable;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Di\FactoryDefault;
-use \Phalcon\DiInterface;
-use \Phalcon\Mvc\Micro\Exception;
-use \Phalcon\Mvc\Micro\LazyLoader;
-use \Phalcon\Mvc\Micro\MiddlewareInterface;
-use \Phalcon\Mvc\CollectionInterface;
-use \ArrayAccess;
+use Phalcon\DiInterface;
+use Phalcon\Di\Injectable;
+use Phalcon\Mvc\Controller;
+use Phalcon\Di\FactoryDefault;
+use Phalcon\Mvc\Micro\Exception;
+use Phalcon\Di\ServiceInterface;
+use Phalcon\Mvc\Micro\Collection;
+use Phalcon\Mvc\Micro\LazyLoader;
+use Phalcon\Http\ResponseInterface;
+use Phalcon\Mvc\Model\BinderInterface;
+use Phalcon\Mvc\Router\RouteInterface;
+use Phalcon\Mvc\Micro\MiddlewareInterface;
+use Phalcon\Mvc\Micro\CollectionInterface;
+use Phalcon\Mvc\RouterInterface;
 
 /**
  * Phalcon\Mvc\Micro
@@ -21,20 +25,19 @@ use \ArrayAccess;
  * to small applications, APIs and prototypes in a practical way.
  *
  * <code>
+ * $app = new \Phalcon\Mvc\Micro();
  *
- * $app = new Phalcon\Mvc\Micro();
- *
- * $app->get('/say/welcome/{name}', function ($name) {
- *    echo "<h1>Welcome $name!</h1>";
- * });
+ * $app->get(
+ *     "/say/welcome/{name}",
+ *     function ($name) {
+ *         echo "<h1>Welcome $name!</h1>";
+ *     }
+ * );
  *
  * $app->handle();
- *
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/micro.c
  */
-class Micro extends Injectable implements EventsAwareInterface, InjectionAwareInterface, ArrayAccess
+class Micro extends Injectable implements \ArrayAccess
 {
 
     /**
@@ -118,6 +121,22 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
     protected $_returnedValue;
 
     /**
+     * Model Binder
+     *
+     * @var Phalcon\Mvc\Model\BinderInterface
+     * @access protected
+     */
+    protected $_modelBinder;
+
+    /**
+     * Binding Handlers
+     *
+     * @var mixed
+     * @access protected
+     */
+    protected $_afterBindingHandlers;
+
+    /**
      * \Phalcon\Mvc\Micro constructor
      *
      * @param \Phalcon\DiInterface|null $dependencyInjector
@@ -136,7 +155,7 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      * @param \Phalcon\DiInterface $dependencyInjector
      * @throws Exception
      */
-    public function setDI(DiInterface $dependencyInjector)
+    public function setDI($dependencyInjector)
     {
         if (is_object($dependencyInjector) === false ||
             $dependencyInjector instanceof DiInterface === false) {
@@ -458,6 +477,18 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
     }
 
     /**
+     * Sets a handler that will be called when an exception is thrown handling the route
+     *
+     * @param callable handler
+     * @return \Phalcon\Mvc\Micro
+     */
+    public function error($handler)
+    {
+        $this->_errorHandler = $handler;
+        return $this;
+    }
+
+    /**
      * Returns the internal router used by the application
      *
      * @return \Phalcon\Mvc\RouterInterface
@@ -577,61 +608,344 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
      */
     public function handle($uri = null)
     {
-        if (is_string($uri) === false &&
-            is_null($uri) === false) {
-            throw new Exception('Invalid parameter type.');
+        $dependencyInjector = $this->_dependencyInjector;
+        if (!is_object($dependencyInjector)) {
+            throw new Exception("A dependency injection container is required to access required micro services");
         }
 
-        if (is_object($this->_dependencyInjector) === false) {
-            throw new Exception('A dependency injection container is required to access related dispatching services');
-        }
+        try {
 
-        //Calling beforeHandle routing
-        if (is_object($this->_eventsManager) === true) {
-            if ($this->_eventsManager->fire('micro:beforeHandleRoute', $this) === false) {
-                return false;
-            }
-        }
+            $returnedValue = null;
 
-        //Handling route information
-        $router = $this->_dependencyInjector->getShared('router');
-
-        //Handle the URI as normal
-        $router->handle($uri);
-
-        //Check if one route was matched
-        $matchedRoute = $router->getMatchedRoute();
-        if (is_object($matchedRoute) === true) {
-            $routeId = $matchedRoute->getRouteId();
-            if (isset($this->_handlers[$routeId]) === false) {
-                throw new Exception("Matched route doesn't have an associate handler");
-            }
-
-            //Updating active handler
-            $handler              = $this->_handlers[$routeId];
-            $this->_activeHandler = $handler;
-
-            //Calling beforeExecuteRoute event
-            if (is_object($this->_eventsManager) === true) {
-                if ($this->_eventsManager->fire('micro:beforeExecuteRoute', $this) === false) {
+            /**
+             * Calling beforeHandle routing
+             */
+            $eventsManager = $this->_eventsManager;
+            if (is_object($eventsManager)) {
+                if ($eventsManager->fire("micro:beforeHandleRoute", $this) === false) {
                     return false;
-                } else {
-                    $handler = $this->_activeHandler;
                 }
             }
 
-            if (is_array($this->_beforeHandlers) === true) {
+            /**
+             * Handling routing information
+             * @var RouterInterface 
+             */
+            $router = $dependencyInjector->getShared("router");
+            if (!$response instanceof RouterInterface) {
+                throw new Exception("Service 'response' should be instance of Phalcon\Mvc\RouterInterface");
+            }
+            /**
+             * Handle the URI as normal
+             */
+            $router->handle($uri);
+
+            /**
+             * Check if one route was matched
+             */
+            $matchedRoute = $router->getMatchedRoute();
+            if (is_object($matchedRoute)) {
+
+                if (!isset($this->_handlers[$matchedRoute->getRouteId()])) {
+                    throw new Exception("Matched route doesn't have an associated handler");
+                }
+
+                $handler = $this->_handlers[$matchedRoute->getRouteId()];
+
+                /**
+                 * Updating active handler
+                 */
+                $this->_activeHandler = $handler;
+
+                /**
+                 * Calling beforeExecuteRoute event
+                 */
+                if (is_object($eventsManager)) {
+                    if ($eventsManager->fire("micro:beforeExecuteRoute", $this) === false) {
+                        return false;
+                    } else {
+                        $handler = $this->_activeHandler;
+                    }
+                }
+
+                $beforeHandlers = $this->_beforeHandlers;
+                if (is_array($beforeHandlers)) {
+
+                    $this->_stopped = false;
+
+                    /**
+                     * Calls the before handlers
+                     */
+                    foreach ($beforeHandlers as $before) {
+
+                        if (is_object($before)) {
+                            if ($before instanceof MiddlewareInterface) {
+
+                                /**
+                                 * Call the middleware
+                                 */
+                                $status = $before->call($this);
+
+                                /**
+                                 * Reload the status
+                                 * break the execution if the middleware was stopped
+                                 */
+                                if ($this->_stopped) {
+                                    break;
+                                }
+
+                                continue;
+                            }
+                        }
+
+                        if (!is_callable($before)) {
+                            throw new Exception("'before' handler is not callable");
+                        }
+
+                        /**
+                         * Call the before handler
+                         */
+                        $status = call_user_func($before);
+
+                        /**
+                         * break the execution if the middleware was stopped
+                         */
+                        if ($this->_stopped) {
+                            break;
+                        }
+                    }
+                    /**
+                     * Reload the 'stopped' status
+                     */
+                    if ($this->_stopped) {
+                        return $status;
+                    }
+                }
+
+                $params = $router->getParams();
+
+                $modelBinder = $this->_modelBinder;
+
+                /**
+                 * Bound the app to the handler
+                 */
+                if ($handler && $handler instanceof \Closure) {
+                    $handler = \Closure::bind($handler, $this);
+                    if ($modelBinder != null) {
+                        $routeName = $matchedRoute->getName();
+                        if ($routeName != null) {
+                            $bindCacheKey = "_PHMB_" . $routeName;
+                        } else {
+                            $bindCacheKey = "_PHMB_" . $matchedRoute->getPattern();
+                        }
+                        $params = $modelBinder->bindToHandler($handler, $params, $bindCacheKey);
+                    }
+                }
+
+                /**
+                 * Calling the Handler in the PHP userland
+                 */
+                if (is_array($handler)) {
+
+                    $realHandler = $handler[0];
+
+                    if ($realHandler instanceof Controller && $modelBinder != null) {
+                        $methodName   = $handler[1];
+                        $bindCacheKey = "_PHMB_" . get_class($realHandler) . "_" . $methodName;
+                        $params       = $modelBinder->bindToHandler($realHandler, $params, $bindCacheKey, $methodName);
+                    }
+                }
+
+                /**
+                 * Instead of double call_user_func_array when lazy loading we will just call method
+                 */
+                if ($realHandler != null && $realHandler instanceof LazyLoader) {
+                    $methodName    = $handler[1];
+                    /**
+                     * There is seg fault if we try set directly value of method to returnedValue
+                     */
+                    $lazyReturned  = $realHandler->callMethod($methodName, $params, $modelBinder);
+                    $returnedValue = $lazyReturned;
+                } else {
+                    $returnedValue = call_user_func_array($handler, $params);
+                }
+
+                /**
+                 * Calling afterBinding event
+                 */
+                if (is_object($eventsManager)) {
+                    if ($eventsManager->fire("micro:afterBinding", $this) === false) {
+                        return false;
+                    }
+                }
+
+                $afterBindingHandlers = $this->_afterBindingHandlers;
+                if (is_array($afterBindingHandlers)) {
+                    $this->_stopped = false;
+
+                    /**
+                     * Calls the after binding handlers
+                     */
+                    foreach ($afterBindingHandlers as $afterBinding) {
+
+                        if ($afterBinding && $afterBinding instanceof MiddlewareInterface) {
+
+                            /**
+                             * Call the middleware
+                             */
+                            $status = $afterBinding->call($this);
+
+                            /**
+                             * Reload the status
+                             * break the execution if the middleware was stopped
+                             */
+                            if ($this->_stopped) {
+                                break;
+                            }
+
+                            continue;
+                        }
+
+                        if (!is_callable($afterBinding)) {
+                            throw new Exception("'afterBinding' handler is not callable");
+                        }
+
+                        /**
+                         * Call the afterBinding handler
+                         */
+                        $status = call_user_func($afterBinding);
+
+                        /**
+                         * break the execution if the middleware was stopped
+                         */
+                        if ($this->_stopped) {
+                            break;
+                        }
+                    }
+                    /**
+                     * Reload the 'stopped' status
+                     */
+                    if ($this->_stopped) {
+                        return $status;
+                    }
+                }
+
+                /**
+                 * Update the returned value
+                 */
+                $this->_returnedValue = $returnedValue;
+
+                /**
+                 * Calling afterExecuteRoute event
+                 */
+                if (is_object($eventsManager)) {
+                    $eventsManager->fire("micro:afterExecuteRoute", $this);
+                }
+
+                $afterHandlers = $this->_afterHandlers;
+                if (is_array($afterHandlers)) {
+
+                    $this->_stopped = false;
+
+                    /**
+                     * Calls the after handlers
+                     */
+                    foreach ($afterHandlers as $after) {
+
+                        if (is_object($after)) {
+                            if ($after instanceof MiddlewareInterface) {
+
+                                /**
+                                 * Call the middleware
+                                 */
+                                $status = $after->call($this);
+
+                                /**
+                                 * break the execution if the middleware was stopped
+                                 */
+                                if ($this->_stopped) {
+                                    break;
+                                }
+
+                                continue;
+                            }
+                        }
+
+                        if (!is_callable($after)) {
+                            throw new Exception("One of the 'after' handlers is not callable");
+                        }
+
+                        $status = call_user_func($after);
+
+                        /**
+                         * break the execution if the middleware was stopped
+                         */
+                        if ($this->_stopped) {
+                            break;
+                        }
+                    }
+                }
+            } else {
+
+                /**
+                 * Calling beforeNotFound event
+                 */
+                $eventsManager = $this->_eventsManager;
+                if (is_object($eventsManager)) {
+                    if ($eventsManager->fire("micro:beforeNotFound", $this) === false) {
+                        return false;
+                    }
+                }
+
+                /**
+                 * Check if a notfoundhandler is defined and it's callable
+                 */
+                $notFoundHandler = $this->_notFoundHandler;
+                if (!is_callable($notFoundHandler)) {
+                    throw new Exception("Not-Found handler is not callable or is not defined");
+                }
+
+                /**
+                 * Call the Not-Found handler
+                 */
+                $returnedValue = call_user_func($notFoundHandler);
+            }
+
+            /**
+             * Calling afterHandleRoute event
+             */
+            if (is_object($eventsManager)) {
+                $eventsManager->fire("micro:afterHandleRoute", $this, $returnedValue);
+            }
+
+            $finishHandlers = $this->_finishHandlers;
+            if (is_array($finishHandlers)) {
+
                 $this->_stopped = false;
 
-                //Call the before handlers
-                foreach ($this->_beforeHandlers as $before) {
-                    if (is_object($before) === true) {
-                        if ($before instanceof MiddlewareInterface === true) {
-                            //Call the middleware
-                            $status = $before->call($this);
+                $params = null;
 
-                            //break the execution if the middleware was stopped
-                            if ($this->_stopped === true) {
+                /**
+                 * Calls the finish handlers
+                 */
+                foreach ($finishHandlers as $finish) {
+
+                    /**
+                     * Try to execute middleware as plugins
+                     */
+                    if (is_object($finish)) {
+
+                        if ($finish instanceof MiddlewareInterface) {
+
+                            /**
+                             * Call the middleware
+                             */
+                            $status = $finish->call($this);
+
+                            /**
+                             * break the execution if the middleware was stopped
+                             */
+                            if ($this->_stopped) {
                                 break;
                             }
 
@@ -639,126 +953,95 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
                         }
                     }
 
-                    if (is_callable($before) === false) {
-                        throw new Exception('The before handler is not callable');
+                    if (!is_callable($finish)) {
+                        throw new Exception("One of the 'finish' handlers is not callable");
                     }
 
-                    //Call the before handler, if it return false exit
-                    $status = call_user_func($before);
-                    if ($status === false) {
-                        return false;
+                    if ($params === null) {
+                        $params = [$this];
                     }
 
-                    //Reload the stopped status
-                    if ($this->_stopped === true) {
-                        return $status;
-                    }
-                }
-            }
+                    /**
+                     * Call the 'finish' middleware
+                     */
+                    $status = call_user_func_array($finish, $params);
 
-            //Update the returned value
-            $params               = $router->getParams();
-            $this->_returnedValue = call_user_func_array($handler, $params);
-
-            //Calling afterExecuteRoute event
-            if (is_object($this->_eventsManager) === true) {
-                $this->_eventsManager->fire('micro:afterExecuteRoute', $this);
-            }
-
-            if (is_array($this->_afterHandlers) === true) {
-                $this->_stopped = false;
-
-                //Call the after handlers
-                foreach ($this->_afterHandlers as $after) {
-                    if (is_object($after) === true &&
-                        $after instanceof MiddlewareInterface === true) {
-                        //Call the middleware
-                        $status = $after->call($this);
-
-                        //Reload the status
-                        if ($this->_stopped === true) {
-                            break;
-                        }
-                        continue;
-                    }
-
-                    if (is_callable($after) === false) {
-                        throw new Exception("One of the 'after' handlers is not callable");
-                    }
-
-                    $status = call_user_func($after);
-                }
-            }
-        } else {
-            //Calling beforeNotFound event
-            if (is_object($this->_eventsManager) === true) {
-                if ($this->_eventsManager->fire('micro:beforeNotFound', $this) === false) {
-                    return false;
-                }
-            }
-
-            //Check if a notfound handler is defined and is callable
-            if (is_callable($this->_notFoundHandler) === false) {
-                throw new Exception('The Not-Found handler is not callable or is not defined');
-            }
-
-            //Call the notfound handler
-            $this->_returnedValue = call_user_func($this->_notFoundHandler);
-
-            return $this->_returnedValue;
-        }
-
-        //Calling afterHandleRoute event
-        if (is_object($this->_eventsManager) === true) {
-            $this->_eventsManager->fire('micro:afterHandleRoute', $this);
-        }
-
-        if (is_array($this->_finishHandlers) === true) {
-            $this->_stopped = false;
-            $params         = null;
-
-            foreach ($this->_finishHandlers as $finish) {
-                //Try to execute middleware as plugins
-                if (is_object($finish) === true &&
-                    $finish instanceof MiddlewareInterface === true) {
-                    //Call the middleware
-                    $status = $finish->call($this);
-
-                    //Reload the status
-                    if ($this->_stopped === true) {
+                    /**
+                     * break the execution if the middleware was stopped
+                     */
+                    if ($this->_stopped) {
                         break;
                     }
+                }
+            }
+        } catch (\Exception $e) {
 
-                    continue;
+            /**
+             * Calling beforeNotFound event
+             */
+            $eventsManager = $this->_eventsManager;
+            if (is_object($eventsManager)) {
+                $returnedValue = $eventsManager->fire("micro:beforeException", $this, $e);
+            }
+
+            /**
+             * Check if an errorhandler is defined and it's callable
+             */
+            $errorHandler = $this->_errorHandler;
+            if ($errorHandler) {
+                if (!is_callable($errorHandler)) {
+                    throw new Exception("Error handler is not callable");
                 }
 
-                if (is_callable($finish) === false) {
-                    throw new Exception('One of finish handlers is not callable');
+                /**
+                 * Call the Error handler
+                 */
+                $returnedValue = call_user_func_array($errorHandler, [$e]);
+                if (is_object($returnedValue)) {
+                    if (!($returnedValue instanceof ResponseInterface)) {
+                        throw $e;
+                    }
+                } else {
+                    if ($returnedValue !== false) {
+                        throw $e;
+                    }
                 }
-
-                if (is_null($params) === true) {
-                    //@note see #719
-                    $params = array($this);
-                }
-
-                //Call the 'finish' middleware
-                $status = $finish($params);
-
-                //Reload the status
-                if ($this->_stopped === true) {
-                    break;
+            } else {
+                if ($returnedValue !== false) {
+                    throw $e;
                 }
             }
         }
 
-        //Check if the returned object is already a response
-        if (is_object($this->_returnedValue) === true &&
-            $this->_returnedValue instanceof ResponseInterface === true) {
-            //Automatically send the responses
-            $this->_returnedValue->send();
+        /**
+         * Check if the returned value is a string and take it as response body
+         */
+        if (is_string($returnedValue)) {
+            $response = $dependencyInjector->getShared("response");
+            if (!$response instanceof ResponseInterface) {
+                throw new Exception("Service 'response' should be instance of Phalcon\Http\ResponseInterface");
+            }
+            if (!$response->isSent()) {
+                $response->setContent($returnedValue);
+                $response->send();
+            }
         }
 
-        return $this->_returnedValue;
+        /**
+         * Check if the returned object is already a response
+         */
+        if (is_object($returnedValue)) {
+            if ($returnedValue instanceof ResponseInterface) {
+                /**
+                 * Automatically send the response
+                 */
+                if (!$returnedValue->isSent()) {
+                    $returnedValue->send();
+                }
+            }
+        }
+
+        return $returnedValue;
     }
 
     /**
@@ -886,6 +1169,25 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
     }
 
     /**
+     * Appends a afterBinding middleware to be called after model binding
+     *
+     * @param callable handler
+     * @return \Phalcon\Mvc\Micro
+     */
+    public function afterBinding($handler)
+    {
+        if (is_callable($handler) === false && $handler instanceof MiddlewareInterface === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+
+        if (is_array($this->_afterHandlers) === false) {
+            $this->_afterHandlers = array();
+        }
+        $this->_afterBindingHandlers[] = $handler;
+        return this;
+    }
+
+    /**
      * Appends an 'after' middleware to be called after execute the route
      *
      * @param callable $handler
@@ -937,6 +1239,44 @@ class Micro extends Injectable implements EventsAwareInterface, InjectionAwareIn
     public function getHandlers()
     {
         return $this->_handlers;
+    }
+
+    /**
+     * Sets model binder
+     *
+     * <code>
+     * $micro = new Micro($di);
+     * $micro->setModelBinder(new Binder(), 'cache');
+     * </code>
+     */
+    public function setModelBinder(BinderInterface $modelBinder, $cache = null)
+    {
+        if (is_string($cache)) {
+            $dependencyInjector = $this->_dependencyInjector;
+            $cache              = $dependencyInjector->get($cache);
+        }
+
+        if ($cache != null) {
+            $modelBinder->setCache($cache);
+        }
+
+        $this->_modelBinder = $modelBinder;
+
+        return $this;
+    }
+
+    /**
+     * Returns bound models from binder instance
+     */
+    public function getBoundModels()
+    {
+        $modelBinder = $this->_modelBinder;
+
+        if ($modelBinder != null) {
+            return $modelBinder->getBoundModels();
+        }
+
+        return [];
     }
 
 }

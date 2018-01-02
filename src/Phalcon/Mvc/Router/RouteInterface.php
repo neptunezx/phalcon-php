@@ -3,9 +3,9 @@
 namespace Phalcon\Mvc\Router;
 
 /**
- * Phalcon\Mvc\Router\RouteInterface initializer
+ * Phalcon\Mvc\Router\RouteInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/router/routeinterface.c
+ * Interface for Phalcon\Mvc\Router\Route
  */
 interface RouteInterface
 {

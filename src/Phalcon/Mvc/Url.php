@@ -2,91 +2,51 @@
 
 namespace Phalcon\Mvc;
 
-use \Phalcon\Mvc\UrlInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\Mvc\Url\Exception;
-use \Phalcon\DiInterface;
+use Phalcon\DiInterface;
+use Phalcon\Mvc\UrlInterface;
+use Phalcon\Mvc\Url\Exception;
+use Phalcon\Mvc\RouterInterface;
+use Phalcon\Mvc\Router\RouteInterface;
+use Phalcon\Di\InjectionAwareInterface;
 
 /**
  * Phalcon\Mvc\Url
  *
- * This components aids in the generation of: URIs, URLs and Paths
+ * This components helps in the generation of: URIs, URLs and Paths
  *
  * <code>
+ * // Generate a URL appending the URI to the base URI
+ * echo $url->get("products/edit/1");
  *
- * //Generate a URL appending the URI to the base URI
- * echo $url->get('products/edit/1');
- *
- * //Generate a URL for a predefined route
- * echo $url->get(array('for' => 'blog-post', 'title' => 'some-cool-stuff', 'year' => '2012'));
- *
+ * // Generate a URL for a predefined route
+ * echo $url->get(
+ *     [
+ *         "for"   => "blog-post",
+ *         "title" => "some-cool-stuff",
+ *         "year"  => "2012",
+ *     ]
+ * );
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/url.c
  */
 class Url implements UrlInterface, InjectionAwareInterface
 {
 
-    /**
-     * Dependency Injector
-     *
-     * @var null|\Phalcon\DiInterface
-     * @access protected
-     */
     protected $_dependencyInjector;
-
-    /**
-     * Base URI
-     *
-     * @var string|null
-     * @access protected
-     */
-    protected $_baseUri;
-
-    /**
-     * Static Base URI
-     *
-     * @var string|null
-     * @access protected
-     */
-    protected $_staticBaseUri;
-
-    /**
-     * Base Path
-     *
-     * @var string|null
-     * @access protected
-     */
-    protected $_basePath;
-
-    /**
-     * Router
-     *
-     * @var object|null
-     * @access protected
-     */
+    protected $_baseUri       = null;
+    protected $_staticBaseUri = null;
+    protected $_basePath      = null;
     protected $_router;
 
     /**
      * Sets the DependencyInjector container
-     *
-     * @param \Phalcon\DiInterface $dependencyInjector
-     * @throws Exception
      */
-    public function setDI($dependencyInjector)
+    public function setDI(DiInterface $dependencyInjector)
     {
-        if (is_object($dependencyInjector) === false ||
-            $dependencyInjector instanceof DiInterface === false) {
-            throw new Exception('The dependency injector must be an Object');
-        }
-
-        $this->_dependencyInjector = $dependencyInjector;
+        $this->_dependencyInjector = dependencyInjector;
     }
 
     /**
      * Returns the DependencyInjector container
-     *
-     * @return \Phalcon\DiInterface|null
      */
     public function getDI()
     {
@@ -97,26 +57,17 @@ class Url implements UrlInterface, InjectionAwareInterface
      * Sets a prefix for all the URIs to be generated
      *
      * <code>
-     *  $url->setBaseUri('/invo/');
-     *  $url->setBaseUri('/invo/index.php/');
-     * </code>
+     * $url->setBaseUri("/invo/");
      *
-     * @param string $baseUri
-     * @return \Phalcon\Mvc\Url
-     * @throws Exception
+     * $url->setBaseUri("/invo/index.php/");
+     * </code>
      */
     public function setBaseUri($baseUri)
     {
-        if (is_string($baseUri) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_baseUri = $baseUri;
-
-        if (is_null($this->_staticBaseUri) === true) {
+        if ($this->_staticBaseUri === null) {
             $this->_staticBaseUri = $baseUri;
         }
-
         return $this;
     }
 
@@ -124,125 +75,215 @@ class Url implements UrlInterface, InjectionAwareInterface
      * Sets a prefix for all static URLs generated
      *
      * <code>
-     *  $url->setStaticBaseUri('/invo/');
+     * $url->setStaticBaseUri("/invo/");
      * </code>
-     *
-     * @param string $staticBaseUri
-     * @return \Phalcon\Mvc\Url
-     * @throws Exception
      */
     public function setStaticBaseUri($staticBaseUri)
     {
-        if (is_string($staticBaseUri) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_staticBaseUri = $staticBaseUri;
-
         return $this;
     }
 
     /**
-     * Get URI
-     *
-     * @param string $path
-     * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/kernel/framework/url.c
-     */
-    private static function getUri($path)
-    {
-        if (is_string($path) === false) {
-            return '';
-        }
-
-        $found = 0;
-        $mark  = 0;
-
-        if (empty($path) === false) {
-            for ($i = strlen($path); $i > 0; $i--) {
-                $ch = $path[$i - 1];
-                if ($ch === '/' || $ch === '\\') {
-                    $found++;
-
-                    if ($found === 1) {
-                        $mark = $i - 1;
-                    } else {
-                        return substr($path, 0, $mark - $i) . chr(0);
-                    }
-                }
-            }
-        }
-
-        return '';
-    }
-
-    /**
      * Returns the prefix for all the generated urls. By default /
-     *
-     * @return string
      */
     public function getBaseUri()
     {
-        $baseUri = $this->_baseUri;
 
-        if (is_null($this->_baseUri) === true) {
-            if (isset($_SERVER['PHP_SELF']) === true) {
-                $uri = self::getUri($_SERVER['PHP_SELF']);
+        $baseUri = $this->_baseUri;
+        if ($baseUri === null) {
+
+            if (isset($_SERVER["PHP_SELF"])) {
+                $uri = phalcon_get_uri($_SERVER["PHP_SELF"]);
+            } else {
+                $uri = null;
             }
 
-            if (is_string($uri) === false) {
-                $baseUri = '/';
+            if (!$uri) {
+                $baseUri = "/";
             } else {
-                $baseUri .= '/' . $uri . '/';
+                $baseUri = "/" . $uri . "/";
             }
 
             $this->_baseUri = $baseUri;
         }
-
         return $baseUri;
     }
 
     /**
      * Returns the prefix for all the generated static urls. By default /
-     *
-     * @return string
      */
     public function getStaticBaseUri()
     {
-        if (is_null($this->_staticBaseUri) === false) {
-            return $this->_staticBaseUri;
+        $staticBaseUri = $this->_staticBaseUri;
+        if ($staticBaseUri !== null) {
+            return $staticBaseUri;
         }
-
-        return $this::getBaseUri();
+        return $this->getBaseUri();
     }
 
     /**
      * Sets a base path for all the generated paths
      *
      * <code>
-     *  $url->setBasePath('/var/www/htdocs/');
+     * $url->setBasePath("/var/www/htdocs/");
      * </code>
-     *
-     * @param string $basePath
-     * @return \Phalcon\Mvc\Url
-     * @throws Exception
      */
     public function setBasePath($basePath)
     {
-        if (is_string($basePath) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $this->_basePath = $basePath;
+        return $this;
     }
 
     /**
      * Returns the base path
-     *
-     * @return string|null
      */
     public function getBasePath()
     {
         return $this->_basePath;
+    }
+
+    /**
+     * Generates a URL
+     *
+     * <code>
+     * // Generate a URL appending the URI to the base URI
+     * echo $url->get("products/edit/1");
+     *
+     * // Generate a URL for a predefined route
+     * echo $url->get(
+     *     [
+     *         "for"   => "blog-post",
+     *         "title" => "some-cool-stuff",
+     *         "year"  => "2015",
+     *     ]
+     * );
+     *
+     * // Generate a URL with GET arguments (/show/products?id=1&name=Carrots)
+     * echo $url->get(
+     *     "show/products",
+     *     [
+     *         "id"   => 1,
+     *         "name" => "Carrots",
+     *     ]
+     * );
+     *
+     * // Generate an absolute URL by setting the third parameter as false.
+     * echo $url->get(
+     *     "https://phalconphp.com/",
+     *     null,
+     *     false
+     * );
+     * </code>
+     */
+    public function get($uri = null, $args = null, $local = null, $baseUri = null)
+    {
+        if ($local == null) {
+            if (is_string($uri) && (Text::memstr($uri, "//") || Text::memstr($uri, ":"))) {
+                if (preg_match("#^((//)|([a-z0-9]+://)|([a-z0-9]+:))#i", $uri)) {
+                    $local = false;
+                } else {
+                    $local = true;
+                }
+            } else {
+                $local = true;
+            }
+        }
+
+        if (!is_string($baseUri)) {
+            $baseUri = $this->getBaseUri();
+        }
+
+        if (is_array($uri)) {
+
+            if (!isset($uri["for"])) {
+                throw new Exception("It's necessary to define the route name with the parameter 'for'");
+            }
+
+            $routeName = $uri["for"];
+            $router    = $this->_router;
+
+            /**
+             * Check if the router has not previously set
+             */
+            if (!is_object($router)) {
+
+                $dependencyInjector = $this->_dependencyInjector;
+                if ($dependencyInjector != "object") {
+                    throw new Exception("A dependency injector container is required to obtain the 'router' service");
+                }
+
+                $router        = $dependencyInjector->getShared("router");
+                $this->_router = $router;
+            }
+
+            /**
+             * Every route is uniquely differenced by a name
+             */
+            $route = $router->getRouteByName(routeName);
+            if (!is_object($route)) {
+                throw new Exception("Cannot obtain a route using the name '" . $routeName . "'");
+            }
+
+            /**
+             * Replace the patterns by its variables
+             */
+            $uri = self::replacePaths($route->getPattern(), $route->getReversedPaths(), $uri);
+        }
+
+        if ($local) {
+            $strUri = (string) $uri;
+            if ($baseUri == "/" && strlen($strUri) > 2 && $strUri[0] == '/' && $strUri[1] != '/') {
+                $uri = $baseUri . substr($strUri, 1);
+            } else {
+                if ($baseUri == "/" && strlen($strUri) == 1 && $strUri[0] == '/') {
+                    $uri = $baseUri;
+                } else {
+                    $uri = $baseUri . $strUri;
+                }
+            }
+        }
+
+        if ($args) {
+            $queryString = self::httpBuildQuery($args);
+            if (is_string($queryString) && strlen($queryString)) {
+                if (strpos($uri, "?") !== false) {
+                    $uri .= "&" . $queryString;
+                } else {
+                    $uri .= "?" . $queryString;
+                }
+            }
+        }
+
+        return uri;
+    }
+
+    /**
+     * Generates a URL for a static resource
+     *
+     * <code>
+     * // Generate a URL for a static resource
+     * echo $url->getStatic("img/logo.png");
+     *
+     * // Generate a URL for a static predefined route
+     * echo $url->getStatic(
+     *     [
+     *         "for" => "logo-cdn",
+     *     ]
+     * );
+     * </code>
+     */
+    public function getStatic($uri = null)
+    {
+        return $this->get($uri, null, null, $this->getStaticBaseUri());
+    }
+
+    /**
+     * Generates a local path
+     */
+    public function path($path = null)
+    {
+        return $this->_basePath . $path;
     }
 
     /**
@@ -339,7 +380,6 @@ class Url implements UrlInterface, InjectionAwareInterface
      * @param array $replacements
      * @return string|boolean
      * @throws Exception
-     * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/kernel/framework/router.c
      */
     private static function replacePaths($pattern, $paths, $replacements)
     {
@@ -485,9 +525,8 @@ class Url implements UrlInterface, InjectionAwareInterface
      * @param array $params
      * @param string $sep
      * @return string
-     * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/kernel/string.c
      */
-    private static function httpBuildQuery($params, $sep)
+    private static function httpBuildQuery($params, $sep = '&')
     {
         if (is_array($params) === false ||
             is_string($sep) === false) {
@@ -505,130 +544,6 @@ class Url implements UrlInterface, InjectionAwareInterface
         }
 
         return substr($d, strlen($sep));
-    }
-
-    /**
-     * Generates a URL
-     *
-     * <code>
-     *
-     * //Generate a URL appending the URI to the base URI
-     * echo $url->get('products/edit/1');
-     *
-     * //Generate a URL for a predefined route
-     * echo $url->get(array('for' => 'blog-post', 'title' => 'some-cool-stuff', 'year' => '2012'));
-     *
-     * </code>
-     *
-     * @param string|array|null $uri
-     * @param array|object|null $args Optional arguments to be appended to the query string
-     * @return string
-     * @throws Exception
-     */
-    public function get($uri = null, $args = null, $local = null, $baseUri = null)
-    {
-        if (is_string($uri) === false &&
-            is_array($uri) === false &&
-            is_null($uri) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_null($args) === false &&
-            is_array($args) === false &&
-            is_object($args) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $return = '';
-        if (is_array($uri) === true) {
-            if (isset($uri['for']) === false) {
-                throw new Exception('It\'s necessary to define the route name with the parameter "for"');
-            }
-
-            $router = $this->_router;
-
-            //Check if the router has not previously set
-            if (is_object($router) === false) {
-                $dependencyInjector = $this->_dependencyInjector;
-                if (is_object($dependencyInjector) === false) {
-                    throw new Exception('A dependency injector container is required to obtain the "url" service');
-                }
-
-                //@note no interface validation
-                $this->_router = $dependencyInjector->getShared('router');
-                $router        = $this->_router;
-            }
-
-            $routeName = $uri['for'];
-
-            //Every route is uniquely differenced by a name
-            $route = $router->getRouteByName($routeName);
-            if (is_object($route) === false) {
-                throw new Exception('Cannot obtain a route using the name "' . $routeName . '"');
-            }
-
-            //Replace the patterns by its variables
-            $return  .= $this->_baseUri . self::replacePaths(
-                    $pattern = $route->getPattern(), $route->getReversedPaths(), $uri
-            );
-        } else {
-            $return .= $this->_baseUri . $uri;
-        }
-
-        if (is_null($args) === false) {
-            $query = self::httpBuildQuery($args, '&');
-            if (is_string($query) === true && empty($query) === false) {
-                if (strpos($return, '?') !== false) {
-                    $return .= '&' . $query;
-                } else {
-                    $return .= '?' . $query;
-                }
-            }
-        }
-
-        return $return;
-    }
-
-    /**
-     * Generates a URL for a static resource
-     *
-     * @param string|null $uri
-     * @return string
-     * @throws Exception
-     */
-    public function getStatic($uri = null)
-    {
-        //@note documented 'array' type for uri doesn't make any sence
-        //@note added fallback from NULL
-        if (is_null($uri) === true) {
-            $uri = '';
-        } elseif (is_string($uri) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_null($this->_staticBaseUri) === false) {
-            return $this->_staticBaseUri . $uri;
-        }
-
-        return $this->getBaseUri() . $uri;
-    }
-
-    /**
-     * Generates a local path
-     *
-     * @param string|null $path
-     * @return string
-     */
-    public function path($path = null)
-    {
-        //@note added NULL fallback
-        if (is_null($path) === true) {
-            $path = '';
-        } elseif (is_string($path) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        return $this->_basePath . $path;
     }
 
 }

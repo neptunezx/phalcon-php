@@ -2,12 +2,12 @@
 
 namespace Phalcon\Mvc;
 
-use \Phalcon\Dispatcher as DefaultDispatcher;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Di\InjectionAwareInterface;
-use \Phalcon\DispatcherInterface as PhalconDispatcherInterface;
-use \Phalcon\Mvc\DispatcherInterface;
-use \Phalcon\Mvc\Dispatcher\Exception;
+use Phalcon\Mvc\DispatcherInterface;
+use Phalcon\Mvc\Dispatcher\Exception;
+use Phalcon\Events\ManagerInterface;
+use Phalcon\Http\ResponseInterface;
+use Phalcon\Mvc\ControllerInterface;
+use Phalcon\Dispatcher as BaseDispatcher;
 
 /**
  * Phalcon\Mvc\Dispatcher
@@ -17,67 +17,21 @@ use \Phalcon\Mvc\Dispatcher\Exception;
  * instantiating a controller and calling an action of that controller.
  *
  * <code>
+ * $di = new \Phalcon\Di();
  *
- *  $di = new Phalcon\Di();
+ * $dispatcher = new \Phalcon\Mvc\Dispatcher();
  *
- *  $dispatcher = new Phalcon\Mvc\Dispatcher();
+ * $dispatcher->setDI($di);
  *
- *  $dispatcher->setDI($di);
+ * $dispatcher->setControllerName("posts");
+ * $dispatcher->setActionName("index");
+ * $dispatcher->setParams([]);
  *
- *  $dispatcher->setControllerName('posts');
- *  $dispatcher->setActionName('index');
- *  $dispatcher->setParams(array());
- *
- *  $controller = $dispatcher->dispatch();
- *
+ * $controller = $dispatcher->dispatch();
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/dispatcher.c
  */
-class Dispatcher extends DefaultDispatcher implements EventsAwareInterface, InjectionAwareInterface, DispatcherInterface
+class Dispatcher extends BaseDispatcher implements DispatcherInterface
 {
-
-    /**
-     * Exception: No Dependency Injector
-     *
-     * @var int
-     */
-    const EXCEPTION_NO_DI = 0;
-
-    /**
-     * Exception: Cyclic Routing
-     *
-     * @var int
-     */
-    const EXCEPTION_CYCLIC_ROUTING = 1;
-
-    /**
-     * Exception: Handler Not Found
-     *
-     * @var int
-     */
-    const EXCEPTION_HANDLER_NOT_FOUND = 2;
-
-    /**
-     * Exception: Invalid Handler
-     *
-     * @var int
-     */
-    const EXCEPTION_INVALID_HANDLER = 3;
-
-    /**
-     * Exception: Invalid Parameters
-     *
-     * @var int
-     */
-    const EXCEPTION_INVALID_PARAMS = 4;
-
-    /**
-     * Exception: Action Not Found
-     *
-     * @var int
-     */
-    const EXCEPTION_ACTION_NOT_FOUND = 5;
 
     /**
      * Handler Suffix

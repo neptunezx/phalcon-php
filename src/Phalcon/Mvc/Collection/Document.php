@@ -2,17 +2,16 @@
 
 namespace Phalcon\Mvc\Collection;
 
-use \ArrayAccess;
+use Phalcon\Mvc\EntityInterface;
+use Phalcon\Mvc\Collection\Exception;
 
 /**
  * Phalcon\Mvc\Collection\Document
  *
  * This component allows Phalcon\Mvc\Collection to return rows without an associated entity.
  * This objects implements the ArrayAccess interface to allow access the object as object->x or array[x].
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/collection/document.c
  */
-class Document implements ArrayAccess
+class Document implements EntityInterface, \ArrayAccess
 {
 
     /**

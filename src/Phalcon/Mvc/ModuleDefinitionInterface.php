@@ -2,10 +2,12 @@
 
 namespace Phalcon\Mvc;
 
+use Phalcon\DiInterface;
+
 /**
- * Phalcon\Mvc\ModuleDefinitionInterface initializer
+ * Phalcon\Mvc\ModuleDefinitionInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/moduledefinitioninterface.c
+ * This interface must be implemented by class module definitions
  */
 interface ModuleDefinitionInterface
 {
@@ -13,12 +15,10 @@ interface ModuleDefinitionInterface
     /**
      * Registers an autoloader related to the module
      */
-    public function registerAutoloaders();
+    public function registerAutoloaders(DiInterface $dependencyInjector = null);
 
     /**
      * Registers services related to the module
-     *
-     * @param \Phalcon\DiInterface $dependencyInjector
      */
-    public function registerServices($dependencyInjector);
+    public function registerServices(DiInterface $dependencyInjector);
 }
