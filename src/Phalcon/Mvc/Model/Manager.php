@@ -1053,7 +1053,7 @@ class Manager implements ManagerInterface, InjectionAwareInterface, EventsAwareI
     /**
      * Setup a relation 1-n between two models
      *
-     * @param Phalcon\Mvc\ModelInterface $model
+     * @param ModelInterface $model
      * @param mixed $fields
      * @param string $referencedModel
      * @param array|null $options
