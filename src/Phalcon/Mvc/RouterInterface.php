@@ -2,10 +2,13 @@
 
 namespace Phalcon\Mvc;
 
+use Phalcon\Mvc\Router\RouteInterface;
+use Phalcon\Mvc\Router\GroupInterface;
+
 /**
- * Phalcon\Mvc\RouterInterface initializer
+ * Phalcon\Mvc\RouterInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/routerinterface.c
+ * Interface for Phalcon\Mvc\Router
  */
 interface RouterInterface
 {
@@ -36,7 +39,7 @@ interface RouterInterface
      *
      * @param array $defaults
      */
-    public function setDefaults($defaults);
+    public function setDefaults(array $defaults);
 
     /**
      * Handles routing information received from the rewrite engine
@@ -108,6 +111,38 @@ interface RouterInterface
      * @return \Phalcon\Mvc\Router\RouteInterface
      */
     public function addHead($pattern, $paths = null);
+
+    /**
+     * Adds a route to the router that only match if the HTTP method is PURGE (Squid and Varnish support)
+     * 
+     * @param string $pattern
+     * @param string|array|null $paths
+     * @return \Phalcon\Mvc\Router\RouteInterface
+     */
+    public function addPurge($pattern, $paths = null);
+
+    /**
+     * Adds a route to the router that only match if the HTTP method is TRACE
+     * 
+     * @param string $pattern
+     * @param string|array|null $paths
+     * @return \Phalcon\Mvc\Router\RouteInterface
+     */
+    public function addTrace($pattern, $paths = null);
+
+    /**
+     * Adds a route to the router that only match if the HTTP method is CONNECT
+     * 
+     * @param string $pattern
+     * @param string|array|null $paths
+     * @return \Phalcon\Mvc\Router\RouteInterface
+     */
+    public function addConnect($pattern, $paths = null);
+
+    /**
+     * Mounts a group of routes in the router
+     */
+    public function mount(GroupInterface $group);
 
     /**
      * Removes all the defined routes
@@ -185,11 +220,4 @@ interface RouterInterface
      * @return \Phalcon\Mvc\Router\RouteInterface
      */
     public function getRouteByName($name);
-
-    /**
-     * Returns whether controller name should not be mangled
-     *
-     * @return bool
-     */
-    public function isExactControllerName();
 }

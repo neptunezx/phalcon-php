@@ -3,16 +3,17 @@
 namespace Phalcon\Mvc;
 
 use Phalcon\DiInterface;
+use Phalcon\Mvc\ModelInterface;
 use Phalcon\Mvc\Model\TransactionInterface;
+use Phalcon\Mvc\Model\MessageInterface;
 
 /**
- * Phalcon\Mvc\ModelInterface initializer
+ * Phalcon\Mvc\ModelInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/modelinterface.c
+ * Interface for Phalcon\Mvc\Model
  */
 interface ModelInterface
 {
-
 
     /**
      * Sets a transaction related to the Model instance
@@ -93,12 +94,12 @@ interface ModelInterface
      */
     public function setDirtyState($dirtyState);
 
-	/**
+    /**
      * Returns one of the DIRTY_STATE_* constants telling if the record exists in the database or not
      *
      * @return int
      */
-	public function getDirtyState();
+    public function getDirtyState();
 
     /**
      * Assigns values to a model from an array
@@ -108,7 +109,7 @@ interface ModelInterface
      * @param array $columnMap
      * @return \Phalcon\Mvc\Model
      */
-    public function assign($data, $dataColumnMap = null, $whiteList = null);
+    public function assign(array $data, $dataColumnMap = null, $whiteList = null);
 
     /**
      * Assigns values to a model from an array returning a new model
@@ -120,7 +121,7 @@ interface ModelInterface
      * @param boolean|null $keepSnapshots
      * @return \Phalcon\Mvc\Model $result
      */
-    public static function cloneResultMap($base, $data, $columnMap, $dirtyState = null, $keepSnapshots = null);
+    public static function cloneResultMap($base, array $data, $columnMap, $dirtyState = null, $keepSnapshots = null);
 
     /**
      * Assigns values to a model from an array returning a new model
@@ -130,7 +131,7 @@ interface ModelInterface
      * @param int|null $dirtyState
      * @return \Phalcon\Mvc\Model
      */
-    public static function cloneResult(ModelInterface $base, $data, $dirtyState = null);
+    public static function cloneResult(ModelInterface $base, array $data, $dirtyState = null);
 
     /**
      * Returns an hydrated result based on the data and the column map
@@ -139,7 +140,7 @@ interface ModelInterface
      * @param array $columnMap
      * @param int $hydrationMode
      */
-    public static function cloneResultMapHydrate($data, $columnMap, $hydrationMode);
+    public static function cloneResultMapHydrate(array $data, $columnMap, $hydrationMode);
 
     /**
      * Allows to query a set of records that match the specified conditions
@@ -227,7 +228,7 @@ interface ModelInterface
      *
      * @param \Phalcon\Mvc\Model\MessageInterface $message
      */
-    public function appendMessage($message);
+    public function appendMessage(MessageInterface $message);
 
     /**
      * Check whether validation process has generated any messages
@@ -315,27 +316,10 @@ interface ModelInterface
      * @param array $data
      * @param array $columnMap
      */
-    public function setSnapshotData($data, $columnMap = null);
+    public function setSnapshotData(array $data, $columnMap = null);
 
-	/**
+    /**
      * Reset a model instance data
      */
-	public function reset();
-
-
-    /**
-     * Reads an attribute value by its name
-     *
-     * @param string $attribute
-     * @return mixed
-     */
-    public function readAttribute($attribute);
-
-    /**
-     * Writes an attribute value by its name
-     *
-     * @param string $attribute
-     * @param mixed $value
-     */
-    public function writeAttribute($attribute, $value);
+    public function reset();
 }

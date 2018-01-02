@@ -2,9 +2,7 @@
 
 namespace Phalcon\Mvc;
 
-use \Phalcon\Di\Injectable;
-use \Phalcon\Events\EventsAwareInterface;
-use \Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Di\Injectable;
 
 /**
  * Phalcon\Mvc\Controller
@@ -16,43 +14,44 @@ use \Phalcon\Di\InjectionAwareInterface;
  * and passing that data on to the views for presentation.
  *
  * <code>
+ * <?php
  *
  * class PeopleController extends \Phalcon\Mvc\Controller
  * {
+ *     // This action will be executed by default
+ *     public function indexAction()
+ *     {
  *
- *  //This action will be executed by default
- *  public function indexAction()
- *  {
+ *     }
  *
- *  }
+ *     public function findAction()
+ *     {
  *
- *  public function findAction()
- *  {
+ *     }
  *
- *  }
- *
- *  public function saveAction()
- *  {
- *   //Forwards flow to the index action
- *   return $this->dispatcher->forward(array('controller' => 'people', 'action' => 'index'));
- *  }
- *
+ *     public function saveAction()
+ *     {
+ *         // Forwards flow to the index action
+ *         return $this->dispatcher->forward(
+ *             [
+ *                 "controller" => "people",
+ *                 "action"     => "index",
+ *             ]
+ *         );
+ *     }
  * }
- *
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/controller.c
  */
-abstract class Controller extends Injectable implements EventsAwareInterface, InjectionAwareInterface
+abstract class Controller extends Injectable implements ControllerInterface
 {
 
     /**
-     * \Phalcon\Mvc\Controller constructor
+     * Phalcon\Mvc\Controller constructor
      */
-    final public function __construct()
+    public final function __construct()
     {
-        if (method_exists($this, 'onConstruct') === true) {
-            $this->onConstruct();
+        if (method_exists($this, "onConstruct")) {
+            $this->{"onConstruct"}();
         }
     }
 

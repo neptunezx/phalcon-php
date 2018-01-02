@@ -8,40 +8,49 @@ namespace Phalcon\Mvc\Router;
  * Helper class to create a group of routes with common attributes
  *
  * <code>
- * $router = new Phalcon\Mvc\Router();
+ * $router = new \Phalcon\Mvc\Router();
  *
  * //Create a group with a common module and controller
- * $blog = new Phalcon\Mvc\Router\Group(array(
- *  'module' => 'blog',
- *  'controller' => 'index'
- * ));
+ * $blog = new Group(
+ *     [
+ *         "module"     => "blog",
+ *         "controller" => "index",
+ *     ]
+ * );
  *
  * //All the routes start with /blog
- * $blog->setPrefix('/blog');
+ * $blog->setPrefix("/blog");
  *
  * //Add a route to the group
- * $blog->add('/save', array(
- *  'action' => 'save'
- * ));
+ * $blog->add(
+ *     "/save",
+ *     [
+ *         "action" => "save",
+ *     ]
+ * );
  *
  * //Add another route to the group
- * $blog->add('/edit/{id}', array(
- *  'action' => 'edit'
- * ));
+ * $blog->add(
+ *     "/edit/{id}",
+ *     [
+ *         "action" => "edit",
+ *     ]
+ * );
  *
  * //This route maps to a controller different than the default
- * $blog->add('/blog', array(
- *  'controller' => 'about',
- *  'action' => 'index'
- * ));
+ * $blog->add(
+ *     "/blog",
+ *     [
+ *         "controller" => "about",
+ *         "action"     => "index",
+ *     ]
+ * );
  *
  * //Add the group to the router
  * $router->mount($blog);
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/router/group.c
  */
-class Group
+class Group implements GroupInterface
 {
 
     /**
@@ -226,7 +235,7 @@ class Group
      */
     protected function _addRoute($pattern, $paths, $httpMethods)
     {
-        if ( is_string($pattern) === false ) {
+        if (is_string($pattern) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -235,15 +244,15 @@ class Group
          */
         $defaultPaths = $this->_paths;
 
-        if ( is_array($defaultPaths) ) {
+        if (is_array($defaultPaths)) {
 
-            if ( is_string($paths) ) {
+            if (is_string($paths)) {
                 $processedPaths = Route::getRoutePaths($paths);
             } else {
                 $processedPaths = $paths;
             }
 
-            if ( is_array($processedPaths) ) {
+            if (is_array($processedPaths)) {
                 /**
                  * Merge the paths with the default paths
                  */
@@ -258,10 +267,8 @@ class Group
         /**
          * Every route is internally stored as a Phalcon\Mvc\Router\Route
          */
-        $route = new Route(
-            $this->_prefix.$pattern,
-            $mergedPaths,
-            $httpMethods
+        $route           = new Route(
+            $this->_prefix . $pattern, $mergedPaths, $httpMethods
         );
         $this->_routes[] = $route;
 
@@ -284,8 +291,8 @@ class Group
      */
     public function add($pattern, $paths = null, $httpMethods = null)
     {
-        if(! is_string($pattern)) {
-            throw  new Exception('Invalid parameter type.');
+        if (!is_string($pattern)) {
+            throw new Exception('Invalid parameter type.');
         }
         return $this->_addRoute($pattern, $paths, $httpMethods);
     }
@@ -300,8 +307,8 @@ class Group
      */
     public function addGet($pattern, $paths = null)
     {
-        if(! is_string($pattern)) {
-            throw  new Exception('Invalid parameter type.');
+        if (!is_string($pattern)) {
+            throw new Exception('Invalid parameter type.');
         }
         return $this->_addRoute($pattern, $paths, 'GET');
     }
@@ -316,8 +323,8 @@ class Group
      */
     public function addPost($pattern, $paths = null)
     {
-        if(! is_string($pattern)) {
-            throw  new Exception('Invalid parameter type.');
+        if (!is_string($pattern)) {
+            throw new Exception('Invalid parameter type.');
         }
         return $this->_addRoute($pattern, $paths, 'POST');
     }
@@ -332,8 +339,8 @@ class Group
      */
     public function addPut($pattern, $paths = null)
     {
-        if(! is_string($pattern)) {
-            throw  new Exception('Invalid parameter type.');
+        if (!is_string($pattern)) {
+            throw new Exception('Invalid parameter type.');
         }
         return $this->_addRoute($pattern, $paths, 'PUT');
     }
@@ -347,8 +354,8 @@ class Group
      */
     public function addPatch($pattern, $paths = null)
     {
-        if(! is_string($pattern)) {
-            throw  new Exception('Invalid parameter type.');
+        if (!is_string($pattern)) {
+            throw new Exception('Invalid parameter type.');
         }
         return $this->_addRoute($pattern, $paths, 'PATCH');
     }
@@ -363,8 +370,8 @@ class Group
      */
     public function addDelete($pattern, $paths = null)
     {
-        if(! is_string($pattern)) {
-            throw  new Exception('Invalid parameter type.');
+        if (!is_string($pattern)) {
+            throw new Exception('Invalid parameter type.');
         }
         return $this->_addRoute($pattern, $paths, 'DELETE');
     }
@@ -379,8 +386,8 @@ class Group
      */
     public function addOptions($pattern, $paths = null)
     {
-        if(! is_string($pattern)) {
-            throw  new Exception('Invalid parameter type.');
+        if (!is_string($pattern)) {
+            throw new Exception('Invalid parameter type.');
         }
         return $this->_addRoute($pattern, $paths, 'OPTIONS');
     }
@@ -395,8 +402,8 @@ class Group
      */
     public function addHead($pattern, $paths = null)
     {
-        if(! is_string($pattern)) {
-            throw  new Exception('Invalid parameter type.');
+        if (!is_string($pattern)) {
+            throw new Exception('Invalid parameter type.');
         }
         return $this->_addRoute($pattern, $paths, 'HEAD');
     }

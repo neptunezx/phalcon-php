@@ -123,15 +123,12 @@ class Collection implements CollectionInterface
      * @throws Exception
      */
     public function setHandler($handler, $lazy = false)
-	{
-	    if(!is_bool($lazy)) {
-            throw new Exception('Invalid parameter type.');
-        }
-		$this->_handler = $handler;
-	    $this->_lazy = $lazy;
+    {
+        $this->_handler = $handler;
+        $this->_lazy    = (bool) $lazy;
 
-		return $this;
-	}
+        return $this;
+    }
 
     /**
      * Sets if the main handler must be lazy loaded
@@ -142,11 +139,7 @@ class Collection implements CollectionInterface
      */
     public function setLazy($lazy)
     {
-        if (!is_bool($lazy)) {
-            throw new Exception('Invalid parameter type.');
-        }
-        $this->_lazy = $lazy;
-
+        $this->_lazy = (bool) $lazy;
         return $this;
     }
 
@@ -181,11 +174,7 @@ class Collection implements CollectionInterface
      */
     public function map($routePattern, $handler, $name = null)
     {
-        if(!is_string($routePattern) && !is_null($name)) {
-            throw new Exception('Invalid parameter type.');
-        }
         $this->_addMap(null, $routePattern, $handler, $name);
-
         return $this;
     }
 
@@ -200,11 +189,7 @@ class Collection implements CollectionInterface
      */
     public function get($routePattern, $handler, $name = null)
     {
-        if(!is_string($routePattern) && !is_null($name)) {
-            throw new Exception('Invalid parameter type.');
-        }
         $this->_addMap('GET', $routePattern, $handler, $name);
-
         return $this;
     }
 
@@ -219,11 +204,7 @@ class Collection implements CollectionInterface
      */
     public function post($routePattern, $handler, $name = null)
     {
-        if(!is_string($routePattern) && !is_null($name)) {
-            throw new Exception('Invalid parameter type.');
-        }
         $this->_addMap('POST', $routePattern, $handler, $name);
-
         return $this;
     }
 
@@ -238,11 +219,7 @@ class Collection implements CollectionInterface
      */
     public function put($routePattern, $handler, $name = null)
     {
-        if(!is_string($routePattern) && !is_null($name)) {
-            throw new Exception('Invalid parameter type.');
-        }
         $this->_addMap('PUT', $routePattern, $handler, $name);
-
         return $this;
     }
 
@@ -257,11 +234,7 @@ class Collection implements CollectionInterface
      */
     public function patch($routePattern, $handler, $name = null)
     {
-        if(!is_string($routePattern) && !is_null($name)) {
-            throw new Exception('Invalid parameter type.');
-        }
         $this->_addMap('PATCH', $routePattern, $handler, $name);
-
         return $this;
     }
 
@@ -276,11 +249,7 @@ class Collection implements CollectionInterface
      */
     public function head($routePattern, $handler, $name = null)
     {
-        if(!is_string($routePattern) && !is_null($name)) {
-            throw new Exception('Invalid parameter type.');
-        }
         $this->_addMap('HEAD', $routePattern, $handler, $name);
-
         return $this;
     }
 
@@ -295,11 +264,7 @@ class Collection implements CollectionInterface
      */
     public function delete($routePattern, $handler, $name = null)
     {
-        if(!is_string($routePattern) && !is_null($name)) {
-            throw new Exception('Invalid parameter type.');
-        }
         $this->_addMap('DELETE', $routePattern, $handler, $name);
-
         return $this;
     }
 
@@ -314,11 +279,7 @@ class Collection implements CollectionInterface
      */
     public function options($routePattern, $handler, $name = null)
     {
-        if(!is_string($routePattern) && !is_null($name)) {
-            throw new Exception('Invalid parameter type.');
-        }
         $this->_addMap('OPTIONS', $routePattern, $handler, $name);
-
         return $this;
     }
 

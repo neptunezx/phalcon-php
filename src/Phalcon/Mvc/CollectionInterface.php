@@ -3,19 +3,12 @@
 namespace Phalcon\Mvc;
 
 /**
- * Phalcon\Mvc\CollectionInterface initializer
+ * Phalcon\Mvc\CollectionInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/collectioninterface.c
+ * Interface for Phalcon\Mvc\Collection
  */
 interface CollectionInterface
 {
-
-    /**
-     * \Phalcon\Mvc\Collection
-     *
-     * @param \Phalcon\DiInterface|null $dependencyInjector
-     */
-    public function __construct($dependencyInjector = null);
 
     /**
      * Sets a value for the _id propery, creates a MongoId object if needed
@@ -60,20 +53,19 @@ interface CollectionInterface
     public function getConnection();
 
     /**
-     * Reads an attribute value by its name
-     *
-     * @param string $attribute
-     * @return mixed
+     * Sets the dirty state of the object using one of the DIRTY_STATE_* constants
+     * 
+     * @param int $dirtyState
+     * @return \Phalcon\Mvc\CollectionInterface
      */
-    public function readAttribute($attribute);
+    public function setDirtyState($dirtyState);
 
     /**
-     * Writes an attribute value by its name
+     * Returns one of the DIRTY_STATE_* constants telling if the record exists in the database or not
      *
-     * @param string $attribute
-     * @param mixed $value
+     * @return int
      */
-    public function writeAttribute($attribute, $value);
+    public function getDirtyState();
 
     /**
      * Returns a cloned collection
@@ -82,7 +74,7 @@ interface CollectionInterface
      * @param array $document
      * @return \Phalcon\Mvc\Collection
      */
-    public static function cloneResult($collection, $document);
+    public static function cloneResult(CollectionInterface $collection, array $document);
 
     /**
      * Fires an event, implicitly calls behaviors and listeners in the events manager are notified
@@ -143,7 +135,7 @@ interface CollectionInterface
      * @param array|null $parameters
      * @return array
      */
-    public static function findFirst($parameters = null);
+    public static function findFirst(array $parameters = null);
 
     /**
      * Allows to query a set of records that match the specified conditions
@@ -151,7 +143,7 @@ interface CollectionInterface
      * @param array|null $parameters
      * @return array
      */
-    public static function find($parameters = null);
+    public static function find(array $parameters = null);
 
     /**
      * Perform a count over a collection
@@ -159,7 +151,7 @@ interface CollectionInterface
      * @param array|null $parameters
      * @return array
      */
-    public static function count($parameters = null);
+    public static function count(array $parameters = null);
 
     /**
      * Deletes a model instance. Returning true on success or false otherwise
