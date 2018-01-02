@@ -8,6 +8,7 @@ use Phalcon\Mvc\Url\Exception;
 use Phalcon\Mvc\RouterInterface;
 use Phalcon\Mvc\Router\RouteInterface;
 use Phalcon\Di\InjectionAwareInterface;
+use Phalcon\Text;
 
 /**
  * Phalcon\Mvc\Url
