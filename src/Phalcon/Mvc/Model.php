@@ -1313,11 +1313,12 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
         $dependencyInjector = Di::getDefault();
-        if (is_object($dependencyInjector) === false ||
-            !$dependencyInjector instanceof ManagerInterface) {
+
+        $manager = $dependencyInjector->getShared("modelsManager");
+        if (is_object($manager) === false ||
+            !$manager instanceof ManagerInterface) {
             throw new Exception('Invalid parameter type.');
         }
-        $manager = $dependencyInjector->getShared("modelsManager");
 
         if (!is_array($parameters)) {
             $params = [];
