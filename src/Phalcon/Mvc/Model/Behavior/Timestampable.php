@@ -12,58 +12,75 @@ use Phalcon\Mvc\Model\Exception;
  * Allows to automatically update a model’s attribute saving the
  * datetime when a record is created or updated
  */
-class Timestampable extends Behavior implements BehaviorInterface
+class Timestampable extends Behavior
 {
 
     /**
      * Listens for notifications from the models manager
      *
      * @param string $type
-     * @param \Phalcon\Mvc\ModelInterface $model
+     * @param  ModelInterface $model
      * @throws Exception
+     * @return null
      */
     public function notify($type, ModelInterface $model)
     {
-        if (is_string($type) === false ||
-            is_object($model) === false) {
+        if (is_string($type) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        //Check if the developer decided to take aciton here
+        /**
+         * Check if the developer decided to take action here
+         */
         if ($this->mustTakeAction($type) !== true) {
-            return;
+            return null;
         }
 
         $options = $this->getOptions($type);
-        if (is_array($options) === true) {
-            //The field name is required in this behavior
-            if (isset($options['field']) === false) {
+        if (is_array($options)) {
+
+            /**
+             * The field name is required in this behavior
+             */
+            if (isset($options['field'])) {
+                $field = $options['field'];
+            } else {
                 throw new Exception("The option 'field' is required");
             }
 
             $timestamp = null;
-            if (isset($options['format']) === true) {
-                //Format is a format for date
-                $timestamp = date($options['format']);
+
+            if (isset($options['format'])) {
+                $format = $options['format'];
+                /**
+                 * Format is a format for date()
+                 */
+                $timestamp = date($format);
             } else {
-                if (isset($options['generator']) === true) {
-                    //A generator is a closure that produces the current timestamp value
-                    if (is_object($options['generator']) === true &&
-                        $options['generator'] instanceof Closure === true) {
-                        $timestamp = call_user_func($options['generator']);
+                if (isset($options['generator'])) {
+                    $generator = $options['generator'];
+
+                    /**
+                     * A generator is a closure that produce the correct timestamp value
+                     */
+                    if (is_object($generator)) {
+                        if ($generator instanceof \Closure) {
+                            $timestamp = call_user_func($generator);
+                        }
                     }
                 }
             }
 
-            //Last resort call time()
-            if (is_null($timestamp) === true) {
+            /**
+             * Last resort call time()
+             */
+            if ($timestamp === null) {
                 $timestamp = time();
             }
 
-            $field = $options['field'];
-
-            //Assign the value to the field, use writeAttribute if the property is protected
-            if (is_array($field) === true) {
+            /**
+             * Assign the value to the field, use writeattribute if the property is protected
+             */
+            if (is_array($field)) {
                 foreach ($field as $singleField) {
                     $model->writeAttribute($singleField, $timestamp);
                 }
@@ -72,5 +89,4 @@ class Timestampable extends Behavior implements BehaviorInterface
             }
         }
     }
-
 }

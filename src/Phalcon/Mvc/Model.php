@@ -1411,7 +1411,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public static function count($parameters = null)
     {
 
-        $result = self::_groupResult("COUNT", "rowcount", parameters);
+        $result = self::_groupResult("COUNT", "rowcount", $parameters);
         if (is_string($result)) {
             return (int)$result;
         }
@@ -4445,7 +4445,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     protected final function _possibleSetter($property, $value)
     {
-        if (is_string($property)) {
+        if (is_string($property)===false) {
             throw new Exception('Invalid parameter type.');
         }
 
