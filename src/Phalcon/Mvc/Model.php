@@ -67,7 +67,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\iterator;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model.c
  */
-abstract class Model implements ModelInterface, ResultInterface, InjectionAwareInterface,  \Serializable, \JsonSerializable
+abstract class Model implements ModelInterface, ResultInterface, InjectionAwareInterface, \Serializable, \JsonSerializable
 {
 
     /**
@@ -641,14 +641,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         foreach ($metaData->getAttributes($this) as $attribute) {
             // Check if we need to rename the field
             if (is_array($columnMap)) {
-                if (!isset($columnMap[$attribute])) {
+                if (isset($columnMap[$attribute])) {
+                    $attributeField = $columnMap[$attribute];
+                } else {
                     if (!Kernel::getGlobals('orm.ignore_unknown_columns')) {
-                        throw new Exception("Column '" . $attribute. "' doesn\'t make part of the column map");
+                        throw new Exception("Column '" . $attribute . "' doesn\'t make part of the column map");
                     } else {
                         continue;
                     }
-                } else {
-                    $attributeField = $columnMap[$attribute];
                 }
             } else {
                 $attributeField = $attribute;
@@ -1074,6 +1074,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
          * Builds a query with the passed parameters
          */
         $builder = $manager->createBuilder($params);
+        if (!$builder instanceof Builder) {
+            $builder = null;
+        }
         $builder->from(get_called_class());
 
         /**
@@ -1194,10 +1197,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
              */
             foreach ($primaryKeys as $field) {
                 if (is_array($columnMap)) {
-                    if (!isset($columnMap[$field])) {
+                    if (isset($columnMap[$field])) {
+                        $attributeField = $columnMap[$field];
+                    } else {
                         throw new Exception("Column '" . $field . "' isn't part of the column map");
                     }
-                    $attributeField = $columnMap[$field];
                 } else {
                     $attributeField = $field;
                 }
@@ -1291,7 +1295,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         return false;
     }
 
-    // ====== 伟大的分割线 ======
+// ====== 伟大的分割线 ======
 
     /**
      * Generate a PHQL SELECT statement for an aggregate
@@ -1338,7 +1342,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         } else {
             if (isset($params['group'])) {
                 $groupColumns = $params['group'];
-                $columns = $groupColumns . ", " . $functionName . "(" . $groupColumn . ") AS " . alias;
+                $columns = $groupColumns . ", " . $functionName . "(" . $groupColumn . ") AS " . $alias;
             } else {
                 $columns = $functionName . "(" . $groupColumn . ") AS " . $alias;
             }
@@ -1348,10 +1352,15 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
          * Builds a query with the passed parameters
          */
         $builder = $manager->createBuilder($params);
+        if (!$builder instanceof Builder) {
+            $builder = null;
+        }
+
         $builder->columns($columns);
         $builder->from(get_called_class());
 
         $query = $builder->getQuery();
+
 
         /**
          * Check for bind parameters
@@ -1434,7 +1443,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * </code>
      *
      * @param array|null $parameters
-     * @return double
+     * @return double | mixed
      */
     public static function sum($parameters = null)
     {
@@ -1732,7 +1741,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         $belongsTo = $manager->getBelongsTo($this);
-
+        if (is_array($belongsTo) === false) {
+            $belongsTo = array();
+        }
         $error = false;
         foreach ($belongsTo as $relation) {
 
@@ -1883,6 +1894,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //We check if some of the hasOne/hasMany relations are a foreign key
         $relations = $manager->getHasOneAndHasMany($this);
+        if (is_array($relations) === false) {
+            $relations = [];
+        }
         foreach ($relations as $relation) {
 
             /**
@@ -1956,6 +1970,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 join(" AND ", $conditions),
                 "bind" => $bindParams
             ]);
+            if (!$resultset instanceof Resultset) {
+                $resultset = null;
+            }
 
             /**
              * Delete the resultset
@@ -1972,7 +1989,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Reads both "hasMany" and "hasOne" relations and checks the virtual foreign keys (cascade) when deleting records
      *
-     * @return boolean
+     * @return bool
+     * @throws Exception
      */
     protected function _checkForeignKeysReverseCascade()
     {
@@ -2347,7 +2365,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                  * Check if the model has a column map
                  */
                 if (is_array($columnMap)) {
-                    if (isset($columnMap[field])) {
+                    if (isset($columnMap[$field])) {
                         $attributeField = $columnMap[$field];
                     } else {
                         throw new Exception("Column '" . $field . "' isn't part of the column map");
@@ -2380,7 +2398,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         if (isset($bindDataTypes[$field])) {
                             $bindType = $bindDataTypes[$field];
                         } else {
-                            throw new Exception("Column '" . field . "' have not defined a bind data type");
+                            throw new Exception("Column '" . $field . "' have not defined a bind data type");
                         }
 
                         $fields[] = $field;
@@ -2662,7 +2680,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                         if ($changed) {
                             $fields[] = $field;
                             $values[] = $value;
-                            $bindTypes[] = bindType;
+                            $bindTypes[] = $bindType;
                         }
                     }
                     $newSnapshot[$attributeField] = $value;
@@ -3321,7 +3339,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             return false;
         }
 
-        $value = array();
+        $values = array();
         $bindTypes = array();
         $conditions = array();
         $primaryKeys = $metaData->getPrimaryKeyAttributes($this);
@@ -4411,8 +4429,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
             if (count($related) > 0) {
                 $this->_related[$lowerProperty] = $related;
-				$this->_dirtyState = self::DIRTY_STATE_TRANSIENT;
-			}
+                $this->_dirtyState = self::DIRTY_STATE_TRANSIENT;
+            }
 
             return $value;
         }
@@ -4445,7 +4463,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     protected final function _possibleSetter($property, $value)
     {
-        if (is_string($property)===false) {
+        if (is_string($property) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
@@ -4503,7 +4521,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                  * For belongs-to relations we store the object in the related bag
                  */
                 if ($result instanceof ModelInterface) {
-                    $this->_related[$lowerProperty] = result;
+                    $this->_related[$lowerProperty] = $result;
                 }
             }
 
@@ -4621,9 +4639,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             if ($manager->isKeepingSnapshots($this)) {
                 if (isset($attributes["_snapshot"])) {
                     $snapshot = $attributes["_snapshot"];
-            $this->_snapshot = $snapshot;
-					$attributes = $attributes["_attributes"];
-				} else {
+                    $this->_snapshot = $snapshot;
+                    $attributes = $attributes["_attributes"];
+                } else {
                     $this->_snapshot = $attributes;
                 }
             }
