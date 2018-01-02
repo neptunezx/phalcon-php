@@ -38,7 +38,7 @@ interface ManagerInterface
     /**
      * Sets the mapped schema for a model
      * 
-     * @param Phalcon\Mvc\ModelInterface $model
+     * @param ModelInterface $model
      * @param string $schema
      * @return void
      */
@@ -47,7 +47,7 @@ interface ManagerInterface
     /**
      * Returns the mapped schema for a model
      * 
-     * @param Phalcon\Mvc\ModelInterface $model
+     * @param ModelInterface $model
      * @return string
      */
     public function getModelSchema(ModelInterface $model);
@@ -60,7 +60,7 @@ interface ManagerInterface
     /**
      * Sets read connection service for a model
      * 
-     * @param Phalcon\Mvc\ModelInterface $model
+     * @param ModelInterface $model
      * @param string $connectionService
      * @return void
      */
@@ -74,7 +74,7 @@ interface ManagerInterface
     /**
      * Sets write connection service for a model
      * 
-     * @param Phalcon\Mvc\ModelInterface $model
+     * @param ModelInterface $model
      * @param string $connectionService
      * @return void
      */
@@ -83,7 +83,7 @@ interface ManagerInterface
     /**
      * Returns the connection service name used to write data related to a model
      * 
-     * @param Phalcon\Mvc\ModelInterface $model
+     * @param ModelInterface $model
      * @return string
      */
     public function getWriteConnectionService(ModelInterface $model);
@@ -91,16 +91,16 @@ interface ManagerInterface
     /**
      * Returns the connection to read data related to a model
      * 
-     * @param Phalcon\Mvc\ModelInterface $model
-     * @return Phalcon\Db\AdapterInterface
+     * @param ModelInterface $model
+     * @return AdapterInterface
      */
     public function getReadConnection(ModelInterface $model);
 
     /**
      * Returns the connection to write data related to a model
      * 
-     * @param Phalcon\Mvc\ModelInterface $model
-     * @return Phalcon\Db\AdapterInterface
+     * @param ModelInterface $model
+     * @return AdapterInterface
      */
     public function getWriteConnection(ModelInterface $model);
 
@@ -115,7 +115,7 @@ interface ManagerInterface
     /**
      * Get last initialized model
      * 
-     * @return Phalcon\Mvc\ModelInterface
+     * @return ModelInterface
      */
     public function getLastInitialized();
 
@@ -124,7 +124,7 @@ interface ManagerInterface
      * 
      * @param string $modelName
      * @param boolean $newInstance
-     * @return Phalcon\Mvc\ModelInterface
+     * @return ModelInterface
      */
     public function load($modelName, $newInstance = false);
 

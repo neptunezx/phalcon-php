@@ -2,7 +2,7 @@
 
 namespace Phalcon\Mvc;
 
-use Serializable;
+use function GuzzleHttp\Promise\all;
 use Phalcon\Di;
 use Phalcon\Db\Column;
 use Phalcon\Db\RawValue;
@@ -27,10 +27,12 @@ use Phalcon\Mvc\Model\BehaviorInterface;
 use Phalcon\Mvc\Model\Exception;
 use Phalcon\Mvc\Model\MessageInterface;
 //use Phalcon\Mvc\Model\Message;
-//use Phalcon\ValidationInterface;
+use Phalcon\Text;
+use Phalcon\ValidationInterface;
 use Phalcon\Mvc\Model\ValidationFailed;
 use Phalcon\Events\ManagerInterface as EventsManagerInterface;
 use Phalcon\Kernel;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\iterator;
 
 /**
  * Phalcon\Mvc\Model
@@ -65,7 +67,7 @@ use Phalcon\Kernel;
  *
  * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/mvc/model.c
  */
-abstract class Model implements ModelInterface, ResultInterface, InjectionAwareInterface, Serializable
+abstract class Model implements ModelInterface, ResultInterface, InjectionAwareInterface, \Serializable, \JsonSerializable
 {
 
     /**
@@ -285,6 +287,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function setDI($dependencyInjector)
     {
+        if (!is_object($dependencyInjector ||
+            !$dependencyInjector instanceof DiInterface)) {
+            throw new Exception('Invalid parameter type.');
+        }
         $this->_dependencyInjector = $dependencyInjector;
     }
 
@@ -527,7 +533,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function getWriteConnectionService()
     {
-        return $this->_modelsManager->getWriteConnectionService();
+        return $this->_modelsManager->getWriteConnectionService($this);
     }
 
     /**
@@ -561,7 +567,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Gets the connection used to read data for the model
      *
-     * @return \Phalcon\Db\AdapterInterface
+     * @return \Phalcon\Db\AdapterInterface|string
      */
     public function getReadConnection()
     {
@@ -576,7 +582,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Gets the connection used to write data to the model
      *
-     * @return \Phalcon\Db\AdapterInterface
+     * @return \Phalcon\Db\AdapterInterface|string
      */
     public function getWriteConnection()
     {
@@ -599,7 +605,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * </code>
      *
      * @param array $data
-     * @param array|null $columnMap
+     * @param array|null $dataColumnMap
      * @return \Phalcon\Mvc\Model
      * @throws Exception
      */
@@ -612,7 +618,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             $dataMapped = [];
             foreach ($data as $key => $value) {
                 if (isset($dataColumnMap[$key])) {
-                    $keyMapped              = $dataColumnMap[$key];
+                    $keyMapped = $dataColumnMap[$key];
                     $dataMapped[$keyMapped] = $value;
                 }
             }
@@ -635,14 +641,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         foreach ($metaData->getAttributes($this) as $attribute) {
             // Check if we need to rename the field
             if (is_array($columnMap)) {
-                if (!isset($columnMap[$attribute])) {
+                if (isset($columnMap[$attribute])) {
+                    $attributeField = $columnMap[$attribute];
+                } else {
                     if (!Kernel::getGlobals('orm.ignore_unknown_columns')) {
                         throw new Exception("Column '" . $attribute . "' doesn\'t make part of the column map");
                     } else {
                         continue;
                     }
-                } else {
-                    $attributeField = $columnMap[$attribute];
                 }
             } else {
                 $attributeField = $attribute;
@@ -686,13 +692,15 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param array $columnMap
      * @param int|null $dirtyState
      * @param boolean|null $keepSnapshots
-     * @return \Phalcon\Mvc\Model
+     * @return Model|ModelInterface
      * @throws Exception
      */
     public static function cloneResultMap($base, $data, $columnMap, $dirtyState = 0, $keepSnapshots = null)
     {
 
-        if (!is_array($data)) {
+        if (!is_array($data) ||
+            is_int($dirtyState === false) ||
+            (!is_bool($keepSnapshots) === false && !is_null($keepSnapshots))) {
             throw new Exception('Invalid parameter type.');
         }
         $instance = clone $base;
@@ -725,7 +733,6 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 }
 
 
-
                 if ($value != "" && $value !== null) {
                     switch ($attribute[1]) {
 
@@ -740,7 +747,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                             break;
 
                         case Column::TYPE_BOOLEAN:
-                            $castValue = (boolean) $value;
+                            $castValue = (boolean)$value;
                             break;
 
                         default:
@@ -759,11 +766,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                             break;
 
                         default:
-                            $castValue = value;
+                            $castValue = $value;
                             break;
                     }
                 }
-                $attributeName              = $attribute[0];
+                $attributeName = $attribute[0];
                 $instance->{$attributeName} = $castValue;
             }
         }
@@ -796,6 +803,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public static function cloneResultMapHydrate($data, $columnMap, $hydrationMode)
     {
+        $hydrateObject = null;
+        $hydrateArray = null;
         if (is_array($data) === false) {
             throw new Exception('Data to hydrate must be an Array'); //@note fixed typo
         }
@@ -812,9 +821,6 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 return $data;
             }
         }
-
-
-
 
 
         /**
@@ -857,13 +863,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
                     $hydrateArray[$attributeName] = $value;
                 } else {
-                    $hydrateArray->{$attributeName} = $value;
+                    $hydrateObject->{$attributeName} = $value;
                 }
             } else {
                 if ($hydrationMode == Resultset::HYDRATE_ARRAYS) {
                     $hydrateArray[$key] = $value;
                 } else {
-                    $hydrateArray->{$key} = $value;
+                    $hydrateObject->{$key} = $value;
                 }
             }
         }
@@ -889,7 +895,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param \Phalcon\Mvc\ModelInterface $base
      * @param array $data
      * @param int|null $dirtyState
-     * @return \Phalcon\Mvc\Model
+     * @return \Phalcon\Mvc\Model|ModelInterface
      * @throws Exception
      */
     public static function cloneResult(ModelInterface $base, $data, $dirtyState = 0)
@@ -906,31 +912,27 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_array($data) === false) {
-            throw new Exception('Data to dump in the object must be an Array');
-        }
-
         //Clone the base record
-        $object = clone $base;
+        $instance = clone $base;
 
-        //Mark the object as persistent
-        $object->setDirtyState($dirtyState);
+        /**
+         * Mark the object as persistent
+         */
+        $instance->setDirtyState($dirtyState);
 
         foreach ($data as $key => $value) {
-            if (is_string($key) === false) {
-                throw new Exception("Invalid key in array data provided to cloneResult()"); //@note fixed wrong function name
+            if (!is_string($key)) {
+                throw new Exception("Invalid key in array data provided to dumpResult()");
             }
-
-            $object->$key = $value;
+            $instance->{$key} = $value;
         }
 
-        //Call afterFetch, this allows the developer to execute actions after a record is
-        //fetched from the database
-        if (method_exists($object, 'afterFetch') === true) {
-            $object->afterFetch();
-        }
+        /**
+         * Call afterFetch, this allows the developer to execute actions after a record is fetched from the database
+         */
+        $instance->fireEvent("afterFetch");
 
-        return $object;
+        return $instance;
     }
 
     /**
@@ -966,7 +968,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public static function find($parameters = null)
     {
         $dependencyInjector = Di::getDefault();
-        $manager            = $dependencyInjector->getShared("modelsManager");
+        $manager = $dependencyInjector->getShared("modelsManager");
 
         if (!is_array($parameters)) {
             $params = [];
@@ -1002,7 +1004,6 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 }
             }
         }
-
 
 
         /**
@@ -1058,7 +1059,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     {
 
         $dependencyInjector = Di::getDefault();
-        $manager            = $dependencyInjector->getShared("modelsManager");
+        $manager = $dependencyInjector->getShared("modelsManager");
 
         if (!is_array($parameters)) {
             $params = [];
@@ -1073,6 +1074,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
          * Builds a query with the passed parameters
          */
         $builder = $manager->createBuilder($params);
+        if (!$builder instanceof Builder) {
+            $builder = null;
+        }
         $builder->from(get_called_class());
 
         /**
@@ -1159,14 +1163,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     {
 
         $uniqueParams = null;
-        $uniqueTypes  = null;
-        $uniqueKey    = $this->_uniqueKey;
+        $uniqueTypes = null;
+        $uniqueKey = $this->_uniqueKey;
 
         //Builds an unique primary key condition
 
         if ($uniqueKey === null) {
 
-            $primaryKeys   = $metaData->getPrimaryKeyAttributes($this);
+            $primaryKeys = $metaData->getPrimaryKeyAttributes($this);
             $bindDataTypes = $metaData->getBindTypes($this);
 
             $numberPrimary = count($primaryKeys);
@@ -1183,20 +1187,21 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 $columnMap = null;
             }
 
-            $numberEmpty  = 0;
-            $wherePk      = [];
+            $numberEmpty = 0;
+            $wherePk = [];
             $uniqueParams = [];
-            $uniqueTypes  = [];
+            $uniqueTypes = [];
 
             /**
              * We need to create a primary key based on the current data
              */
             foreach ($primaryKeys as $field) {
                 if (is_array($columnMap)) {
-                    if (!isset($columnMap[$field])) {
-                        throw new Exception("Column '" . field . "' isn't part of the column map");
+                    if (isset($columnMap[$field])) {
+                        $attributeField = $columnMap[$field];
+                    } else {
+                        throw new Exception("Column '" . $field . "' isn't part of the column map");
                     }
-                    $attributeField = $columnMap[$field];
                 } else {
                     $attributeField = $field;
                 }
@@ -1223,7 +1228,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 }
 
                 $uniqueTypes[] = $type;
-                $wherePk[]     = $connection->escapeIdentifier($field) . " = ?";
+                $wherePk[] = $connection->escapeIdentifier($field) . " = ?";
             }
 
             /**
@@ -1238,10 +1243,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             /**
              * The unique key is composed of 3 parts _uniqueKey, uniqueParams, uniqueTypes
              */
-            $this->_uniqueKey    = $joinWhere;
+            $this->_uniqueKey = $joinWhere;
             $this->_uniqueParams = $uniqueParams;
-            $this->_uniqueTypes  = $uniqueTypes;
-            $uniqueKey           = $joinWhere;
+            $this->_uniqueTypes = $uniqueTypes;
+            $uniqueKey = $joinWhere;
         }
 
 
@@ -1276,7 +1281,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
          * Here we use a single COUNT(*) without PHQL to make the execution faster
          */
         $num = $connection->fetchOne(
-            "SELECT COUNT(*) \"rowcount\" FROM " . $connection->escapeIdentifier($table) . " WHERE " . $uniqueKey, null, $uniqueParams, $uniqueTypes
+            "SELECT COUNT(*) \"rowcount\" FROM " . $connection->escapeIdentifier($table) . " WHERE " . $uniqueKey,
+            $uniqueParams,
+            $uniqueTypes
         );
         if ($num["rowcount"]) {
             $this->_dirtyState = self::DIRTY_STATE_PERSISTENT;
@@ -1288,84 +1295,109 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         return false;
     }
 
-    // ====== 伟大的分割线 ======
+// ====== 伟大的分割线 ======
 
     /**
      * Generate a PHQL SELECT statement for an aggregate
      *
-     * @param string $function
+     * @param string $functionName
      * @param string $alias
      * @param mixed $parameters
      * @return \Phalcon\Mvc\Model\ResultsetInterface
      * @throws Exception
      */
-    protected static function _groupResult($function, $alias, $parameters = null)
+    protected static function _groupResult($functionName, $alias, $parameters)
     {
-        if (is_string($function) === false ||
+        if (is_string($functionName) === false ||
             is_string($alias) === false) {
             throw new Exception('Invalid parameter type.');
         }
+        $dependencyInjector = Di::getDefault();
 
-        if (is_array($parameters) === false) {
-            if (is_null($parameters) === false) {
-                $params = array($parameters);
-            } else {
-                $params = array();
+        $manager = $dependencyInjector->getShared("modelsManager");
+        if (is_object($manager) === false ||
+            !$manager instanceof ManagerInterface) {
+            throw new Exception('Invalid parameter type.');
+        }
+
+        if (!is_array($parameters)) {
+            $params = [];
+            if ($parameters !== null) {
+                $params[] = $parameters;
             }
         } else {
             $params = $parameters;
         }
-
-        if (isset($params['column']) === true) {
-            $groupColumn = $params['column'];
+        if (isset($params['column'])) {
+            $groupColumn = $params;
         } else {
             $groupColumn = '*';
         }
 
-        //Builds the column to query according to the received parameters
-        if (isset($params['distinct']) === true) {
-            $columns = $function . '(DISTINCT ' . $params['distinct'] . ') AS ' . $alias;
+        /**
+         * Builds the columns to query according to the received parameters
+         */
+        if (isset($params['distinct'])) {
+            $distinctColumn = $params['distinct'];
+            $columns = $functionName . "(DISTINCT " . $distinctColumn . ") AS " . $alias;
         } else {
-            if (isset($params['group']) === true) {
-                $columns = $params['group'] . ', ' . $function . '(' . $params['group'] . ') AS ' . $alias;
+            if (isset($params['group'])) {
+                $groupColumns = $params['group'];
+                $columns = $groupColumns . ", " . $functionName . "(" . $groupColumn . ") AS " . $alias;
             } else {
-                $columns = $function . '(' . $groupColumn . ') AS ' . $alias;
+                $columns = $functionName . "(" . $groupColumn . ") AS " . $alias;
             }
         }
 
-        //Builds a query with the passed parameters
-        $builder = new Builder($params);
+        /**
+         * Builds a query with the passed parameters
+         */
+        $builder = $manager->createBuilder($params);
+        if (!$builder instanceof Builder) {
+            $builder = null;
+        }
+
         $builder->columns($columns);
         $builder->from(get_called_class());
-        $query   = $builder->getQuery();
 
+        $query = $builder->getQuery();
+
+
+        /**
+         * Check for bind parameters
+         */
         $bindParams = null;
-        $bindTypes  = null;
-        //Check for bind parameters
-        if (isset($params['bind']) === true) {
+        $bindTypes = null;
+        if (isset($params['bind'])) {
             $bindParams = $params['bind'];
-            if (isset($params['bindTypes']) === true) {
-                $bindTypes = $params['bindTypes'];
-            }
+            $bindTypes = $params['bindTypes'];
         }
 
-        //Execute the query
+        /**
+         * Pass the cache options to the query
+         */
+        if (isset($params['cache'])) {
+            $cache = $params['cache'];
+            $query->cache($cache);
+        }
+
+        /**
+         * Execute the query
+         */
         $resultset = $query->execute($bindParams, $bindTypes);
 
-        //Pass the cache options to the query
-        if (isset($params['cache']) === true) {
-            $query->cache($params['cache']);
-        }
-
-        //Return the full resultset if the query is grouped
-        if (isset($params['group']) === true) {
+        /**
+         * Return the full resultset if the query is grouped
+         */
+        if (isset ($params["group"])) {
             return $resultset;
         }
 
-        //Return only the value in the first result
-        //$number_rows = count($resultset); @note this variable is not necessary
+        /**
+         * Return only the value in the first result
+         */
         $firstRow = $resultset->getFirst();
-        return $firstRow->alias;
+        return $firstRow->{$alias};
     }
 
     /**
@@ -1384,11 +1416,16 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * </code>
      *
      * @param array|null $parameters
-     * @return int
+     * @return mixed
      */
     public static function count($parameters = null)
     {
-        return self::_groupResult('COUNT', 'rowcount', $parameters);
+
+        $result = self::_groupResult("COUNT", "rowcount", $parameters);
+        if (is_string($result)) {
+            return (int)$result;
+        }
+        return $result;
     }
 
     /**
@@ -1407,7 +1444,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * </code>
      *
      * @param array|null $parameters
-     * @return double
+     * @return double | mixed
      */
     public static function sum($parameters = null)
     {
@@ -1476,7 +1513,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * </code>
      *
      * @param array|null $parameters
-     * @return double
+     * @return double|mixed
      */
     public static function average($parameters = null)
     {
@@ -1497,7 +1534,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //Check if there is a method with the same name of the event
-        if (method_exists($this, $eventName) === true) {
+        if (method_exists($this, $eventName)) {
             $this->$eventName();
         }
 
@@ -1520,7 +1557,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //Check if there is a method with the same name of the event
-        if (method_exists($this, $eventName) === true) {
+        if (method_exists($this, $eventName)) {
             if ($this->$eventName() === false) {
                 return false;
             }
@@ -1539,44 +1576,23 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     protected function _cancelOperation()
     {
-        if ($this->_operationMade === 3) {
-            $this->fireEvent('notDeleted');
+        if ($this->_operationMade == self::OP_DELETE) {
+            $this->fireEvent("notDeleted");
         } else {
-            $this->fireEvent('notSaved');
+            $this->fireEvent("notSaved");
         }
     }
 
     /**
-     * Appends a customized message on the validation process
-     *
-     * <code>
-     * use \Phalcon\Mvc\Model\Message as Message;
-     *
-     * class Robots extends \Phalcon\Mvc\Model
-     * {
-     *
-     *   public function beforeSave()
-     *   {
-     *     if ($this->name == 'Peter') {
-     *        $message = new Message("Sorry, but a robot cannot be named Peter");
-     *        $this->appendMessage($message);
-     *     }
-     *   }
-     * }
-     * </code>
-     *
-     * @param \Phalcon\Mvc\Model\MessageInterface $message
-     * @return \Phalcon\Mvc\Model
+     * @param MessageInterface $message
+     * @return $this
+     * @throws Exception
      */
     public function appendMessage($message)
     {
         if (is_object($message) === false ||
             $message instanceof MessageInterface === false) {
             throw new Exception("Invalid message format '" . getType($message) . "'");
-        }
-
-        if (is_array($this->_errorMessages) === false) {
-            $this->_errorMessages = array();
         }
 
         $this->_errorMessages[] = $message;
@@ -1607,30 +1623,35 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * }
      * </code>
      *
-     * @param object $validator
-     * @return \Phalcon\Mvc\Model
+     * @param ValidationInterface $validator
+     * @return \Phalcon\Mvc\Model|mixed
+     * @throws Exception
      */
-    protected function validate($validator)
+    protected function validate(ValidationInterface $validator)
     {
         //@note no validator interface validation
-        if (is_object($validator) === false) {
-            throw new Exception('Validator must be an Object');
+        $messages = $validator->validate(null, $this);
+
+        // Call the validation, if it returns not the boolean
+        // we append the messages to the current object
+        if (is_bool($messages)) {
+            return $messages;
         }
 
-        if (is_array($this->_errorMessages) === false) {
-            $this->_errorMessages = array();
+        foreach (iterator($messages) as $message) {
+            $this->appendMessage(
+                new Message(
+                    $message->getMessage(),
+                    $message->getField(),
+                    $message->getType(),
+                    null,
+                    $message->getCode()
+                )
+            );
         }
 
-        //Call the validation, if it returns false we apped the messages to the current
-        //object
-        if ($validator->validate($this) === false) {
-            $messages = $validator->getMessages();
-            foreach ($messages as $message) {
-                $this->_errorMessages[] = $message;
-            }
-        }
-
-        return $this;
+        // If there is a message, it returns false otherwise true
+        return !count($messages);
     }
 
     /**
@@ -1660,7 +1681,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function validationHasFailed()
     {
-        return (is_array($this->_errorMessages) === true && count($this->_errorMessages) > 0 ? true : false);
+        $errorMessages = $this->_errorMessages;
+        if (is_array($errorMessages)) {
+            return count($errorMessages) > 0;
+        }
+        return false;
     }
 
     /**
@@ -1683,8 +1708,19 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *
      * @return \Phalcon\Mvc\Model\MessageInterface[]|null
      */
-    public function getMessages()
+    public function getMessages($filter = null)
     {
+
+        if (is_string($filter) && !isEmpty($filter)) {
+            $filtered = [];
+            foreach ($this->_errorMessages as $message) {
+                if ($message->getField() == $filter) {
+                    $filtered[] = $message;
+                }
+            }
+            return $filtered;
+        }
+
         return $this->_errorMessages;
     }
 
@@ -1692,110 +1728,151 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * Reads "belongs to" relations and check the virtual foreign keys when inserting or updating records
      * to verify that inserted/updated values are present in the related entity
      *
-     * @return boolean
+     * @return bool
+     * @throws Exception
      */
     protected function _checkForeignKeysRestrict()
     {
         //Get the models manager
+
         $manager = $this->_modelsManager;
+        if (is_object($manager) === false ||
+            !$manager instanceof ManagerInterface) {
+            throw new Exception('Invalid parameter type.');
+        }
 
-        //We check if some of the belongsTo relations act as virtual foreign keys
-        $belongsTo = $manager->belongsTo($this);
+        $belongsTo = $manager->getBelongsTo($this);
+        if (is_array($belongsTo) === false) {
+            $belongsTo = array();
+        }
+        $error = false;
+        foreach ($belongsTo as $relation) {
 
-        if (count($belongsTo) > 0) {
-            $error = false;
+            $validateWithNulls = false;
+            $foreignKey = $relation->getForeignKey();
+            if ($foreignKey === false) {
+                continue;
+            }
 
-            foreach ($belongsTo as $relation) {
-                $foreignKey = $relation->getForeignKey();
-                if ($foreignKey !== false) {
-                    //By default action is restricted
-                    $action = 1;
+            /**
+             * By default action is restrict
+             */
+            $action = Relation::ACTION_RESTRICT;
 
-                    //Try to find a different action in the foreign key's options
-                    if (is_array($foreignKey) === true && isset($foreignKey['action']) === true) {
-                        $action = $foreignKey['action'];
-                    }
-
-                    //Check only if the operation is restricted
-                    if ($action === 1) {
-                        //Load the referenced model if needed
-                        $referencedModel = $manager->load($relation->getReferencedModel());
-
-                        //Since relations can have multiple columns or a single one, we need to build a
-                        //condition for each of these cases
-                        $conditions       = array();
-                        $bindParams       = array();
-                        $fields           = $relation->getFields();
-                        $referencedFields = $relation->getReferencedFields();
-
-                        if (is_array($fields) === true) {
-                            //Create a compound condition
-                            foreach ($fields as $position => $field) {
-                                if (isset($this->$field) === true) {
-                                    $value = $this->$field;
-                                } else {
-                                    $value = null;
-                                }
-
-                                $conditions[] = '[' . $referencedFields[$position] . '] = ?' . $position;
-                                $bindParams[] = $value;
-                            }
-                        } else {
-                            //Create a simple condition
-                            if (isset($this->$fields) === true) {
-                                $value = $this->$fields;
-                            } else {
-                                $value = null;
-                            }
-                            $conditions[] = '[' . $referencedFields . '] = ?0';
-                            $bindParams[] = $value;
-                        }
-
-                        //Check if the virtual foreign key has extra conditions
-                        if (isset($foreignKey['conditions']) === true) {
-                            $conditions[] = $foreignKey['conditions'];
-                        }
-
-                        //We don't trust the actual values in the object and pass the values using bound
-                        //parameters
-                        $joinConditions = implode(' AND ', $conditions);
-
-                        $parameters[]       = $joinConditions;
-                        $parameters['bind'] = $bindParams;
-
-                        //Lets make the checking
-                        $rowcount = $referencedModel->count($parameters);
-                        if ($rowcount == 0) {
-                            //Get the message or produce a new one
-                            if (isset($foreignKey['message']) === true) {
-                                $userMessage = $foreignKey['message'];
-                            } else {
-                                if (is_array($fields) === true) {
-                                    $userMessage = 'Value of fields "' . implode(', ', $fields) . '" does not exist on referenced table';
-                                } else {
-                                    $userMessage = 'Value of field "' . $fields . '" does not exist on referenced table';
-                                }
-                            }
-
-                            //Create a message
-                            $this->appendMessage(new Message($userMessage, $fields, 'ConstraintViolation'));
-                            $error = true;
-                            break;
-                        }
-                    }
+            /**
+             * Try to find a different action in the foreign key's options
+             */
+            if (is_array($foreignKey)) {
+                if (isset($foreignKey["action"])) {
+                    $action = (int)$foreignKey["action"];
                 }
             }
 
-            //Call 'onValidationFails' if the validation fails
-            if ($error === true) {
-                $itGlobal = Kernel::getGlobals('_PHALCON_ORM_EVENTS');
-                if (isset($itGlobal) && Kernel::getGlobals('_PHALCON_ORM_EVENTS') === true) {
-                    $this->fireEvent('onValidationFails');
-                    $this->_cancelOperation();
+            /**
+             * Check only if the operation is restrict
+             */
+            if ($action != Relation::ACTION_RESTRICT) {
+                continue;
+            }
+
+            /**
+             * Load the referenced model if needed
+             */
+            $referencedModel = $manager->load($relation->getReferencedModel());
+
+            /**
+             * Since relations can have multiple columns or a single one, we need to build a condition for each of these cases
+             */
+            $conditions = [];
+            $bindParams = [];
+
+            $numberNull = 0;
+            $fields = $relation->getFields();
+            $referencedFields = $relation->getReferencedFields();
+
+            if (is_array($fields)) {
+                /**
+                 * Create a compound condition
+                 */
+                foreach ($fields as $position => $field) {
+                    $value = $this->{$field};
+                    $conditions[] = "[" . $referencedFields[$position] . "] = ?" . $position;
+                    $bindParams[] = $value;
+                    if (is_null($value)) {
+                        $numberNull++;
+                    }
                 }
 
-                return false;
+                $validateWithNulls = $numberNull == count($fields);
+
+            } else {
+
+                $value = $this->{$fields};
+                $conditions[] = "[" . $referencedFields . "] = ?0";
+                $bindParams[] = $value;
+
+                if (is_null($value)) {
+                    $validateWithNulls = true;
+                }
             }
+
+            /**
+             * Check if the virtual foreign key has extra conditions
+             */
+            if (isset($foreignKey['conditions'])) {
+                $extraConditions = $foreignKey['conditions'];
+                $conditions[] = $extraConditions;
+            }
+
+            /**
+             * Check if the relation definition allows nulls
+             */
+            if ($validateWithNulls) {
+                if (isset($foreignKey["allowNulls"])) {
+                    $allowNulls = $foreignKey["allowNulls"];
+                    $validateWithNulls = (boolean)$allowNulls;
+                } else {
+                    $validateWithNulls = false;
+                }
+            }
+
+            /**
+             * We don't trust the actual values in the object and pass the values using bound parameters
+             * Let's make the checking
+             */
+            if (!$validateWithNulls && !$referencedModel->count([join(" AND ", $conditions), "bind" => $bindParams])) {
+
+                /**
+                 * Get the user message or produce a new one
+                 */
+                if (isset($foreignKey["message"])) {
+                    $message = $foreignKey['message'];
+                } else {
+                    if (is_array($fields)) {
+                        $message = "Value of fields \"" . join(", ", $fields) . "\" does not exist on referenced table";
+                    } else {
+                        $message = "Value of field \"" . $fields . "\" does not exist on referenced table";
+                    }
+                }
+
+                /**
+                 * Create a message
+                 */
+                $this->appendMessage(new Message($message, $fields, "ConstraintViolation"));
+                $error = true;
+                break;
+            }
+        }
+
+        /**
+         * Call 'onValidationFails' if the validation fails
+         */
+        if ($error === true) {
+            if (Kernel::getGlobals("orm.events")) {
+                $this->fireEvent("onValidationFails");
+                $this->_cancelOperation();
+            }
+            return false;
         }
 
         return true;
@@ -1805,106 +1882,104 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * Reads both "hasMany" and "hasOne" relations and checks the virtual foreign keys (restrict) when deleting records
      *
      * @return boolean
+     * @throws Exception
      */
     protected function _checkForeignKeysReverseRestrict()
     {
         //Get the models manager
         $manager = $this->_modelsManager;
+        if (is_object($manager) === false ||
+            !$manager instanceof ManagerInterface) {
+            throw new Exception('Invalid parameter type.');
+        }
 
         //We check if some of the hasOne/hasMany relations are a foreign key
         $relations = $manager->getHasOneAndHasMany($this);
-        if (count($relations) > 0) {
-            $error = false;
+        if (is_array($relations) === false) {
+            $relations = [];
+        }
+        foreach ($relations as $relation) {
 
-            foreach ($relations as $relation) {
-                //Check if the relation has a virtual foregin key
-                $foreignKey = $relation->getForeignKey();
-                if ($foreignKey != false) {
-                    //By default action is restricted
-                    $action = 1;
+            /**
+             * Check if the relation has a virtual foreign key
+             */
+            $foreignKey = $relation->getForeignKey();
+            if ($foreignKey === false) {
+                continue;
+            }
 
-                    //Try to find a different action in the foreign key's options
-                    if (is_array($foreignKey) === true) {
-                        if (isset($foreignKey['action']) === true) {
-                            $action = $foreignKey['action'];
-                        }
-                    }
+            /**
+             * By default action is restrict
+             */
+            $action = Relation::NO_ACTION;
 
-                    //Check only if the operation is restricted
-                    if ($action === 1) {
-                        $relationClass = $relation->getReferencedModel();
-
-                        //Load a plain instance from the models manager
-                        $referencedModel  = $manager->load($relationClass);
-                        $fields           = $relation->getFields();
-                        $referencedFields = $relation->getReferencedFields();
-
-                        //Create the checking conditions. A relation can have many fields or a single one
-                        $conditions = array();
-                        $bindParams = array();
-
-                        if (is_array($fields) === true) {
-                            foreach ($fields as $position => $field) {
-                                if (isset($this->$field) === true) {
-                                    $value = $this->$field;
-                                } else {
-                                    $value = null;
-                                }
-
-                                $referencedField = $referencedFields[$position];
-
-                                $conditions[] = '[' . $referencedField . '] = ?' . $position;
-                                $bindParams[] = $value;
-                            }
-                        } else {
-                            if (isset($this->$fields) === true) {
-                                $value = $this->$fields;
-                            } else {
-                                $value = null;
-                            }
-
-                            $conditions[] = '[' . $referencedFields . '] = ?0';
-                            $bindParams[] = $value;
-                        }
-
-                        //Check if the virtual foreign key has extra conditions
-                        if (isset($foreignKey['conditions']) === true) {
-                            $conditions[] = $foreignKey['conditions'];
-                        }
-
-                        //We don't trust the actual values in the object and then we're passing the values
-                        //using bound parmeters
-                        $joinConditions = implode(' AND ', $conditions);
-
-                        $parameters         = array($joinConditions);
-                        $parameters['bind'] = $bindParams;
-
-                        //Checking
-                        $rowcount = $referencedModel->count($parameters);
-                        if ($rowcount != 0) {
-                            //Create a new message
-                            if (isset($foreignKey['message']) === true) {
-                                $userMessage = $foreignKey['message'];
-                            } else {
-                                $userMessage = 'Record is referenced by model ' . $relationClass;
-                            }
-
-                            //Create a message
-                            $this->appendMessage(new Message($userMessage, $fields, 'ConstraintViolation'));
-                            $error = true;
-                            break;
-                        }
-                    }
+            /**
+             * Try to find a different action in the foreign key's options
+             */
+            if (is_array($foreignKey)) {
+                if (isset($foreignKey["action"])) {
+                    $action = (int)$foreignKey["action"];
                 }
             }
 
-            //Call validation failed event
-            if ($error === true) {
-                if (isset($GLOBALS['_PHALCON_ORM_EVENTS']) === true && $GLOBALS['_PHALCON_ORM_EVENTS'] === true) {
-                    $this->fireEvent('onValidationFails');
-                    $this->_cancelOperation();
-                }
+            /**
+             * Check only if the operation is restrict
+             */
+            if ($action != Relation::ACTION_CASCADE) {
+                continue;
+            }
 
+            /**
+             * Load a plain instance from the models manager
+             */
+            $referencedModel = $manager->load($relation->getReferencedModel());
+
+            $fields = $relation->getFields();
+            $referencedFields = $relation->getReferencedFields();
+
+            /**
+             * Create the checking conditions. A relation can has many fields or a single one
+             */
+            $conditions = [];
+            $bindParams = [];
+
+            if (is_array($fields)) {
+                foreach ($fields as $position => $field) {
+                    $value = $this->{$field};
+                    $conditions[] = "[" . $referencedFields[$position] . "] = ?" . $position;
+                    $bindParams[] = $value;
+                }
+            } else {
+                $value = $this->{$fields};
+                $conditions[] = "[" . $referencedFields . "] = ?0";
+                $bindParams[] = $value;
+            }
+
+            /**
+             * Check if the virtual foreign key has extra conditions
+             */
+            if (isset($foreignKey["conditions"])) {
+                $extraConditions = $foreignKey["conditions"];
+                $conditions[] = $extraConditions;
+            }
+
+            /**
+             * We don't trust the actual values in the object and then we're passing the values using bound parameters
+             * Let's make the checking
+             */
+            $resultset = $referencedModel->find([
+                join(" AND ", $conditions),
+                "bind" => $bindParams
+            ]);
+            if (!$resultset instanceof Resultset) {
+                $resultset = null;
+            }
+
+            /**
+             * Delete the resultset
+             * Stop the operation if needed
+             */
+            if ($resultset->delete() === false) {
                 return false;
             }
         }
@@ -1915,84 +1990,122 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     /**
      * Reads both "hasMany" and "hasOne" relations and checks the virtual foreign keys (cascade) when deleting records
      *
-     * @return boolean
+     * @return bool
+     * @throws Exception
      */
     protected function _checkForeignKeysReverseCascade()
     {
         //Get the models manager
         $manager = $this->_modelsManager;
-
-        //We check if some of the hasOne/hasMany relations is a foregin key
+        if (is_object($manager) === false ||
+            !$manager instanceof ManagerInterface) {
+            throw new Exception('Invalid parameter type.');
+        }
         $relations = $manager->getHasOneAndHasMany($this);
 
-        if (count($relations) > 0) {
-            foreach ($relations as $relation) {
-                //Check if the relation has a virtual foreign key
-                $foreignKey = $relation->getForeignKey();
-                if ($foreignKey != false) {
-                    //By default action is restricted
-                    $action = false;
+        $error = false;
+        foreach ($relations as $relation) {
 
-                    //Try to find a different action in the foreign key's options
-                    if (is_array($foreignKey) === true &&
-                        isset($foreignKey['action']) === true) {
-                        $action = $foreignKey['action'];
-                    }
+            /**
+             * Check if the relation has a virtual foreign key
+             */
+            $foreignKey = $relation->getForeignKey();
+            if ($foreignKey === false) {
+                continue;
+            }
 
-                    //Check only if the operation is restricted
-                    if ($action === 2) {
-                        $relationClass = $relation->getReferencedModel();
+            /**
+             * By default action is restrict
+             */
+            $action = Relation::ACTION_RESTRICT;
 
-                        //Load a plain instance from the models manager
-                        $referencedModel  = $manager->load($relationClass);
-                        $fields           = $relation->getFields();
-                        $referencedFields = $relation->getReferencedFields();
-
-                        //Create the checking conditions. A relation can have many fields or a single one.
-                        $conditions = array();
-                        $bindParams = array();
-
-                        if (is_array($fields) === true) {
-                            foreach ($fields as $position => $field) {
-                                if (isset($this->$field) === true) {
-                                    $value = $this->$field;
-                                } else {
-                                    $value = null;
-                                }
-
-                                $conditions[] = '[' . $referencedFields[$position] . '] = ?' . $position;
-                                $bindParams[] = $value;
-                            }
-                        } else {
-                            if (isset($this->$fields) === true) {
-                                $value = $this->$fields;
-                            } else {
-                                $value = null;
-                            }
-
-                            $conditions[] = '[' . $referencedFields . '] = ?0';
-                            $bindParams[] = $value;
-                        }
-
-                        //Check if the virtual foreign key has extra conditions
-                        if (isset($foreignKey['conditions']) === true) {
-                            $conditions[] = $foreignKey['conditions'];
-                        }
-
-                        //Pass the values using bound parameters
-                        $parameters         = array(implode(' AND ', $conditions));
-                        $parameters['bind'] = $bindParams;
-
-                        //Let's make the checking
-                        $resultset = $referencedModel->find($parameters);
-
-                        //Delete the resultset
-                        if ($resultset->delete() === false) {
-                            return false;
-                        }
-                    }
+            /**
+             * Try to find a different action in the foreign key's options
+             */
+            if (is_array($foreignKey)) {
+                if (isset ($foreignKey["action"])) {
+                    $action = (int)$foreignKey["action"];
                 }
             }
+
+            /**
+             * Check only if the operation is restrict
+             */
+            if ($action != Relation::ACTION_RESTRICT) {
+                continue;
+            }
+
+            $relationClass = $relation->getReferencedModel();
+
+            /**
+             * Load a plain instance from the models manager
+             */
+            $referencedModel = $manager->load($relationClass);
+
+            $fields = $relation->getFields();
+            $referencedFields = $relation->getReferencedFields();
+
+            /**
+             * Create the checking conditions. A relation can has many fields or a single one
+             */
+            $conditions = [];
+            $bindParams = [];
+
+            if (is_array($fields)) {
+
+                foreach ($fields as $position => $field) {
+                    $value = $this->{$field};
+                    $conditions[] = "[" . $referencedFields[$position] . "] = ?" . $position;
+                    $bindParams[] = $value;
+                }
+
+            } else {
+                $value = $this->{$fields};
+                $conditions[] = "[" . $referencedFields . "] = ?0";
+                $bindParams[] = $value;
+            }
+
+            /**
+             * Check if the virtual foreign key has extra conditions
+             */
+            if (isset($foreignKey["conditions"])) {
+                $extraConditions = $foreignKey["conditions"];
+                $conditions[] = $extraConditions;
+            }
+
+            /**
+             * We don't trust the actual values in the object and then we're passing the values using bound parameters
+             * Let's make the checking
+             */
+            if ($referencedModel->count([join(" AND ", $conditions), "bind" => $bindParams])) {
+
+                /**
+                 * Create a new message
+                 */
+                if (isset($foreignKey['message'])) {
+                    $message = $foreignKey['message'];
+                } else {
+                    $message = "Record is referenced by model " . $relationClass;
+                }
+
+                /**
+                 * Create a message
+                 */
+                $this->appendMessage(new Message($message, $fields, "ConstraintViolation"));
+                $error = true;
+                break;
+            }
+        }
+
+        /**
+         * Call validation fails event
+         */
+        if ($error === true) {
+            if (Kernel::getGlobals("orm.events")) {
+                $this->fireEvent("onValidationFails");
+                $this->_cancelOperation();
+            }
+            return false;
         }
 
         return true;
@@ -2007,7 +2120,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return boolean
      * @throws Exception
      */
-    protected function _preSave($metaData, $exists, $identityField)
+    protected function _preSave(MetaDataInterface $metaData, $exists, $identityField)
     {
         if (is_object($metaData) === false ||
             $metaData instanceof MetaDataInterface === false ||
@@ -2017,8 +2130,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //Run Validation Callbacks "Before"
-        if (isset($GLOBALS['_PHALCON_ORM_EVENTS']) === true &&
-            $GLOBALS['_PHALCON_ORM_EVENTS'] === true) {
+        if (Kernel::getGlobals("orm.events")) {
             //Call the beforeValidation
             if ($this->fireEventCancel('beforeValidation') === false) {
                 return false;
@@ -2037,32 +2149,36 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //Check for Virtual foreign keys
-        if (isset($GLOBALS['_PHALCON_ORM_VIRTUAL_FOREIGN_KEYS']) === true &&
-            $GLOBALS['_PHALCON_ORM_VIRTUAL_FOREIGN_KEYS'] === true) {
+        if (Kernel::getGlobals("orm.virtual_foreign_keys")) {
             if ($this->_checkForeignKeysRestrict() === false) {
                 return false;
             }
         }
 
         //Columns marked as not null are automatically validated by the ORM
-        if (isset($GLOBALS['_PHALCON_ORM_NOT_NULL_VALIDATIONS']) === true) {
+        if (Kernel::getGlobals("orm.not_null_validations")) {
             $notNull = $metaData->getNotNullAttributes($this);
             if (is_array($notNull) === true) {
                 //Get the fields which are numeric, these are validated in a different way
                 $dataTypeNumeric = $metaData->getDataTypesNumeric($this);
-                if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
-                    $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === true) {
+                if (Kernel::getGlobals("orm.column_renaming")) {
                     $columnMap = $metaData->getColumnMap($this);
                 } else {
                     $columnMap = null;
                 }
 
                 //Get fields which must be omitted from the SQL generation
-                if ($exists === true) {
+                if ($exists) {
                     $automaticAttributes = $metaData->getAutomaticUpdateAttributes($this);
                 } else {
                     $automaticAttributes = $metaData->getAutomaticCreateAttributes($this);
                 }
+                $defaultValues = $metaData->getDefaultValues($this);
+
+                /**
+                 * Get string attributes that allow empty strings as defaults
+                 */
+                $emptyStringValues = $metaData->getEmptyStringAttributes($this);
 
                 $error = false;
 
@@ -2095,7 +2211,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                                         $isNull = true;
                                     }
                                 } else {
-                                    if (is_numeric($value) === false) {
+                                    if ($value === null || ($value === "" && (!isset ($defaultValues[$field]) || $value !== $defaultValues[$field]))) {
                                         $isNull = true;
                                     }
                                 }
@@ -2111,17 +2227,19 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                                     continue;
                                 }
                             }
+                            if (isset ($defaultValues[$field])) {
+                                continue;
+                            }
 
                             //A implicit PresenceOf message is created
                             $this->_errorMessages[] = new Message($attributeField . ' is required', $attributeField, 'PresenceOf');
-                            $error                  = true;
+                            $error = true;
                         }
                     }
                 }
 
                 if ($error === true) {
-                    if (isset($GLOBALS['_PHALCON_ORM_EVENTS']) === true &&
-                        $GLOBALS['_PHALCON_ORM_EVENTS'] === true) {
+                    if (Kernel::getGlobals("orm.events")) {
                         $this->fireEvent('onValidationFails');
                         $this->_cancelOperation();
                     }
@@ -2133,8 +2251,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //Call the main validation event
         if ($this->fireEventCancel('validation') === false) {
-            if (isset($GLOBALS['_PHALCON_ORM_EVENTS']) === true &&
-                $GLOBALS['_PHALCON_ORM_EVENTS'] === true) {
+            if (Kernel::getGlobals("orm.events")) {
                 $this->fireEvent('onValidationFails');
             }
 
@@ -2142,8 +2259,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //Run validation
-        if (isset($GLOBALS['_PHALCON_ORM_EVENTS']) === true &&
-            $GLOBALS['_PHALCON_ORM_EVENTS'] === true) {
+        if (Kernel::getGlobals("orm.events")) {
             //Run Validation Callbacks "After"
             if ($exists === false) {
                 if ($this->fireEventCancel('afterValidationOnCreate') === false) {
@@ -2206,14 +2322,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             } else {
                 $this->fireEvent('afterCreate');
             }
-
-            $this->fireEvent('afterSave');
-            return true;
         }
-
-        $this->fireEvent('notSave');
-        $this->_cancelOperation();
-        return false;
+        return $success;
     }
 
     /**
@@ -2223,79 +2333,116 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param \Phalcon\Db\AdapterInterface connection
      * @param string|array table
      * @param boolean|string identityField
+     * @throws Exception
      * @return boolean
      */
     protected function _doLowInsert(MetaDataInterface $metaData, AdapterInterface $connection, $table, $identityField)
     {
-        if (is_string($identityField) === false &&
-            is_bool($identityField) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
 
-        $bindSkip  = Column::BIND_SKIP;
-        $fields    = array();
-        $values    = array();
+        $bindSkip = Column::BIND_SKIP;
+        $manager = $this->_modelsManager;
+        $fields = array();
+        $values = array();
         $bindTypes = array();
+        $snapshot = array();
         $columnMap = null;
 
-        $attributes          = $metaData->getAttributes($this);
-        $bindDataTypes       = $metaData->getBindTypes($this);
+        $attributes = $metaData->getAttributes($this);
+        $bindDataTypes = $metaData->getBindTypes($this);
         $automaticAttributes = $metaData->getAutomaticCreateAttributes($this);
+        $defaultValues = $metaData->getDefaultValues($this);
 
-        if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
-            $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === true) {
+        if (Kernel::getGlobals("orm.column_renaming")) {
             $columnMap = $metaData->getColumnMap($this);
+        } else {
+            $columnMap = null;
         }
 
         //All fields in the model are part of the INSERT statement
         foreach ($attributes as $field) {
-            //Check if the model has a column map
-            if (is_array($columnMap) === true) {
-                if (isset($columnMap[$field]) === true) {
-                    $attributeField = $columnMap[$field];
-                } else {
-                    throw new Exception("Column '" . $field . "' isn't part of the column map");
-                }
-            } else {
-                $attributeField = $field;
-            }
+            if (!isset ($automaticAttributes[$field])) {
 
-            //Check every attribute in the model except identity field
-            if ($field !== $identityField) {
-                $fields[] = $field;
-
-                //This isset check that the property is defined in the model
-                if (isset($this->$attributeField) === true) {
-                    //Every column must have a bind data type defined
-                    if (isset($bindDataTypes[$field]) === false) {
-                        throw new Exception("Column '" . $field . "' has not defined a bind data type");
+                /**
+                 * Check if the model has a column map
+                 */
+                if (is_array($columnMap)) {
+                    if (isset($columnMap[$field])) {
+                        $attributeField = $columnMap[$field];
+                    } else {
+                        throw new Exception("Column '" . $field . "' isn't part of the column map");
                     }
-
-                    $value    = $this->$attributeField;
-                    $values[] = $value;
-
-                    $bindTypes[] = $bindDataTypes[$field];
                 } else {
-                    $values[]    = null;
-                    $bindTypes[] = $bindSkip;
+                    $attributeField = $field;
+                }
+
+                /**
+                 * Check every attribute in the model except identity field
+                 */
+                if ($field != $identityField) {
+
+                    /**
+                     * This isset checks that the property be defined in the model
+                     */
+                    if (isset($this->{$attributeField})) {
+                        $value = $this->{$attributeField};
+
+                        if ($value === null && isset ($defaultValues[$field])) {
+                            $snapshot[$attributeField] = null;
+                            $value = $connection->getDefaultValue();
+                        } else {
+                            $snapshot[$attributeField] = $value;
+                        }
+
+                        /**
+                         * Every column must have a bind data type defined
+                         */
+                        if (isset($bindDataTypes[$field])) {
+                            $bindType = $bindDataTypes[$field];
+                        } else {
+                            throw new Exception("Column '" . $field . "' have not defined a bind data type");
+                        }
+
+                        $fields[] = $field;
+                        $values[] = $value;
+                        $bindTypes[] = $bindType;
+                    } else {
+
+                        if (isset ($defaultValues[$field])) {
+                            $values[] = $connection->getDefaultValue();
+                            /**
+                             * This is default value so we set null, keep in mind it's value in database!
+                             */
+                            $snapshot[$attributeField] = null;
+                        } else {
+                            $values[] = $value;
+                            $snapshot[$attributeField] = $value;
+                        }
+
+                        $fields[] = $field;
+                        $bindTypes[] = $bindSkip;
+                    }
                 }
             }
         }
 
         //If there is an identity field, we add it using "null" or "default"
-        $identityFieldIsNotFalse = ($identityField !== false ? true : false);
-        if ($identityFieldIsNotFalse === true) {
+        if ($identityField !== false) {
+
             $defaultValue = $connection->getDefaultIdValue();
 
-            //Not all database systems require an explicit value for identity columns
-            $useExplicitIdentity = $connection->useExplicitIdValue();
-            if ($useExplicitIdentity === true) {
+            /**
+             * Not all the database systems require an explicit value for identity columns
+             */
+            $useExplicitIdentity = (boolean)$connection->useExplicitIdValue();
+            if ($useExplicitIdentity) {
                 $fields[] = $identityField;
             }
 
-            //Check if the model has a column map
-            if (is_array($columnMap) === true) {
-                if (isset($columnMap[$identityField]) === true) {
+            /**
+             * Check if the model has a column map
+             */
+            if (is_array($columnMap)) {
+                if (isset($columnMap[$identityField])) {
                     $attributeField = $columnMap[$identityField];
                 } else {
                     throw new Exception("Identity column '" . $identityField . "' isn't part of the column map");
@@ -2304,31 +2451,41 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 $attributeField = $identityField;
             }
 
-            //Check if the developer set an explicit value for the column
-            if (isset($this->$attributeField) === true) {
-                $value = $this->$attributeField;
-                if (empty($value) === true) {
-                    if ($useExplicitIdentity === true) {
-                        $values[]    = $defaultValue;
+            /**
+             * Check if the developer set an explicit value for the column
+             */
+            if (isset($this->{$attributeField})) {
+                $value = $this->{$attributeField};
+
+                if ($value === null || $value === "") {
+                    if ($useExplicitIdentity) {
+                        $values[] = $defaultValue;
                         $bindTypes[] = $bindSkip;
                     }
                 } else {
-                    //Add the explicit value to the field list if the user defined a value for it
-                    if ($useExplicitIdentity === false) {
+
+                    /**
+                     * Add the explicit value to the field list if the user has defined a value for it
+                     */
+                    if (!$useExplicitIdentity) {
                         $fields[] = $identityField;
                     }
 
-                    //The field is valid - we look for a bind value (normally int)
-                    if (isset($bindDataTypes[$identityField]) === false) {
-                        throw new Exception("Identity column '" . $identityField . "' isn't part of the table columns");
+                    /**
+                     * The field is valid we look for a bind value (normally int)
+                     */
+                    if (isset($bindDataTypes[$identityField])) {
+                        $bindType = $bindDataTypes[$identityField];
+                    } else {
+                        throw new Exception("Identity column '" . $identityField . "' isn\'t part of the table columns");
                     }
 
-                    $values[]    = $value;
-                    $bindTypes[] = $bindDataTypes[$identityField];
+                    $values[] = $value;
+                    $bindTypes[] = $bindType;
                 }
             } else {
-                if ($useExplicitIdentity === true) {
-                    $values[]    = $defaultValue;
+                if ($useExplicitIdentity) {
+                    $values[] = $defaultValue;
                     $bindTypes[] = $bindSkip;
                 }
             }
@@ -2336,29 +2493,37 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //The low-level insert
         $success = $connection->insert($table, $values, $fields, $bindTypes);
-        if ($identityFieldIsNotFalse === true) {
+        if ($success && $identityField !== false) {
             //We check if the model has sequences
-            $sequenceName     = null;
-            $supportSequences = $connection->supportSequences();
-            if ($supportSequences == true) {
+            $sequenceName = null;
+            if ($connection->supportSequences() === true) {
                 if (method_exists($this, 'getSequenceName') === true) {
-                    $sequenceName = $this->getSequenceName();
+                    $sequenceName = $this->{"getSequenceName"}();
                 } else {
-                    $source       = $this->getSource();
-                    $sequenceName = $source . '_' . $identityField . '_seq';
+                    $source = $this->getSource();
+                    $schema = $this->getSchema();
+                    if (empty($schema)) {
+                        $sequenceName = $source . "_" . $identityField . "_seq";
+                    } else {
+                        $sequenceName = $schema . "." . $source . "_" . $identityField . "_seq";
+                    }
                 }
             }
 
-            //Recover the last "insert id" and assign it to the object
-            $lastInsertId          = $connection->lastInsertId($sequenceName);
-            $this->$attributeField = $lastInsertId;
+//Recover the last "insert id" and assign it to the object
+            $lastInsertedId = $connection->lastInsertId($sequenceName);
+            $this->{$attributeField} = $lastInsertedId;
+            $snapshot[$attributeField] = $lastInsertedId;
 
-            //Since the primary key was modified, we delete the _uniqueParams to force any
-            //future update to rebuild the primary key
+//Since the primary key was modified, we delete the _uniqueParams to force any
+//future update to rebuild the primary key
+            if ($manager->isKeepingSnapshots($this) && Kernel::getGlobals("orm.update_snapshot_on_save")) {
+                $this->_snapshot = $snapshot;
+            }
             $this->_uniqueParams = null;
         }
 
-        return true;
+        return $success;
     }
 
     /**
@@ -2370,56 +2535,60 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return boolean
      * @throws Exception
      */
-    protected function _doLowUpdate($metaData, $connection, $table)
+    protected function _doLowUpdate(MetaDataInterface $metaData, AdapterInterface $connection, $table)
     {
-        if (is_object($metaData) === false ||
-            is_object($connection) === false ||
-            $metaData instanceof MetaDataInterface === false ||
-            $connection instanceof DbAdapterInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $bindSkip = Column::BIND_SKIP;
+        $fields = [];
+        $values = [];
+        $bindTypes = [];
+        $newSnapshot = [];
+        $manager = $this->_modelsManager;
 
-        if (is_array($table) === false &&
-            is_string($table) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        /**
+         * Check if the model must use dynamic update
+         */
+        $useDynamicUpdate = (boolean)$manager->isUsingDynamicUpdate($this);
 
-        $bindSkip  = 1024;
-        $fields    = array();
-        $values    = array();
-        $bindTypes = array();
+        $snapshot = $this->_snapshot;
 
-        $manager         = $this->_modelsManager;
-        $isDynamicUpdate = $manager->isDynamicUpdate($this);
-        if ($isDynamicUpdate === true) {
-            if (is_array($this->_snapshot) === false) {
-                $isDynamicUpdate = false;
+        if ($useDynamicUpdate) {
+            if (is_array($snapshot)) {
+                $useDynamicUpdate = false;
             }
         }
 
-        $bindDataTypes       = $metaData->getBindTypes($this);
-        $nonPrimary          = $metaData->getNonPrimaryKeysAttributes($this);
+        $dataTypes = $metaData->getDataTypes($this);
+        $bindDataTypes = $metaData->getBindTypes($this);
+        $nonPrimary = $metaData->getNonPrimaryKeyAttributes($this);
         $automaticAttributes = $metaData->getAutomaticUpdateAttributes($this);
 
-        if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
-            $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === true) {
+        if (Kernel::getGlobals("orm.column_renaming")) {
             $columnMap = $metaData->getColumnMap($this);
         } else {
             $columnMap = null;
         }
 
-        //Update based on the non-primary attributes. Values of the
-        //primary key attributes will be ignored.
+        /**
+         * We only make the update based on the non-primary attributes, values in primary key attributes are ignored
+         */
         foreach ($nonPrimary as $field) {
-            if (isset($automaticAttributes[$field]) === false) {
-                //Check the bind type for field
-                if (isset($bindDataTypes[$field]) === false) {
+
+            if (!isset ($automaticAttributes[$field])) {
+
+                /**
+                 * Check a bind type for field to update
+                 */
+                if (isset($bindDataTypes[$field])) {
+                    $bindType = $bindDataTypes[$field];
+                } else {
                     throw new Exception("Column '" . $field . "' have not defined a bind data type");
                 }
 
-                //Check if the model has a column map
-                if (is_array($columnMap) === true) {
-                    if (isset($columnMap[$field]) === true) {
+                /**
+                 * Check if the model has a column map
+                 */
+                if (is_array($columnMap)) {
+                    if (isset($columnMap[$field])) {
                         $attributeField = $columnMap[$field];
                     } else {
                         throw new Exception("Column '" . $field . "' isn't part of the column map");
@@ -2428,66 +2597,137 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     $attributeField = $field;
                 }
 
-                //If a field isn't set we pass a null value
-                if (isset($this->$attributeField) === true) {
-                    //Get the fields value
-                    $value = $this->$attributeField;
-
-                    //When dynamic update is not used we pass every field to the update
-                    if ($isDynamicUpdate === false) {
-                        $fields[]    = $field;
-                        $values[]    = $value;
-                        $bindTypes[] = $bindDataTypes[$field];
+                /**
+                 * Get the field's value
+                 * If a field isn't set we pass a null value
+                 */
+                if (isset($this->{$attributeField})) {
+                    $value = $this->{$attributeField};
+                    /**
+                     * When dynamic update is not used we pass every field to the update
+                     */
+                    if (!$useDynamicUpdate) {
+                        $fields[] = $field;
+                        $values[] = $value;
+                        $bindTypes[] = $bindType;
                     } else {
-                        //If the field is not part of the snapshot we add them as changed
-                        if (isset($this->_snapshot[$attributeField]) === false) {
+
+                        /**
+                         * If the field is not part of the snapshot we add them as changed
+                         */
+                        if (!isset($snapshot[$attributeField])) {
                             $changed = true;
                         } else {
-                            if ($value !== $this->_snapshot[$attributeField]) {
-                                $changed = true;
+                            $snapshotValue = $snapshot[$attributeField];
+                            /**
+                             * See https://github.com/phalcon/cphalcon/issues/3247
+                             * Take a TEXT column with value '4' and replace it by
+                             * the value '4.0'. For PHP '4' and '4.0' are the same.
+                             * We can't use simple comparison...
+                             *
+                             * We must use the type of snapshotValue.
+                             */
+                            if ($value === null) {
+                                $changed = $snapshotValue !== null;
                             } else {
-                                $changed = false;
+                                if ($snapshotValue === null) {
+                                    $changed = true;
+                                } else {
+
+                                    if (isset($dataTypes[$field])) {
+                                        $dataType = $dataTypes[$field];
+                                    } else {
+                                        throw new Exception("Column '" . $field . "' have not defined a data type");
+                                    }
+
+                                    switch ($dataType) {
+
+                                        case Column::TYPE_BOOLEAN:
+                                            $changed = (boolean)$snapshotValue !== (boolean)$value;
+                                            break;
+
+                                        case Column::TYPE_INTEGER:
+                                            $changed = (int)$snapshotValue !== (int)$value;
+                                            break;
+
+                                        case Column::TYPE_DECIMAL:
+                                        case Column::TYPE_FLOAT:
+                                            $changed = floatval($snapshotValue) !== floatval($value);
+                                            break;
+
+                                        case Column::TYPE_DATE:
+                                        case Column::TYPE_VARCHAR:
+                                        case Column::TYPE_DATETIME:
+                                        case Column::TYPE_CHAR:
+                                        case Column::TYPE_TEXT:
+                                        case Column::TYPE_VARCHAR:
+                                        case Column::TYPE_BIGINTEGER:
+                                            $changed = (string)$snapshotValue !== (string)$value;
+                                            break;
+
+                                        /**
+                                         * Any other type is not really supported...
+                                         */
+                                        default:
+                                            $changed = $value != $snapshotValue;
+                                    }
+                                }
                             }
                         }
 
-                        //Only changed values are added to the SQL update
-                        if ($changed === true) {
-                            $fields[]    = $field;
-                            $values[]    = $value;
-                            $bindTypes[] = $bindDataTypes[$field];
+                        /**
+                         * Only changed values are added to the SQL Update
+                         */
+                        if ($changed) {
+                            $fields[] = $field;
+                            $values[] = $value;
+                            $bindTypes[] = $bindType;
                         }
                     }
+                    $newSnapshot[$attributeField] = $value;
+
                 } else {
-                    $fields[]    = $field;
-                    $values[]    = null;
+                    $newSnapshot[$attributeField] = null;
+                    $fields[] = $field;
+                    $values[] = null;
                     $bindTypes[] = $bindSkip;
                 }
             }
         }
 
-        //If there is no field to update we return true
-        if (count($fields) === 0) {
+        /**
+         * If there is no fields to update we return true
+         */
+        if (!count($fields)) {
             return true;
         }
 
-        $uniqueKey    = $this->_uniqueKey;
+        $uniqueKey = $this->_uniqueKey;
         $uniqueParams = $this->_uniqueParams;
-        $uniqueTypes  = $this->_uniqueTypes;
+        $uniqueTypes = $this->_uniqueTypes;
 
-        //When unique params is null we need to rebuild the bind params
-        if (is_array($this->_uniqueParams) === false) {
-            $uniqueParams = array();
-            $primaryKeys  = $metaData->getPrimaryKeyAttributes($this);
+        /**
+         * When unique params is null we need to rebuild the bind params
+         */
+        if (!is_array($uniqueParams)) {
 
-            //We can't create dynamic SQL without a primary key
-            if (empty($primaryKeys) === true) {
-                throw new Exception('A primary key must be defined in the model in order to perform the operation');
+            $primaryKeys = $metaData->getPrimaryKeyAttributes($this);
+
+            /**
+             * We can't create dynamic SQL without a primary key
+             */
+            if (!count($primaryKeys)) {
+                throw new Exception("A primary key must be defined in the model in order to perform the operation");
             }
 
+            $uniqueParams = [];
             foreach ($primaryKeys as $field) {
-                //Check if the model has a column map
-                if (is_array($columnMap) === true) {
-                    if (isset($columnMap[$field]) === true) {
+
+                /**
+                 * Check if the model has a column map
+                 */
+                if (is_array($columnMap)) {
+                    if (isset($columnMap[$field])) {
                         $attributeField = $columnMap[$field];
                     } else {
                         throw new Exception("Column '" . $field . "' isn't part of the column map");
@@ -2496,24 +2736,42 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     $attributeField = $field;
                 }
 
-                if (isset($this->$attributeField) === true) {
-                    $value          = $this->$attributeField;
-                    $unqiueParams[] = $value;
+                if (isset($this->{$attributeField})) {
+                    $value = $this->{$attributeField};
+                    $newSnapshot[$attributeField] = $value;
+                    $uniqueParams[] = $value;
                 } else {
-                    $unqiueParams[] = null;
+                    $newSnapshot[$attributeField] = null;
+                    $uniqueParams[] = null;
                 }
             }
         }
 
-        //We build the conditions as an array
-        $conditions = array('conditions' => $uniqueKey, 'bind' => $unqiueParams, 'bindtypes' => $uniqueTypes);
+        /**
+         * We build the conditions as an array
+         * Perform the low level update
+         */
+        $success = $connection->update($table, $fields, $values, [
+            "conditions" => $uniqueKey,
+            "bind" => $uniqueParams,
+            "bindTypes" => $uniqueTypes
+        ], $bindTypes);
 
-        //Perform the low-level update
-        return $connection->update($table, $fields, $values, $conditions, $bindTypes);
+        if ($success && $manager->isKeepingSnapshots($this) && Kernel::getGlobals("orm.update_snapshot_on_save")) {
+            if (is_array($snapshot)) {
+                $this->_oldSnapshot = $snapshot;
+                $this->_snapshot = array_merge($snapshot, $newSnapshot);
+            } else {
+                $this->_oldSnapshot = [];
+                $this->_snapshot = $newSnapshot;
+            }
+        }
+
+        return $success;
     }
 
     /**
-     * Get messages from model
+     * Get messages from model(没用了)
      *
      * @param object $model
      * @param object $target
@@ -2550,54 +2808,86 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return boolean
      * @throws Exception
      */
-    protected function _preSaveRelatedRecords($connection, $related)
+    protected function _preSaveRelatedRecords(AdapterInterface $connection, $related)
     {
-        if (is_object($connection) === false ||
-            $connection instanceof DbAdapterInterface === false ||
-            is_array($related) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
 
-        //Start an implicit transaction
-        $connection->begin(false);
+        $nesting = false;
+
+        /**
+         * Start an implicit transaction
+         */
+        $connection->begin($nesting);
+
+        $className = get_class($this);
         $manager = $this->getModelsManager();
 
         foreach ($related as $name => $record) {
-            //Try to get a relation with the same name
-            $relation = $manager->getRelationByAlias(__CLASS__, $name);
-            if (is_object($relation) === true) {
-                //Get the relation type
+
+            /**
+             * Try to get a relation with the same name
+             */
+            $relation = $manager->getRelationByAlias($className, $name);
+            if (is_object($relation)) {
+
+                /**
+                 * Get the relation type
+                 */
                 $type = $relation->getType();
 
-                //Only belongsTo are stored before saving the master record
-                if ($type === 0) {
-                    if (is_object($record) === false) {
-                        $connection->rollback(false);
-                        throw new Exception('Only objects can be stored as part of belongs-to relations');
+                /**
+                 * Only belongsTo are stored before save the master record
+                 */
+                if ($type == Relation::BELONGS_TO) {
+
+                    if (!is_object($record)) {
+                        $connection->rollback($nesting);
+                        throw new Exception("Only objects can be stored as part of belongs-to relations");
                     }
 
-                    $columns          = $relation->getFields();
-                    $referencedModel  = $relation->getReferencedModel();
+                    $columns = $relation->getFields();
+                    $referencedModel = $relation->getReferencedModel();
                     $referencedFields = $relation->getReferencedFields();
-                    if (is_array($columns) === true) {
-                        $connection->rollback(false);
-                        throw new Exception('Not implemented');
+
+                    if (is_array($columns)) {
+                        $connection->rollback($nesting);
+                        throw new Exception("Not implemented");
                     }
 
-                    //If dynamic update is enabled, saving the record must not take some action
-                    if ($record->save() === false) {
-                        //Get the validation messages generated by the referenced model
-                        if (self::getMessagesFromModel($this, $record, $record) === false) {
-                            return;
+                    /**
+                     * If dynamic update is enabled, saving the record must not take any action
+                     */
+                    if (!$record->save()) {
+
+                        /**
+                         * Get the validation messages generated by the referenced model
+                         */
+                        foreach ($record->getMessages() as $message) {
+
+                            /**
+                             * Set the related model
+                             */
+                            if (is_object($message)) {
+                                $message->setModel($record);
+                            }
+
+                            /**
+                             * Appends the messages to the current model
+                             */
+                            $this->appendMessage($message);
                         }
 
-                        //Rollback the implicit transaction
-                        $connection->rollback(false);
+                        /**
+                         * Rollback the implicit transaction
+                         */
+                        $connection->rollback($nesting);
                         return false;
                     }
 
-                    //Read the attribute from the referenced model and assign it to the current model
-                    $this->$columns = $record->readAttribute($referencedFields);
+                    /**
+                     * Read the attribute from the referenced model and assigns it to the current model
+                     * Assign it to the model
+                     */
+                    $this->{$columns} = $record->readAttribute($referencedFields);
                 }
             }
         }
@@ -2613,26 +2903,21 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return boolean|null
      * @throws Exception
      */
-    protected function _postSaveRelatedRecords($connection, $related)
+    protected function _postSaveRelatedRecords(AdapterInterface $connection, $related)
     {
-        if (is_object($connection) === false ||
-            $connection instanceof DbAdapterInterface === false ||
-            is_array($related) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
 
-        $nesting     = false;
-        $newInstance = true;
-        $manager     = $this->getModelsManager();
+        $nesting = false;
+        $className = get_class($this);
+        $manager = $this->getModelsManager();
 
         foreach ($related as $name => $record) {
             //Try to get a relation with the same name
-            $relation = $manager->getRelationByAlias(__CLASS__, $name);
+            $relation = $manager->getRelationByAlias($className, $name);
             if (is_object($relation) === true) {
                 $type = $relation->getType();
 
                 //Discard belongsTo relation
-                if ($type === 0) {
+                if ($type === Relation::BELONGS_TO) {
                     continue;
                 }
 
@@ -2641,8 +2926,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     throw new Exception("Only objects/arrays can be stored as part of has-many/has-one/has-many-to-many relations");
                 }
 
-                $columns          = $relation->getFields();
-                $referencedModel  = $relation->getReferencedModel();
+                $columns = $relation->getFields();
+                $referencedModel = $relation->getReferencedModel();
                 $referencedFields = $relation->getReferencedFields();
 
                 if (is_array($columns) === true) {
@@ -2658,21 +2943,28 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 }
 
                 if (isset($this->$columns) === false) {
+                    $value = $this->$columns;
                     $connection->rollback($nesting);
                     throw new Exception("The column '" . $columns . "' needs to be present in the model");
+                } else {
+                    $value = null;
                 }
 
                 //Get the value of the field from the current model
-                $value = $this->$columns;
+
 
                 //Check if the relation is has-many-to-amy
-                $isThrough = $relation->isThrough();
+                $isThrough = (boolean)$relation->isThrough();
 
                 //Get the rest of intermediate model info
-                if ($isThrough === true) {
-                    $intermediateModelName        = $relation->getIntermediateModel();
-                    $intermediateFields           = $relation->getIntermediateFields();
+                if ($isThrough) {
+                    $intermediateModelName = $relation->getIntermediateModel();
+                    $intermediateFields = $relation->getIntermediateFields();
                     $intermediateReferencedFields = $relation->getIntermediateReferencedFields();
+                } else {
+                    $intermediateModelName = null;
+                    $intermediateFields = null;
+                    $intermediateReferencedFields = null;
                 }
 
                 foreach ($relatedRecord as $recordAfter) {
@@ -2686,36 +2978,75 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     //Save the record and get messages
                     if ($recordAfter->save() === false) {
                         //Get the validation messages generated by the referenced model
-                        if (self::getMessagesFromModel($this, $recordAfter, $record) === false) {
-                            return;
+                        foreach ($recordAfter->getMessages() as $message) {
+
+                            /**
+                             * Set the related model
+                             */
+                            if (is_object($message)) {
+                                $message->setModel($record);
+                            }
+
+                            /**
+                             * Appends the messages to the current model
+                             */
+                            $this->appendMessage($message);
                         }
 
-                        //Rollback the implicit transaction
+                        /**
+                         * Rollback the implicit transaction
+                         */
                         $connection->rollback($nesting);
                         return false;
                     }
 
                     if ($isThrough === true) {
-                        //Create a new instance of the intermediate model
-                        $intermediateModel = $manager->load($intermediateModelName, $newInstance);
+                        /**
+                         * Create a new instance of the intermediate model
+                         */
+                        $intermediateModel = $manager->load($intermediateModelName, true);
 
-                        //Write values in the intermediate model
+                        /**
+                         * Write value in the intermediate model
+                         */
                         $intermediateModel->writeAttribute($intermediateFields, $value);
 
-                        //Get the value from the referenced model
-                        $intermediateValue = $recordAfter->$referencedFields;
+                        /**
+                         * Get the value from the referenced model
+                         */
+                        $intermediateValue = $recordAfter->readAttribute($referencedFields);
 
-                        //Write the intermediate value in the intermediate model
+                        /**
+                         * Write the intermediate value in the intermediate model
+                         */
                         $intermediateModel->writeAttribute($intermediateReferencedFields, $intermediateValue);
 
-                        //Save the record and get messages
-                        if ($intermediateModel->save() === false) {
-                            //Get the validation messages generated by the referenced model
-                            if (self::getMessagesFromModel($this, $intermediateModel, $record) === false) {
-                                return;
+                        /**
+                         * Save the record and get messages
+                         */
+                        if (!$intermediateModel->save()) {
+
+                            /**
+                             * Get the validation messages generated by the referenced model
+                             */
+                            foreach ($intermediateModel->getMessages() as $message) {
+
+                                /**
+                                 * Set the related model
+                                 */
+                                if (is_object($message)) {
+                                    $message->setModel($record);
+                                }
+
+                                /**
+                                 * Appends the messages to the current model
+                                 */
+                                $this->appendMessage($message);
                             }
 
-                            //Rollback the implicit transaction
+                            /**
+                             * Rollback the implicit transaction
+                             */
                             $connection->rollback($nesting);
                             return false;
                         }
@@ -2758,51 +3089,30 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function save($data = null, $whiteList = null)
     {
-        if (is_array($whiteList) === false &&
-            is_null($whiteList) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+
 
         $metaData = $this->getModelsMetaData();
 
-        if (is_array($data) === true) {
-            //Get the reversed column map for future remainings
-            $attributes = $metaData->getColumnMap($this);
-
-            if (is_array($attributes) === false) {
-                //Use the standard column map if there are no renamings
-                $attributes = $metaData->getAttributes($this);
-            }
-
-            foreach ($attributes as $attribute) {
-                if (isset($data[$attribute]) === true) {
-                    //If the whitelist is an array, check if the attribute is on that list
-                    if (is_array($whiteList) === true && in_array($attribute, $whiteList) === false) {
-                        continue;
-                    }
-
-                    //We check if the field has a setter
-                    $value          = $data[$attribute];
-                    $possibleSetter = 'set' . $attribute;
-
-                    if (method_exists($this, $possibleSetter) === true) {
-                        $this->$possibleSetter($value);
-                    } else {
-                        //Otherwise we assign the attribute directly
-                        $this->$attribute = $value;
-                    }
-                }
-            }
-        } elseif (is_null($data) === false) {
-            throw new Exception('Data passed to save() must be an array');
+        if (is_array($data) && count($data) > 0) {
+            $this->assign($data, null, $whiteList);
         }
 
-        //Create/Get the current database connection
+        /**
+         * Create/Get the current database connection
+         */
         $writeConnection = $this->getWriteConnection();
 
-        //Save related records in belongsTo relationships
-        if (is_array($this->_related) === true) {
-            if ($this->_preSaveRelatedRecords($writeConnection, $this->_related) === false) {
+        /**
+         * Fire the start event
+         */
+        $this->fireEvent("prepareSave");
+
+        /**
+         * Save related records in belongsTo relationships
+         */
+        $related = $this->_related;
+        if (is_array($related)) {
+            if ($this->_preSaveRelatedRecords($writeConnection, $related) === false) {
                 return false;
             }
         }
@@ -2810,75 +3120,105 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         $schema = $this->getSchema();
         $source = $this->getSource();
 
-        if ($schema == true) {
-            $table = array($schema, $source);
+        if ($schema) {
+            $table = [$schema, $source];
         } else {
             $table = $source;
         }
 
-        //Create/Get the current database connection
+        /**
+         * Create/Get the current database connection
+         */
         $readConnection = $this->getReadConnection();
 
-        //We need to check if the records exists
+        /**
+         * We need to check if the record exists
+         */
         $exists = $this->_exists($metaData, $readConnection, $table);
-        if ($exists === true) {
-            $this->_operationMade = 2;
+
+        if ($exists) {
+            $this->_operationMade = self::OP_UPDATE;
         } else {
-            $this->_operationMade = 1;
+            $this->_operationMade = self::OP_CREATE;
         }
 
-        //Clean the messages
-        $this->_errorMessages = array();
+        /**
+         * Clean the messages
+         */
+        $this->_errorMessages = [];
 
-        //Query the identity field
+        /**
+         * Query the identity field
+         */
         $identityField = $metaData->getIdentityField($this);
 
-        //_preSave() makes all the validations
+        /**
+         * _preSave() makes all the validations
+         */
         if ($this->_preSave($metaData, $exists, $identityField) === false) {
-            //Rollback the current transaction if there was validation error
-            if (is_array($this->_related) === true) {
+
+            /**
+             * Rollback the current transaction if there was validation errors
+             */
+            if (is_array($related)) {
                 $writeConnection->rollback(false);
             }
 
-            //Throw exceptions on failed saves
-            if (isset($GLOBALS['_PHALCON_ORM_EXCEPTION_ON_FAILED_SAVE']) === true &&
-                $GLOBALS['_PHALCON_ORM_EXCEPTION_ON_FAILED_SAVE'] === true) {
-                //Launch a Phalcon\Mvc\Model\ValidationFailed to notify that the save failed
-                throw new ValidationFailed($this, $this->_errorMessages);
+            /**
+             * Throw exceptions on failed saves?
+             */
+            if (Kernel::getGlobals("orm.exception_on_failed_save")) {
+                /**
+                 * Launch a Phalcon\Mvc\Model\ValidationFailed to notify that the save failed
+                 */
+                throw new ValidationFailed($this, $this->getMessages());
             }
 
             return false;
         }
 
-        //Depending if the record exists we do an update or an insert operation
-        if ($exists === true) {
+        /**
+         * Depending if the record exists we do an update or an insert operation
+         */
+        if ($exists) {
             $success = $this->_doLowUpdate($metaData, $writeConnection, $table);
         } else {
             $success = $this->_doLowInsert($metaData, $writeConnection, $table, $identityField);
         }
 
-        //Change the dirty state to persistent
-        if ($success === true) {
-            $this->_dirtyState = 0;
+        /**
+         * Change the dirty state to persistent
+         */
+        if ($success) {
+            $this->_dirtyState = self::DIRTY_STATE_PERSISTENT;
         }
 
-        //_postSave() makes all the validations
-        if (isset($GLOBALS['_PHALCON_ORM_EVENTS']) === true &&
-            $GLOBALS['_PHALCON_ORM_EVENTS'] === true) {
+        if (is_array($related)) {
+
+            /**
+             * Rollbacks the implicit transaction if the master save has failed
+             */
+            if ($success === false) {
+                $writeConnection->rollback(false);
+            } else {
+                /**
+                 * Save the post-related records
+                 */
+                $success = $this->_postSaveRelatedRecords($writeConnection, $related);
+            }
+        }
+
+        /**
+         * _postSave() invokes after* events if the operation was successful
+         */
+        if (Kernel::getGlobals("orm.events")) {
             $success = $this->_postSave($success, $exists);
         }
 
-        if (is_array($this->_related) === true) {
-            //Rollbacks the implicit transaction if the master save has failed
-            if ($success === false) {
-                $writeConnection->rollback(false);
-                return false;
-            }
-
-            //Save the post-related records
-            if ($this->_postSaveRelatedRecords($writeConnection, $this->_related) === false) {
-                return false;
-            }
+        if ($success === false) {
+            $this->_cancelOperation();
+        } else {
+            $this->fireEvent("afterSave");
         }
 
         return $success;
@@ -2912,78 +3252,20 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function create($data = null, $whiteList = null)
     {
-        if (is_array($whiteList) === false &&
-            is_null($whiteList) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
 
         $metaData = $this->getModelsMetaData();
 
-        //Assign the values passed
-        if (is_null($data) === false) {
-            if (is_array($data) === false) {
-                throw new Exception('Data passed to create() must be an array');
-            }
-
-            if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
-                $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === true) {
-                $columnMap = $metaData->getColumnMap($this);
-            } else {
-                $columnMap = null;
-            }
-
-            //We assign the fields starting from the current attributes in the model
-            $attributes = $metaData->getAttributes($this);
-            foreach ($attributes as $attribute) {
-                //Check if we need to rename the field
-                if (is_array($columnMap) === true) {
-                    if (isset($columnMap[$attribute]) === true) {
-                        $attributeField = $columnMap[$attribute];
-                    } else {
-                        throw new Exception("Column '" . $attribute . "' isn't part of the column map");
-                    }
-                } else {
-                    $attributeField = $attribute;
-                }
-
-                //Check if there is data for the field
-                if (isset($data[$attributeField]) === true) {
-                    //If the whiteliste is an array check if the attribute is on that
-                    if (is_array($whiteList) === true &&
-                        in_array($attributeField, $whiteList) === false) {
-                        continue;
-                    }
-
-                    //The value in the array passed
-                    $value = $data[$attributeField];
-
-                    //Check if the field has a possible setter
-                    $possibleSetter = 'set' . $attributeField;
-
-                    if (method_exists($this, $possibleSetter) === true) {
-                        $this->$possibleSetter($value);
-                    } else {
-                        $this->$attributeField = $value;
-                    }
-                }
-            }
-        }
-
-        //Get the current connection
-        $readConnection = $this->getReadConnection();
-
-        //A 'exists' confirmation is performed first
-        $exists = $this->_exists($metaData, $readConnection);
-
-        //If the record already exists we must throw an exception
-        if ($exists === true) {
-            $modelMessage         = new Message('Record cannot be created because it already exists', null, 'InvalidCreateAttempt');
-            $this->_errorMessages = array($modelMessage);
+        if ($this->_exists($metaData, $this->getReadConnection())) {
+            $this->_errorMessages = [
+                new Message("Record cannot be created because it already exists", null, "InvalidCreateAttempt")
+            ];
             return false;
         }
 
-        //Using save() anyways
-        return $this->save();
+        /**
+         * Using save() anyways
+         */
+        return $this->save($data, $whiteList);
     }
 
     /**
@@ -3004,79 +3286,28 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function update($data = null, $whiteList = null)
     {
-        if (is_array($whiteList) === false &&
-            is_null($whiteList) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
 
-        $metaData = null;
-
-        //Assign the values based on the passed
-        if (is_null($data) === false) {
-            if (is_array($data) === false) {
-                throw new Exception('Data passed to update() must be an array');
-            }
+        if ($this->_dirtyState) {
 
             $metaData = $this->getModelsMetaData();
-            if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
-                $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === true) {
-                $columnMap = $metaData->getColumnMap($this);
-            } else {
-                $columnMap = null;
-            }
 
-            //We assign the fields starting form the current attributes in the model
-            $attributes = $metaData->getAttributes($this);
-            foreach ($attributes as $attribute) {
-                //Check if we need to rename the field
-                if (is_array($columnMap) === true) {
-                    if (isset($columnMap[$attribute]) === true) {
-                        $attributeField = $columnMap[$attribute];
-                    } else {
-                        throw new Exception("Column '" . $attribute . "' isn't part of the column map");
-                    }
-                } else {
-                    $attributeField = $attribute;
-                }
+            if (!$this->_exists($metaData, $this->getReadConnection())) {
+                $this->_errorMessages = [
+                    new Message(
+                        "Record cannot be updated because it does not exist",
+                        null,
+                        "InvalidUpdateAttempt"
+                    )
+                ];
 
-                //Check if there is data for the field
-                if (isset($data[$attributeField]) === true) {
-                    //If the whitelist is an array check if the attribute is on that list
-                    if (is_array($whiteList) === true &&
-                        in_array($attributeField, $whiteList) === false) {
-                        continue;
-                    }
-
-                    //Read the attribute from the data
-                    $value = $data[$attributeField];
-
-                    //Try to find a possible setter
-                    $possibleSetter = 'set' . $attributeField;
-                    if (method_exists($this, $possibleSetter) === true) {
-                        $this->$possibleSetter($value);
-                    } else {
-                        $this->$attributeField = $value;
-                    }
-                }
-            }
-        }
-
-        //We don't check if the record exists, if the record is already checked
-        if ($this->_dirtyState == true) {
-            if (is_null($metaData) === true) {
-                $metaData = $this->getModelsMetaData();
-            }
-
-            $readConnection = $this->getReadConnection();
-            $exists         = $this->_exists($metaData, $readConnection);
-            if ($exists === false) {
-                $this->_errorMessages = array(new Message('Record cannot be updated because it does not exist', null, 'InvalidUpdateAttempt'));
                 return false;
             }
         }
 
-        //Call save() anyways
-        return $this->save();
+        /**
+         * Call save() anyways
+         */
+        return $this->save($data, $whiteList);
     }
 
     /**
@@ -3096,35 +3327,33 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function delete()
     {
-        $metaData             = $this->getModelsMetaData();
-        $writeConnection      = $this->getWriteConnection();
+        $metaData = $this->getModelsMetaData();
+        $writeConnection = $this->getWriteConnection();
         $this->_errorMessages = array();
 
         //Operation made is OP_DELETE
         $this->_operationMade = 3;
 
         //Check if deleting the record violates a virtual foreign key
-        if (isset($GLOBALS['_PHALCON_ORM_VIRTUAL_FOREIGN_KEYS']) === true &&
-            $GLOBALS['_PHALCON_ORM_VIRTUAL_FOREIGN_KEYS'] === true &&
+        if (Kernel::getGlobals("orm.virtual_foreign_keys") &&
             $this->_checkForeignKeysReverseRestrict() === false) {
             return false;
         }
 
-        $value         = array();
-        $bindTypes     = array();
-        $conditions    = array();
-        $primaryKeys   = $metaData->getPrimaryKeyAttributes($this);
+        $values = array();
+        $bindTypes = array();
+        $conditions = array();
+        $primaryKeys = $metaData->getPrimaryKeyAttributes($this);
         $bindDataTypes = $metaData->getBindTypes($this);
 
-        if (isset($GLOBALS['_PHALCON_ORM_COLUMN_RENAMING']) === true &&
-            $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] === true) {
+        if (Kernel::getGlobals("orm.column_renaming")) {
             $columnMap = $metaData->getColumnMap($this);
         } else {
             $columnMap = null;
         }
 
         //We can't create dynamic SQL without a primary key
-        if (count($primaryKeys) === 0) {
+        if (!count($primaryKeys)) {
             throw new Exception('A primary key must be defined in the model in order to perform the operation');
         }
 
@@ -3133,6 +3362,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             //Every column part of the primary key must be in the bind_data_types
             if (isset($bindDataTypes[$primaryKey]) === false) {
                 throw new Exception("Column '" . $primaryKey . "' have not defined a bind data type");
+            } else {
+                $bindType = $bindDataTypes[$primaryKey];
             }
 
             //Take the column values based on the column map if any
@@ -3152,17 +3383,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             }
 
             $values[] = $this->$attributeField;
-
             //Escape the column identifier
             $conditions[] = $writeConnection->escapeIdentifier($primaryKey) . ' = ?';
-            $bindTypes[]  = $bindDataTypes[$primaryKey];
+            $bindTypes[] = $bindDataTypes[$primaryKey];
         }
 
-        //Join the conditions in the array using an AND operator
-        $deleteConditions = implode(' AND ', $conditions);
 
-        if (isset($GLOBALS['_PHALCON_ORM_EVENTS']) === true &&
-            $GLOBALS['_PHALCON_ORM_EVENTS'] === true) {
+        if (Kernel::getGlobals("orm.events")) {
             $this->_skipped = false;
 
             //Fire the beforeDelete event
@@ -3186,18 +3413,16 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //Do the deletion
-        $success = $writeConnection->delete($table, $deleteConditions, $values, $bindTypes);
+        $success = $writeConnection->delete($table, join(" AND ", $conditions), $values, $bindTypes);
 
         //Check if there is a virtual foreign key with cascade action
-        if (isset($GLOBALS['_PHALCON_ORM_VIRTUAL_FOREIGN_KEYS']) === true &&
-            $GLOBALS['_PHALCON_ORM_VIRTUAL_FOREIGN_KEYS'] === true) {
+        if (Kernel::getGlobals("orm.virtual_foreign_keys")) {
             if ($this->_checkForeignKeysReverseCascade() === false) {
                 return false;
             }
         }
 
-        if (isset($GLOBALS['_PHALCON_ORM_EVENTS']) === true &&
-            $GLOBALS['_PHALCON_ORM_EVENTS'] === true &&
+        if (Kernel::getGlobals("orm.events") &&
             $success === true) {
             $this->fireEvent('afterDelete');
         }
@@ -3226,14 +3451,15 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function refresh()
     {
-        if ($this->_dirtyState !== 0) {
+        if ($this->_dirtyState != self::DIRTY_STATE_PERSISTENT) {
             throw new Exception('The record cannot be refreshed because it does not exist or is deleted');
         }
 
-        $metaData       = $this->getModelsMetaData();
+        $metaData = $this->getModelsMetaData();
         $readConnection = $this->getReadConnection();
-        $schema         = $this->getSchema();
-        $source         = $this->getSource();
+        $schema = $this->getSchema();
+        $source = $this->getSource();
+        $manager = $this->_modelsManager;
 
         if ($schema == true) {
             $table = array($schema, $source);
@@ -3242,7 +3468,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         $uniqueKey = $this->_uniqueKey;
-        if (isset($uniqueKey) === false) {
+        if (!$uniqueKey) {
             //We need to check if the record exists
             $exists = $this->_exists($metaData, $readConnection, $table);
             if ($exists !== true) {
@@ -3261,7 +3487,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //We only refresh the attributes in the model's metadata
         $attributes = $metaData->getAttributes($this);
-        $fields     = array();
+        $fields = array();
 
         foreach ($attributes as $attribute) {
             $fields[] = array($attribute);
@@ -3269,17 +3495,23 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         //We directly build the SELECT to save resources
         $dialect = $readConnection->getDialect();
-        $sql     = $dialect->select(array('columns' => $fields, 'tables'  => $readConnection->escapeIdentifier($table),
-            'where'   => $uniqueKey));
-        $row     = $readConnection->fetchOne($sql, 1, $uniqueParams, $uniqueTypes);
-
-        //Get a column map if any
-        $columnMap = $metaData->getColumnMap($this);
+        $tables = $dialect->select([
+            "columns" => $fields,
+            "tables" => $readConnection->escapeIdentifier($table),
+            "where" => $uniqueKey
+        ]);
+        $row = $readConnection->fetchOne($tables, \Phalcon\Db::FETCH_ASSOC, $uniqueParams, $this->_uniqueTypes);
 
         //Assign the resulting array to the $this object
-        if (is_array($row) === true) {
+        if (is_array($row)) {
+            $columnMap = $metaData->getColumnMap($this);
             $this->assign($row, $columnMap);
+            if ($manager->isKeepingSnapshots($this)) {
+                $this->setSnapshotData($row, $columnMap);
+            }
         }
+
+        return $this;
     }
 
     /**
@@ -3314,11 +3546,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        if (isset($this->$attribute) === true) {
-            return $this->$attribute;
+        if (!isset ($this->{$attribute})) {
+            return null;
         }
 
-        return null;
+        return $this->{$attribute};
     }
 
     /**
@@ -3368,21 +3600,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Attributes must be an array');
         }
 
-        if (is_null($replace) === true) {
-            $replace = false;
-        } elseif (is_bool($replace) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $keysAttributes = array();
-
-        foreach ($attributes as $attribute) {
-            $keysAttributes[$attribute] = null;
-        }
-
-        $metaData = $this->getModelsMetaData();
-        $metaData->setAutomaticCreateAttributes($this, $keysAttributes, $replace);
-        $metaData->setAutomaticUpdateAttributes($this, $keysAttributes, $replace);
+        $this->skipAttributesOnCreate($attributes);
+        $this->skipAttributesOnUpdate($attributes);
     }
 
     /**
@@ -3403,29 +3622,16 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * </code>
      *
      * @param array $attributes
-     * @param null|boolean $replace
      * @throws Exception
      */
-    protected function skipAttributesOnCreate($attributes, $replace = null)
+    protected function skipAttributesOnCreate($attributes)
     {
-        if (is_array($attributes) === false) {
-            throw new Exception('Attributes must be an array');
-        }
-
-        if (is_null($replace) === true) {
-            $replace = false;
-        } elseif (is_bool($replace) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $keysAttributes = array();
-
+        $keysAttributes = [];
         foreach ($attributes as $attribute) {
             $keysAttributes[$attribute] = null;
         }
 
-        $metaData = $this->getModelsMetaData();
-        $metaData->setAutomaticCreateAttributes($this, $keysAttributes, $replace);
+        $this->getModelsMetaData()->setAutomaticCreateAttributes($this, $keysAttributes);
     }
 
     /**
@@ -3446,30 +3652,57 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * </code>
      *
      * @param array $attributes
-     * @param null|boolean $replace
      * @throws Exception
      */
-    protected function skipAttributesOnUpdate($attributes, $replace = null)
+    protected function skipAttributesOnUpdate($attributes)
     {
         if (is_array($attributes) === false) {
             throw new Exception('Attributes must be an array');
         }
 
-        if (is_null($replace) === true) {
-            $replace = false;
-        } elseif (is_bool($replace) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        $keysAttributes = array();
-
+        $keysAttributes = [];
         foreach ($attributes as $attribute) {
             $keysAttributes[$attribute] = null;
         }
 
-        $metaData = $this->getModelsMetaData();
-        $metaData->setAutomaticUpdateAttributes($this, $keysAttributes, $replace);
+        $this->getModelsMetaData()->setAutomaticUpdateAttributes($this, $keysAttributes);
     }
+
+    /**
+     * Sets a list of attributes that must be skipped from the
+     * generated UPDATE statement
+     *
+     *<code>
+     *
+     * class Robots extends \Phalcon\Mvc\Model
+     * {
+     *     public function initialize()
+     *     {
+     *         $this->allowEmptyStringValues(
+     *             [
+     *                 "name",
+     *             ]
+     *         );
+     *     }
+     * }
+     *</code>
+     * @param $attributes
+     * @throws Exception
+     */
+    protected function allowEmptyStringValues($attributes)
+    {
+        if (is_array($attributes) === false) {
+            throw new Exception('Attributes must be an array');
+        }
+
+        $keysAttributes = [];
+        foreach ($attributes as $attribute) {
+            $keysAttributes[$attribute] = null;
+        }
+
+        $this->getModelsMetaData()->setEmptyStringAttributes($this, $keysAttributes);
+    }
+
 
     /**
      * Setup a 1-1 relation between two models
@@ -3491,10 +3724,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param string $referenceModel
      * @param mixed $referencedFields
      * @param array $options
+     * @throws Exception
      * @return \Phalcon\Mvc\Model\Relation
      */
     public function hasOne($fields, $referenceModel, $referencedFields, $options)
     {
+        if (is_string($referenceModel) === false) {
+            throw new Exception('Attributes must be an array');
+        }
         return $this->_modelsManager->addHasOne($this, $fields, $referenceModel, $referencedFields, $options);
     }
 
@@ -3518,11 +3755,21 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param string $referenceModel
      * @param mixed $referencedFields
      * @param array|null $options
+     * @throws Exception
      * @return \Phalcon\Mvc\Model\Relation
      */
     public function belongsTo($fields, $referenceModel, $referencedFields, $options = null)
     {
-        return $this->_modelsManager->addBelongsTo($this, $fields, $referenceModel, $referencedFields, $options);
+        if (is_string($referenceModel) === false) {
+            throw new Exception('Attributes must be an array');
+        }
+        return ($this->_modelsManager)->addBelongsTo(
+            $this,
+            $fields,
+            $referenceModel,
+            $referencedFields,
+            $options
+        );
     }
 
     /**
@@ -3545,11 +3792,21 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param string $referenceModel
      * @param mixed $referencedFields
      * @param array|null $options
+     * @throws Exception
      * @return \Phalcon\Mvc\Model\Relation
      */
     public function hasMany($fields, $referenceModel, $referencedFields, $options = null)
     {
-        return $this->_modelsManager->addHasMany($this, $fields, $referenceModel, $referencedFields, $options);
+        if (is_string($referenceModel) === false) {
+            throw new Exception('Attributes must be an array');
+        }
+        return ($this->_modelsManager)->addHasMany(
+            $this,
+            $fields,
+            $referenceModel,
+            $referencedFields,
+            $options
+        );
     }
 
     /**
@@ -3583,12 +3840,24 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param string $referenceModel
      * @param string $referencedFields
      * @param array|null $options
+     * @throws Exception
      * @return \Phalcon\Mvc\Model\Relation
      */
     public function hasManyToMany($fields, $intermediateModel, $intermediateFields, $intermediateReferencedFields, $referenceModel, $referencedFields, $options = null)
     {
-        return $this->_modelsManager->addHasManyToMany(
-                $this, $fields, $intermediateModel, $intermediateFields, $intermediateReferencedFields, $referenceModel, $referencedFields, $options
+        if (is_string($referenceModel) === false ||
+            is_string($intermediateModel) === false) {
+            throw new Exception('Attributes must be an array');
+        }
+        return ($this->_modelsManager)->addHasManyToMany(
+            $this,
+            $fields,
+            $intermediateModel,
+            $intermediateFields,
+            $intermediateReferencedFields,
+            $referenceModel,
+            $referencedFields,
+            $options
         );
     }
 
@@ -3617,7 +3886,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *
      * @param \Phalcon\Mvc\Model\BehaviorInterface $behavior
      */
-    public function addBehavior($behavior)
+    public function addBehavior(BehaviorInterface $behavior)
     {
         $this->_modelsManager->addBehavior($this, $behavior);
     }
@@ -3642,6 +3911,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     protected function keepSnapshots($keepSnapshots)
     {
+        $keepSnapshots = (boolean)$keepSnapshots;
         $this->_modelsManager->keepSnapshots($this, $keepSnapshots);
     }
 
@@ -3669,20 +3939,36 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                 }
 
                 //Every field must be part of the column map
-                if (isset($columnMap[$key]) === false) {
-                    throw new Exception('Column "' . $key . '" doesn\'t make part of the column map');
+                if (isset($columnMap[$key])) {
+                    $attribute = $columnMap[$key];
+                } else {
+                    if (!Kernel::getGlobals("orm.ignore_unknown_columns")) {
+                        throw new Exception("Column '" . $key . "' doesn't make part of the column map");
+                    } else {
+                        continue;
+                    }
                 }
 
-                $snapshot[$columnMap[$key]] = $value;
-            }
+                if (is_array($attribute)) {
+                    if (isset($attribute[0])) {
+                        $attribute = $attribute[0];
+                    } else {
+                        if (!Kernel::getGlobals("orm.ignore_unknown_columns")) {
+                            throw new Exception("Column '" . $key . "' doesn't make part of the column map");
+                        } else {
+                            continue;
+                        }
+                    }
+                }
 
-            $this->_snapshot = $snapshot;
-            return;
-        } elseif (is_null($columnMap) === false) {
-            throw new Exception('Invalid parameter type.');
+                $snapshot[$attribute] = $value;
+            }
+        } else {
+            $snapshot = $data;
         }
 
-        $this->_snapshot = $data;
+        $this->_oldSnapshot = $snapshot;
+        $this->_snapshot = $snapshot;
     }
 
     /**
@@ -3692,7 +3978,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function hasSnapshotData()
     {
-        return (is_array($this->_snapshot) === true ? true : false);
+        $snapshot = $this->_snapshot;
+
+        return is_array($snapshot);
     }
 
     /**
@@ -3706,98 +3994,87 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     }
 
     /**
+     * Returns the internal old snapshot data
+     *
+     * @return array
+     */
+    public function getOldSnapshotData()
+    {
+        return $this->_oldSnapshot;
+    }
+
+    /**
      * Check if a specific attribute has changed
      * This only works if the model is keeping data snapshots
      *
      * @param string|null $fieldName
+     * @return bool
      * @throws Exception
      */
-    public function hasChanged($fieldName = null)
+    public function hasChanged($fieldName = null, $allFields = false)
     {
-        if (is_array($this->_snapshot) === false) {
-            throw new Exception("The record doesn't have a valid data snapshot");
-        }
+        $allFields = (boolean)$allFields;
 
-        if (is_string($fieldName) === false &&
-            is_null($fieldName) === false) {
-            throw new Exception('The field name must be string');
-        }
+        $changedFields = $this->getChangedFields();
 
-        //Dirty state must be DIRTY_PERSISTENT to make the checking
-        if ($this->_dirtyState !== 0) {
-            throw new Exception('Change checking cannot be performed because the object has not been persisted or is deleted');
-        }
-
-        //Return the models metadata
-        $metaData = $this->getModelsMetaData();
-
-        //The reversed column map is an array if the model has a column map
-        $columnMap = $metaData->getReverseColumnMap($this);
-
-        //Data types are field indexes
-        if (is_array($columnMap) === false) {
-            $attributes    = $metaData->getDataTypes($this);
-            $allAttributes = $attributes;
-        } else {
-            $allAttributes = $columnMap;
-        }
-
-        //If a field was specified we only check it
-        if (is_string($fieldName) === true) {
-            //We only make this validation over valid fields
-            if (is_array($columnMap) === true) {
-                if (isset($columnMap[$fieldName]) === false) {
-                    throw new Exception("The field '" . $fieldName . "' is not part of the model");
-                }
-            } else {
-                if (isset($attributes[$fieldName]) === false) {
-                    throw new Exception("The field '" . $fieldName . "' is not part of the model");
-                }
+        /**
+         * If a field was specified we only check it
+         */
+        if (is_string($fieldName)) {
+            return in_array($fieldName, $changedFields);
+        } elseif (is_array($fieldName)) {
+            if ($allFields) {
+                return array_intersect($fieldName, $changedFields) == $fieldName;
             }
 
-            //The field is not part of the model - throw exception
-            if (isset($this->$fieldName) === false) {
-                throw new Exception("The field '" . $fieldName . "' is not defined on the model");
-            }
-
-            //The field is not part of the data snapshot, throw exception
-            if (isset($this->_snapshot[$fieldName]) === false) {
-                throw new Exception("The field '" . $fieldName . "' was not found in the snapshot");
-            }
-
-            $value         = $this->$fieldName;
-            $originalValue = $this->_snapshot[$fieldName];
-
-            //Check if the field has changed
-            return ($value == $originalValue ? false : true);
+            return count(array_intersect($fieldName, $changedFields)) > 0;
         }
 
-        //Check every attribute in the model
-        foreach ($allAttributes as $name => $type) {
-            //If an attribute is not present in the snapshot, we assume the record as changed
-            if (isset($snapshot[$name]) === false) {
-                return true;
-            }
-
-            //If some attribute is not present in the model, we assume the record as changed
-            if (isset($this->$name) === false) {
-                return true;
-            }
-
-            $value         = $this->$name;
-            $originalValue = $this->_snapshot[$name];
-
-            if ($value !== $originalValue) {
-                return true;
-            }
-        }
-
-        return false;
+        return count($changedFields) > 0;
     }
 
     /**
-     * Returns a list of changed values
+     * Check if a specific attribute was updated
+     * This only works if the model is keeping data snapshots
      *
+     * @param string|array fieldName
+     * @param bool $allFields
+     * @return bool
+     */
+    public function hasUpdated($fieldName = null, $allFields = false)
+    {
+
+        $updatedFields = $this->getUpdatedFields();
+
+        /**
+         * If a field was specified we only check it
+         */
+        if (is_string($fieldName)) {
+            return in_array($fieldName, $updatedFields);
+        } elseif (is_array($fieldName)) {
+            if ($allFields) {
+                return array_intersect($fieldName, $updatedFields) == $fieldName;
+            }
+
+            return count(array_intersect($fieldName, $updatedFields)) > 0;
+        }
+
+        return count($updatedFields) > 0;
+    }
+
+
+    /**
+     * Returns a list of changed values.
+     *
+     * <code>
+     * $robots = Robots::findFirst();
+     * print_r($robots->getChangedFields()); // []
+     *
+     * $robots->deleted = 'Y';
+     *
+     * $robots->getChangedFields();
+     * print_r($robots->getChangedFields()); // ["deleted"]
+     * </code>
      * @return array
      * @throws Exception
      */
@@ -3807,10 +4084,6 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception("The record doesn't have a valid data snapshot");
         }
 
-        //Dirty state must be DIRTY_PERSISTENT to make the checking
-        if ($this->_dirtyState !== 0) {
-            throw new Exception('Change checking cannot be performed because the object has not been persisted or is deleted');
-        }
 
         //return the models metadata
         $metaData = $this->getModelsMetaData();
@@ -3888,28 +4161,17 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_array($arguments) === false &&
-            is_null($arguments) === false) {
-            throw new Exception('Invalid parameter type.');
+        $className = get_class($this);
+        $manager = $this->_modelsManager;
+        $relation = $manager->getRelationByAlias($className, $alias);
+        if (is_object($relation)) {
+            throw new Exception("There is no defined relations for the model '" . $className . "' using alias '" . $alias . "'");
         }
 
-        //Query the relation by alias
-        $relation = $this->_modelsManager->getRelationByAlias(__CLASS__, $alias);
-        if (is_object($relation) === false) {
-            throw new Exception('There is no defined relations for the model "' . __CLASS__ . '" using alias "' . $alias . '"'); //@note sic
-        }
-
-        //Call the 'getRelationRecords' in the model manager
-        return call_user_func_array(
-            array(
-            $this->_modelsManager,
-            'getRelationRecords'
-            ), array(
-            $relation,
-            null,
-            $this,
-            $arguments)
-        );
+        /**
+         * Call the 'getRelationRecords' in the models manager
+         */
+        return $manager->getRelationRecords($relation, null, $this, $arguments);
     }
 
     /**
@@ -3928,43 +4190,126 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             is_array($arguments) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        $relation    = null;
+        $manager = $this->_modelsManager;
+        $relation = false;
         $queryMethod = null;
 
-        //Calling find/findFirst if the method starts with "get"
-        if (strpos($method, 'get') === 0) {
-            $relation = $this->_modelsManager->getRelationByAlias($modelName, substr($method, 3));
+        if (Text::startsWith($method, "count")) {
+            $relation = $manager->getRelationByAlias($modelName, substr($method, 3));
+        } /**
+         * Calling count if the method starts with "count"
+         */
+        elseif (Text::startsWith($method, "count")) {
+            $queryMethod = "count";
+            $relation = $manager->getRelationByAlias($modelName, substr($method, 5));
         }
 
-        //Calling count if the method starts with "count"
-        if (is_object($relation) === false && strpos($method, 'count') === 0) {
-            $queryMethod = 'count';
-            $relation    = $this->_modelsManager->getRelationByAlias($modelName, substr($method, 5));
+        /**
+         * If the relation was found perform the query via the models manager
+         */
+        if (is_object($relation) === false) {
+            return null;
         }
 
-        //If the relation was found perform the query via the models manager
-        if (is_object($relation) === true) {
-            if (isset($arguments[0]) === true) {
-                $extraArgs = $arguments[0];
+        $extraArgs = $arguments[0];
+
+        return $manager->getRelationRecords(
+            $relation,
+            $queryMethod,
+            $this,
+            $extraArgs
+        );
+    }
+
+    /**
+     * Try to check if the query must invoke a finder
+     *
+     * @param $method
+     * @param $arguments
+     * @return null
+     * @throws Exception
+     */
+    protected final static function _invokeFinder($method, $arguments)
+    {
+        $extraMethod = null;
+
+        /**
+         * Check if the method starts with "findFirst"
+         */
+        if (Text::startsWith($method, "findFirstBy")) {
+            $type = "findFirst";
+            $extraMethod = substr($method, 11);
+        } /**
+         * Check if the method starts with "find"
+         */
+        elseif (Text::startsWith($method, "findBy")) {
+            $type = "find";
+            $extraMethod = substr($method, 6);
+        } /**
+         * Check if the method starts with "count"
+         */
+        elseif (Text::startsWith($method, "countBy")) {
+            $type = "count";
+            $extraMethod = substr($method, 7);
+        } else {
+            $type = null;
+        }
+
+        /**
+         * The called class is the model
+         */
+        $modelName = get_called_class();
+
+        if (!$extraMethod) {
+            return null;
+        }
+
+        if (isset($arguments[0])) {
+            $value = $arguments[0];
+        } else {
+            throw new Exception("The static method '" . $method . "' requires one argument");
+        }
+
+        $model = new $modelName();
+        $metaData = $model->getModelsMetaData();
+
+        /**
+         * Get the attributes
+         */
+        $attributes = $metaData->getReverseColumnMap($model);
+        if (is_array($attributes) === false) {
+            $attributes = $metaData->getDataTypes($model);
+        }
+
+        /**
+         * Check if the extra-method is an attribute
+         */
+        if (isset ($attributes[$extraMethod])) {
+            $field = $extraMethod;
+        } else {
+
+            /**
+             * Lowercase the first letter of the extra-method
+             */
+            $extraMethodFirst = lcfirst($extraMethod);
+            if (isset ($attributes[$extraMethodFirst])) {
+                $field = $extraMethodFirst;
             } else {
-                $extraArgs = null;
-            }
 
-            return call_user_func_array(
-                array(
-                $this->_modelsManager,
-                'getRelationRecords'
-                ), array(
-                $relation,
-                $queryMethod,
-                $this,
-                $extraArgs
-                )
-            );
+                /**
+                 * Get the possible real method name
+                 */
+                $field = Text::uncamelize($extraMethod);
+                if (!isset ($attributes[$field])) {
+                    throw new Exception("Cannot resolve attribute '" . $extraMethod . "' in the model");
+                }
+            }
         }
 
-        return null;
+        /**
+         * Execute the query
+         */
+        return $modelName::{$type}(["conditions" => "[" . $field . "] = ?0", "bind" => [$value]]);
     }
 
     /**
@@ -3975,32 +4320,39 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return mixed
      * @throws Exception
      */
-    public function __call($method, $arguments = null)
+    public function __call($method, $arguments)
     {
         if (is_string($method) === false) {
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_null($arguments) === true) {
-            $arguments = array();
-        } elseif (is_array($arguments) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        //Check if there is a default action using the magic getter
-        $records = $this->_getRelatedRecords(__CLASS__, $method, $arguments);
-        if (is_null($records) === false) {
+        $records = self::_invokeFinder($method, $arguments);
+        if ($records !== null) {
             return $records;
         }
 
-        //Try to find a replacement for the missing method in a behavior/listener
-        $status = $this->_modelsManager->missingMethod($this, $method, $arguments);
-        if (is_null($status) === false) {
+        $modelName = get_class($this);
+
+        /**
+         * Check if there is a default action using the magic getter
+         */
+        $records = $this->_getRelatedRecords($modelName, $method, $arguments);
+        if ($records !== null) {
+            return $records;
+        }
+
+        /**
+         * Try to find a replacement for the missing method in a behavior/listener
+         */
+        $status = ($this->_modelsManager)->missingMethod($this, $method, $arguments);
+        if ($status !== null) {
             return $status;
         }
 
-        //The method doesn't exist - throw an exception
-        throw new Exception('The method "' . $method . '" doesn\'t exist on model "' . __CLASS__ . '"');
+        /**
+         * The method doesn't exist throw an exception
+         */
+        throw new Exception("The method '" . $method . "' doesn't exist on model '" . $modelName . "'");
     }
 
     /**
@@ -4016,78 +4368,20 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         if (is_string($method) === false) {
             throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($arguments) === false &&
-            is_null($arguments) === false) {
-            throw new Exception('Invalid parameter type.');
+        $records = self::_invokeFinder($method, $arguments);
+        if ($records === null) {
+            throw new Exception("The static method '" . $method . "' doesn't exist");
         }
 
-        $extraMethod = null;
-        $type        = null;
-
-        if (strpos($method, 'findFirstBy') === 0) {
-            $type        = 'findFirst';
-            $extraMethod = substr($method, 11);
-        } elseif (strpos($method, 'findBy') === 0) {
-            $type        = 'find';
-            $extraMethod = substr($method, 6);
-        } elseif (strpos($method, 'countBy') === 0) {
-            $type        = 'count';
-            $extraMethod = substr($method, 7);
-        }
-
-        $modelName = get_called_class();
-
-        if (is_null($extraMethod) === true) {
-            //The method doesn't exist - throw an exception
-            throw new Exception('The static method "' . $method . '" doesn\'t exist on model"' . $modelName . '"');
-        }
-
-        if (isset($arguments[0]) === false) {
-            throw new Exception('The static method "' . $method . '" requires one argument');
-        }
-
-        $value = $arguments[0];
-        $model = new $modelName();
-
-        //Get the model's metadata
-        $metaData = $model->getModelsMetaData();
-
-        //Get the attributes
-        $attributes = $metaData->getReverseColumnMap($model);
-        if (is_array($attributes) === false) {
-            //Use the standard attributes if there is no column map available
-            $attributes = $metaData->getDataTypes($model);
-        }
-
-        //Check if the extra-method is an attribute
-        if (isset($attributes[$extraMethod]) === true) {
-            $field = $extraMethod;
-        } else {
-            //Lowercase the first letter of the extra-method
-            $extraMethodFirst = lcfirst($extraMethod);
-            if (isset($attributes[$extraMethodFirst]) === true) {
-                $field = $extraMethodFirst;
-            } else {
-                //Get the possible real method name
-                $field = Text::uncamelize($extraMethod);
-                if (isset($attributes[$field]) === false) {
-                    throw new Exception('Cannot resolve attribute "' . $extraMethod . '" in the model');
-                }
-            }
-        }
-
-        //Execute the query (static call)
-        return call_user_func_array(
-            array($modelName, $type), array('conditions' => $field . ' = ?0', 'bind' => array($value))
-        );
+        return $records;
     }
 
     /**
      * Magic method to assign values to the the model
      *
-     * @param string $property
-     * @param mixed $value
+     * @param $property
+     * @param $value
+     * @return mixed
      * @throws Exception
      */
     public function __set($property, $value)
@@ -4097,25 +4391,89 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //Values are probably relationships if they are objects
-        if (is_object($value) === true && $value instanceof ModelInterface === true) {
-            $lowerProperty                  = strtolower($property);
-            $this->$lowerProperty           = $value;
-            $this->_related[$lowerProperty] = $value;
-            $this->_dirtyState              = 1;
-            return $value;
+        if (is_object($value)) {
+            if ($value instanceof ModelInterface) {
+                $dirtyState = $this->_dirtyState;
+                if ($value->getDirtyState() != $dirtyState) {
+                    $dirtyState = self::DIRTY_STATE_TRANSIENT;
+                }
+                $lowerProperty = strtolower($property);
+                $this->{$lowerProperty} = $value;
+                $this->_related[$lowerProperty] = $value;
+                $this->_dirtyState = $dirtyState;
+                return $value;
+            }
         }
-
         //Check if the value is an array
-        if (is_array($value) === true) {
-            $lowerProperty                  = strtolower($property);
-            $this->_related[$lowerProperty] = $value; //@note ???
-            $this->_dirtyState              = 1;
+        if (is_array($value)) {
+
+            $lowerProperty = strtolower($property);
+            $modelName = get_class($this);
+            $manager = $this->getModelsManager();
+
+            $related = [];
+            foreach ($value as $key => $item) {
+                if (is_object($item)) {
+                    if ($item instanceof ModelInterface) {
+                        $related[] = $item;
+                    }
+                } else {
+                    $lowerKey = strtolower($key);
+                    $this->{$owerKey} = $item;
+                    $relation = $manager->getRelationByAlias($modelName, $lowerProperty);
+                    if (is_object($relation)) {
+                        $referencedModel = $manager->load($relation->getReferencedModel());
+                        $referencedModel->writeAttribute($lowerKey, $item);
+                    }
+                }
+            }
+
+            if (count($related) > 0) {
+                $this->_related[$lowerProperty] = $related;
+                $this->_dirtyState = self::DIRTY_STATE_TRANSIENT;
+            }
+
             return $value;
         }
 
-        $this->$property = $value;
+        if ($this->_possibleSetter($property, $value)) {
+            return $value;
+        }
+
+        // Throw an exception if there is an attempt to set a non-public property.
+        if (property_exists($this, $property)) {
+            $manager = $this->getModelsManager();
+            if (!$manager->isVisibleModelProperty($this, $property)) {
+                throw new Exception("Property '" . $property . "' does not have a setter.");
+            }
+        }
+
+        $this->{$property} = $value;
 
         return $value;
+    }
+
+
+    /**
+     * Check for, and attempt to use, possible setter.
+     *
+     * @param string $property
+     * @param mixed $value
+     * @throws Exception
+     * @return string
+     */
+    protected final function _possibleSetter($property, $value)
+    {
+        if (is_string($property) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+
+        $possibleSetter = "set" . Text::camelize($property);
+        if (method_exists($this, $possibleSetter)) {
+            $this->{$possibleSetter}($value);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -4131,26 +4489,39 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
-        $modelName     = get_class($this);
+        $modelName = get_class($this);
         $lowerProperty = strtolower($property);
-        $manager       = $this->getModelsManager();
+        $manager = $this->getModelsManager();
 
         //Check if the property is a relationship
         $relation = $manager->getRelationByAlias($modelName, $lowerProperty);
-        if (is_object($relation) === true) {
-            $callArgs   = array($relation, null, $this, null);
-            $callObject = array($manager, 'getRelationRecords');
+        if (is_object($relation)) {
 
-            //Get the related records
-            $result = call_user_func_array($callObject, $callArgs);
+            /*
+             Not fetch a relation if it is on CamelCase
+             */
+            if (isset ($this->{$lowerProperty}) && (is_object($this->{$lowerProperty}))) {
+                return $this->{$lowerProperty};
+            }
+            /**
+             * Get the related records
+             */
+            $result = $manager->getRelationRecords($relation, null, $this, null);
 
-            //Assign the result to the object
-            if (is_object($result) === true) {
-                //We assign the result to the instance avoiding future queries
-                $this->$lowerProperty = $result;
+            /**
+             * Assign the result to the object
+             */
+            if (is_object($result)) {
 
-                //For belongs-to-relations we store the object in the related bag
-                if ($result instanceof ModelInterface === true) {
+                /**
+                 * We assign the result to the instance avoiding future queries
+                 */
+                $this->{$lowerProperty} = $result;
+
+                /**
+                 * For belongs-to relations we store the object in the related bag
+                 */
+                if ($result instanceof ModelInterface) {
                     $this->_related[$lowerProperty] = $result;
                 }
             }
@@ -4158,8 +4529,20 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             return $result;
         }
 
-        //A notice is shown if the property is not defined an isn't a relationship
-        trigger_error('Access to undefined property ' . $modelName . '::' . $property);
+        /**
+         * Check if the property has getters
+         */
+        $method = "get" . Text::camelize($property);
+
+        if (method_exists($this, $method)) {
+            return $this->{$method}();
+        }
+
+        /**
+         * A notice is shown if the property is not defined and it isn't a relationship
+         */
+        trigger_error("Access to undefined property " . $modelName . "::" . $property);
+        return null;
     }
 
     /**
@@ -4167,6 +4550,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      *
      * @param string $property
      * @throws Exception
+     * @return boolean
      */
     public function __isset($property)
     {
@@ -4174,12 +4558,14 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             throw new Exception('Invalid parameter type.');
         }
 
+        $modelName = get_class($this);
         $manager = $this->getModelsManager();
 
-        //Check if the property is a relationship
-        $relation = $manager->getRelationByAlias(get_called_class(), $property);
-
-        return (is_object($relation) === true ? true : false);
+        /**
+         * Check if the property is a relationship
+         */
+        $relation = $manager->getRelationByAlias($modelName, $property);
+        return is_object($relation);
     }
 
     /**
@@ -4189,23 +4575,21 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function serialize()
     {
-        $metaData = $this->getModelsMetaData();
 
-        //We get the model's attributes to only serialize them
-        $attributes = $metaData->getAttributes($this);
+        $attributes = $this->toArray();
+        $manager = $this->getModelsManager();
 
-        $data = array();
-
-        foreach ($attributes as $attribute) {
-            if (isset($this->$attribute) === true) {
-                $data[$attribute] = $this->$attribute;
-            } else {
-                $data[$attribute] = null;
+        if ($manager->isKeepingSnapshots($this)) {
+            $snapshot = $this->_snapshot;
+            /**
+             * If attributes is not the same as snapshot then save snapshot too
+             */
+            if ($snapshot != null && $attributes != $snapshot) {
+                return serialize(["_attributes" => $attributes, "_snapshot" => $snapshot]);
             }
         }
 
-        //Use the standard serialize function to serialize the array data
-        return serialize($data);
+        return serialize($attributes);
     }
 
     /**
@@ -4216,42 +4600,60 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function unserialize($data)
     {
-        if (is_string($data) === true) {
-            $attributes = unserialize($data);
-            if (is_array($attributes) === true) {
-                //Obtain the default DI
-                $dependencyInjector = DI::getDefault();
-                if (is_object($dependencyInjector) === false) {
-                    throw new Exception('A dependency injector container is required to obtain the services related to the ORM');
+
+        if (is_string($data) === false) {
+            throw new Exception('Invalid parameter type.');
+        }
+        $attributes = unserialize($data);
+        if (is_array($attributes)) {
+
+            /**
+             * Obtain the default DI
+             */
+            $dependencyInjector = Di::getDefault();
+            if (!is_object($dependencyInjector)) {
+                throw new Exception("A dependency injector container is required to obtain the services related to the ORM");
+            }
+
+            /**
+             * Update the dependency injector
+             */
+            $this->_dependencyInjector = $dependencyInjector;
+
+            /**
+             * Gets the default modelsManager service
+             */
+            $manager = $dependencyInjector->getShared("modelsManager");
+            if (!is_object($manager)) {
+                throw new Exception("The injected service 'modelsManager' is not valid");
+            }
+
+            /**
+             * Update the models manager
+             */
+            $this->_modelsManager = $manager;
+
+            /**
+             * Try to initialize the model
+             */
+            $manager->initialize($this);
+            if ($manager->isKeepingSnapshots($this)) {
+                if (isset($attributes["_snapshot"])) {
+                    $snapshot = $attributes["_snapshot"];
+                    $this->_snapshot = $snapshot;
+                    $attributes = $attributes["_attributes"];
+                } else {
+                    $this->_snapshot = $attributes;
                 }
+            }
 
-                //Update the dependency injector
-                $this->_dependencyInjector = $dependencyInjector;
-
-                //Get the default modelsManager service
-                $manager = $dependencyInjector->getShared('modelsManager');
-
-                if (is_object($manager) === false) {
-                    //@note no interface validation
-                    throw new Exception("The injected service 'modelsManager' is not valid");
-                }
-
-                //Update the models manager
-                $this->_modelsManager = $manager;
-
-                //Try to initialize the model
-                $manager->initialize($this);
-
-                //Update the objects attributes
-                foreach ($attributes as $key => $value) {
-                    $this->$key = $value;
-                }
-
-                return;
+            /**
+             * Update the objects attributes
+             */
+            foreach ($attributes as $key => $value) {
+                $this->{$key} = $value;
             }
         }
-
-        throw new Exception('Invalid serialization data');
     }
 
     /**
@@ -4275,13 +4677,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * print_r($robot->toArray());
      * </code>
      *
-     * @return array
+     * @return array|null $columns
      * @throws Exception
      */
-    public function toArray()
+    public function toArray($columns = null)
     {
         $metaData = $this->getModelsMetaData();
-        $data     = array();
+        $data = array();
 
         //Original attributes
         $attributes = $metaData->getAttributes($this);
@@ -4291,23 +4693,48 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
         foreach ($attributes as $attribute) {
             //Check if the columns must be renamed
-            if (is_array($columnMap) === true) {
-                if (isset($columnMap[$attribute]) === false) {
-                    throw new Exception('Column "' . $attribute . '" doesn\'t make part of the column map');
+            if (is_array($columnMap)) {
+                if (isset($columnMap[$attribute])) {
+                    $attributeField = $columnMap[$attribute];
+                } else {
+                    if (!Kernel::getGlobals("orm.ignore_unknown_columns")) {
+                        throw new Exception("Column '" . $attribute . "' doesn't make part of the column map");
+                    } else {
+                        continue;
+                    }
                 }
-                $attributeField = $columnMap[$attribute];
             } else {
                 $attributeField = $attribute;
             }
 
-            if (isset($this->$attributeField) === true) {
-                $data[$attributeField] = $this->$attributeField;
+            if (is_array($columns)) {
+                if (!in_array($attributeField, $columns)) {
+                    continue;
+                }
+            }
+
+            if (isset($this->{$attributeField})) {
+                $data[$attributeField] = $this->{$attributeField};
             } else {
                 $data[$attributeField] = null;
             }
         }
 
         return $data;
+    }
+
+    /**
+     * Serializes the object for json_encode
+     *
+     *<code>
+     * echo json_encode($robot);
+     *</code>
+     *
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->toArray();
     }
 
     /**
@@ -4330,33 +4757,72 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         }
 
         //Enable/Disable internal events
-        if (isset($options['events']) === true) {
-            $GLOBALS['_PHALCON_ORM_EVENTS'] = ($options['events'] == true ? true : false);
+        if (isset($options["events"])) {
+            Kernel::setGlobals("orm.events", $options["events"]);
         }
 
-        //Enable/Disable virtual foreign keys
-        if (isset($options['virtualForeignKeys']) === true) {
-            $GLOBALS['_PHALCON_ORM_VIRTUAL_FOREIGN_KEYS'] = ($options['virtualForeignKeys'] == true ? true : false);
+        /**
+         * Enables/Disables virtual foreign keys
+         */
+        if (isset($options["virtualForeignKeys"])) {
+            Kernel::setGlobals("orm.virtual_foreign_keys", $options["virtualForeignKeys"]);
         }
 
-        //Enable/Disable column renaming
-        if (isset($options['columnRenaming']) === true) {
-            $GLOBALS['_PHALCON_ORM_COLUMN_RENAMING'] = ($options['columnRenaming'] == true ? true : false);
+        /**
+         * Enables/Disables column renaming
+         */
+        if (isset($options["columnRenaming"])) {
+            Kernel::setGlobals("orm.column_renaming", $options["columnRenaming"]);
         }
 
-        //Enable/Disable automatic not null validation
-        if (isset($options['notNullValidations']) === true) {
-            $GLOBALS['_PHALCON_ORM_NOT_NULL_VALIDATIONS'] = ($options['notNullValidations'] == true ? true : false);
+        /**
+         * Enables/Disables automatic not null validation
+         */
+        if (isset($options["notNullValidations"])) {
+            Kernel::setGlobals("orm.not_null_validations", $options["notNullValidations"]);
         }
 
-        //Enable/Disable of throwing exceptions if the saving process fails
-        if (isset($options['exceptionOnFailedSave']) === true) {
-            $GLOBALS['_PHALCON_ORM_EXCEPTION_ON_FAILED_SAVE'] = ($options['exceptionOnFailedSave'] == true ? true : false);
+        /**
+         * Enables/Disables throws an exception if the saving process fails
+         */
+        if (isset($options["exceptionOnFailedSave"])) {
+            Kernel::setGlobals("orm.exception_on_failed_save", $options["exceptionOnFailedSave"]);
         }
 
-        //Enable/Disable literals in PHQL - this improves the security of applications
-        if (isset($options['phqlLiterals']) === true) {
-            $GLOBALS['_PHALCON_ORM_ENABLE_LITERALS'] = ($options['phqlLiterals'] == true ? true : false);
+        /**
+         * Enables/Disables literals in PHQL this improves the security of applications
+         */
+        if (isset($options["phqlLiterals"])) {
+            Kernel::setGlobals("orm.enable_literals", $options["phqlLiterals"]);
+        }
+
+        /**
+         * Enables/Disables late state binding on model hydration
+         */
+        if (isset($options["lateStateBinding"])) {
+            Kernel::setGlobals("orm.late_state_binding", $options["lateStateBinding"]);
+        }
+
+        /**
+         * Enables/Disables automatic cast to original types on hydration
+         */
+        if (isset($options["castOnHydrate"])) {
+            Kernel::setGlobals("orm.cast_on_hydrate", $options["castOnHydrate"]);
+        }
+
+        /**
+         * Allows to ignore unknown columns when hydrating objects
+         */
+        if (isset($options["ignoreUnknownColumns"])) {
+            Kernel::setGlobals("orm.ignore_unknown_columns", $options["ignoreUnknownColumns"]);
+        }
+
+        if (isset($options["updateSnapshotOnSave"])) {
+            Kernel::setGlobals("orm.update_snapshot_on_save", $options["updateSnapshotOnSave"]);
+        }
+
+        if (isset($options["disableAssignSetters"])) {
+            Kernel::setGlobals("orm.disable_assign_setters", $options["disableAssignSetters"]);
         }
     }
 
@@ -4366,7 +4832,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public function reset()
     {
         $this->_uniqueParams = null;
-        $this->_snapshot     = null;
+        $this->_snapshot = null;
     }
 
 }
