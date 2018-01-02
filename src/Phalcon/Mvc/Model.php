@@ -609,7 +609,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return \Phalcon\Mvc\Model
      * @throws Exception
      */
-    public function assign($data, $dataColumnMap = null, $whiteList = null)
+    public function assign(array $data, $dataColumnMap = null, $whiteList = null)
     {
         $disableAssignSetters = Kernel::getGlobals("orm.disable_assign_setters");
 
@@ -695,7 +695,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return Model|ModelInterface
      * @throws Exception
      */
-    public static function cloneResultMap($base, $data, $columnMap, $dirtyState = 0, $keepSnapshots = null)
+    public static function cloneResultMap($base,array $data, $columnMap, $dirtyState = 0, $keepSnapshots = null)
     {
 
         if (!is_array($data) ||
@@ -801,7 +801,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return mixed
      * @throws Exception
      */
-    public static function cloneResultMapHydrate($data, $columnMap, $hydrationMode)
+    public static function cloneResultMapHydrate(array $data, $columnMap, $hydrationMode)
     {
         $hydrateObject = null;
         $hydrateArray = null;
@@ -898,7 +898,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return \Phalcon\Mvc\Model|ModelInterface
      * @throws Exception
      */
-    public static function cloneResult(ModelInterface $base, $data, $dirtyState = 0)
+    public static function cloneResult(ModelInterface $base,array $data, $dirtyState = 0)
     {
         if (is_object($base) === false ||
             $base instanceof ModelInterface === false ||
@@ -1588,7 +1588,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @return $this
      * @throws Exception
      */
-    public function appendMessage($message)
+    public function appendMessage(MessageInterface $message)
     {
         if (is_object($message) === false ||
             $message instanceof MessageInterface === false) {
@@ -3924,7 +3924,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      * @param array|null $columnMap
      * @throws Exception
      */
-    public function setSnapshotData($data, $columnMap = null)
+    public function setSnapshotData(array $data, $columnMap = null)
     {
         if (is_array($data) === false) {
             throw new Exception('The snapshot data must be an array');
