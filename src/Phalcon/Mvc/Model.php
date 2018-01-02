@@ -1315,10 +1315,10 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         $dependencyInjector = Di::getDefault();
 
         $manager = $dependencyInjector->getShared("modelsManager");
-        if (is_object($manager) === false ||
-            !$manager instanceof ManagerInterface) {
-            throw new Exception('Invalid parameter type.');
-        }
+//        if (is_object($manager) === false ||
+//            !$manager instanceof ManagerInterface) {
+//            throw new Exception('Invalid parameter type.');
+//        }
 
         if (!is_array($parameters)) {
             $params = [];
@@ -2383,8 +2383,9 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     /**
                      * This isset checks that the property be defined in the model
                      */
+                    $value = $this->{$attributeField};
                     if (isset($this->{$attributeField})) {
-                        $value = $this->{$attributeField};
+
 
                         if ($value === null && isset ($defaultValues[$field])) {
                             $snapshot[$attributeField] = null;
