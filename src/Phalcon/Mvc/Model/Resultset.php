@@ -7,6 +7,7 @@ use Phalcon\Cache\BackendInterface;
 use Phalcon\Mvc\ModelInterface;
 use Phalcon\Mvc\Model\Exception;
 use Phalcon\Mvc\Model\ResultsetInterface;
+use Phalcon\Db\ResultInterface;
 
 /**
  * Phalcon\Mvc\Model\Resultset
@@ -281,7 +282,7 @@ abstract class Resultset implements ResultsetInterface, \Iterator, \SeekableIter
              */
             $this->seek($index);
 
-            return $this->{"current"}();
+            return $this->current();
         }
         throw new Exception("The index does not exist in the cursor");
     }
@@ -331,7 +332,7 @@ abstract class Resultset implements ResultsetInterface, \Iterator, \SeekableIter
         }
 
         $this->seek(0);
-        return $this->{"current"}();
+        return $this->current();
     }
 
     /**
@@ -347,7 +348,7 @@ abstract class Resultset implements ResultsetInterface, \Iterator, \SeekableIter
         }
 
         $this->seek($count - 1);
-        return $this->{"current"}();
+        return $this->current();
     }
 
     /**
