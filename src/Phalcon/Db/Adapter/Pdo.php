@@ -2,12 +2,12 @@
 
 namespace Phalcon\Db\Adapter;
 
-use \Phalcon\Db\Adapter;
+use Phalcon\Db\Adapter;
 use Phalcon\Db\Column;
-use \Phalcon\Db\Exception;
-use \Phalcon\Db\Result\Pdo as PdoResult;
-use \PDO as Service;
-use \PDOStatement;
+use Phalcon\Db\Exception;
+use Phalcon\Db\Result\Pdo as PdoResult;
+use PDO as PhpPdo;
+use PDOStatement;
 use Phalcon\Kernel;
 
 /**
@@ -16,16 +16,18 @@ use Phalcon\Kernel;
  * Phalcon\Db\Adapter\Pdo is the Phalcon\Db that internally uses PDO to connect to a database
  *
  * <code>
- * $connection = new Phalcon\Db\Adapter\Pdo\Mysql(array(
- *      'host' => '192.168.0.11',
- *      'username' => 'sigma',
- *      'password' => 'secret',
- *      'dbname' => 'blog',
- *      'port' => '3306'
- *  ));
- * </code>
+ * use Phalcon\Db\Adapter\Pdo\Mysql;
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/adapter/pdo.c
+ * $config = [
+ *     "host"     => "localhost",
+ *     "dbname"   => "blog",
+ *     "port"     => 3306,
+ *     "username" => "sigma",
+ *     "password" => "secret",
+ * ];
+ *
+ * $connection = new Mysql($config);
+ * </code>
  */
 abstract class Pdo extends Adapter
 {
@@ -45,14 +47,6 @@ abstract class Pdo extends Adapter
      * @access protected
      */
     protected $_affectedRows;
-
-    /**
-     * Transaction Level
-     *
-     * @var int
-     * @access protected
-     */
-    protected $_transactionLevel = 0;
 
     /**
      * Constructor for \Phalcon\Db\Adapter\Pdo
@@ -94,7 +88,7 @@ abstract class Pdo extends Adapter
     public function connect($descriptor = null)
     {
         if (is_null($descriptor) === true) {
-            $descriptor = $this->_descriptor;
+            $descriptor = (array) $this->_descriptor;
         } elseif (is_array($descriptor) === false) {
             throw new Exception('Invalid parameter type.');
         }
@@ -115,13 +109,6 @@ abstract class Pdo extends Adapter
             $password = null;
         }
 
-        /**
-         * Remove the dialectClass from the descriptor if any
-         */
-        if(isset($descriptor["dialectClass"])){
-            unset($descriptor["dialectClass"]);
-        }
-
         //Check if the developer has defined custom options or create one from scratch
         if (isset($descriptor['options']) === true) {
             $options = $descriptor['options'];
@@ -131,19 +118,17 @@ abstract class Pdo extends Adapter
         }
 
         //Check if the user has defined a custom dsn
-        if (isset($descriptor['dns']) === false) {
-            $dnsParts = array();
+        if (isset($descriptor['dsn']) === false) {
+            $dsnParts = array();
 
             foreach ($descriptor as $key => $value) {
-                $dnsParts[] = $key . '=' . $value;
+                $dsnParts[] = $key . '=' . $value;
             }
 
-            $dnsAttributes = implode(';', $dnsParts);
+            $dsnAttributes = implode(';', $dsnParts);
         } else {
-            $dnsAttributes = $descriptor['dns'];
+            $dsnAttributes = $descriptor['dns'];
         }
-
-        $dns = $this->_type . ':' . $dnsAttributes;
 
         //Default options
         $options[\PDO::ATTR_ERRMODE] = \PDO::ERRMODE_EXCEPTION;
@@ -155,8 +140,18 @@ abstract class Pdo extends Adapter
             unset($descriptor["persistent"]);
         }
 
+        /**
+         * Remove the dialectClass from the descriptor if any
+         */
+        if (isset($descriptor["dialectClass"])) {
+            unset($descriptor["dialectClass"]);
+        }
+
+        $dsn        = $this->_type . ':' . $dsnAttributes;
         //Create the connection using PDO
-        $this->_pdo = new Service($dns, $username, $password, $options);
+        $this->_pdo = new PhpPdo($dsn, $username, $password, $options);
+
+        return true;
     }
 
     /**
@@ -179,7 +174,7 @@ abstract class Pdo extends Adapter
     /**
      * Executes a prepared statement binding. This function uses integer indexes starting from zero
      *
-     *<code>
+     * <code>
      * use Phalcon\Db\Column;
      *
      * $statement = $db->prepare(
@@ -195,7 +190,7 @@ abstract class Pdo extends Adapter
      *         "name" => Column::BIND_PARAM_INT,
      *     ]
      * );
-     *</code>
+     * </code>
      *
      * @param \PDOStatement $statement
      * @param array $placeholders
@@ -226,34 +221,34 @@ abstract class Pdo extends Adapter
                     $type = $dataTypes[$wildcard];
                     if ($type == Column::BIND_PARAM_DECIMAL) {
                         $castValue = doubleval($value);
-                        $type = Column::BIND_SKIP;
-                    }else{
+                        $type      = Column::BIND_SKIP;
+                    } else {
                         if (Kernel::getGlobals("db.force_casting")) {
                             if (!is_array($value)) {
                                 switch ($type) {
                                     case Column::BIND_PARAM_INT:
                                         $castValue = intval($value, 10);
-									break;
+                                        break;
                                     case Column::BIND_PARAM_STR:
                                         $castValue = (string) $value;
-									break;
+                                        break;
 
                                     case Column::BIND_PARAM_NULL:
                                         $castValue = null;
-									break;
+                                        break;
 
                                     case Column::BIND_PARAM_BOOL:
                                         $castValue = (boolean) $value;
-									break;
+                                        break;
 
                                     default:
                                         $castValue = $value;
-									break;
+                                        break;
                                 }
-                            }else{
+                            } else {
                                 $castValue = $value;
                             }
-                        }else{
+                        } else {
                             $castValue = $value;
                         }
                     }
@@ -261,37 +256,31 @@ abstract class Pdo extends Adapter
                     if (!is_array($castValue)) {
                         if ($type == Column::BIND_SKIP) {
                             $statement->bindValue($parameter, $castValue);
-                        }else{
-                            $statement->bindValue($parameter,$castValue,$type);
+                        } else {
+                            $statement->bindValue($parameter, $castValue, $type);
                         }
-                    }else{
+                    } else {
                         foreach ($castValue as $position => $itemValue) {
                             if ($type == Column::BIND_SKIP) {
                                 $statement->bindValue($parameter, $castValue);
-                            }else{
-                                $statement->bindValue($parameter,$castValue,$type);
+                            } else {
+                                $statement->bindValue($parameter, $castValue, $type);
                             }
                         }
-
                     }
-
-
-
-
                 } else {
                     throw new Exception('Invalid bind type parameter');
                 }
             } else {
                 if (!is_array($value)) {
                     $statement->bindValue($parameter, $value);
-                }else{
+                } else {
                     foreach ($value as $position => $itemValue) {
                         $statement->bindValue(
                             $parameter . $position, $itemValue
                         );
                     }
                 }
-
             }
         }
 
@@ -304,9 +293,17 @@ abstract class Pdo extends Adapter
      * Use this method only when the SQL statement sent to the server is returning rows
      *
      * <code>
-     *  //Querying data
-     *  $resultset = $connection->query("SELECT * FROM robots WHERE type='mechanical'");
-     *  $resultset = $connection->query("SELECT * FROM robots WHERE type=?", array("mechanical"));
+     * // Querying data
+     * $resultset = $connection->query(
+     *     "SELECT * FROM robots WHERE type = 'mechanical'"
+     * );
+     *
+     * $resultset = $connection->query(
+     *     "SELECT * FROM robots WHERE type = ?",
+     *     [
+     *         "mechanical",
+     *     ]
+     * );
      * </code>
      *
      * @param string $sqlStatement
@@ -324,7 +321,6 @@ abstract class Pdo extends Adapter
             is_null($bindTypes) === false)) {
             throw new Exception('Invalid parameter type.');
         }
-
         $eventsManager = $this->_eventsManager;
 
         //Execute the beforeQuery event if an EventsManager is available
@@ -343,7 +339,7 @@ abstract class Pdo extends Adapter
         if (is_array($bindParams) === true) {
             $statement = $pdo->prepare($sqlStatement);
             if (is_object($statement) === true) {
-                $statement = $this->executePrepared($statement,$bindParams, $bindTypes);
+                $statement = $this->executePrepared($statement, $bindParams, $bindTypes);
             }
         } else {
             $statement = $pdo->query($sqlStatement);
@@ -363,12 +359,21 @@ abstract class Pdo extends Adapter
 
     /**
      * Sends SQL statements to the database server returning the success state.
-     * Use this method only when the SQL statement sent to the server doesn't return any row
+     * Use this method only when the SQL statement sent to the server doesn't return any rows
      *
      * <code>
-     *  //Inserting data
-     *  $success = $connection->execute("INSERT INTO robots VALUES (1, 'Astro Boy')");
-     *  $success = $connection->execute("INSERT INTO robots VALUES (?, ?)", array(1, 'Astro Boy'));
+     * // Inserting data
+     * $success = $connection->execute(
+     *     "INSERT INTO robots VALUES (1, 'Astro Boy')"
+     * );
+     *
+     * $success = $connection->execute(
+     *     "INSERT INTO robots VALUES (?, ?)",
+     *     [
+     *         1,
+     *         "Astro Boy",
+     *     ]
+     * );
      * </code>
      *
      * @param string $sqlStatement
@@ -452,29 +457,6 @@ abstract class Pdo extends Adapter
 
         return true;
     }
-
-    ///**
-    // * Escapes a column/table/schema name
-    // *
-    // * <code>
-    // *  $escapedTable = $connection->escapeIdentifier('robots');
-    // *  $escapedTable = $connection->escapeIdentifier(array('store', 'robots'));
-    // * </code>
-    // *
-    // * @param string|array $identifier
-    // * @return string
-    // * @throws Exception
-    // */
-    //public function escapeIdentifier($identifier)
-    //{
-    //    if (is_array($identifier) === true) {
-    //        return '"' . $identifier[0] . '"."' . $identifier[1] . '"';
-    //    } elseif (is_string($identifier) === true) {
-    //        return '"' . $identifier . '"';
-    //    } else {
-    //        throw new Exception('Invalid parameter type.');
-    //    }
-    //}
 
     /**
      * Escapes a value to avoid SQL injections according to the active charset in the connection
@@ -806,6 +788,6 @@ abstract class Pdo extends Adapter
     public function getErrorInfo()
     {
         return $this->_pdo->errorInfo();
-	}
+    }
 
 }

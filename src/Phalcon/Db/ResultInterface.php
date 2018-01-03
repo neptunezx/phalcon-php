@@ -3,23 +3,12 @@
 namespace Phalcon\Db;
 
 /**
- * Phalcon\Db\ResultInterface initializer
+ * Phalcon\Db\ResultInterface
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/resultinterface.c
+ * Interface for Phalcon\Db\Result objects
  */
 interface ResultInterface
 {
-
-    /**
-     * \Phalcon\Db\Result\Pdo constructor //@note wrong constructor name
-     *
-     * @param \Phalcon\Db\AdapterInterface $connection
-     * @param \PDOStatement $result
-     * @param string|null $sqlStatement
-     * @param array|null $bindParams
-     * @param array|null $bindTypes
-     */
-    public function __construct($connection, $result, $sqlStatement = null, $bindParams = null, $bindTypes = null);
 
     /**
      * Allows to executes the statement again. Some database systems don't support scrollable cursors,

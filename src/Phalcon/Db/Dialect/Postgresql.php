@@ -6,6 +6,7 @@ use \Phalcon\Db\Dialect;
 use \Phalcon\Db\DialectInterface;
 use \Phalcon\Db\ColumnInterface;
 use \Phalcon\Db\Exception;
+use Phalcon\Db\IndexInterface;
 
 /**
  * Phalcon\Db\Dialect\Postgresql
@@ -86,7 +87,7 @@ class Postgresql extends Dialect implements DialectInterface
      * @return string
      * @throws Exception
      */
-    public function modifyColumn($tableName, $schemaName, $column)
+    public function modifyColumn($tableName, $schemaName, ColumnInterface $column)
     {
         throw new Exception('Not implemented yet');
     }
@@ -110,11 +111,11 @@ class Postgresql extends Dialect implements DialectInterface
      *
      * @param string $tableName
      * @param string $schemaName
-     * @param \Phalcon\Db\Index $index
+     * @param \Phalcon\Db\IndexInterface $index
      * @return string
      * @throws Exception
      */
-    public function addIndex($tableName, $schemaName, $index)
+    public function addIndex($tableName, $schemaName, IndexInterface $index)
     {
         throw new Exception('Not implemented yet');
     }

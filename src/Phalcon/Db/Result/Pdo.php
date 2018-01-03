@@ -2,9 +2,8 @@
 
 namespace Phalcon\Db\Result;
 
-use \Phalcon\Db\Exception;
-use \Phalcon\Db\AdapterInterface;
-use \PDOStatement;
+use Phalcon\Db;
+use Phalcon\Db\ResultInterface;
 
 /**
  * Phalcon\Db\Result\Pdo
@@ -12,138 +11,68 @@ use \PDOStatement;
  * Encapsulates the resultset internals
  *
  * <code>
- *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
- *  $result->setFetchMode(Phalcon\Db::FETCH_NUM);
- *  while ($robot = $result->fetchArray()) {
- *      print_r($robot);
- *  }
- * </code>
+ * $result = $connection->query("SELECT * FROM robots ORDER BY name");
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/result/pdo.c
+ * $result->setFetchMode(
+ *     \Phalcon\Db::FETCH_NUM
+ * );
+ *
+ * while ($robot = $result->fetchArray()) {
+ *     print_r($robot);
+ * }
+ * </code>
  */
-class Pdo
+class Pdo implements ResultInterface
 {
 
-    /**
-     * Connection
-     *
-     * @var null|\Phalcon\Db\AdapterInterface
-     * @access protected
-     */
     protected $_connection;
-
-    /**
-     * Result
-     *
-     * @var null
-     * @access protected
-     */
     protected $_result;
 
     /**
-     * Fetch Model
-     *
-     * @var int
-     * @access protected
+     * Active fetch mode
      */
-    protected $_fetchMode = 4;
+    protected $_fetchMode = Db::FETCH_OBJ;
 
     /**
-     * PDO Statement
+     * Internal resultset
      *
-     * @var null|\PDOStatement
-     * @access protected
+     * @var \PDOStatement
      */
     protected $_pdoStatement;
-
-    /**
-     * SQL Statement
-     *
-     * @var null|string
-     * @access protected
-     */
     protected $_sqlStatement;
-
-    /**
-     * Bind Params
-     *
-     * @var null|array
-     * @access protected
-     */
     protected $_bindParams;
-
-    /**
-     * Bind Types
-     *
-     * @var null|array
-     * @access protected
-     */
     protected $_bindTypes;
-
-    /**
-     * Row Count
-     *
-     * @var boolean|int
-     * @access protected
-     */
     protected $_rowCount = false;
 
     /**
-     * Row Offset
+     * Phalcon\Db\Result\Pdo constructor
      *
-     * @var null|int
-     * @access private
+     * @param \Phalcon\Db\AdapterInterface connection
+     * @param \PDOStatement result
+     * @param string sqlStatement
+     * @param array bindParams
+     * @param array bindTypes
      */
-    private $_rowOffset;
-
-    /**
-     * \Phalcon\Db\Result\Pdo constructor
-     *
-     * @param \Phalcon\Db\AdapterInterface $connection
-     * @param \PDOStatement $result
-     * @param string|null $sqlStatement
-     * @param array|null $bindParams
-     * @param array|null $bindTypes
-     */
-    public function __construct($connection, $result, $sqlStatement = null, $bindParams = null, $bindTypes = null)
+    public function __construct(Db\AdapterInterface $connection, \PDOStatement $result, $sqlStatement = null, $bindParams = null, $bindTypes = null)
     {
-        if (is_object($connection) === false ||
-            $connection instanceof AdapterInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_object($result) === false ||
-            $result instanceof PDOStatement === false) {
-            throw new Exception('Invalid PDOStatement supplied to Phalcon\\Db\\Result\\Pdo');
-        }
 
         $this->_connection   = $connection;
         $this->_pdoStatement = $result;
 
-        if (is_string($sqlStatement) === true) {
+        if ($sqlStatement !== null) {
             $this->_sqlStatement = $sqlStatement;
-        } elseif (is_null($sqlStatement) === false) {
-            throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($bindParams) === true) {
+        if ($bindParams !== null) {
             $this->_bindParams = $bindParams;
-        } elseif (is_null($bindParams) === false) {
-            throw new Exception('Invalid parameter type.');
         }
-
-        if (is_array($bindTypes) === true) {
+        if ($bindTypes !== null) {
             $this->_bindTypes = $bindTypes;
-        } elseif (is_null($bindTypes) === false) {
-            throw new Exception('Invalid parameter type.');
         }
     }
 
     /**
-     * Allows to executes the statement again. Some database systems don't support scrollable cursors,
+     * Allows to execute the statement again. Some database systems don't support scrollable cursors,
      * So, as cursors are forward only, we need to execute the cursor again to fetch rows from the begining
-     *
-     * @return boolean
      */
     public function execute()
     {
@@ -152,42 +81,40 @@ class Pdo
 
     /**
      * Fetches an array/object of strings that corresponds to the fetched row, or FALSE if there are no more rows.
-     * This method is affected by the active fetch flag set using \Phalcon\Db\Result\Pdo::setFetchMode
+     * This method is affected by the active fetch flag set using Phalcon\Db\Result\Pdo::setFetchMode
      *
      * <code>
-     *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
-     *  $result->setFetchMode(Phalcon\Db::FETCH_OBJ);
-     *  while ($robot = $result->fetch()) {
-     *      echo $robot->name;
-     *  }
-     * </code>
+     * $result = $connection->query("SELECT * FROM robots ORDER BY name");
      *
-     * @return mixed
+     * $result->setFetchMode(
+     *     \Phalcon\Db::FETCH_OBJ
+     * );
+     *
+     * while ($robot = $result->fetch()) {
+     *     echo $robot->name;
+     * }
+     * </code>
      */
-    public function fetch()
+    public function fetch($fetchStyle = null, $cursorOrientation = null, $cursorOffset = null)
     {
-        if (is_null($this->_rowOffset) === true) {
-            return $this->_pdoStatement->fetch();
-        } else {
-            return $this->_pdoStatement->fetch(
-                    $this->_fetchMode, \PDO::FETCH_ORI_ABS, $this->_rowOffset
-            );
-        }
+        return $this->_pdoStatement->fetch($fetchStyle, $cursorOrientation, $cursorOffset);
     }
 
     /**
      * Returns an array of strings that corresponds to the fetched row, or FALSE if there are no more rows.
-     * This method is affected by the active fetch flag set using \Phalcon\Db\Result\Pdo::setFetchMode
+     * This method is affected by the active fetch flag set using Phalcon\Db\Result\Pdo::setFetchMode
      *
      * <code>
-     *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
-     *  $result->setFetchMode(Phalcon\Db::FETCH_NUM);
-     *  while ($robot = $result->fetchArray()) {
-     *      print_r($robot);
-     *  }
-     * </code>
+     * $result = $connection->query("SELECT * FROM robots ORDER BY name");
      *
-     * @return mixed
+     * $result->setFetchMode(
+     *     \Phalcon\Db::FETCH_NUM
+     * );
+     *
+     * while ($robot = result->fetchArray()) {
+     *     print_r($robot);
+     * }
+     * </code>
      */
     public function fetchArray()
     {
@@ -196,151 +123,212 @@ class Pdo
 
     /**
      * Returns an array of arrays containing all the records in the result
-     * This method is affected by the active fetch flag set using \Phalcon\Db\Result\Pdo::setFetchMode
+     * This method is affected by the active fetch flag set using Phalcon\Db\Result\Pdo::setFetchMode
      *
      * <code>
-     *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
-     *  $robots = $result->fetchAll();
-     * </code>
+     * $result = $connection->query(
+     *     "SELECT * FROM robots ORDER BY name"
+     * );
      *
-     * @return array
+     * $robots = $result->fetchAll();
+     * </code>
      */
-    public function fetchAll()
+    public function fetchAll($fetchStyle = null, $fetchArgument = null, $ctorArgs = null)
     {
-        return $this->_pdoStatement->fetchAll();
+        $pdoStatement = $this->_pdoStatement;
+
+        if (is_integer($fetchStyle)) {
+
+            if ($fetchStyle == Db::FETCH_CLASS) {
+                return $pdoStatement->fetchAll($fetchStyle, $fetchArgument, $ctorArgs);
+            }
+
+            if ($fetchStyle == Db::FETCH_COLUMN) {
+                return $pdoStatement->fetchAll($fetchStyle, $fetchArgument);
+            }
+
+            if ($fetchStyle == Db::FETCH_FUNC) {
+                return $pdoStatement->fetchAll($fetchStyle, $fetchArgument);
+            }
+
+            return $pdoStatement->fetchAll($fetchStyle);
+        }
+
+        return $pdoStatement->fetchAll();
     }
 
     /**
-     * Gets number of rows returned by a resulset
+     * Gets number of rows returned by a resultset
      *
      * <code>
-     *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
-     *  echo 'There are ', $result->numRows(), ' rows in the resulset';
-     * </code>
+     * $result = $connection->query(
+     *     "SELECT * FROM robots ORDER BY name"
+     * );
      *
-     * @return int
+     * echo "There are ", $result->numRows(), " rows in the resultset";
+     * </code>
      */
     public function numRows()
     {
         $rowCount = $this->_rowCount;
         if ($rowCount === false) {
-            switch ($this->_connection->getType()) {
-                case 'mysql':
-                    $rowCount = $this->_pdoStatement->rowCount();
-                    break;
-                case 'pgsql':
-                    $rowCount = $this->_pdoStatement->rowCount();
-                    break;
+
+            $connection = $this->_connection;
+            $type       = $connection->getType();
+
+            /**
+             * MySQL library properly returns the number of records PostgreSQL too
+             */
+            if ($type == "mysql" || $type == "pgsql") {
+                $pdoStatement = $this->_pdoStatement;
+                $rowCount     = $pdoStatement->rowCount();
             }
 
+            /**
+             * We should get the count using a new statement :(
+             */
             if ($rowCount === false) {
-                //SQLite/Oracle/SQLServer returns resultsets that to the client eyes (PDO) has an
-                //arbitrary number of rows, so we need to perform an extra count to know that
+
+                /**
+                 * SQLite/SQLServer returns resultsets that to the client eyes
+                 * (PDO) has an arbitrary number of rows, so we need to perform
+                 * an extra count to know that
+                 */
                 $sqlStatement = $this->_sqlStatement;
 
-                //If the sql_statement starts with SELECT COUNT(*) we don't make the count
-                if (strpos($sqlStatement, 'SELECT COUNT(*) ') !== 0) {
-                    $bindParams = $this->_bindParams;
-                    $bindTypes  = $this->_bindTypes;
-                    $matches    = null;
+                /**
+                 * If the sql_statement starts with SELECT COUNT(*) we don't make the count
+                 */
+                if (!Phalcon\Text::startsWith(sqlStatement, "SELECT COUNT(*) ")) {
 
-                    if (preg_match("/^SELECT\\s+(.*)$/i", $sqlStatement, $matches) == true) {
-                        $rowCount = $this->_connection->query(
-                                "SELECT COUNT(*) \"numrows\" FROM (SELECT " . $matches[0] . ')', $bindParams, $bindTypes
-                            )->fetch()->numRows();
+                    $matches = null;
+                    if (preg_match("/^SELECT\\s+(.*)/i", $sqlStatement, $matches)) {
+                        $result = $connection->query(
+                            "SELECT COUNT(*) \"numrows\" FROM (SELECT " . $matches[1] . ")", $this->_bindParams, $this->_bindTypes
+                        );
+
+                        $row      = $result->fetch();
+                        $rowCount = $row["numrows"];
                     }
                 } else {
                     $rowCount = 1;
                 }
             }
 
-            //Update the value to avoid further calculations
+            /**
+             * Update the value to avoid further calculations
+             */
             $this->_rowCount = $rowCount;
         }
-
         return $rowCount;
     }
 
     /**
-     * Moves internal resulset cursor to another position letting us to fetch a certain row
+     * Moves internal resultset cursor to another position letting us to fetch a certain row
      *
      * <code>
-     *  $result = $connection->query("SELECT * FROM robots ORDER BY name");
-     *  $result->dataSeek(2); // Move to third row on result
-     *  $row = $result->fetch(); // Fetch third row
-     * </code>
+     * $result = $connection->query(
+     *     "SELECT * FROM robots ORDER BY name"
+     * );
      *
-     * @param int $number
-     * @return null|false
+     * // Move to third row on result
+     * $result->dataSeek(2);
+     *
+     * // Fetch third row
+     * $row = $result->fetch();
+     * </code>
      */
     public function dataSeek($number)
     {
-        /* Validation */
-        if (is_int($number) === false) {
-            return;
+        $connection   = $this->_connection;
+        $pdo          = $connection->getInternalHandler();
+        $sqlStatement = $this->_sqlStatement;
+        $bindParams   = $this->_bindParams;
+
+        /**
+         * PDO doesn't support scrollable cursors, so we need to re-execute the statement
+         */
+        if (is_array($bindParams)) {
+            $statement = $pdo->prepare(sqlStatement);
+            if (is_object($statement)) {
+                $statement = $connection->executePrepared($statement, $bindParams, $this->_bindTypes);
+            }
+        } else {
+            $statement = $pdo->query($sqlStatement);
         }
 
-        $this->_rowOffset = $number;
+        $this->_pdoStatement = $statement;
 
-        if ($this->_pdoStatement->setAttribute(\PDO::ATTR_CURSOR, \PDO::CURSOR_SCROLL) === false) {
-            return false;
+        $n = -1;
+        $number--;
+        while ($n != $number) {
+            $statement->fetch();
+            $n++;
         }
     }
 
     /**
-     * Changes the fetching mode affecting \Phalcon\Db\Result\Pdo::fetch()
+     * Changes the fetching mode affecting Phalcon\Db\Result\Pdo::fetch()
      *
      * <code>
-     *  //Return array with integer indexes
-     *  $result->setFetchMode(Phalcon\Db::FETCH_NUM);
+     * // Return array with integer indexes
+     * $result->setFetchMode(
+     *     \Phalcon\Db::FETCH_NUM
+     * );
      *
-     *  //Return associative array without integer indexes
-     *  $result->setFetchMode(Phalcon\Db::FETCH_ASSOC);
+     * // Return associative array without integer indexes
+     * $result->setFetchMode(
+     *     \Phalcon\Db::FETCH_ASSOC
+     * );
      *
-     *  //Return associative array together with integer indexes
-     *  $result->setFetchMode(Phalcon\Db::FETCH_BOTH);
+     * // Return associative array together with integer indexes
+     * $result->setFetchMode(
+     *     \Phalcon\Db::FETCH_BOTH
+     * );
      *
-     *  //Return an object
-     *  $result->setFetchMode(Phalcon\Db::FETCH_OBJ);
+     * // Return an object
+     * $result->setFetchMode(
+     *     \Phalcon\Db::FETCH_OBJ
+     * );
      * </code>
-     *
-     * @param int $fetchMode
-     * @throws Exception
      */
-    public function setFetchMode($fetchMode)
+    public function setFetchMode($fetchMode, $colNoOrClassNameOrObject = null, $ctorargs = null)
     {
-        if (is_int($fetchMode) === false) {
-            throw new Exception('Invalid parameter type.');
+        $pdoStatement = $this->_pdoStatement;
+
+        if ($fetchMode == Db::FETCH_CLASS) {
+            if ($pdoStatement->setFetchMode($fetchMode, $colNoOrClassNameOrObject, $ctorargs)) {
+                $this->_fetchMode = $fetchMode;
+                return true;
+            }
+            return false;
         }
 
-        switch ($fetchMode) {
-            case 1:
-                $fetchType = 2;
-                break;
-            case 2:
-                $fetchType = 4;
-                break;
-            case 3:
-                $fetchType = 3;
-                break;
-            case 4:
-                $fetchType = 5;
-                break;
-            default:
-                $fetchType = 0;
-                break;
+        if ($fetchMode == Db::FETCH_INTO) {
+            if ($pdoStatement->setFetchMode($fetchMode, $colNoOrClassNameOrObject)) {
+                $this->_fetchMode = $fetchMode;
+                return true;
+            }
+            return false;
         }
 
-        if ($fetchType !== 0) {
-            $this->_pdoStatement->setFetchMode($fetchType);
-            $this->_fetchMode = $fetchType;
+        if ($fetchMode == Db::FETCH_COLUMN) {
+            if ($pdoStatement->setFetchMode($fetchMode, $colNoOrClassNameOrObject)) {
+                $this->_fetchMode = $fetchMode;
+                return true;
+            }
+            return false;
         }
+
+        if ($pdoStatement->setFetchMode($fetchMode)) {
+            $this->_fetchMode = $fetchMode;
+            return true;
+        }
+        return false;
     }
 
     /**
      * Gets the internal PDO result object
-     *
-     * @return \PDOStatement
      */
     public function getInternalResult()
     {

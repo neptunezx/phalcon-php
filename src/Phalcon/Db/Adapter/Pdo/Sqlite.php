@@ -2,31 +2,32 @@
 
 namespace Phalcon\Db\Adapter\Pdo;
 
-use \Phalcon\Db\Adapter\Pdo;
-use \Phalcon\Db\AdapterInterface;
-use \Phalcon\Db\Exception;
-use \Phalcon\Db\Column;
-use \Phalcon\Db\Index;
-use \Phalcon\Db\Reference;
-use \Phalcon\Events\EventsAwareInterface;
+use Phalcon\Db;
+use Phalcon\Db\Column;
+use Phalcon\Db\Exception;
+use Phalcon\Db\RawValue;
+use Phalcon\Db\Reference;
+use Phalcon\Db\ReferenceInterface;
+use Phalcon\Db\Index;
+use Phalcon\Db\IndexInterface;
+use Phalcon\Db\Adapter\Pdo as PdoAdapter;
 
 /**
  * Phalcon\Db\Adapter\Pdo\Sqlite
  *
  * Specific functions for the Sqlite database system
+ *
  * <code>
+ * use Phalcon\Db\Adapter\Pdo\Sqlite;
  *
- * $config = array(
- *  "dbname" => "/tmp/test.sqlite"
+ * $connection = new Sqlite(
+ *     [
+ *         "dbname" => "/tmp/test.sqlite",
+ *     ]
  * );
- *
- * $connection = new Phalcon\Db\Adapter\Pdo\Sqlite($config);
- *
  * </code>
- *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/db/adapter/pdo/sqlite.c
  */
-class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
+class Sqlite extends PdoAdapter
 {
 
     /**
@@ -43,7 +44,7 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
      * @var string
      * @access protected
      */
-    protected $_dialectType = 'Sqlite';
+    protected $_dialectType = 'sqlite';
 
     /**
      * This method is automatically called in \Phalcon\Db\Adapter\Pdo constructor.
@@ -65,9 +66,9 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
             throw new Exception('dbname must be specified');
         }
 
-        $descriptor['dns'] = $descriptor['dbname'];
+        $descriptor['dsn'] = $descriptor['dbname'];
 
-        parent::connect($descriptor);
+        return parent::connect($descriptor);
     }
 
     /**
@@ -90,6 +91,9 @@ class Sqlite extends Pdo implements EventsAwareInterface, AdapterInterface
             throw new Exception('Invalid parameter type.');
         }
 
+        $oldColumn = null;
+		$sizePattern = "#\\(([0-9]+)(?:,\\s*([0-9]+))*\\)#";
+        
         $columns = array();
         $sql     = $this->_dialect->describeColumns($table, $schema);
 

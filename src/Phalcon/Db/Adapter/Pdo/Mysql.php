@@ -390,9 +390,7 @@ class Mysql extends PdoAdapter
 
     /**
      * Adds a foreign key to a table
-     */
-
-    /**
+     * 
      * @param string                         $tableName
      * @param string                         $schemaName
      * @param \Phalcon\Db\ReferenceInterface $reference
@@ -402,8 +400,6 @@ class Mysql extends PdoAdapter
      */
     public function addForeignKey($tableName, $schemaName, $reference)
     {
-
-
         $foreignKeyCheck = $this->prepare($this->_dialect->getForeignKeyChecks());
         if (!$foreignKeyCheck->execute()) {
             throw new Exception("DATABASE PARAMETER 'FOREIGN_KEY_CHECKS' HAS TO BE 1");

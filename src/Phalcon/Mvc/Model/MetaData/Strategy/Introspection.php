@@ -128,13 +128,6 @@ class Introspection implements StrategyInterface
      */
     public function getColumnMaps(ModelInterface $model, \Phalcon\DiInterface $dependencyInjector)
     {
-        if (is_object($model) === false ||
-            $model instanceof ModelInterface === false ||
-            is_object($dependencyInjector) === false ||
-            $dependencyInjector instanceof DiInterface === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
         $orderedColumnMap  = null;
         $reversedColumnMap = null;
 

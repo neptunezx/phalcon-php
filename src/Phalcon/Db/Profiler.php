@@ -118,7 +118,6 @@ class Profiler
         return $this;
     }
 
-
     /**
      *  Stops the active profile
      * @return $this

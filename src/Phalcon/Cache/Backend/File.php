@@ -113,12 +113,12 @@ class File extends Backend implements BackendInterface
      * Stores cached content into the file backend and stops the frontend
      *
      * @param int|string|null $keyName
-     * @param string|null $content
+     * @param mixed $content
      * @param int|null $lifetime
      * @param boolean|null $stopBuffer
      * @throws Exception
      */
-    public function save($keyName = null, $content = null, $lifetime = null, $stopBuffer = null)
+    public function save($keyName = null, $content = null, $lifetime = null, $stopBuffer = true)
     {
         /* Input processing */
         if (is_null($keyName) === true) {
@@ -133,27 +133,20 @@ class File extends Backend implements BackendInterface
             throw new Exception('Invalid parameter type.');
         }
 
-        if (is_string($content) === false &&
-            is_null($content) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $lifetime = (int) $lifetime;
 
-        if (is_int($lifetime) === false &&
-            is_null($lifetime) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
-
-        if (is_null($stopBuffer) === true) {
-            $stopBuffer = true;
-        } elseif (is_bool($stopBuffer) === false) {
-            throw new Exception('Invalid parameter type.');
-        }
+        $stopBuffer = (bool) $stopBuffer;
 
         /* Content preprocessing */
-        if (isset($content) === false) {
+        if ($content === null) {
             $content = $this->_frontend->getContent();
         }
-        $preparedContent = $this->_frontend->beforeStore($content);
+
+        if (!is_numeric($content)) {
+            $preparedContent = $this->_frontend->beforeStore($content);
+        } else {
+            $preparedContent = $content;
+        }
 
         /* Store data */
         //We use file_put_contents to respect open_base_dir directive
@@ -173,6 +166,8 @@ class File extends Backend implements BackendInterface
         }
 
         $this->_started = false;
+
+        return true;
     }
 
     /**
