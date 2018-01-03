@@ -32,6 +32,7 @@ use Phalcon\ValidationInterface;
 use Phalcon\Mvc\Model\ValidationFailed;
 use Phalcon\Events\ManagerInterface as EventsManagerInterface;
 use Phalcon\Kernel;
+
 //use function Symfony\Component\DependencyInjection\Loader\Configurator\iterator;
 
 /**
@@ -698,12 +699,11 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
     public static function cloneResultMap($base, array $data, $columnMap, $dirtyState = 0, $keepSnapshots = null)
     {
 
-        if (!is_array($data) ||
-            is_int($dirtyState === false) ||
-            (!is_bool($keepSnapshots) === false && !is_null($keepSnapshots))) {
-            throw new Exception('Invalid parameter type.');
+        if (!is_array($data) || is_int($dirtyState === false)) {
+            throw new Exception('Invalid parameter type.' . $keepSnapshots);
         }
-        $instance = clone $base;
+        $keepSnapshots = (bool) $keepSnapshots;
+        $instance      = clone $base;
 
         // Change the dirty state to persistent
         $instance->setDirtyState($dirtyState);
