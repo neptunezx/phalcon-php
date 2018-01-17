@@ -28,7 +28,6 @@ use \InvalidArgumentException;
  *  }
  * </code>
  *
- * @see https://github.com/phalcon/cphalcon/blob/1.2.6/ext/http/request.c
  */
 class Request implements RequestInterface, InjectionAwareInterface
 {

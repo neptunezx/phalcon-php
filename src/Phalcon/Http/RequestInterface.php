@@ -331,4 +331,6 @@ interface RequestInterface
      * @return array
      */
     public function getDigestAuth();
+    
+    
 }
