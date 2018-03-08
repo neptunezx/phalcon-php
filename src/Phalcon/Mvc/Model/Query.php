@@ -2775,7 +2775,8 @@ class Query implements QueryInterface, InjectionAwareInterface
                 /**
                  * Get the column map
                  */
-                if (!Kernel::getGlobals("orm.cast_on_hydrate")) {
+                //todo
+                if (Kernel::getGlobals("orm.cast_on_hydrate")) {
                     $simpleColumnMap = $metaData->getColumnMap($resultObject);
                 } else {
 
@@ -2817,6 +2818,7 @@ class Query implements QueryInterface, InjectionAwareInterface
                 }
             }
 
+            
             /**
              * Simple resultsets contains only complete objects
              */

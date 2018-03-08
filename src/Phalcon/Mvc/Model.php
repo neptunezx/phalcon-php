@@ -646,7 +646,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                     $attributeField = $columnMap[$attribute];
                 } else {
                     if (!Kernel::getGlobals('orm.ignore_unknown_columns')) {
-                        throw new Exception("Column '" . $attribute . "' doesn\'t make part of the column map");
+                        throw new Exception("Column '" . $attribute . "' doesn\'t make part of the column map" . codecept_debug($columnMap));
                     } else {
                         continue;
                     }
@@ -1368,7 +1368,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
         $bindTypes  = null;
         if (isset($params['bind'])) {
             $bindParams = $params['bind'];
-            $bindTypes  = $params['bindTypes'];
+            $bindTypes  = isset($params['bindTypes']) ? $params['bindTypes'] : null;
         }
 
         /**
@@ -1789,7 +1789,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
                  * Create a compound condition
                  */
                 foreach ($fields as $position => $field) {
-                    $value        = $this->{$field};
+                    $value        = isset($this->{$field}) ? $this->{$field} : null;
                     $conditions[] = "[" . $referencedFields[$position] . "] = ?" . $position;
                     $bindParams[] = $value;
                     if (is_null($value)) {
@@ -1799,8 +1799,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
 
                 $validateWithNulls = $numberNull == count($fields);
             } else {
-
-                $value        = $this->{$fields};
+                $value        = isset($this->{$fields}) ? $this->{$fields} : null;
                 $conditions[] = "[" . $referencedFields . "] = ?0";
                 $bindParams[] = $value;
 
@@ -2045,14 +2044,13 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             $bindParams = [];
 
             if (is_array($fields)) {
-
                 foreach ($fields as $position => $field) {
-                    $value        = $this->{$field};
+                    $value        = isset($this->{$field}) ? $this->{$field} : null;
                     $conditions[] = "[" . $referencedFields[$position] . "] = ?" . $position;
                     $bindParams[] = $value;
                 }
             } else {
-                $value        = $this->{$fields};
+                $value        = isset($this->{$fields}) ? $this->{$fields} : null;
                 $conditions[] = "[" . $referencedFields . "] = ?0";
                 $bindParams[] = $value;
             }
@@ -3079,8 +3077,6 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
      */
     public function save($data = null, $whiteList = null)
     {
-
-
         $metaData = $this->getModelsMetaData();
 
         if (is_array($data) && count($data) > 0) {
@@ -4181,7 +4177,7 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             return null;
         }
 
-        $extraArgs = $arguments[0];
+        $extraArgs = isset($arguments[0]) ? $arguments[0] : null;
 
         return $manager->getRelationRecords(
                 $relation, $queryMethod, $this, $extraArgs
@@ -4464,8 +4460,8 @@ abstract class Model implements ModelInterface, ResultInterface, InjectionAwareI
             /*
               Not fetch a relation if it is on CamelCase
              */
-            if (isset($this->{$lowerProperty}) && (is_object($this->{$lowerProperty}))) {
-                return $this->{$lowerProperty};
+            if (property_exists($this, $lowerProperty) && (is_object($this->$lowerProperty))) {
+                return $this->$lowerProperty;
             }
             /**
              * Get the related records

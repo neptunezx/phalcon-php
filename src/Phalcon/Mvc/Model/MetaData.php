@@ -255,7 +255,8 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
 
         //Get the meta-data extraction strategy
         if (is_object($strategy) === false) {
-            $strategy = $this->_dependencyInjector->getStrategy();
+            //todo
+            $strategy = $this->getStrategy();
         }
 
         //Get the meta-data
@@ -790,6 +791,7 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
         if (is_null($data)) {
             $data = [];
         }
+        
         if (is_array($data) === false) {
             throw new Exception('The meta-data is invalid or is corrupted');
         }
@@ -810,7 +812,7 @@ abstract class MetaData implements InjectionAwareInterface, MetaDataInterface
      */
     public function getDefaultValues(ModelInterface $model)
     {
-        $data = $this->readMetaDataIndex(model, self::MODELS_DEFAULT_VALUES);
+        $data = $this->readMetaDataIndex($model, self::MODELS_DEFAULT_VALUES);
         if (is_array($data) === false) {
             throw new Exception("The meta-data is invalid or is corrupt");
         }

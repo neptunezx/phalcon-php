@@ -55,7 +55,7 @@ class ModelTest extends UnitTest
 
                 $modelsManager->registerNamespaceAlias('AlbumORama', 'Phalcon\Test\Models\AlbumORama');
                 $album = Albums::findFirst();
-
+                
                 $album->artist->name = 'NotArtist';
                 expect($album->artist->name)->equals($album->Artist->name);
             }

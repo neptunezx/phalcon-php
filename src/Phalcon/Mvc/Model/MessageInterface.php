@@ -65,5 +65,5 @@ interface MessageInterface
      * @param array $message
      * @return \Phalcon\Mvc\Model\MessageInterface
      */
-    public static function __set_state($message);
+    public static function __set_state(array $message);
 }
